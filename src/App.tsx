@@ -5,7 +5,17 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import Index from "./pages/Index.tsx";
 import Explore from "./pages/Explore.tsx";
+import Experiences from "./pages/Experiences.tsx";
+import ExperienceDetail from "./pages/ExperienceDetail.tsx";
 import HostProfile from "./pages/HostProfile.tsx";
+import Booking from "./pages/Booking.tsx";
+import BecomeHost from "./pages/BecomeHost.tsx";
+import TravelerDashboard from "./pages/dashboard/TravelerDashboard.tsx";
+import HostDashboard from "./pages/dashboard/HostDashboard.tsx";
+import AdminDashboard from "./pages/dashboard/AdminDashboard.tsx";
+import HelpCenter from "./pages/HelpCenter.tsx";
+import Safety from "./pages/Safety.tsx";
+import Terms from "./pages/Terms.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
@@ -19,7 +29,17 @@ const App = () => (
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/explore" element={<Explore />} />
+          <Route path="/experiences" element={<Experiences />} />
+          <Route path="/experience/:id" element={<ExperienceDetail />} />
           <Route path="/host/:id" element={<HostProfile />} />
+          <Route path="/book/:id" element={<Booking />} />
+          <Route path="/become-host" element={<BecomeHost />} />
+          <Route path="/dashboard/traveler" element={<TravelerDashboard />} />
+          <Route path="/dashboard/host" element={<HostDashboard />} />
+          <Route path="/dashboard/admin" element={<AdminDashboard />} />
+          <Route path="/help" element={<HelpCenter />} />
+          <Route path="/safety" element={<Safety />} />
+          <Route path="/terms" element={<Terms />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
