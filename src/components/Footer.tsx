@@ -15,23 +15,23 @@ const Footer = () => (
           <div className="space-y-2">
             <Link to="/explore" className="block text-sm text-muted-foreground hover:text-foreground transition-colors">Find Hosts</Link>
             <Link to="/experiences" className="block text-sm text-muted-foreground hover:text-foreground transition-colors">Experiences</Link>
-            <Link to="#" className="block text-sm text-muted-foreground hover:text-foreground transition-colors">Destinations</Link>
+            <Link to="/dashboard/traveler" className="block text-sm text-muted-foreground hover:text-foreground transition-colors">Traveler Dashboard</Link>
           </div>
         </div>
         <div>
           <h5 className="text-sm font-semibold text-foreground mb-3">Host</h5>
           <div className="space-y-2">
             <Link to="/become-host" className="block text-sm text-muted-foreground hover:text-foreground transition-colors">Become a Host</Link>
-            <Link to="#" className="block text-sm text-muted-foreground hover:text-foreground transition-colors">Resources</Link>
-            <Link to="#" className="block text-sm text-muted-foreground hover:text-foreground transition-colors">Community</Link>
+            <Link to="/dashboard/host" className="block text-sm text-muted-foreground hover:text-foreground transition-colors">Host Dashboard</Link>
+            <Link to="/dashboard/admin" className="block text-sm text-muted-foreground hover:text-foreground transition-colors">Admin Panel</Link>
           </div>
         </div>
         <div>
           <h5 className="text-sm font-semibold text-foreground mb-3">Support</h5>
           <div className="space-y-2">
-            <Link to="#" className="block text-sm text-muted-foreground hover:text-foreground transition-colors">Help Center</Link>
-            <Link to="#" className="block text-sm text-muted-foreground hover:text-foreground transition-colors">Safety</Link>
-            <Link to="#" className="block text-sm text-muted-foreground hover:text-foreground transition-colors">Terms</Link>
+            <Link to="/help" className="block text-sm text-muted-foreground hover:text-foreground transition-colors">Help Center</Link>
+            <Link to="/safety" className="block text-sm text-muted-foreground hover:text-foreground transition-colors">Safety</Link>
+            <Link to="/terms" className="block text-sm text-muted-foreground hover:text-foreground transition-colors">Terms</Link>
           </div>
         </div>
       </div>

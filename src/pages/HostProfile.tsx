@@ -1,10 +1,10 @@
 import { useParams, Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Star, Shield, Clock, Globe, MapPin, ArrowLeft, MessageCircle, Car, Home, Compass } from "lucide-react";
+import { Star, Shield, Clock, Globe, MapPin, ArrowLeft, MessageCircle, Car, Home, Compass, Play } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { hosts } from "@/lib/data";
+import { hosts, experiences, reviews } from "@/lib/data";
 
 const serviceIcons: Record<string, React.ElementType> = {
   Guide: Compass,
@@ -26,6 +26,9 @@ const HostProfile = () => {
       </div>
     );
   }
+
+  const hostExperiences = experiences.filter(e => e.hostId === host.id);
+  const hostReviews = reviews.filter(r => r.hostId === host.id);
 
   return (
     <div className="min-h-screen bg-background">
@@ -116,37 +119,80 @@ const HostProfile = () => {
               </div>
             </div>
 
+            {/* Experiences by this host */}
+            {hostExperiences.length > 0 && (
+              <div className="mt-8">
+                <h3 className="text-sm font-semibold text-foreground uppercase tracking-wider mb-3">Experiences by {host.name}</h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {hostExperiences.map(exp => (
+                    <Link to={`/experience/${exp.id}`} key={exp.id} className="group rounded-lg overflow-hidden shadow-card hover:shadow-card-hover transition-shadow">
+                      <div className="relative aspect-video overflow-hidden">
+                        <img src={exp.image} alt={exp.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-foreground/60 via-transparent to-transparent" />
+                        <div className="absolute bottom-2 left-2 right-2">
+                          <p className="text-sm font-semibold text-primary-foreground">{exp.title}</p>
+                          <p className="text-xs text-primary-foreground/80">${exp.price} · {exp.duration}</p>
+                        </div>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Video Testimonials */}
+            <div className="mt-8">
+              <h3 className="text-sm font-semibold text-foreground uppercase tracking-wider mb-3">📹 Video Testimonials</h3>
+              <div className="grid grid-cols-3 gap-3">
+                {[1, 2, 3].map(i => (
+                  <div key={i} className="relative aspect-[9/16] rounded-lg overflow-hidden bg-secondary group cursor-pointer">
+                    <img src={host.image} alt="testimonial" className="w-full h-full object-cover opacity-70" />
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <div className="w-10 h-10 rounded-full bg-primary/80 flex items-center justify-center backdrop-blur-sm group-hover:scale-110 transition-transform">
+                        <Play className="w-4 h-4 text-primary-foreground ml-0.5" />
+                      </div>
+                    </div>
+                    <div className="absolute bottom-2 left-2 text-xs font-medium text-primary-foreground bg-foreground/40 backdrop-blur-sm px-2 py-0.5 rounded">
+                      Traveler #{i}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
             {/* CTA */}
             <div className="mt-8 flex flex-wrap gap-3">
-              <Button size="lg" className="rounded-full bg-primary text-primary-foreground hover:bg-primary/90 px-8 gap-2">
-                <MessageCircle className="w-4 h-4" /> Inquire Now
-              </Button>
+              <Link to={`/book/${host.id}`}>
+                <Button size="lg" className="rounded-full bg-primary text-primary-foreground hover:bg-primary/90 px-8 gap-2">
+                  <MessageCircle className="w-4 h-4" /> Book Now
+                </Button>
+              </Link>
               <Button size="lg" variant="outline" className="rounded-full px-8">
                 Save Host
               </Button>
             </div>
 
-            {/* Reviews placeholder */}
+            {/* Reviews */}
             <div className="mt-10">
               <h3 className="text-sm font-semibold text-foreground uppercase tracking-wider mb-4">Traveler Reviews</h3>
               <div className="space-y-4">
-                {[
-                  { name: "Sarah M.", country: "USA", text: "Ravi made Jaipur feel like home. His knowledge of hidden spots is incredible!", rating: 5 },
-                  { name: "Thomas K.", country: "Germany", text: "An unforgettable experience. The homestay was warm and the food was amazing.", rating: 5 },
-                ].map((review, i) => (
-                  <div key={i} className="rounded-lg bg-card p-4 shadow-card">
+                {hostReviews.map(review => (
+                  <div key={review.id} className="rounded-lg bg-card p-4 shadow-card">
                     <div className="flex items-center gap-2">
                       <div className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center text-xs font-bold text-foreground">
-                        {review.name[0]}
+                        {review.travelerName[0]}
                       </div>
                       <div>
-                        <p className="text-sm font-medium text-foreground">{review.name} <span className="text-muted-foreground font-normal">· {review.country}</span></p>
+                        <p className="text-sm font-medium text-foreground">{review.travelerName} <span className="text-muted-foreground font-normal">· {review.country}</span></p>
                         <div className="flex gap-0.5">
                           {Array.from({ length: review.rating }).map((_, j) => (
                             <Star key={j} className="w-3 h-3 fill-primary text-primary" />
                           ))}
                         </div>
                       </div>
+                      {review.experienceType && (
+                        <span className="ml-auto text-xs bg-secondary px-2 py-0.5 rounded-full text-muted-foreground">{review.experienceType}</span>
+                      )}
                     </div>
                     <p className="mt-2 text-sm text-muted-foreground leading-relaxed">{review.text}</p>
                   </div>
