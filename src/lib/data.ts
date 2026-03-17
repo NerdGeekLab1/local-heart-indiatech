@@ -14,6 +14,47 @@ import expWellness from "@/assets/exp-wellness.jpg";
 import expAdventure from "@/assets/exp-adventure.jpg";
 import expBeach from "@/assets/exp-beach.jpg";
 
+export interface StayRoom {
+  name: string;
+  type: "Private Room" | "Shared Room" | "Entire Home" | "Heritage Suite";
+  beds: number;
+  maxGuests: number;
+  pricePerNight: number;
+  amenities: string[];
+  description: string;
+}
+
+export interface StayInfo {
+  propertyName: string;
+  propertyType: "Homestay" | "Heritage Haveli" | "Houseboat" | "Villa" | "Apartment" | "Farm Stay";
+  description: string;
+  images: string[];
+  rooms: StayRoom[];
+  amenities: string[];
+  checkIn: string;
+  checkOut: string;
+  houseRules: string[];
+}
+
+export interface Vehicle {
+  type: string;
+  model: string;
+  capacity: number;
+  ac: boolean;
+  pricePerDay: number;
+  pricePerKm: number;
+  features: string[];
+  image?: string;
+}
+
+export interface TransportInfo {
+  description: string;
+  vehicles: Vehicle[];
+  airports: string[];
+  coverage: string[];
+  driverLanguages: string[];
+}
+
 export interface Host {
   id: string;
   name: string;
@@ -30,6 +71,8 @@ export interface Host {
   safetyScore: number;
   responseTime: string;
   specialties?: string[];
+  stayInfo?: StayInfo;
+  transportInfo?: TransportInfo;
 }
 
 export interface Experience {
@@ -91,6 +134,32 @@ export const hosts: Host[] = [
     safetyScore: 98,
     responseTime: "< 1 hour",
     specialties: ["Cultural", "Wedding", "Village"],
+    stayInfo: {
+      propertyName: "Ravi's Heritage Haveli",
+      propertyType: "Heritage Haveli",
+      description: "A beautifully restored 150-year-old haveli in the heart of the old city. Original Rajasthani frescoes adorn the walls, while modern comforts ensure a luxurious stay. Wake up to palace views from the rooftop terrace.",
+      images: [hostRavi, hostRavi, hostRavi, hostRavi],
+      rooms: [
+        { name: "Maharaja Suite", type: "Heritage Suite", beds: 1, maxGuests: 2, pricePerNight: 65, amenities: ["AC", "Ensuite Bathroom", "Palace View", "King Bed", "Mini Fridge"], description: "Our signature room with hand-painted walls and a private balcony overlooking Nahargarh Fort." },
+        { name: "Rani Room", type: "Private Room", beds: 1, maxGuests: 2, pricePerNight: 45, amenities: ["AC", "Ensuite Bathroom", "Queen Bed", "Desk"], description: "A charming private room with traditional jaali windows and handcrafted furniture." },
+        { name: "Courtyard Room", type: "Private Room", beds: 2, maxGuests: 3, pricePerNight: 35, amenities: ["Fan", "Shared Bathroom", "Twin Beds"], description: "Opens directly into the central courtyard with its beautiful marble fountain." },
+      ],
+      amenities: ["Free WiFi", "Rooftop Terrace", "Home-Cooked Meals", "Laundry", "24hr Hot Water", "Courtyard Garden", "Library", "Bicycle Rental"],
+      checkIn: "2:00 PM",
+      checkOut: "11:00 AM",
+      houseRules: ["No smoking indoors", "Shoes off at entrance", "Quiet hours 10PM–7AM", "Pets not allowed"],
+    },
+    transportInfo: {
+      description: "Comfortable and reliable transport across Rajasthan with experienced local drivers who double as guides.",
+      vehicles: [
+        { type: "Sedan", model: "Maruti Suzuki Dzire", capacity: 4, ac: true, pricePerDay: 35, pricePerKm: 0.15, features: ["AC", "Music System", "Phone Charger", "First Aid Kit"] },
+        { type: "SUV", model: "Toyota Innova Crysta", capacity: 7, ac: true, pricePerDay: 55, pricePerKm: 0.20, features: ["AC", "Music System", "Extra Luggage Space", "Phone Charger", "Water Bottles"] },
+        { type: "Vintage Jeep", model: "Mahindra Thar (Open Top)", capacity: 4, ac: false, pricePerDay: 65, pricePerKm: 0.25, features: ["Open Top", "Desert Ready", "Great for Photos", "Rugged Terrain"] },
+      ],
+      airports: ["Jaipur International Airport (JAI)"],
+      coverage: ["Jaipur City", "Amber Fort", "Pushkar", "Ajmer", "Ranthambore", "Jodhpur", "Udaipur"],
+      driverLanguages: ["English", "Hindi"],
+    },
   },
   {
     id: "priya-kerala",
@@ -108,6 +177,20 @@ export const hosts: Host[] = [
     safetyScore: 97,
     responseTime: "< 2 hours",
     specialties: ["Food", "Cultural", "Wellness"],
+    stayInfo: {
+      propertyName: "Priya's Backwater Homestay",
+      propertyType: "Homestay",
+      description: "A traditional Kerala home right on the backwaters, surrounded by coconut palms. Enjoy authentic home-cooked Kerala cuisine and wake up to the gentle sounds of the waterways.",
+      images: [hostPriya, hostPriya, hostPriya],
+      rooms: [
+        { name: "Backwater View Room", type: "Private Room", beds: 1, maxGuests: 2, pricePerNight: 40, amenities: ["Fan", "Ensuite Bathroom", "Backwater View", "Mosquito Net"], description: "Peaceful room overlooking the serene backwaters with a private sit-out." },
+        { name: "Garden Room", type: "Private Room", beds: 1, maxGuests: 2, pricePerNight: 30, amenities: ["Fan", "Shared Bathroom", "Garden View"], description: "Cozy room opening to the spice garden." },
+      ],
+      amenities: ["Home-Cooked Kerala Meals", "Canoe Rides", "Spice Garden Tour", "Free WiFi", "Yoga Deck", "Cooking Classes"],
+      checkIn: "1:00 PM",
+      checkOut: "11:00 AM",
+      houseRules: ["Vegetarian property", "No alcohol on premises", "Shoes off indoors", "Eco-friendly toiletries provided"],
+    },
   },
   {
     id: "arjun-varanasi",
@@ -125,6 +208,17 @@ export const hosts: Host[] = [
     safetyScore: 99,
     responseTime: "< 30 min",
     specialties: ["Spiritual", "Cultural"],
+    transportInfo: {
+      description: "Navigate Varanasi's ancient lanes and beyond with our local transport options — from boats to cars.",
+      vehicles: [
+        { type: "Boat", model: "Traditional Wooden Boat", capacity: 6, ac: false, pricePerDay: 25, pricePerKm: 0, features: ["Sunrise Rides", "Aarti Viewing", "Photography Friendly", "Cushioned Seats"] },
+        { type: "Auto Rickshaw", model: "Bajaj RE", capacity: 3, ac: false, pricePerDay: 15, pricePerKm: 0.08, features: ["City Navigation", "Narrow Lane Access", "Local Experience"] },
+        { type: "Sedan", model: "Maruti Suzuki Ertiga", capacity: 6, ac: true, pricePerDay: 40, pricePerKm: 0.15, features: ["AC", "Airport Transfers", "Outstation Trips"] },
+      ],
+      airports: ["Lal Bahadur Shastri Airport (VNS)"],
+      coverage: ["Varanasi Ghats", "Sarnath", "Ramnagar Fort", "Chunar Fort", "Allahabad (Prayagraj)"],
+      driverLanguages: ["English", "Hindi"],
+    },
   },
   {
     id: "meera-goa",
@@ -142,6 +236,32 @@ export const hosts: Host[] = [
     safetyScore: 96,
     responseTime: "< 1 hour",
     specialties: ["Food", "Adventure", "Festival"],
+    stayInfo: {
+      propertyName: "Meera's Beach Villa",
+      propertyType: "Villa",
+      description: "A charming Portuguese-style villa just 200 meters from Benaulim Beach. Surrounded by cashew trees and featuring a private garden, this is the perfect blend of Goan heritage and coastal comfort.",
+      images: [hostMeera, hostMeera, hostMeera, hostMeera],
+      rooms: [
+        { name: "Ocean Breeze Suite", type: "Entire Home", beds: 2, maxGuests: 4, pricePerNight: 75, amenities: ["AC", "Kitchen", "Living Room", "Garden", "Beach Access"], description: "Entire ground floor with a private garden and direct beach path." },
+        { name: "Balcão Room", type: "Private Room", beds: 1, maxGuests: 2, pricePerNight: 45, amenities: ["AC", "Ensuite Bathroom", "Balcony", "Sea Breeze"], description: "First-floor room with a traditional Goan balcão overlooking the garden." },
+        { name: "Backpacker Bunk", type: "Shared Room", beds: 4, maxGuests: 4, pricePerNight: 15, amenities: ["Fan", "Shared Bathroom", "Locker", "Common Area"], description: "Social dorm-style room for budget travelers." },
+      ],
+      amenities: ["Beach Towels", "Bicycle Rental", "BBQ Area", "Free WiFi", "Hammocks", "Outdoor Shower", "Scooter Rental Available"],
+      checkIn: "3:00 PM",
+      checkOut: "12:00 PM",
+      houseRules: ["No parties after 11PM", "Respect neighbors", "Sort recyclables", "Pets allowed with notice"],
+    },
+    transportInfo: {
+      description: "Explore all of Goa at your own pace with our curated vehicle options — from scooters to SUVs.",
+      vehicles: [
+        { type: "Scooter", model: "Honda Activa 6G", capacity: 2, ac: false, pricePerDay: 8, pricePerKm: 0, features: ["Helmet Included", "Fuel Efficient", "Easy Parking", "Freedom to Explore"] },
+        { type: "Motorcycle", model: "Royal Enfield Classic 350", capacity: 2, ac: false, pricePerDay: 18, pricePerKm: 0, features: ["Iconic Ride", "Touring Ready", "Saddlebags Available"] },
+        { type: "Hatchback", model: "Maruti Suzuki Swift", capacity: 4, ac: true, pricePerDay: 30, pricePerKm: 0.12, features: ["AC", "Music System", "GPS", "Self-Drive Option"] },
+      ],
+      airports: ["Goa International Airport (GOI)", "Manohar International Airport (GOX)"],
+      coverage: ["North Goa Beaches", "South Goa Beaches", "Old Goa", "Dudhsagar Falls", "Palolem", "Anjuna", "Panjim"],
+      driverLanguages: ["English", "Hindi", "Konkani"],
+    },
   },
   {
     id: "deepak-delhi",
@@ -159,6 +279,17 @@ export const hosts: Host[] = [
     safetyScore: 97,
     responseTime: "< 1 hour",
     specialties: ["Food", "Cultural", "Village"],
+    transportInfo: {
+      description: "Navigate Delhi's sprawling cityscape in comfort. From metro-connected drops to full-day chauffeur service.",
+      vehicles: [
+        { type: "Sedan", model: "Honda City", capacity: 4, ac: true, pricePerDay: 40, pricePerKm: 0.15, features: ["AC", "Music System", "Phone Charger", "Daily Newspaper"] },
+        { type: "SUV", model: "Toyota Fortuner", capacity: 7, ac: true, pricePerDay: 70, pricePerKm: 0.25, features: ["Premium AC", "Leather Seats", "WiFi Hotspot", "Water & Snacks"] },
+        { type: "Auto Rickshaw", model: "Bajaj RE (Guided)", capacity: 3, ac: false, pricePerDay: 20, pricePerKm: 0.05, features: ["Authentic Experience", "Old Delhi Navigation", "Photo-Worthy"] },
+      ],
+      airports: ["Indira Gandhi International Airport (DEL)"],
+      coverage: ["Old Delhi", "New Delhi", "Gurugram", "Noida", "Agra Day Trip", "Mathura-Vrindavan"],
+      driverLanguages: ["English", "Hindi", "Punjabi"],
+    },
   },
   {
     id: "sunita-udaipur",
@@ -176,6 +307,20 @@ export const hosts: Host[] = [
     safetyScore: 99,
     responseTime: "< 30 min",
     specialties: ["Cultural", "Wedding", "Wellness"],
+    stayInfo: {
+      propertyName: "Sunita's Lakeside Haveli",
+      propertyType: "Heritage Haveli",
+      description: "A lovingly restored 200-year-old haveli on the shores of Lake Pichola. Every room features hand-painted murals, antique furniture, and views that will take your breath away.",
+      images: [hostSunita, hostSunita, hostSunita],
+      rooms: [
+        { name: "Lake Palace View Suite", type: "Heritage Suite", beds: 1, maxGuests: 2, pricePerNight: 85, amenities: ["AC", "Ensuite Bathroom", "Lake View", "King Bed", "Minibar", "Room Service"], description: "Panoramic views of Lake Palace from your private balcony. Hand-painted Mewar murals." },
+        { name: "Courtyard Room", type: "Private Room", beds: 1, maxGuests: 2, pricePerNight: 55, amenities: ["AC", "Ensuite Bathroom", "Courtyard Access", "Antique Furniture"], description: "Opens to the inner courtyard with its century-old tulsi plant." },
+      ],
+      amenities: ["Rooftop Restaurant", "Lake Views", "Art Gallery", "Heritage Walk", "Free WiFi", "Airport Transfer", "Cultural Evenings"],
+      checkIn: "2:00 PM",
+      checkOut: "11:00 AM",
+      houseRules: ["Heritage property — please be gentle", "No smoking", "Photography welcome", "Children supervised near lake-facing areas"],
+    },
   },
   {
     id: "kiran-mumbai",
@@ -193,6 +338,17 @@ export const hosts: Host[] = [
     safetyScore: 95,
     responseTime: "< 2 hours",
     specialties: ["Food", "Cultural", "Adventure"],
+    transportInfo: {
+      description: "Get around Mumbai like a local — from iconic black-and-yellow cabs to premium cars for the long haul.",
+      vehicles: [
+        { type: "Sedan", model: "Maruti Suzuki Ciaz", capacity: 4, ac: true, pricePerDay: 40, pricePerKm: 0.15, features: ["AC", "Music System", "Phone Charger", "Toll Inclusive"] },
+        { type: "Taxi", model: "Classic Mumbai Kaali-Peeli", capacity: 4, ac: false, pricePerDay: 25, pricePerKm: 0.10, features: ["Iconic Experience", "Meter-Based", "City Navigation"] },
+        { type: "Premium MPV", model: "Kia Carens", capacity: 7, ac: true, pricePerDay: 55, pricePerKm: 0.20, features: ["Premium AC", "Entertainment System", "Extra Luggage Space"] },
+      ],
+      airports: ["Chhatrapati Shivaji Maharaj International Airport (BOM)"],
+      coverage: ["South Mumbai", "Bandra-Juhu", "Film City", "Elephanta Caves", "Lonavala Day Trip", "Alibaug"],
+      driverLanguages: ["English", "Hindi", "Marathi"],
+    },
   },
 ];
 
@@ -317,6 +473,83 @@ export const experiences: Experience[] = [
     reviewCount: 41,
     highlights: ["Hidden beaches", "Spice plantation", "Portuguese chapel", "Goan lunch"],
   },
+  // Medical Care experiences
+  {
+    id: "exp-medical-ayurveda",
+    title: "Ayurveda Medical Consultation",
+    description: "Consult with certified Ayurvedic doctors for personalized treatment plans, herbal remedies, and holistic health assessments rooted in 5000 years of tradition.",
+    image: expWellness,
+    price: 60,
+    duration: "Half Day",
+    category: "Medical Care",
+    hostId: "priya-kerala",
+    hostName: "Priya",
+    hostCity: "Alleppey",
+    rating: 4.9,
+    reviewCount: 22,
+    highlights: ["Certified Ayurvedic doctor", "Personalized treatment plan", "Herbal medicine kit", "Diet & lifestyle guidance"],
+  },
+  {
+    id: "exp-medical-dental",
+    title: "Dental Tourism Package",
+    description: "World-class dental care at a fraction of the cost — from checkups to cosmetic dentistry in JCI-accredited clinics.",
+    image: expFood,
+    price: 150,
+    duration: "1-3 Days",
+    category: "Medical Care",
+    hostId: "kiran-mumbai",
+    hostName: "Kiran",
+    hostCity: "Mumbai",
+    rating: 4.6,
+    reviewCount: 15,
+    highlights: ["JCI-accredited clinic", "Airport pickup", "Post-care follow-up", "Recovery lounge"],
+  },
+  {
+    id: "exp-medical-yoga-therapy",
+    title: "Therapeutic Yoga for Chronic Pain",
+    description: "Evidence-based yoga therapy sessions designed for chronic back pain, arthritis, and stress-related conditions.",
+    image: expSpiritual,
+    price: 40,
+    duration: "5 Days",
+    category: "Medical Care",
+    hostId: "arjun-varanasi",
+    hostName: "Arjun",
+    hostCity: "Varanasi",
+    rating: 4.8,
+    reviewCount: 31,
+    highlights: ["Certified yoga therapist", "Personalized program", "Daily progress tracking", "Take-home practice guide"],
+  },
+  // More Wellness
+  {
+    id: "exp-wellness-panchakarma",
+    title: "Panchakarma Detox Program",
+    description: "A traditional 7-day Panchakarma detox and rejuvenation program supervised by Ayurvedic physicians.",
+    image: expWellness,
+    price: 450,
+    duration: "7 Days",
+    category: "Wellness",
+    hostId: "priya-kerala",
+    hostName: "Priya",
+    hostCity: "Alleppey",
+    rating: 4.9,
+    reviewCount: 19,
+    highlights: ["Doctor consultation", "Daily treatments", "Sattvic diet", "Herbal medicines included"],
+  },
+  {
+    id: "exp-wellness-sound",
+    title: "Sound Healing & Crystal Therapy",
+    description: "Immerse yourself in Tibetan singing bowls, crystal healing, and guided meditation in a serene lakeside setting.",
+    image: expSpiritual,
+    price: 55,
+    duration: "3 Hours",
+    category: "Wellness",
+    hostId: "sunita-udaipur",
+    hostName: "Sunita",
+    hostCity: "Udaipur",
+    rating: 4.7,
+    reviewCount: 24,
+    highlights: ["Singing bowl session", "Crystal healing", "Guided meditation", "Herbal refreshments"],
+  },
 ];
 
 export const reviews: Review[] = [
@@ -338,6 +571,8 @@ export const mockBookings: Booking[] = [
   { id: "b1", hostId: "ravi-jaipur", travelerId: "t1", services: ["Guide", "Stay"], startDate: "2026-04-15", endDate: "2026-04-18", guests: 2, totalPrice: 270, status: "confirmed", message: "Excited to explore Jaipur!", createdAt: "2026-03-10" },
   { id: "b2", hostId: "arjun-varanasi", travelerId: "t1", services: ["Guide"], startDate: "2026-05-01", endDate: "2026-05-03", guests: 1, totalPrice: 80, status: "pending", createdAt: "2026-03-15" },
   { id: "b3", hostId: "priya-kerala", travelerId: "t2", services: ["Guide", "Stay"], startDate: "2026-03-20", endDate: "2026-03-25", guests: 2, totalPrice: 350, status: "completed", createdAt: "2026-02-28" },
+  { id: "b4", hostId: "meera-goa", travelerId: "t1", services: ["Stay", "Transport"], startDate: "2026-06-10", endDate: "2026-06-15", guests: 3, totalPrice: 420, status: "pending", message: "Looking forward to the beach villa!", createdAt: "2026-03-12" },
+  { id: "b5", hostId: "deepak-delhi", travelerId: "t3", services: ["Guide", "Transport"], startDate: "2026-04-01", endDate: "2026-04-03", guests: 4, totalPrice: 200, status: "confirmed", createdAt: "2026-03-08" },
 ];
 
 export const vibeCategories = [
@@ -349,15 +584,26 @@ export const vibeCategories = [
   { label: "Food", emoji: "🍛" },
   { label: "Festival", emoji: "🎉" },
   { label: "Wellness", emoji: "🧘" },
+  { label: "Medical Care", emoji: "🏥" },
 ];
 
 export const destinations = [
-  { name: "Jaipur", state: "Rajasthan", hostCount: 12, tagline: "The Pink City" },
-  { name: "Varanasi", state: "Uttar Pradesh", hostCount: 8, tagline: "India's Spiritual Heart" },
-  { name: "Alleppey", state: "Kerala", hostCount: 6, tagline: "Venice of the East" },
-  { name: "Goa", state: "Goa", hostCount: 15, tagline: "Beach Paradise" },
-  { name: "Delhi", state: "Delhi", hostCount: 20, tagline: "Capital of Contrasts" },
-  { name: "Udaipur", state: "Rajasthan", hostCount: 9, tagline: "City of Lakes" },
-  { name: "Mumbai", state: "Maharashtra", hostCount: 18, tagline: "City of Dreams" },
-  { name: "Rishikesh", state: "Uttarakhand", hostCount: 7, tagline: "Yoga Capital" },
+  { name: "Jaipur", state: "Rajasthan", hostCount: 12, tagline: "The Pink City", description: "Explore majestic forts, vibrant bazaars, and Rajasthani cuisine in India's most colorful city." },
+  { name: "Varanasi", state: "Uttar Pradesh", hostCount: 8, tagline: "India's Spiritual Heart", description: "Witness ancient rituals on the Ganges, explore 5000-year-old lanes, and find inner peace." },
+  { name: "Alleppey", state: "Kerala", hostCount: 6, tagline: "Venice of the East", description: "Cruise through serene backwaters, visit spice gardens, and savor authentic Kerala cuisine." },
+  { name: "Goa", state: "Goa", hostCount: 15, tagline: "Beach Paradise", description: "Discover hidden beaches, Portuguese heritage, spice plantations, and legendary seafood." },
+  { name: "Delhi", state: "Delhi", hostCount: 20, tagline: "Capital of Contrasts", description: "From Mughal monuments to modern art districts, experience 1000 years of history in one city." },
+  { name: "Udaipur", state: "Rajasthan", hostCount: 9, tagline: "City of Lakes", description: "Romance, royalty, and lake palaces — Udaipur is India's most picturesque city." },
+  { name: "Mumbai", state: "Maharashtra", hostCount: 18, tagline: "City of Dreams", description: "Bollywood, street food, colonial architecture, and the unstoppable energy of India's largest city." },
+  { name: "Rishikesh", state: "Uttarakhand", hostCount: 7, tagline: "Yoga Capital", description: "The birthplace of yoga, set against Himalayan foothills with rafting, trekking, and ashrams." },
+  { name: "Hampi", state: "Karnataka", hostCount: 5, tagline: "Ruins & Boulders", description: "UNESCO World Heritage ruins of the Vijayanagara Empire scattered among surreal boulder landscapes." },
+  { name: "Darjeeling", state: "West Bengal", hostCount: 4, tagline: "Queen of the Hills", description: "Tea gardens, toy trains, and stunning Kanchenjunga views in the Eastern Himalayas." },
+  { name: "Amritsar", state: "Punjab", hostCount: 6, tagline: "Golden Temple City", description: "Home to the Golden Temple, Wagah Border ceremony, and the heartiest Punjabi food." },
+  { name: "Jodhpur", state: "Rajasthan", hostCount: 8, tagline: "The Blue City", description: "Towering Mehrangarh Fort overlooks a sea of blue houses in this desert jewel." },
+];
+
+export const communityStories = [
+  { id: "cs1", travelerName: "Emily R.", country: "USA", hostName: "Ravi", city: "Jaipur", title: "How Ravi Changed My Perspective on Travel", excerpt: "I came to India as a tourist and left as a friend. Ravi didn't just show me Jaipur — he invited me into his world.", date: "2026-02-15" },
+  { id: "cs2", travelerName: "Hans K.", country: "Germany", hostName: "Arjun", city: "Varanasi", title: "Finding Peace on the Ganges", excerpt: "The sunrise meditation with Arjun was the most profound experience of my life. Varanasi changed everything.", date: "2026-01-20" },
+  { id: "cs3", travelerName: "Akiko T.", country: "Japan", hostName: "Priya", city: "Alleppey", title: "Cooking with Grandmother — A Love Story", excerpt: "Learning to cook Kerala fish curry with Priya's grandmother is a memory I'll treasure forever.", date: "2026-03-05" },
 ];

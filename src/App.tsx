@@ -10,6 +10,10 @@ import ExperienceDetail from "./pages/ExperienceDetail.tsx";
 import HostProfile from "./pages/HostProfile.tsx";
 import Booking from "./pages/Booking.tsx";
 import BecomeHost from "./pages/BecomeHost.tsx";
+import Signup from "./pages/Signup.tsx";
+import Destinations from "./pages/Destinations.tsx";
+import Community from "./pages/Community.tsx";
+import Resources from "./pages/Resources.tsx";
 import TravelerDashboard from "./pages/dashboard/TravelerDashboard.tsx";
 import HostDashboard from "./pages/dashboard/HostDashboard.tsx";
 import AdminDashboard from "./pages/dashboard/AdminDashboard.tsx";
@@ -34,6 +38,10 @@ const App = () => (
           <Route path="/host/:id" element={<HostProfile />} />
           <Route path="/book/:id" element={<Booking />} />
           <Route path="/become-host" element={<BecomeHost />} />
+          <Route path="/signup" element={<Signup />} />
+          <Route path="/destinations" element={<Destinations />} />
+          <Route path="/community" element={<Community />} />
+          <Route path="/resources" element={<Resources />} />
           <Route path="/dashboard/traveler" element={<TravelerDashboard />} />
           <Route path="/dashboard/host" element={<HostDashboard />} />
           <Route path="/dashboard/admin" element={<AdminDashboard />} />
