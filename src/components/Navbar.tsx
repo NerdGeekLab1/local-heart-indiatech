@@ -18,15 +18,10 @@ const Navbar = () => {
           </Link>
 
           <div className="hidden md:flex items-center gap-8">
-            <Link to="/explore" className="text-sm font-medium text-foreground/70 hover:text-foreground transition-colors">
-              Explore
-            </Link>
-            <Link to="/experiences" className="text-sm font-medium text-foreground/70 hover:text-foreground transition-colors">
-              Experiences
-            </Link>
-            <Link to="/become-host" className="text-sm font-medium text-foreground/70 hover:text-foreground transition-colors">
-              Become a Host
-            </Link>
+            <Link to="/explore" className="text-sm font-medium text-foreground/70 hover:text-foreground transition-colors">Explore</Link>
+            <Link to="/experiences" className="text-sm font-medium text-foreground/70 hover:text-foreground transition-colors">Experiences</Link>
+            <Link to="/destinations" className="text-sm font-medium text-foreground/70 hover:text-foreground transition-colors">Destinations</Link>
+            <Link to="/become-host" className="text-sm font-medium text-foreground/70 hover:text-foreground transition-colors">Become a Host</Link>
           </div>
 
           <div className="hidden md:flex items-center gap-3">
@@ -36,9 +31,9 @@ const Navbar = () => {
             <Button variant="ghost" size="icon" className="rounded-full">
               <Globe className="h-4 w-4" />
             </Button>
-            <Button className="rounded-full bg-primary text-primary-foreground hover:bg-primary/90 px-6">
-              Sign Up
-            </Button>
+            <Link to="/signup">
+              <Button className="rounded-full bg-primary text-primary-foreground hover:bg-primary/90 px-6">Sign Up</Button>
+            </Link>
           </div>
 
           <button onClick={() => setMobileOpen(!mobileOpen)} className="md:hidden p-2">
@@ -49,17 +44,17 @@ const Navbar = () => {
 
       <AnimatePresence>
         {mobileOpen && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            exit={{ opacity: 0, height: 0 }}
-            className="md:hidden bg-card/95 backdrop-blur-xl border-t border-border"
-          >
+          <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }}
+            className="md:hidden bg-card/95 backdrop-blur-xl border-t border-border">
             <div className="px-4 py-4 space-y-3">
               <Link to="/explore" className="block py-2 text-sm font-medium" onClick={() => setMobileOpen(false)}>Explore</Link>
               <Link to="/experiences" className="block py-2 text-sm font-medium" onClick={() => setMobileOpen(false)}>Experiences</Link>
+              <Link to="/destinations" className="block py-2 text-sm font-medium" onClick={() => setMobileOpen(false)}>Destinations</Link>
               <Link to="/become-host" className="block py-2 text-sm font-medium" onClick={() => setMobileOpen(false)}>Become a Host</Link>
-              <Button className="w-full rounded-full bg-primary text-primary-foreground">Sign Up</Button>
+              <Link to="/community" className="block py-2 text-sm font-medium" onClick={() => setMobileOpen(false)}>Community</Link>
+              <Link to="/signup" onClick={() => setMobileOpen(false)}>
+                <Button className="w-full rounded-full bg-primary text-primary-foreground">Sign Up</Button>
+              </Link>
             </div>
           </motion.div>
         )}
