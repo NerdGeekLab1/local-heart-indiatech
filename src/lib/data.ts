@@ -205,7 +205,7 @@ export const hosts: Host[] = [
     image: hostPriya,
     rating: 4.8,
     reviewCount: 89,
-    services: ["Guide", "Stay"],
+    services: ["Guide", "Stay", "Food"],
     languages: ["English", "Hindi", "Malayalam"],
     pricePerDay: 35,
     verified: true,
