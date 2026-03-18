@@ -226,6 +226,20 @@ export const hosts: Host[] = [
       checkOut: "11:00 AM",
       houseRules: ["Vegetarian property", "No alcohol on premises", "Shoes off indoors", "Eco-friendly toiletries provided"],
     },
+    foodInfo: {
+      description: "Experience authentic Kerala cuisine with Priya's grandmother — centuries-old recipes using fresh spices from the family garden.",
+      cuisines: ["Kerala", "South Indian", "Ayurvedic"],
+      mealTypes: ["Breakfast", "Lunch", "Dinner", "Cooking Class"],
+      specialties: ["Kerala Fish Curry", "Appam & Stew", "Banana Leaf Sadhya", "Payasam"],
+      dietaryOptions: ["Vegetarian", "Vegan", "Pescatarian", "Ayurvedic"],
+      dishes: [
+        { name: "Kerala Sadhya", description: "Grand vegetarian feast served on banana leaf with 20+ items", cuisine: "Kerala", dietaryTags: ["Vegetarian"], price: 12 },
+        { name: "Meen Pollichathu", description: "Pearl spot fish marinated in spices, wrapped in banana leaf and grilled", cuisine: "Kerala", dietaryTags: ["Pescatarian"], price: 14 },
+        { name: "Appam & Vegetable Stew", description: "Lacy rice pancakes with coconut milk stew", cuisine: "Kerala", dietaryTags: ["Vegetarian"], price: 8 },
+        { name: "Cooking Class (3 dishes)", description: "Learn to make Kerala curry, appam, and payasam with grandmother", cuisine: "Kerala", dietaryTags: ["Vegetarian"], price: 25 },
+      ],
+      advanceNotice: "Same day morning",
+    },
   },
   {
     id: "arjun-varanasi",
