@@ -55,6 +55,25 @@ export interface TransportInfo {
   driverLanguages: string[];
 }
 
+export interface FoodDish {
+  name: string;
+  description: string;
+  cuisine: string;
+  dietaryTags: string[];
+  price: number;
+}
+
+export interface FoodInfo {
+  description: string;
+  cuisines: string[];
+  mealTypes: string[];
+  specialties: string[];
+  dietaryOptions: string[];
+  dishes: FoodDish[];
+  minimumOrder?: number;
+  advanceNotice?: string;
+}
+
 export interface Host {
   id: string;
   name: string;
@@ -73,6 +92,7 @@ export interface Host {
   specialties?: string[];
   stayInfo?: StayInfo;
   transportInfo?: TransportInfo;
+  foodInfo?: FoodInfo;
 }
 
 export interface Experience {
@@ -127,7 +147,7 @@ export const hosts: Host[] = [
     image: hostRavi,
     rating: 4.9,
     reviewCount: 127,
-    services: ["Guide", "Stay", "Transport"],
+    services: ["Guide", "Stay", "Transport", "Food"],
     languages: ["English", "Hindi", "French"],
     pricePerDay: 45,
     verified: true,
@@ -160,6 +180,21 @@ export const hosts: Host[] = [
       coverage: ["Jaipur City", "Amber Fort", "Pushkar", "Ajmer", "Ranthambore", "Jodhpur", "Udaipur"],
       driverLanguages: ["English", "Hindi"],
     },
+    foodInfo: {
+      description: "Savor authentic Rajasthani home-cooked meals prepared by Ravi's mother using family recipes passed down through generations.",
+      cuisines: ["Rajasthani", "North Indian", "Street Food"],
+      mealTypes: ["Breakfast", "Lunch", "Dinner"],
+      specialties: ["Dal Baati Churma", "Laal Maas", "Ghevar", "Pyaaz Kachori"],
+      dietaryOptions: ["Vegetarian", "Vegan", "Jain"],
+      dishes: [
+        { name: "Dal Baati Churma", description: "Rajasthani signature — baked wheat balls with spiced lentils and sweet churma", cuisine: "Rajasthani", dietaryTags: ["Vegetarian"], price: 8 },
+        { name: "Laal Maas", description: "Fiery red mutton curry slow-cooked with mathania chillies", cuisine: "Rajasthani", dietaryTags: ["Non-Veg", "Spicy"], price: 12 },
+        { name: "Ker Sangri", description: "Desert beans and berries in a tangy spice mix — unique to Rajasthan", cuisine: "Rajasthani", dietaryTags: ["Vegan"], price: 7 },
+        { name: "Rajasthani Thali", description: "Full traditional thali with 12 items including sweets", cuisine: "Rajasthani", dietaryTags: ["Vegetarian"], price: 15 },
+      ],
+      minimumOrder: 2,
+      advanceNotice: "4 hours",
+    },
   },
   {
     id: "priya-kerala",
@@ -170,7 +205,7 @@ export const hosts: Host[] = [
     image: hostPriya,
     rating: 4.8,
     reviewCount: 89,
-    services: ["Guide", "Stay"],
+    services: ["Guide", "Stay", "Food"],
     languages: ["English", "Hindi", "Malayalam"],
     pricePerDay: 35,
     verified: true,
@@ -190,6 +225,20 @@ export const hosts: Host[] = [
       checkIn: "1:00 PM",
       checkOut: "11:00 AM",
       houseRules: ["Vegetarian property", "No alcohol on premises", "Shoes off indoors", "Eco-friendly toiletries provided"],
+    },
+    foodInfo: {
+      description: "Experience authentic Kerala cuisine with Priya's grandmother — centuries-old recipes using fresh spices from the family garden.",
+      cuisines: ["Kerala", "South Indian", "Ayurvedic"],
+      mealTypes: ["Breakfast", "Lunch", "Dinner", "Cooking Class"],
+      specialties: ["Kerala Fish Curry", "Appam & Stew", "Banana Leaf Sadhya", "Payasam"],
+      dietaryOptions: ["Vegetarian", "Vegan", "Pescatarian", "Ayurvedic"],
+      dishes: [
+        { name: "Kerala Sadhya", description: "Grand vegetarian feast served on banana leaf with 20+ items", cuisine: "Kerala", dietaryTags: ["Vegetarian"], price: 12 },
+        { name: "Meen Pollichathu", description: "Pearl spot fish marinated in spices, wrapped in banana leaf and grilled", cuisine: "Kerala", dietaryTags: ["Pescatarian"], price: 14 },
+        { name: "Appam & Vegetable Stew", description: "Lacy rice pancakes with coconut milk stew", cuisine: "Kerala", dietaryTags: ["Vegetarian"], price: 8 },
+        { name: "Cooking Class (3 dishes)", description: "Learn to make Kerala curry, appam, and payasam with grandmother", cuisine: "Kerala", dietaryTags: ["Vegetarian"], price: 25 },
+      ],
+      advanceNotice: "Same day morning",
     },
   },
   {
@@ -229,7 +278,7 @@ export const hosts: Host[] = [
     image: hostMeera,
     rating: 4.7,
     reviewCount: 64,
-    services: ["Guide", "Stay", "Transport"],
+    services: ["Guide", "Stay", "Transport", "Food"],
     languages: ["English", "Hindi", "Konkani", "Portuguese"],
     pricePerDay: 40,
     verified: true,
@@ -262,6 +311,22 @@ export const hosts: Host[] = [
       coverage: ["North Goa Beaches", "South Goa Beaches", "Old Goa", "Dudhsagar Falls", "Palolem", "Anjuna", "Panjim"],
       driverLanguages: ["English", "Hindi", "Konkani"],
     },
+    foodInfo: {
+      description: "Goan soul food at its finest — from Portuguese-influenced seafood to fiery Goan vindaloo, prepared with love in Meera's beach villa kitchen.",
+      cuisines: ["Goan", "Portuguese-Indian", "Seafood", "Thai", "Mexican"],
+      mealTypes: ["Breakfast", "Lunch", "Dinner", "Brunch", "BBQ Night"],
+      specialties: ["Goan Fish Curry Rice", "Pork Vindaloo", "Bebinca", "Prawn Balchão"],
+      dietaryOptions: ["Vegetarian", "Vegan", "Pescatarian", "Gluten-Free"],
+      dishes: [
+        { name: "Goan Fish Curry Rice", description: "Coconut-based fish curry with local red rice — the soul of Goa", cuisine: "Goan", dietaryTags: ["Pescatarian"], price: 10 },
+        { name: "Pork Vindaloo", description: "Portuguese-influenced pork in tangy vinegar-chili sauce", cuisine: "Goan", dietaryTags: ["Non-Veg", "Spicy"], price: 12 },
+        { name: "Pad Thai Night", description: "Authentic Pad Thai with fresh prawns — Meera's Thai fusion special", cuisine: "Thai", dietaryTags: ["Pescatarian"], price: 14 },
+        { name: "Taco Tuesday", description: "Goan-Mexican fusion tacos with recheado masala fish", cuisine: "Mexican", dietaryTags: ["Pescatarian"], price: 12 },
+        { name: "Beach BBQ Platter", description: "Grilled seafood platter with Goan sausages on the beach", cuisine: "Goan", dietaryTags: ["Non-Veg"], price: 25 },
+      ],
+      minimumOrder: 2,
+      advanceNotice: "6 hours",
+    },
   },
   {
     id: "deepak-delhi",
@@ -272,7 +337,7 @@ export const hosts: Host[] = [
     image: hostDeepak,
     rating: 4.8,
     reviewCount: 156,
-    services: ["Guide", "Transport"],
+    services: ["Guide", "Transport", "Food"],
     languages: ["English", "Hindi", "Urdu", "Punjabi"],
     pricePerDay: 50,
     verified: true,
@@ -289,6 +354,20 @@ export const hosts: Host[] = [
       airports: ["Indira Gandhi International Airport (DEL)"],
       coverage: ["Old Delhi", "New Delhi", "Gurugram", "Noida", "Agra Day Trip", "Mathura-Vrindavan"],
       driverLanguages: ["English", "Hindi", "Punjabi"],
+    },
+    foodInfo: {
+      description: "Deepak's food walks through Old Delhi are legendary. From Mughlai kebabs to Chandni Chowk's 200-year-old sweet shops, taste Delhi's history one bite at a time.",
+      cuisines: ["Mughlai", "North Indian", "Chinese-Indian", "Street Food"],
+      mealTypes: ["Breakfast", "Lunch", "Dinner", "Food Walk"],
+      specialties: ["Kebabs", "Parathas", "Chole Bhature", "Jalebi"],
+      dietaryOptions: ["Vegetarian", "Non-Veg", "Halal"],
+      dishes: [
+        { name: "Old Delhi Food Walk", description: "4-hour guided walk through Chandni Chowk covering 12+ stops", cuisine: "Street Food", dietaryTags: ["Vegetarian", "Non-Veg"], price: 20 },
+        { name: "Mughlai Dinner", description: "Royal Mughlai feast — biryani, kebabs, korma, and sheermal bread", cuisine: "Mughlai", dietaryTags: ["Non-Veg", "Halal"], price: 18 },
+        { name: "Paratha Breakfast", description: "Paranthe Wali Gali's legendary stuffed parathas with pickles and lassi", cuisine: "North Indian", dietaryTags: ["Vegetarian"], price: 6 },
+        { name: "Indo-Chinese Feast", description: "Chili chicken, hakka noodles, manchurian — Delhi's beloved Chinese-Indian fusion", cuisine: "Chinese-Indian", dietaryTags: ["Non-Veg"], price: 12 },
+      ],
+      advanceNotice: "2 hours",
     },
   },
   {
