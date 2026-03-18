@@ -278,7 +278,7 @@ export const hosts: Host[] = [
     image: hostMeera,
     rating: 4.7,
     reviewCount: 64,
-    services: ["Guide", "Stay", "Transport"],
+    services: ["Guide", "Stay", "Transport", "Food"],
     languages: ["English", "Hindi", "Konkani", "Portuguese"],
     pricePerDay: 40,
     verified: true,
