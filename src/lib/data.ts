@@ -337,7 +337,7 @@ export const hosts: Host[] = [
     image: hostDeepak,
     rating: 4.8,
     reviewCount: 156,
-    services: ["Guide", "Transport"],
+    services: ["Guide", "Transport", "Food"],
     languages: ["English", "Hindi", "Urdu", "Punjabi"],
     pricePerDay: 50,
     verified: true,
