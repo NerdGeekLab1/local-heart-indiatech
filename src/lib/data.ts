@@ -180,6 +180,21 @@ export const hosts: Host[] = [
       coverage: ["Jaipur City", "Amber Fort", "Pushkar", "Ajmer", "Ranthambore", "Jodhpur", "Udaipur"],
       driverLanguages: ["English", "Hindi"],
     },
+    foodInfo: {
+      description: "Savor authentic Rajasthani home-cooked meals prepared by Ravi's mother using family recipes passed down through generations.",
+      cuisines: ["Rajasthani", "North Indian", "Street Food"],
+      mealTypes: ["Breakfast", "Lunch", "Dinner"],
+      specialties: ["Dal Baati Churma", "Laal Maas", "Ghevar", "Pyaaz Kachori"],
+      dietaryOptions: ["Vegetarian", "Vegan", "Jain"],
+      dishes: [
+        { name: "Dal Baati Churma", description: "Rajasthani signature — baked wheat balls with spiced lentils and sweet churma", cuisine: "Rajasthani", dietaryTags: ["Vegetarian"], price: 8 },
+        { name: "Laal Maas", description: "Fiery red mutton curry slow-cooked with mathania chillies", cuisine: "Rajasthani", dietaryTags: ["Non-Veg", "Spicy"], price: 12 },
+        { name: "Ker Sangri", description: "Desert beans and berries in a tangy spice mix — unique to Rajasthan", cuisine: "Rajasthani", dietaryTags: ["Vegan"], price: 7 },
+        { name: "Rajasthani Thali", description: "Full traditional thali with 12 items including sweets", cuisine: "Rajasthani", dietaryTags: ["Vegetarian"], price: 15 },
+      ],
+      minimumOrder: 2,
+      advanceNotice: "4 hours",
+    },
   },
   {
     id: "priya-kerala",
