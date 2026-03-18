@@ -355,6 +355,20 @@ export const hosts: Host[] = [
       coverage: ["Old Delhi", "New Delhi", "Gurugram", "Noida", "Agra Day Trip", "Mathura-Vrindavan"],
       driverLanguages: ["English", "Hindi", "Punjabi"],
     },
+    foodInfo: {
+      description: "Deepak's food walks through Old Delhi are legendary. From Mughlai kebabs to Chandni Chowk's 200-year-old sweet shops, taste Delhi's history one bite at a time.",
+      cuisines: ["Mughlai", "North Indian", "Chinese-Indian", "Street Food"],
+      mealTypes: ["Breakfast", "Lunch", "Dinner", "Food Walk"],
+      specialties: ["Kebabs", "Parathas", "Chole Bhature", "Jalebi"],
+      dietaryOptions: ["Vegetarian", "Non-Veg", "Halal"],
+      dishes: [
+        { name: "Old Delhi Food Walk", description: "4-hour guided walk through Chandni Chowk covering 12+ stops", cuisine: "Street Food", dietaryTags: ["Vegetarian", "Non-Veg"], price: 20 },
+        { name: "Mughlai Dinner", description: "Royal Mughlai feast — biryani, kebabs, korma, and sheermal bread", cuisine: "Mughlai", dietaryTags: ["Non-Veg", "Halal"], price: 18 },
+        { name: "Paratha Breakfast", description: "Paranthe Wali Gali's legendary stuffed parathas with pickles and lassi", cuisine: "North Indian", dietaryTags: ["Vegetarian"], price: 6 },
+        { name: "Indo-Chinese Feast", description: "Chili chicken, hakka noodles, manchurian — Delhi's beloved Chinese-Indian fusion", cuisine: "Chinese-Indian", dietaryTags: ["Non-Veg"], price: 12 },
+      ],
+      advanceNotice: "2 hours",
+    },
   },
   {
     id: "sunita-udaipur",
