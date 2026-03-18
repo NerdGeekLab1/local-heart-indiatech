@@ -147,7 +147,7 @@ export const hosts: Host[] = [
     image: hostRavi,
     rating: 4.9,
     reviewCount: 127,
-    services: ["Guide", "Stay", "Transport"],
+    services: ["Guide", "Stay", "Transport", "Food"],
     languages: ["English", "Hindi", "French"],
     pricePerDay: 45,
     verified: true,
