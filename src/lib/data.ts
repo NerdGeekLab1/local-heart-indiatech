@@ -311,6 +311,22 @@ export const hosts: Host[] = [
       coverage: ["North Goa Beaches", "South Goa Beaches", "Old Goa", "Dudhsagar Falls", "Palolem", "Anjuna", "Panjim"],
       driverLanguages: ["English", "Hindi", "Konkani"],
     },
+    foodInfo: {
+      description: "Goan soul food at its finest — from Portuguese-influenced seafood to fiery Goan vindaloo, prepared with love in Meera's beach villa kitchen.",
+      cuisines: ["Goan", "Portuguese-Indian", "Seafood", "Thai", "Mexican"],
+      mealTypes: ["Breakfast", "Lunch", "Dinner", "Brunch", "BBQ Night"],
+      specialties: ["Goan Fish Curry Rice", "Pork Vindaloo", "Bebinca", "Prawn Balchão"],
+      dietaryOptions: ["Vegetarian", "Vegan", "Pescatarian", "Gluten-Free"],
+      dishes: [
+        { name: "Goan Fish Curry Rice", description: "Coconut-based fish curry with local red rice — the soul of Goa", cuisine: "Goan", dietaryTags: ["Pescatarian"], price: 10 },
+        { name: "Pork Vindaloo", description: "Portuguese-influenced pork in tangy vinegar-chili sauce", cuisine: "Goan", dietaryTags: ["Non-Veg", "Spicy"], price: 12 },
+        { name: "Pad Thai Night", description: "Authentic Pad Thai with fresh prawns — Meera's Thai fusion special", cuisine: "Thai", dietaryTags: ["Pescatarian"], price: 14 },
+        { name: "Taco Tuesday", description: "Goan-Mexican fusion tacos with recheado masala fish", cuisine: "Mexican", dietaryTags: ["Pescatarian"], price: 12 },
+        { name: "Beach BBQ Platter", description: "Grilled seafood platter with Goan sausages on the beach", cuisine: "Goan", dietaryTags: ["Non-Veg"], price: 25 },
+      ],
+      minimumOrder: 2,
+      advanceNotice: "6 hours",
+    },
   },
   {
     id: "deepak-delhi",
