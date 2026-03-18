@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Star, Shield, Clock, Globe, MapPin, ArrowLeft, MessageCircle, Car, Home, Compass, Play, Bed, Wifi, Coffee, CheckCircle, Users, Fuel, Gauge } from "lucide-react";
+import { Star, Shield, Clock, Globe, MapPin, ArrowLeft, MessageCircle, Car, Home, Compass, Play, Bed, Users, Gauge, CheckCircle, UtensilsCrossed, Leaf, ChefHat } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -11,13 +11,14 @@ const serviceIcons: Record<string, React.ElementType> = {
   Guide: Compass,
   Stay: Home,
   Transport: Car,
+  Food: UtensilsCrossed,
 };
 
 const HostProfile = () => {
   const { id } = useParams();
   const host = hosts.find(h => h.id === id);
   const [activeStayImage, setActiveStayImage] = useState(0);
-  const [activeTab, setActiveTab] = useState<"overview" | "stay" | "transport" | "experiences" | "reviews">("overview");
+  const [activeTab, setActiveTab] = useState<"overview" | "stay" | "transport" | "food" | "experiences" | "reviews">("overview");
 
   if (!host) {
     return (
@@ -36,6 +37,7 @@ const HostProfile = () => {
     { id: "overview" as const, label: "Overview" },
     ...(host.stayInfo ? [{ id: "stay" as const, label: "Stay & Rooms" }] : []),
     ...(host.transportInfo ? [{ id: "transport" as const, label: "Transport" }] : []),
+    ...(host.foodInfo ? [{ id: "food" as const, label: "Food & Dining" }] : []),
     { id: "experiences" as const, label: "Experiences" },
     { id: "reviews" as const, label: `Reviews (${hostReviews.length})` },
   ];
@@ -48,7 +50,6 @@ const HostProfile = () => {
           <ArrowLeft className="w-4 h-4" /> Back to Explore
         </Link>
 
-        {/* Hero Section */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="lg:col-span-1">
             <div className="rounded-lg bg-card p-2 shadow-card">
@@ -96,7 +97,6 @@ const HostProfile = () => {
             </div>
             <p className="mt-1 text-lg text-muted-foreground italic">"{host.tagline}"</p>
 
-            {/* CTA */}
             <div className="mt-4 flex flex-wrap gap-3">
               <Link to={`/book/${host.id}`}>
                 <Button size="lg" className="rounded-full bg-primary text-primary-foreground hover:bg-primary/90 px-8 gap-2">
@@ -132,7 +132,7 @@ const HostProfile = () => {
                 </div>
                 <div>
                   <h3 className="text-sm font-semibold text-foreground uppercase tracking-wider mb-3">Services Offered</h3>
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                     {host.services.map(s => {
                       const Icon = serviceIcons[s] || Compass;
                       return (
@@ -144,7 +144,6 @@ const HostProfile = () => {
                     })}
                   </div>
                 </div>
-                {/* Video Testimonials */}
                 <div>
                   <h3 className="text-sm font-semibold text-foreground uppercase tracking-wider mb-3">📹 Video Testimonials</h3>
                   <div className="grid grid-cols-3 gap-3">
@@ -177,8 +176,6 @@ const HostProfile = () => {
                   <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full">{host.stayInfo.propertyType}</span>
                   <p className="mt-3 text-muted-foreground leading-relaxed">{host.stayInfo.description}</p>
                 </div>
-
-                {/* Image Gallery */}
                 <div>
                   <div className="aspect-video rounded-lg overflow-hidden bg-secondary">
                     <img src={host.stayInfo.images[activeStayImage]} alt="Property" className="w-full h-full object-cover" />
@@ -192,8 +189,6 @@ const HostProfile = () => {
                     ))}
                   </div>
                 </div>
-
-                {/* Rooms */}
                 <div>
                   <h3 className="text-sm font-semibold text-foreground uppercase tracking-wider mb-3">Available Rooms</h3>
                   <div className="space-y-3">
@@ -223,21 +218,16 @@ const HostProfile = () => {
                     ))}
                   </div>
                 </div>
-
-                {/* Property Amenities */}
                 <div>
                   <h3 className="text-sm font-semibold text-foreground uppercase tracking-wider mb-3">Property Amenities</h3>
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                     {host.stayInfo.amenities.map(a => (
                       <div key={a} className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <CheckCircle className="w-3 h-3 text-accent shrink-0" />
-                        {a}
+                        <CheckCircle className="w-3 h-3 text-accent shrink-0" /> {a}
                       </div>
                     ))}
                   </div>
                 </div>
-
-                {/* Check-in/out & Rules */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="rounded-lg bg-secondary p-4">
                     <h4 className="text-xs font-semibold text-foreground uppercase tracking-wider mb-2">Check-in / Check-out</h4>
@@ -268,8 +258,6 @@ const HostProfile = () => {
                   </div>
                   <p className="text-muted-foreground leading-relaxed">{host.transportInfo.description}</p>
                 </div>
-
-                {/* Vehicles */}
                 <div>
                   <h3 className="text-sm font-semibold text-foreground uppercase tracking-wider mb-3">Available Vehicles</h3>
                   <div className="space-y-3">
@@ -283,7 +271,7 @@ const HostProfile = () => {
                             </div>
                             <div className="mt-2 flex items-center gap-4 text-xs text-muted-foreground">
                               <span className="flex items-center gap-1"><Users className="w-3 h-3" />{v.capacity} passengers</span>
-                              <span className="flex items-center gap-1">{v.ac ? "❄️ AC" : "🌀 Non-AC"}</span>
+                              <span>{v.ac ? "❄️ AC" : "🌀 Non-AC"}</span>
                               {v.pricePerKm > 0 && <span className="flex items-center gap-1"><Gauge className="w-3 h-3" />${v.pricePerKm}/km</span>}
                             </div>
                           </div>
@@ -301,8 +289,6 @@ const HostProfile = () => {
                     ))}
                   </div>
                 </div>
-
-                {/* Coverage & Airports */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="rounded-lg bg-secondary p-4">
                     <h4 className="text-xs font-semibold text-foreground uppercase tracking-wider mb-2">Airport Transfers</h4>
@@ -315,7 +301,6 @@ const HostProfile = () => {
                     <p className="text-sm text-muted-foreground">{host.transportInfo.driverLanguages.join(", ")}</p>
                   </div>
                 </div>
-
                 <div>
                   <h4 className="text-xs font-semibold text-foreground uppercase tracking-wider mb-2">Coverage Area</h4>
                   <div className="flex flex-wrap gap-2">
@@ -324,6 +309,102 @@ const HostProfile = () => {
                         <MapPin className="w-3 h-3 text-primary" />{c}
                       </span>
                     ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Food Tab */}
+            {activeTab === "food" && host.foodInfo && (
+              <div className="mt-6 space-y-6">
+                <div>
+                  <div className="flex items-center gap-2 mb-2">
+                    <UtensilsCrossed className="w-5 h-5 text-primary" />
+                    <h3 className="text-lg font-bold text-foreground">Food & Dining</h3>
+                  </div>
+                  <p className="text-muted-foreground leading-relaxed">{host.foodInfo.description}</p>
+                </div>
+
+                {/* Cuisines & Meal Types */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="rounded-lg bg-secondary p-4">
+                    <h4 className="text-xs font-semibold text-foreground uppercase tracking-wider mb-2 flex items-center gap-1">
+                      <ChefHat className="w-3 h-3" /> Cuisines
+                    </h4>
+                    <div className="flex flex-wrap gap-1.5">
+                      {host.foodInfo.cuisines.map(c => (
+                        <span key={c} className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full">{c}</span>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="rounded-lg bg-secondary p-4">
+                    <h4 className="text-xs font-semibold text-foreground uppercase tracking-wider mb-2">Meal Types</h4>
+                    <div className="flex flex-wrap gap-1.5">
+                      {host.foodInfo.mealTypes.map(m => (
+                        <span key={m} className="text-xs bg-accent/10 text-accent px-2 py-0.5 rounded-full">{m}</span>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Dietary Options */}
+                <div>
+                  <h4 className="text-xs font-semibold text-foreground uppercase tracking-wider mb-2 flex items-center gap-1">
+                    <Leaf className="w-3 h-3 text-accent" /> Dietary Options
+                  </h4>
+                  <div className="flex flex-wrap gap-2">
+                    {host.foodInfo.dietaryOptions.map(d => (
+                      <span key={d} className="text-xs bg-card border border-border text-muted-foreground px-3 py-1 rounded-full flex items-center gap-1">
+                        <CheckCircle className="w-3 h-3 text-accent" /> {d}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Menu / Dishes */}
+                <div>
+                  <h3 className="text-sm font-semibold text-foreground uppercase tracking-wider mb-3">🍽️ Menu</h3>
+                  <div className="space-y-3">
+                    {host.foodInfo.dishes.map(dish => (
+                      <div key={dish.name} className="rounded-lg bg-card border border-border p-4 shadow-card">
+                        <div className="flex items-start justify-between">
+                          <div>
+                            <h4 className="font-bold text-foreground">{dish.name}</h4>
+                            <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full">{dish.cuisine}</span>
+                          </div>
+                          <div className="text-right">
+                            <p className="text-lg font-bold text-foreground">${dish.price}</p>
+                            <p className="text-xs text-muted-foreground">per person</p>
+                          </div>
+                        </div>
+                        <p className="mt-2 text-sm text-muted-foreground">{dish.description}</p>
+                        <div className="mt-2 flex flex-wrap gap-1.5">
+                          {dish.dietaryTags.map(t => (
+                            <span key={t} className="text-xs bg-secondary text-muted-foreground px-2 py-0.5 rounded-full">{t}</span>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Specialties */}
+                <div>
+                  <h4 className="text-xs font-semibold text-foreground uppercase tracking-wider mb-2">Signature Specialties</h4>
+                  <div className="flex flex-wrap gap-2">
+                    {host.foodInfo.specialties.map(s => (
+                      <span key={s} className="text-sm bg-primary/5 text-foreground border border-primary/20 px-3 py-1.5 rounded-full">⭐ {s}</span>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Ordering Info */}
+                <div className="rounded-lg bg-primary/5 border border-primary/20 p-4">
+                  <h4 className="text-sm font-bold text-foreground mb-2">📋 Ordering Information</h4>
+                  <div className="space-y-1 text-sm text-muted-foreground">
+                    {host.foodInfo.minimumOrder && <p>Minimum order: {host.foodInfo.minimumOrder} persons</p>}
+                    {host.foodInfo.advanceNotice && <p>Advance notice: {host.foodInfo.advanceNotice}</p>}
+                    <p>All meals are freshly prepared. Prices are per person.</p>
                   </div>
                 </div>
               </div>

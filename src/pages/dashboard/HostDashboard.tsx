@@ -1,11 +1,15 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { DollarSign, Users, Star, Calendar, Clock, TrendingUp, MessageCircle, Settings, Home, Car, BarChart3, Bell } from "lucide-react";
+import { DollarSign, Users, Star, Calendar, Clock, TrendingUp, MessageCircle, Settings, Home, Car, BarChart3, Bell, UtensilsCrossed, Plus, Save } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { mockBookings, hosts, reviews, experiences } from "@/lib/data";
+import { useLocalStorage } from "@/hooks/use-local-storage";
+import EditDialog, { FieldConfig } from "@/components/EditDialog";
+import { useToast } from "@/hooks/use-toast";
 
 const host = hosts[0];
 const hostBookings = mockBookings.filter(b => b.hostId === host.id);
@@ -19,16 +23,79 @@ const statusColors: Record<string, string> = {
   cancelled: "bg-destructive/10 text-destructive",
 };
 
-type Tab = "overview" | "bookings" | "listings" | "reviews" | "earnings" | "messages" | "settings";
+type Tab = "overview" | "bookings" | "listings" | "food" | "reviews" | "earnings" | "messages" | "settings";
+
+const profileFields: FieldConfig[] = [
+  { key: "name", label: "Name", required: true },
+  { key: "tagline", label: "Tagline", required: true },
+  { key: "bio", label: "Bio", type: "textarea", required: true },
+  { key: "city", label: "City", required: true },
+  { key: "pricePerDay", label: "Price Per Day ($)", type: "number", required: true },
+  { key: "responseTime", label: "Response Time" },
+];
+
+const experienceFields: FieldConfig[] = [
+  { key: "title", label: "Title", required: true },
+  { key: "description", label: "Description", type: "textarea", required: true },
+  { key: "price", label: "Price ($)", type: "number", required: true },
+  { key: "duration", label: "Duration", required: true },
+  { key: "category", label: "Category", type: "select", options: ["Cultural", "Food", "Spiritual", "Wellness", "Adventure", "Wedding", "Village", "Festival", "Medical Care"], required: true },
+];
+
+const vehicleFields: FieldConfig[] = [
+  { key: "type", label: "Vehicle Type", required: true },
+  { key: "model", label: "Model", required: true },
+  { key: "capacity", label: "Capacity", type: "number", required: true },
+  { key: "pricePerDay", label: "Price Per Day ($)", type: "number", required: true },
+  { key: "pricePerKm", label: "Price Per Km ($)", type: "number" },
+];
+
+const dishFields: FieldConfig[] = [
+  { key: "name", label: "Dish Name", required: true },
+  { key: "description", label: "Description", type: "textarea", required: true },
+  { key: "cuisine", label: "Cuisine", type: "select", options: ["Rajasthani", "North Indian", "South Indian", "Goan", "Thai", "Chinese", "Mexican", "Italian", "Street Food", "Mughlai", "Kerala", "Ayurvedic"], required: true },
+  { key: "price", label: "Price ($)", type: "number", required: true },
+];
 
 const HostDashboard = () => {
   const [activeTab, setActiveTab] = useState<Tab>("overview");
+  const { toast } = useToast();
   const totalEarnings = hostBookings.reduce((sum, b) => sum + b.totalPrice, 0);
+
+  // CRUD State
+  const [hostProfile, setHostProfile] = useLocalStorage("host_profile", {
+    name: host.name, tagline: host.tagline, bio: host.bio, city: host.city,
+    pricePerDay: host.pricePerDay, responseTime: host.responseTime,
+  });
+  const [bookingStatuses, setBookingStatuses] = useLocalStorage<Record<string, string>>("host_booking_statuses", {});
+  const [customExperiences, setCustomExperiences] = useLocalStorage<any[]>("host_custom_experiences", []);
+  const [customVehicles, setCustomVehicles] = useLocalStorage<any[]>("host_custom_vehicles", []);
+  const [customDishes, setCustomDishes] = useLocalStorage<any[]>("host_custom_dishes", host.foodInfo?.dishes || []);
+  const [hostSettings, setHostSettings] = useLocalStorage("host_settings", {
+    notifications: { bookings: true, messages: true, reviews: true },
+    availability: "available",
+  });
+
+  // Dialog state
+  const [editDialog, setEditDialog] = useState<{ open: boolean; title: string; fields: FieldConfig[]; data?: any; onSave: (d: any) => void; onDelete?: () => void }>({
+    open: false, title: "", fields: [], onSave: () => {},
+  });
+
+  const allExperiences = [...hostExperiences, ...customExperiences];
+  const allVehicles = [...(host.transportInfo?.vehicles || []), ...customVehicles];
+
+  const getBookingStatus = (id: string, original: string) => bookingStatuses[id] || original;
+
+  const updateBookingStatus = (id: string, status: string) => {
+    setBookingStatuses(p => ({ ...p, [id]: status }));
+    toast({ title: `Booking #${id} ${status}`, description: `Status updated to ${status}` });
+  };
 
   const tabs: { id: Tab; label: string; icon: React.ElementType }[] = [
     { id: "overview", label: "Overview", icon: BarChart3 },
     { id: "bookings", label: "Bookings", icon: Calendar },
     { id: "listings", label: "Listings", icon: Home },
+    { id: "food", label: "Food Menu", icon: UtensilsCrossed },
     { id: "reviews", label: "Reviews", icon: Star },
     { id: "earnings", label: "Earnings", icon: DollarSign },
     { id: "messages", label: "Messages", icon: MessageCircle },
@@ -40,14 +107,13 @@ const HostDashboard = () => {
       <Navbar />
       <div className="pt-24 pb-16 px-4 sm:px-6 lg:px-8 mx-auto max-w-6xl">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="flex items-center gap-4">
-          <img src={host.image} alt={host.name} className="w-16 h-16 rounded-full object-cover shadow-card" />
+          <img src={host.image} alt={hostProfile.name} className="w-16 h-16 rounded-full object-cover shadow-card" />
           <div>
-            <h1 className="text-3xl font-bold text-foreground">Welcome, {host.name}!</h1>
-            <p className="text-muted-foreground">{host.city} · Host since 2024</p>
+            <h1 className="text-3xl font-bold text-foreground">Welcome, {hostProfile.name}!</h1>
+            <p className="text-muted-foreground">{hostProfile.city} · Host since 2024</p>
           </div>
         </motion.div>
 
-        {/* Tabs */}
         <div className="mt-6 flex gap-1 overflow-x-auto border-b border-border pb-px">
           {tabs.map(t => (
             <button key={t.id} onClick={() => setActiveTab(t.id)}
@@ -74,27 +140,37 @@ const HostDashboard = () => {
                 </div>
               ))}
             </div>
-
             <div className="mt-8 grid grid-cols-1 lg:grid-cols-3 gap-8">
               <div className="lg:col-span-2">
                 <h2 className="text-xl font-bold text-foreground mb-4">Recent Booking Requests</h2>
                 <div className="space-y-3">
-                  {hostBookings.slice(0, 3).map(b => (
-                    <div key={b.id} className="rounded-lg bg-card p-4 shadow-card">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <h3 className="font-semibold text-foreground">Booking #{b.id}</h3>
-                            <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${statusColors[b.status]}`}>{b.status}</span>
+                  {hostBookings.slice(0, 3).map(b => {
+                    const status = getBookingStatus(b.id, b.status);
+                    return (
+                      <div key={b.id} className="rounded-lg bg-card p-4 shadow-card">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <h3 className="font-semibold text-foreground">Booking #{b.id}</h3>
+                              <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${statusColors[status] || statusColors.pending}`}>{status}</span>
+                            </div>
+                            <p className="text-sm text-muted-foreground mt-1">
+                              <Clock className="w-3 h-3 inline mr-1" />{b.startDate} → {b.endDate} · {b.services.join(", ")}
+                            </p>
                           </div>
-                          <p className="text-sm text-muted-foreground mt-1">
-                            <Clock className="w-3 h-3 inline mr-1" />{b.startDate} → {b.endDate} · {b.services.join(", ")}
-                          </p>
+                          <div className="text-right">
+                            <p className="font-bold text-foreground">${b.totalPrice}</p>
+                            {status === "pending" && (
+                              <div className="flex gap-2 mt-1">
+                                <Button size="sm" onClick={() => updateBookingStatus(b.id, "confirmed")} className="rounded-full text-xs px-3 bg-accent text-accent-foreground hover:bg-accent/90">Accept</Button>
+                                <Button size="sm" variant="outline" onClick={() => updateBookingStatus(b.id, "cancelled")} className="rounded-full text-xs px-3">Decline</Button>
+                              </div>
+                            )}
+                          </div>
                         </div>
-                        <p className="font-bold text-foreground">${b.totalPrice}</p>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
               <div className="space-y-4">
@@ -106,10 +182,6 @@ const HostDashboard = () => {
                     <div className="flex justify-between text-sm"><span className="text-muted-foreground">This Month</span><span className="font-medium text-accent flex items-center gap-1"><TrendingUp className="w-3 h-3" /> +23%</span></div>
                   </div>
                 </div>
-                <div className="rounded-lg bg-primary/5 border border-primary/20 p-5">
-                  <h3 className="text-sm font-bold text-foreground mb-2">💡 Tip</h3>
-                  <p className="text-sm text-muted-foreground">Hosts who respond within 1 hour get 40% more bookings.</p>
-                </div>
               </div>
             </div>
           </>
@@ -119,38 +191,46 @@ const HostDashboard = () => {
         {activeTab === "bookings" && (
           <div className="mt-6 space-y-3">
             <h2 className="text-xl font-bold text-foreground mb-4">All Booking Requests</h2>
-            {hostBookings.map(b => (
-              <div key={b.id} className="rounded-lg bg-card p-4 shadow-card">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <h3 className="font-semibold text-foreground">Booking #{b.id}</h3>
-                      <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${statusColors[b.status]}`}>{b.status}</span>
-                    </div>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      <Clock className="w-3 h-3 inline mr-1" />{b.startDate} → {b.endDate} · {b.services.join(", ")} · {b.guests} guest{b.guests > 1 ? "s" : ""}
-                    </p>
-                    {b.message && <p className="text-sm text-muted-foreground mt-1 italic">"{b.message}"</p>}
-                  </div>
-                  <div className="text-right">
-                    <p className="font-bold text-foreground">${b.totalPrice}</p>
-                    {b.status === "pending" && (
-                      <div className="flex gap-2 mt-2">
-                        <Button size="sm" className="rounded-full bg-accent text-accent-foreground hover:bg-accent/90 text-xs px-3">Accept</Button>
-                        <Button size="sm" variant="outline" className="rounded-full text-xs px-3">Decline</Button>
+            {hostBookings.map(b => {
+              const status = getBookingStatus(b.id, b.status);
+              return (
+                <div key={b.id} className="rounded-lg bg-card p-4 shadow-card">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <h3 className="font-semibold text-foreground">Booking #{b.id}</h3>
+                        <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${statusColors[status] || statusColors.pending}`}>{status}</span>
                       </div>
-                    )}
+                      <p className="text-sm text-muted-foreground mt-1">
+                        <Clock className="w-3 h-3 inline mr-1" />{b.startDate} → {b.endDate} · {b.services.join(", ")} · {b.guests} guest{b.guests > 1 ? "s" : ""}
+                      </p>
+                      {b.message && <p className="text-sm text-muted-foreground mt-1 italic">"{b.message}"</p>}
+                    </div>
+                    <div className="text-right">
+                      <p className="font-bold text-foreground">${b.totalPrice}</p>
+                      {status === "pending" && (
+                        <div className="flex gap-2 mt-2">
+                          <Button size="sm" onClick={() => updateBookingStatus(b.id, "confirmed")} className="rounded-full bg-accent text-accent-foreground hover:bg-accent/90 text-xs px-3">Accept</Button>
+                          <Button size="sm" variant="outline" onClick={() => updateBookingStatus(b.id, "cancelled")} className="rounded-full text-xs px-3">Decline</Button>
+                        </div>
+                      )}
+                      {status === "confirmed" && (
+                        <Button size="sm" variant="outline" onClick={() => updateBookingStatus(b.id, "completed")} className="rounded-full text-xs px-3 mt-2">Mark Complete</Button>
+                      )}
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
 
         {/* Listings Tab */}
         {activeTab === "listings" && (
           <div className="mt-6 space-y-6">
-            <h2 className="text-xl font-bold text-foreground mb-4">Your Listings</h2>
+            <div className="flex items-center justify-between">
+              <h2 className="text-xl font-bold text-foreground">Your Listings</h2>
+            </div>
 
             {host.stayInfo && (
               <div className="rounded-lg bg-card p-5 shadow-card">
@@ -160,34 +240,116 @@ const HostDashboard = () => {
                   <span className="text-xs bg-accent/10 text-accent px-2 py-0.5 rounded-full ml-auto">Active</span>
                 </div>
                 <p className="text-sm text-muted-foreground">{host.stayInfo.propertyType} · {host.stayInfo.rooms.length} rooms</p>
-                <div className="mt-3 flex gap-2">
-                  <Button variant="outline" size="sm" className="rounded-full text-xs">Edit Listing</Button>
-                  <Button variant="outline" size="sm" className="rounded-full text-xs">Update Photos</Button>
-                </div>
               </div>
             )}
 
-            {host.transportInfo && (
-              <div className="rounded-lg bg-card p-5 shadow-card">
-                <div className="flex items-center gap-2 mb-2">
-                  <Car className="w-5 h-5 text-primary" />
-                  <h3 className="font-bold text-foreground">Transport Services</h3>
-                  <span className="text-xs bg-accent/10 text-accent px-2 py-0.5 rounded-full ml-auto">Active</span>
-                </div>
-                <p className="text-sm text-muted-foreground">{host.transportInfo.vehicles.length} vehicles listed</p>
-                <Button variant="outline" size="sm" className="mt-3 rounded-full text-xs">Edit Vehicles</Button>
+            {/* Vehicles */}
+            <div>
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="font-bold text-foreground flex items-center gap-2"><Car className="w-4 h-4 text-primary" /> Vehicles</h3>
+                <Button size="sm" className="rounded-full gap-1 text-xs" onClick={() => setEditDialog({
+                  open: true, title: "Add Vehicle", fields: vehicleFields,
+                  onSave: (d) => { setCustomVehicles(p => [...p, { ...d, ac: true, features: [] }]); toast({ title: "Vehicle added!" }); },
+                })}>
+                  <Plus className="w-3 h-3" /> Add Vehicle
+                </Button>
               </div>
-            )}
+              <div className="space-y-2">
+                {allVehicles.map((v, i) => (
+                  <div key={`${v.model}-${i}`} className="rounded-lg bg-card p-4 shadow-card flex justify-between items-center">
+                    <div>
+                      <p className="font-medium text-foreground">{v.model}</p>
+                      <p className="text-xs text-muted-foreground">{v.type} · {v.capacity} pax · ${v.pricePerDay}/day</p>
+                    </div>
+                    <Button variant="outline" size="sm" className="rounded-full text-xs" onClick={() => setEditDialog({
+                      open: true, title: "Edit Vehicle", fields: vehicleFields, data: v,
+                      onSave: (d) => {
+                        const isCustom = i >= (host.transportInfo?.vehicles?.length || 0);
+                        if (isCustom) { const ci = i - (host.transportInfo?.vehicles?.length || 0); setCustomVehicles(p => p.map((x, j) => j === ci ? { ...x, ...d } : x)); }
+                        toast({ title: "Vehicle updated!" });
+                      },
+                      onDelete: i >= (host.transportInfo?.vehicles?.length || 0) ? () => {
+                        const ci = i - (host.transportInfo?.vehicles?.length || 0);
+                        setCustomVehicles(p => p.filter((_, j) => j !== ci));
+                        toast({ title: "Vehicle removed" });
+                      } : undefined,
+                    })}>Edit</Button>
+                  </div>
+                ))}
+              </div>
+            </div>
 
-            <h3 className="font-bold text-foreground mt-6">Your Experiences</h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {hostExperiences.map(exp => (
-                <div key={exp.id} className="rounded-lg bg-card p-4 shadow-card">
-                  <h4 className="font-semibold text-foreground">{exp.title}</h4>
-                  <p className="text-sm text-muted-foreground">${exp.price} · {exp.duration} · {exp.category}</p>
-                  <Button variant="outline" size="sm" className="mt-2 rounded-full text-xs">Edit</Button>
+            {/* Experiences */}
+            <div>
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="font-bold text-foreground">Your Experiences</h3>
+                <Button size="sm" className="rounded-full gap-1 text-xs" onClick={() => setEditDialog({
+                  open: true, title: "Add Experience", fields: experienceFields,
+                  onSave: (d) => {
+                    setCustomExperiences(p => [...p, { ...d, id: `custom-${Date.now()}`, hostId: host.id, hostName: host.name, hostCity: host.city, image: host.image, rating: 0, reviewCount: 0 }]);
+                    toast({ title: "Experience added!" });
+                  },
+                })}>
+                  <Plus className="w-3 h-3" /> Add Experience
+                </Button>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {allExperiences.map((exp, i) => (
+                  <div key={exp.id} className="rounded-lg bg-card p-4 shadow-card">
+                    <h4 className="font-semibold text-foreground">{exp.title}</h4>
+                    <p className="text-sm text-muted-foreground">${exp.price} · {exp.duration} · {exp.category}</p>
+                    <Button variant="outline" size="sm" className="mt-2 rounded-full text-xs" onClick={() => setEditDialog({
+                      open: true, title: "Edit Experience", fields: experienceFields, data: exp,
+                      onSave: (d) => {
+                        const isCustom = i >= hostExperiences.length;
+                        if (isCustom) { const ci = i - hostExperiences.length; setCustomExperiences(p => p.map((x, j) => j === ci ? { ...x, ...d } : x)); }
+                        toast({ title: "Experience updated!" });
+                      },
+                      onDelete: i >= hostExperiences.length ? () => {
+                        const ci = i - hostExperiences.length;
+                        setCustomExperiences(p => p.filter((_, j) => j !== ci));
+                        toast({ title: "Experience removed" });
+                      } : undefined,
+                    })}>Edit</Button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Food Menu Tab */}
+        {activeTab === "food" && (
+          <div className="mt-6 space-y-6">
+            <div className="flex items-center justify-between">
+              <h2 className="text-xl font-bold text-foreground">Food Menu</h2>
+              <Button size="sm" className="rounded-full gap-1 text-xs" onClick={() => setEditDialog({
+                open: true, title: "Add Dish", fields: dishFields,
+                onSave: (d) => { setCustomDishes(p => [...p, { ...d, dietaryTags: [] }]); toast({ title: "Dish added!" }); },
+              })}>
+                <Plus className="w-3 h-3" /> Add Dish
+              </Button>
+            </div>
+            <div className="space-y-3">
+              {customDishes.map((dish, i) => (
+                <div key={`${dish.name}-${i}`} className="rounded-lg bg-card p-4 shadow-card flex justify-between items-center">
+                  <div>
+                    <h4 className="font-semibold text-foreground">{dish.name}</h4>
+                    <p className="text-sm text-muted-foreground">{dish.cuisine} · ${dish.price}/person</p>
+                    <p className="text-xs text-muted-foreground mt-1">{dish.description}</p>
+                  </div>
+                  <div className="flex gap-2 shrink-0">
+                    <Button variant="outline" size="sm" className="rounded-full text-xs" onClick={() => setEditDialog({
+                      open: true, title: "Edit Dish", fields: dishFields, data: dish,
+                      onSave: (d) => { setCustomDishes(p => p.map((x, j) => j === i ? { ...x, ...d } : x)); toast({ title: "Dish updated!" }); },
+                      onDelete: () => { setCustomDishes(p => p.filter((_, j) => j !== i)); toast({ title: "Dish removed" }); },
+                    })}>Edit</Button>
+                  </div>
                 </div>
               ))}
+              {customDishes.length === 0 && (
+                <p className="text-muted-foreground text-center py-8">No dishes yet. Add your first dish to start your food menu!</p>
+              )}
             </div>
           </div>
         )}
@@ -240,7 +402,7 @@ const HostDashboard = () => {
                   </div>
                   <div className="text-right">
                     <p className="font-bold text-foreground">${b.totalPrice}</p>
-                    <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${statusColors[b.status]}`}>{b.status}</span>
+                    <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${statusColors[getBookingStatus(b.id, b.status)]}`}>{getBookingStatus(b.id, b.status)}</span>
                   </div>
                 </div>
               ))}
@@ -267,32 +429,74 @@ const HostDashboard = () => {
           </div>
         )}
 
-        {/* Settings Tab */}
+        {/* Settings Tab — Functional */}
         {activeTab === "settings" && (
-          <div className="mt-6 space-y-4 max-w-xl">
+          <div className="mt-6 space-y-6 max-w-xl">
             <h2 className="text-xl font-bold text-foreground mb-4">Host Settings</h2>
-            {[
-              { icon: Settings, label: "Profile & Bio", desc: "Edit your public profile, tagline, and photo" },
-              { icon: Calendar, label: "Availability", desc: "Set your calendar and blackout dates" },
-              { icon: DollarSign, label: "Pricing", desc: "Update daily rates and service pricing" },
-              { icon: Bell, label: "Notifications", desc: "Booking alerts, messages, and review notifications" },
-              { icon: Home, label: "Property Details", desc: "Update room info, amenities, and photos" },
-              { icon: Car, label: "Transport Fleet", desc: "Manage vehicles and pricing" },
-            ].map(s => (
-              <div key={s.label} className="rounded-lg bg-card p-4 shadow-card flex items-center gap-4 hover:shadow-card-hover transition-shadow cursor-pointer">
-                <div className="w-10 h-10 rounded-md bg-primary/10 flex items-center justify-center">
-                  <s.icon className="w-5 h-5 text-primary" />
+
+            {/* Profile Edit */}
+            <div className="rounded-lg bg-card p-5 shadow-card space-y-4">
+              <h3 className="font-bold text-foreground flex items-center gap-2"><Settings className="w-4 h-4 text-primary" /> Profile Information</h3>
+              <div className="space-y-3">
+                <div>
+                  <label className="text-sm font-medium text-foreground">Name</label>
+                  <Input value={hostProfile.name} onChange={e => setHostProfile(p => ({ ...p, name: e.target.value }))} />
                 </div>
                 <div>
-                  <p className="font-semibold text-foreground text-sm">{s.label}</p>
-                  <p className="text-xs text-muted-foreground">{s.desc}</p>
+                  <label className="text-sm font-medium text-foreground">Tagline</label>
+                  <Input value={hostProfile.tagline} onChange={e => setHostProfile(p => ({ ...p, tagline: e.target.value }))} />
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-foreground">Bio</label>
+                  <textarea className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm min-h-[80px]"
+                    value={hostProfile.bio} onChange={e => setHostProfile(p => ({ ...p, bio: e.target.value }))} />
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-sm font-medium text-foreground">City</label>
+                    <Input value={hostProfile.city} onChange={e => setHostProfile(p => ({ ...p, city: e.target.value }))} />
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-foreground">Price/Day ($)</label>
+                    <Input type="number" value={hostProfile.pricePerDay} onChange={e => setHostProfile(p => ({ ...p, pricePerDay: Number(e.target.value) }))} />
+                  </div>
                 </div>
               </div>
-            ))}
+              <Button size="sm" className="rounded-full gap-2" onClick={() => toast({ title: "Profile saved!", description: "Your changes have been saved locally." })}>
+                <Save className="w-4 h-4" /> Save Profile
+              </Button>
+            </div>
+
+            {/* Notifications */}
+            <div className="rounded-lg bg-card p-5 shadow-card space-y-3">
+              <h3 className="font-bold text-foreground flex items-center gap-2"><Bell className="w-4 h-4 text-primary" /> Notifications</h3>
+              {(["bookings", "messages", "reviews"] as const).map(key => (
+                <label key={key} className="flex items-center justify-between cursor-pointer">
+                  <span className="text-sm text-foreground capitalize">{key} notifications</span>
+                  <input type="checkbox" className="w-4 h-4 accent-primary" checked={hostSettings.notifications[key]}
+                    onChange={e => setHostSettings(p => ({ ...p, notifications: { ...p.notifications, [key]: e.target.checked } }))} />
+                </label>
+              ))}
+            </div>
+
+            {/* Availability */}
+            <div className="rounded-lg bg-card p-5 shadow-card space-y-3">
+              <h3 className="font-bold text-foreground flex items-center gap-2"><Calendar className="w-4 h-4 text-primary" /> Availability</h3>
+              <select className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                value={hostSettings.availability} onChange={e => setHostSettings(p => ({ ...p, availability: e.target.value }))}>
+                <option value="available">Available</option>
+                <option value="busy">Busy — Not taking bookings</option>
+                <option value="vacation">On Vacation</option>
+              </select>
+            </div>
           </div>
         )}
       </div>
       <Footer />
+
+      <EditDialog open={editDialog.open} onClose={() => setEditDialog(p => ({ ...p, open: false }))}
+        title={editDialog.title} fields={editDialog.fields} initialData={editDialog.data}
+        onSave={editDialog.onSave} onDelete={editDialog.onDelete} />
     </div>
   );
 };
