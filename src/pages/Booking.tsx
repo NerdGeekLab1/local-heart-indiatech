@@ -18,6 +18,7 @@ const serviceOptions = [
   { key: "Guide", label: "Local Guide", desc: "Personalized tours & experiences", icon: "🧭" },
   { key: "Stay", label: "Homestay", desc: "Authentic local accommodation", icon: "🏡" },
   { key: "Transport", label: "Transport", desc: "Vehicle with host as driver", icon: "🚗" },
+  { key: "Food", label: "Food & Dining", desc: "Home-cooked meals & food experiences", icon: "🍛" },
 ];
 
 const Booking = () => {
