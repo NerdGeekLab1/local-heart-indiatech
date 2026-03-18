@@ -55,6 +55,25 @@ export interface TransportInfo {
   driverLanguages: string[];
 }
 
+export interface FoodDish {
+  name: string;
+  description: string;
+  cuisine: string;
+  dietaryTags: string[];
+  price: number;
+}
+
+export interface FoodInfo {
+  description: string;
+  cuisines: string[];
+  mealTypes: string[];
+  specialties: string[];
+  dietaryOptions: string[];
+  dishes: FoodDish[];
+  minimumOrder?: number;
+  advanceNotice?: string;
+}
+
 export interface Host {
   id: string;
   name: string;
@@ -73,6 +92,7 @@ export interface Host {
   specialties?: string[];
   stayInfo?: StayInfo;
   transportInfo?: TransportInfo;
+  foodInfo?: FoodInfo;
 }
 
 export interface Experience {
