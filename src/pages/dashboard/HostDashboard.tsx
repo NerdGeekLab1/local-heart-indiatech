@@ -1,12 +1,12 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { DollarSign, Users, Star, Calendar, Clock, TrendingUp, MessageCircle, Settings, Home, Car, BarChart3, Bell, UtensilsCrossed, Plus, Save } from "lucide-react";
+import { DollarSign, Users, Star, Calendar, Clock, TrendingUp, MessageCircle, Settings, Home, Car, BarChart3, Bell, UtensilsCrossed, Plus, Save, Instagram, Facebook, Twitter, Globe, Tag } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { mockBookings, hosts, reviews, experiences } from "@/lib/data";
+import { mockBookings, hosts, reviews, experiences, propertyTypes, vehicleTypes } from "@/lib/data";
 import { useLocalStorage } from "@/hooks/use-local-storage";
 import EditDialog, { FieldConfig } from "@/components/EditDialog";
 import { useToast } from "@/hooks/use-toast";
@@ -42,10 +42,28 @@ const experienceFields: FieldConfig[] = [
   { key: "category", label: "Category", type: "select", options: ["Cultural", "Food", "Spiritual", "Wellness", "Adventure", "Wedding", "Village", "Festival", "Medical Care"], required: true },
 ];
 
+const propertyFields: FieldConfig[] = [
+  { key: "propertyName", label: "Property Name", required: true },
+  { key: "propertyType", label: "Property Type", type: "select", options: [...propertyTypes], required: true },
+  { key: "description", label: "Description", type: "textarea", required: true },
+  { key: "checkIn", label: "Check-in Time", required: true },
+  { key: "checkOut", label: "Check-out Time", required: true },
+];
+
+const roomFields: FieldConfig[] = [
+  { key: "name", label: "Room Name", required: true },
+  { key: "type", label: "Room Type", type: "select", options: ["Private Room", "Shared Room", "Entire Home", "Heritage Suite"], required: true },
+  { key: "beds", label: "Beds", type: "number", required: true },
+  { key: "maxGuests", label: "Max Guests", type: "number", required: true },
+  { key: "pricePerNight", label: "Price Per Night ($)", type: "number", required: true },
+  { key: "description", label: "Description", type: "textarea" },
+];
+
 const vehicleFields: FieldConfig[] = [
-  { key: "type", label: "Vehicle Type", required: true },
+  { key: "type", label: "Vehicle Type", type: "select", options: [...vehicleTypes], required: true },
   { key: "model", label: "Model", required: true },
   { key: "capacity", label: "Capacity", type: "number", required: true },
+  { key: "pricingModel", label: "Pricing Model", type: "select", options: ["per_day", "per_km", "both"], required: true },
   { key: "pricePerDay", label: "Price Per Day ($)", type: "number", required: true },
   { key: "pricePerKm", label: "Price Per Km ($)", type: "number" },
 ];
@@ -67,10 +85,22 @@ const HostDashboard = () => {
     name: host.name, tagline: host.tagline, bio: host.bio, city: host.city,
     pricePerDay: host.pricePerDay, responseTime: host.responseTime,
   });
+  const [socialMedia, setSocialMedia] = useLocalStorage("host_social_media", {
+    instagram: "", facebook: "", twitter: "", website: "",
+  });
+  const [pricing, setPricing] = useLocalStorage("host_pricing", {
+    guidePerDay: host.pricePerDay,
+    stayCommission: 0,
+    foodMinOrder: host.foodInfo?.minimumOrder || 2,
+    cancellationPolicy: "flexible",
+    currency: "USD",
+  });
   const [bookingStatuses, setBookingStatuses] = useLocalStorage<Record<string, string>>("host_booking_statuses", {});
   const [customExperiences, setCustomExperiences] = useLocalStorage<any[]>("host_custom_experiences", []);
   const [customVehicles, setCustomVehicles] = useLocalStorage<any[]>("host_custom_vehicles", []);
   const [customDishes, setCustomDishes] = useLocalStorage<any[]>("host_custom_dishes", host.foodInfo?.dishes || []);
+  const [customProperties, setCustomProperties] = useLocalStorage<any[]>("host_custom_properties", host.stayInfo ? [host.stayInfo] : []);
+  const [customRooms, setCustomRooms] = useLocalStorage<any[]>("host_custom_rooms", host.stayInfo?.rooms || []);
   const [hostSettings, setHostSettings] = useLocalStorage("host_settings", {
     notifications: { bookings: true, messages: true, reviews: true },
     availability: "available",
@@ -232,16 +262,69 @@ const HostDashboard = () => {
               <h2 className="text-xl font-bold text-foreground">Your Listings</h2>
             </div>
 
-            {host.stayInfo && (
-              <div className="rounded-lg bg-card p-5 shadow-card">
-                <div className="flex items-center gap-2 mb-2">
-                  <Home className="w-5 h-5 text-primary" />
-                  <h3 className="font-bold text-foreground">{host.stayInfo.propertyName}</h3>
-                  <span className="text-xs bg-accent/10 text-accent px-2 py-0.5 rounded-full ml-auto">Active</span>
-                </div>
-                <p className="text-sm text-muted-foreground">{host.stayInfo.propertyType} · {host.stayInfo.rooms.length} rooms</p>
+            {/* Properties */}
+            <div>
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="font-bold text-foreground flex items-center gap-2"><Home className="w-4 h-4 text-primary" /> Properties</h3>
+                <Button size="sm" className="rounded-full gap-1 text-xs" onClick={() => setEditDialog({
+                  open: true, title: "Add Property", fields: propertyFields,
+                  onSave: (d) => { setCustomProperties(p => [...p, { ...d, images: [], rooms: [], amenities: [], houseRules: [] }]); toast({ title: "Property added!" }); },
+                })}>
+                  <Plus className="w-3 h-3" /> Add Property
+                </Button>
               </div>
-            )}
+              <div className="space-y-3">
+                {customProperties.map((prop, i) => (
+                  <div key={`${prop.propertyName}-${i}`} className="rounded-lg bg-card p-5 shadow-card">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-2">
+                        <Home className="w-5 h-5 text-primary" />
+                        <h4 className="font-bold text-foreground">{prop.propertyName}</h4>
+                        <span className="text-xs bg-accent/10 text-accent px-2 py-0.5 rounded-full">{prop.propertyType}</span>
+                      </div>
+                      <Button variant="outline" size="sm" className="rounded-full text-xs" onClick={() => setEditDialog({
+                        open: true, title: "Edit Property", fields: propertyFields, data: prop,
+                        onSave: (d) => { setCustomProperties(p => p.map((x, j) => j === i ? { ...x, ...d } : x)); toast({ title: "Property updated!" }); },
+                        onDelete: customProperties.length > 1 ? () => { setCustomProperties(p => p.filter((_, j) => j !== i)); toast({ title: "Property removed" }); } : undefined,
+                      })}>Edit</Button>
+                    </div>
+                    <p className="text-sm text-muted-foreground">{prop.description}</p>
+                    <p className="text-xs text-muted-foreground mt-1">Check-in: {prop.checkIn} · Check-out: {prop.checkOut}</p>
+                  </div>
+                ))}
+              </div>
+
+              {/* Rooms */}
+              <div className="mt-4">
+                <div className="flex items-center justify-between mb-3">
+                  <h4 className="font-semibold text-foreground text-sm">Rooms</h4>
+                  <Button size="sm" variant="outline" className="rounded-full gap-1 text-xs" onClick={() => setEditDialog({
+                    open: true, title: "Add Room", fields: roomFields,
+                    onSave: (d) => { setCustomRooms(p => [...p, { ...d, amenities: [] }]); toast({ title: "Room added!" }); },
+                  })}>
+                    <Plus className="w-3 h-3" /> Add Room
+                  </Button>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {customRooms.map((room, i) => (
+                    <div key={`${room.name}-${i}`} className="rounded-lg bg-secondary/50 p-3">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <p className="font-medium text-foreground text-sm">{room.name}</p>
+                          <p className="text-xs text-muted-foreground">{room.type} · {room.beds} bed(s) · {room.maxGuests} guests</p>
+                          <p className="text-xs font-medium text-primary mt-1">${room.pricePerNight}/night</p>
+                        </div>
+                        <Button variant="ghost" size="sm" className="text-xs" onClick={() => setEditDialog({
+                          open: true, title: "Edit Room", fields: roomFields, data: room,
+                          onSave: (d) => { setCustomRooms(p => p.map((x, j) => j === i ? { ...x, ...d } : x)); toast({ title: "Room updated!" }); },
+                          onDelete: () => { setCustomRooms(p => p.filter((_, j) => j !== i)); toast({ title: "Room removed" }); },
+                        })}>Edit</Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
 
             {/* Vehicles */}
             <div>
@@ -258,8 +341,16 @@ const HostDashboard = () => {
                 {allVehicles.map((v, i) => (
                   <div key={`${v.model}-${i}`} className="rounded-lg bg-card p-4 shadow-card flex justify-between items-center">
                     <div>
-                      <p className="font-medium text-foreground">{v.model}</p>
-                      <p className="text-xs text-muted-foreground">{v.type} · {v.capacity} pax · ${v.pricePerDay}/day</p>
+                      <div className="flex items-center gap-2">
+                        <p className="font-medium text-foreground">{v.model}</p>
+                        <span className="text-xs bg-secondary text-muted-foreground px-2 py-0.5 rounded-full">{v.type}</span>
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-1">{v.capacity} pax · {v.ac ? "AC" : "Non-AC"}</p>
+                      <div className="flex gap-2 mt-1">
+                        {v.pricePerDay > 0 && <span className="text-xs font-medium text-primary">${v.pricePerDay}/day</span>}
+                        {v.pricePerKm > 0 && <span className="text-xs font-medium text-accent">${v.pricePerKm}/km</span>}
+                        {v.pricingModel && <span className="text-[10px] bg-secondary text-muted-foreground px-1.5 py-0.5 rounded-full">{v.pricingModel.replace("_", " ")}</span>}
+                      </div>
                     </div>
                     <Button variant="outline" size="sm" className="rounded-full text-xs" onClick={() => setEditDialog({
                       open: true, title: "Edit Vehicle", fields: vehicleFields, data: v,
@@ -429,7 +520,7 @@ const HostDashboard = () => {
           </div>
         )}
 
-        {/* Settings Tab — Functional */}
+        {/* Settings Tab */}
         {activeTab === "settings" && (
           <div className="mt-6 space-y-6 max-w-xl">
             <h2 className="text-xl font-bold text-foreground mb-4">Host Settings</h2>
@@ -438,32 +529,61 @@ const HostDashboard = () => {
             <div className="rounded-lg bg-card p-5 shadow-card space-y-4">
               <h3 className="font-bold text-foreground flex items-center gap-2"><Settings className="w-4 h-4 text-primary" /> Profile Information</h3>
               <div className="space-y-3">
-                <div>
-                  <label className="text-sm font-medium text-foreground">Name</label>
-                  <Input value={hostProfile.name} onChange={e => setHostProfile(p => ({ ...p, name: e.target.value }))} />
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-foreground">Tagline</label>
-                  <Input value={hostProfile.tagline} onChange={e => setHostProfile(p => ({ ...p, tagline: e.target.value }))} />
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-foreground">Bio</label>
+                <div><label className="text-sm font-medium text-foreground">Name</label><Input value={hostProfile.name} onChange={e => setHostProfile(p => ({ ...p, name: e.target.value }))} /></div>
+                <div><label className="text-sm font-medium text-foreground">Tagline</label><Input value={hostProfile.tagline} onChange={e => setHostProfile(p => ({ ...p, tagline: e.target.value }))} /></div>
+                <div><label className="text-sm font-medium text-foreground">Bio</label>
                   <textarea className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm min-h-[80px]"
                     value={hostProfile.bio} onChange={e => setHostProfile(p => ({ ...p, bio: e.target.value }))} />
                 </div>
                 <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="text-sm font-medium text-foreground">City</label>
-                    <Input value={hostProfile.city} onChange={e => setHostProfile(p => ({ ...p, city: e.target.value }))} />
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-foreground">Price/Day ($)</label>
-                    <Input type="number" value={hostProfile.pricePerDay} onChange={e => setHostProfile(p => ({ ...p, pricePerDay: Number(e.target.value) }))} />
-                  </div>
+                  <div><label className="text-sm font-medium text-foreground">City</label><Input value={hostProfile.city} onChange={e => setHostProfile(p => ({ ...p, city: e.target.value }))} /></div>
+                  <div><label className="text-sm font-medium text-foreground">Price/Day ($)</label><Input type="number" value={hostProfile.pricePerDay} onChange={e => setHostProfile(p => ({ ...p, pricePerDay: Number(e.target.value) }))} /></div>
                 </div>
               </div>
-              <Button size="sm" className="rounded-full gap-2" onClick={() => toast({ title: "Profile saved!", description: "Your changes have been saved locally." })}>
+              <Button size="sm" className="rounded-full gap-2" onClick={() => toast({ title: "Profile saved!" })}>
                 <Save className="w-4 h-4" /> Save Profile
+              </Button>
+            </div>
+
+            {/* Pricing */}
+            <div className="rounded-lg bg-card p-5 shadow-card space-y-4">
+              <h3 className="font-bold text-foreground flex items-center gap-2"><Tag className="w-4 h-4 text-primary" /> Pricing</h3>
+              <div className="space-y-3">
+                <div><label className="text-sm font-medium text-foreground">Guide Rate ($/day)</label><Input type="number" value={pricing.guidePerDay} onChange={e => setPricing(p => ({ ...p, guidePerDay: Number(e.target.value) }))} /></div>
+                <div><label className="text-sm font-medium text-foreground">Food Minimum Order (guests)</label><Input type="number" value={pricing.foodMinOrder} onChange={e => setPricing(p => ({ ...p, foodMinOrder: Number(e.target.value) }))} /></div>
+                <div>
+                  <label className="text-sm font-medium text-foreground">Cancellation Policy</label>
+                  <select className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm mt-1"
+                    value={pricing.cancellationPolicy} onChange={e => setPricing(p => ({ ...p, cancellationPolicy: e.target.value }))}>
+                    <option value="flexible">Flexible — Full refund 24h before</option>
+                    <option value="moderate">Moderate — Full refund 5 days before</option>
+                    <option value="strict">Strict — 50% refund up to 7 days before</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-foreground">Currency</label>
+                  <select className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm mt-1"
+                    value={pricing.currency} onChange={e => setPricing(p => ({ ...p, currency: e.target.value }))}>
+                    <option value="USD">USD ($)</option><option value="EUR">EUR (€)</option><option value="GBP">GBP (£)</option><option value="INR">INR (₹)</option>
+                  </select>
+                </div>
+              </div>
+              <Button size="sm" className="rounded-full gap-2" onClick={() => toast({ title: "Pricing saved!" })}>
+                <Save className="w-4 h-4" /> Save Pricing
+              </Button>
+            </div>
+
+            {/* Social Media */}
+            <div className="rounded-lg bg-card p-5 shadow-card space-y-4">
+              <h3 className="font-bold text-foreground flex items-center gap-2"><Globe className="w-4 h-4 text-primary" /> Social Media</h3>
+              <div className="space-y-3">
+                <div className="flex items-center gap-2"><Instagram className="w-4 h-4 text-muted-foreground" /><Input placeholder="Instagram handle" value={socialMedia.instagram} onChange={e => setSocialMedia(p => ({ ...p, instagram: e.target.value }))} /></div>
+                <div className="flex items-center gap-2"><Facebook className="w-4 h-4 text-muted-foreground" /><Input placeholder="Facebook page URL" value={socialMedia.facebook} onChange={e => setSocialMedia(p => ({ ...p, facebook: e.target.value }))} /></div>
+                <div className="flex items-center gap-2"><Twitter className="w-4 h-4 text-muted-foreground" /><Input placeholder="Twitter handle" value={socialMedia.twitter} onChange={e => setSocialMedia(p => ({ ...p, twitter: e.target.value }))} /></div>
+                <div className="flex items-center gap-2"><Globe className="w-4 h-4 text-muted-foreground" /><Input placeholder="Website URL" value={socialMedia.website} onChange={e => setSocialMedia(p => ({ ...p, website: e.target.value }))} /></div>
+              </div>
+              <Button size="sm" className="rounded-full gap-2" onClick={() => toast({ title: "Social media saved!" })}>
+                <Save className="w-4 h-4" /> Save Social
               </Button>
             </div>
 

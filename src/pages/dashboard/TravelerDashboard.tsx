@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { MapPin, Calendar, Star, Heart, Clock, Settings, Bell, CreditCard, Shield, Globe, MessageCircle, Video, Save } from "lucide-react";
+import { MapPin, Calendar, Star, Heart, Clock, Settings, Bell, CreditCard, Shield, Globe, MessageCircle, Video, Save, Instagram, Facebook, Twitter, Tag } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import Navbar from "@/components/Navbar";
@@ -24,13 +24,15 @@ const TravelerDashboard = () => {
   const [activeTab, setActiveTab] = useState<Tab>("overview");
   const { toast } = useToast();
   const bookings = mockBookings;
-  const savedHosts = hosts.slice(0, 4);
   const recommendedExp = experiences.slice(0, 4);
 
   // Settings state
   const [profile, setProfile] = useLocalStorage("traveler_profile", {
     name: "Alex Traveler", email: "alex@example.com", phone: "+1 555-0123", bio: "Love exploring cultures and trying local food!",
     currency: "USD", language: "English",
+  });
+  const [socialMedia, setSocialMedia] = useLocalStorage("traveler_social_media", {
+    instagram: "", facebook: "", twitter: "", website: "",
   });
   const [notifSettings, setNotifSettings] = useLocalStorage("traveler_notifications", {
     bookings: true, messages: true, deals: true, reviews: true,
@@ -189,7 +191,6 @@ const TravelerDashboard = () => {
                     </div>
                   </div>
 
-                  {/* Review Form with Video */}
                   {reviewingBooking === b.id && (
                     <div className="mt-4 pt-4 border-t border-border space-y-4">
                       <h4 className="font-bold text-foreground text-sm">Leave a Review for {host.name}</h4>
@@ -206,18 +207,11 @@ const TravelerDashboard = () => {
                       <div>
                         <label className="text-sm font-medium text-foreground">Your Review</label>
                         <textarea className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm min-h-[80px] mt-1"
-                          placeholder="Share your experience..."
-                          value={reviewText} onChange={e => setReviewText(e.target.value)} />
+                          placeholder="Share your experience..." value={reviewText} onChange={e => setReviewText(e.target.value)} />
                       </div>
-                      <VideoRecorder
-                        label="Video Consent & Feedback (Required for testimonials)"
-                        required
-                        onVideoReady={(url) => { setVideoConsent(url); toast({ title: "Video ready!" }); }}
-                      />
+                      <VideoRecorder label="Video Consent & Feedback (Required for testimonials)" required onVideoReady={(url) => { setVideoConsent(url); toast({ title: "Video ready!" }); }} />
                       <div className="flex gap-2">
-                        <Button onClick={submitReview} className="rounded-full gap-2">
-                          <Save className="w-4 h-4" /> Submit Review
-                        </Button>
+                        <Button onClick={submitReview} className="rounded-full gap-2"><Save className="w-4 h-4" /> Submit Review</Button>
                         <Button variant="outline" className="rounded-full" onClick={() => { setReviewingBooking(null); setVideoConsent(null); }}>Cancel</Button>
                       </div>
                     </div>
@@ -297,35 +291,39 @@ const TravelerDashboard = () => {
           </div>
         )}
 
-        {/* Settings Tab — Functional */}
+        {/* Settings Tab */}
         {activeTab === "settings" && (
           <div className="mt-6 space-y-6 max-w-xl">
             <h2 className="text-xl font-bold text-foreground mb-4">Account Settings</h2>
 
-            {/* Profile Edit */}
+            {/* Profile */}
             <div className="rounded-lg bg-card p-5 shadow-card space-y-4">
               <h3 className="font-bold text-foreground flex items-center gap-2"><Settings className="w-4 h-4 text-primary" /> Profile Information</h3>
               <div className="space-y-3">
-                <div>
-                  <label className="text-sm font-medium text-foreground">Name</label>
-                  <Input value={profile.name} onChange={e => setProfile(p => ({ ...p, name: e.target.value }))} />
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-foreground">Email</label>
-                  <Input type="email" value={profile.email} onChange={e => setProfile(p => ({ ...p, email: e.target.value }))} />
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-foreground">Phone</label>
-                  <Input value={profile.phone} onChange={e => setProfile(p => ({ ...p, phone: e.target.value }))} />
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-foreground">Bio</label>
+                <div><label className="text-sm font-medium text-foreground">Name</label><Input value={profile.name} onChange={e => setProfile(p => ({ ...p, name: e.target.value }))} /></div>
+                <div><label className="text-sm font-medium text-foreground">Email</label><Input type="email" value={profile.email} onChange={e => setProfile(p => ({ ...p, email: e.target.value }))} /></div>
+                <div><label className="text-sm font-medium text-foreground">Phone</label><Input value={profile.phone} onChange={e => setProfile(p => ({ ...p, phone: e.target.value }))} /></div>
+                <div><label className="text-sm font-medium text-foreground">Bio</label>
                   <textarea className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm min-h-[80px]"
                     value={profile.bio} onChange={e => setProfile(p => ({ ...p, bio: e.target.value }))} />
                 </div>
               </div>
-              <Button size="sm" className="rounded-full gap-2" onClick={() => toast({ title: "Profile saved!", description: "Your changes have been saved." })}>
+              <Button size="sm" className="rounded-full gap-2" onClick={() => toast({ title: "Profile saved!" })}>
                 <Save className="w-4 h-4" /> Save Profile
+              </Button>
+            </div>
+
+            {/* Social Media */}
+            <div className="rounded-lg bg-card p-5 shadow-card space-y-4">
+              <h3 className="font-bold text-foreground flex items-center gap-2"><Globe className="w-4 h-4 text-primary" /> Social Media</h3>
+              <div className="space-y-3">
+                <div className="flex items-center gap-2"><Instagram className="w-4 h-4 text-muted-foreground" /><Input placeholder="Instagram handle" value={socialMedia.instagram} onChange={e => setSocialMedia(p => ({ ...p, instagram: e.target.value }))} /></div>
+                <div className="flex items-center gap-2"><Facebook className="w-4 h-4 text-muted-foreground" /><Input placeholder="Facebook URL" value={socialMedia.facebook} onChange={e => setSocialMedia(p => ({ ...p, facebook: e.target.value }))} /></div>
+                <div className="flex items-center gap-2"><Twitter className="w-4 h-4 text-muted-foreground" /><Input placeholder="Twitter handle" value={socialMedia.twitter} onChange={e => setSocialMedia(p => ({ ...p, twitter: e.target.value }))} /></div>
+                <div className="flex items-center gap-2"><Globe className="w-4 h-4 text-muted-foreground" /><Input placeholder="Website URL" value={socialMedia.website} onChange={e => setSocialMedia(p => ({ ...p, website: e.target.value }))} /></div>
+              </div>
+              <Button size="sm" className="rounded-full gap-2" onClick={() => toast({ title: "Social media saved!" })}>
+                <Save className="w-4 h-4" /> Save Social
               </Button>
             </div>
 
@@ -348,20 +346,14 @@ const TravelerDashboard = () => {
                 <label className="text-sm font-medium text-foreground">Currency</label>
                 <select className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm mt-1"
                   value={profile.currency} onChange={e => setProfile(p => ({ ...p, currency: e.target.value }))}>
-                  <option value="USD">USD ($)</option>
-                  <option value="EUR">EUR (€)</option>
-                  <option value="GBP">GBP (£)</option>
-                  <option value="INR">INR (₹)</option>
+                  <option value="USD">USD ($)</option><option value="EUR">EUR (€)</option><option value="GBP">GBP (£)</option><option value="INR">INR (₹)</option>
                 </select>
               </div>
               <div>
                 <label className="text-sm font-medium text-foreground">Language</label>
                 <select className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm mt-1"
                   value={profile.language} onChange={e => setProfile(p => ({ ...p, language: e.target.value }))}>
-                  <option value="English">English</option>
-                  <option value="Hindi">Hindi</option>
-                  <option value="French">French</option>
-                  <option value="Spanish">Spanish</option>
+                  <option value="English">English</option><option value="Hindi">Hindi</option><option value="French">French</option><option value="Spanish">Spanish</option>
                 </select>
               </div>
             </div>
@@ -384,7 +376,7 @@ const TravelerDashboard = () => {
                 </div>
                 <span className="ml-auto text-xs bg-accent/10 text-accent px-2 py-0.5 rounded-full">Default</span>
               </div>
-              <Button variant="outline" size="sm" className="rounded-full text-xs" onClick={() => toast({ title: "Add payment method", description: "This would open a payment form in production." })}>+ Add Payment Method</Button>
+              <Button variant="outline" size="sm" className="rounded-full text-xs" onClick={() => toast({ title: "Add payment method (mock)" })}>+ Add Payment Method</Button>
             </div>
           </div>
         )}
