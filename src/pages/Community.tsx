@@ -20,7 +20,8 @@ const tipCategoryColors: Record<string, string> = {
 type Tab = "stories" | "spotlights" | "reviews" | "tips";
 
 const Community = () => {
-  const [activeTab, setActiveTab] = useState<Tab>("stories");
+  const [searchParams] = useSearchParams();
+  const [activeTab, setActiveTab] = useState<Tab>((searchParams.get("tab") as Tab) || "stories");
   const [expandedStory, setExpandedStory] = useState<string | null>(null);
   const [expandedTip, setExpandedTip] = useState<string | null>(null);
 
