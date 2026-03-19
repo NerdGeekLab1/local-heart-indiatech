@@ -33,7 +33,7 @@ const Footer = () => (
           <div className="space-y-2">
             <Link to="/community" className="block text-sm text-muted-foreground hover:text-foreground transition-colors">Traveler Stories</Link>
             <Link to="/community" className="block text-sm text-muted-foreground hover:text-foreground transition-colors">Host Spotlights</Link>
-            <Link to="/community" className="block text-sm text-muted-foreground hover:text-foreground transition-colors">Travel Tips</Link>
+            <Link to="/community?tab=tips" className="block text-sm text-muted-foreground hover:text-foreground transition-colors">Travel Tips</Link>
             <Link to="/community" className="block text-sm text-muted-foreground hover:text-foreground transition-colors">Blog</Link>
           </div>
         </div>
