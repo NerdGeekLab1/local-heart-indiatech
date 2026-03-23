@@ -1,17 +1,24 @@
 import { useState } from "react";
 import { useParams, Link } from "react-router-dom";
-import { motion } from "framer-motion";
-import { Star, Shield, Clock, Globe, MapPin, ArrowLeft, MessageCircle, Car, Home, Compass, Play, Bed, Users, Gauge, CheckCircle, UtensilsCrossed, Leaf, ChefHat } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  Star, Shield, Clock, Globe, MapPin, ArrowLeft, MessageCircle, Car,
+  Home, Compass, Play, Bed, Users, Gauge, CheckCircle, UtensilsCrossed,
+  Leaf, ChefHat, Heart, Share2, Camera, Award, Verified, Calendar,
+  Phone, Instagram, X as XIcon
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { hosts, experiences, reviews } from "@/lib/data";
 
 const serviceIcons: Record<string, React.ElementType> = {
-  Guide: Compass,
-  Stay: Home,
-  Transport: Car,
-  Food: UtensilsCrossed,
+  Guide: Compass, Stay: Home, Transport: Car, Food: UtensilsCrossed,
+};
+
+const serviceColors: Record<string, string> = {
+  Guide: "from-primary/20 to-primary/5", Stay: "from-accent/20 to-accent/5",
+  Transport: "from-destructive/10 to-destructive/5", Food: "from-primary/15 to-primary/5",
 };
 
 const HostProfile = () => {
@@ -19,6 +26,8 @@ const HostProfile = () => {
   const host = hosts.find(h => h.id === id);
   const [activeStayImage, setActiveStayImage] = useState(0);
   const [activeTab, setActiveTab] = useState<"overview" | "stay" | "transport" | "food" | "experiences" | "reviews">("overview");
+  const [liked, setLiked] = useState(false);
+  const [activeReel, setActiveReel] = useState<number | null>(null);
 
   if (!host) {
     return (
@@ -33,213 +42,378 @@ const HostProfile = () => {
 
   const hostExperiences = experiences.filter(e => e.hostId === host.id);
   const hostReviews = reviews.filter(r => r.hostId === host.id);
+
   const tabs = [
-    { id: "overview" as const, label: "Overview" },
-    ...(host.stayInfo ? [{ id: "stay" as const, label: "Stay & Rooms" }] : []),
-    ...(host.transportInfo ? [{ id: "transport" as const, label: "Transport" }] : []),
-    ...(host.foodInfo ? [{ id: "food" as const, label: "Food & Dining" }] : []),
-    { id: "experiences" as const, label: "Experiences" },
-    { id: "reviews" as const, label: `Reviews (${hostReviews.length})` },
+    { id: "overview" as const, label: "Overview", icon: Compass },
+    ...(host.stayInfo ? [{ id: "stay" as const, label: "Stay", icon: Home }] : []),
+    ...(host.transportInfo ? [{ id: "transport" as const, label: "Transport", icon: Car }] : []),
+    ...(host.foodInfo ? [{ id: "food" as const, label: "Food", icon: UtensilsCrossed }] : []),
+    { id: "experiences" as const, label: "Experiences", icon: Camera },
+    { id: "reviews" as const, label: `Reviews`, icon: Star },
+  ];
+
+  // Mock reels data
+  const reels = [
+    { id: 1, thumbnail: host.image, title: "Morning at the haveli", views: "2.3K", duration: "0:32" },
+    { id: 2, thumbnail: host.image, title: "Local market walk", views: "1.8K", duration: "0:45" },
+    { id: 3, thumbnail: host.image, title: "Cooking session", views: "3.1K", duration: "1:02" },
+    { id: 4, thumbnail: host.image, title: "Sunset point", views: "4.5K", duration: "0:28" },
+    { id: 5, thumbnail: host.image, title: "Guest testimonial", views: "1.2K", duration: "0:55" },
+    { id: 6, thumbnail: host.image, title: "Hidden gem tour", views: "2.7K", duration: "0:40" },
   ];
 
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
-      <div className="pt-20 pb-16 px-4 sm:px-6 lg:px-8 mx-auto max-w-6xl">
-        <Link to="/explore" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-6">
-          <ArrowLeft className="w-4 h-4" /> Back to Explore
-        </Link>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="lg:col-span-1">
-            <div className="rounded-lg bg-card p-2 shadow-card">
-              <div className="aspect-[3/4] rounded-md overflow-hidden">
-                <img src={host.image} alt={host.name} className="h-full w-full object-cover" />
-              </div>
+      {/* ═══ Cover Hero ═══ */}
+      <div className="relative h-72 sm:h-80 overflow-hidden bg-gradient-to-br from-primary/20 to-accent/10">
+        <div className="absolute inset-0 opacity-30">
+          <img src={host.image} alt="" className="w-full h-full object-cover blur-2xl scale-110" />
+        </div>
+        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/50 to-transparent" />
+      </div>
+
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 -mt-32 relative z-10 pb-16">
+        {/* ═══ Profile Header ═══ */}
+        <div className="flex flex-col sm:flex-row gap-6 items-start sm:items-end mb-8">
+          {/* Avatar */}
+          <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}
+            className="relative shrink-0">
+            <div className="w-36 h-36 sm:w-44 sm:h-44 rounded-3xl overflow-hidden border-4 border-background shadow-elevated">
+              <img src={host.image} alt={host.name} className="w-full h-full object-cover" />
             </div>
-            <div className="mt-4 space-y-3">
-              <div className="rounded-lg bg-card p-4 shadow-card flex items-center gap-3">
-                <Shield className="w-5 h-5 text-accent" />
-                <div>
-                  <p className="text-sm font-semibold text-foreground">Safety Score: {host.safetyScore}/100</p>
-                  <p className="text-xs text-muted-foreground">Identity verified via KYC</p>
-                </div>
+            {host.verified && (
+              <div className="absolute -bottom-2 -right-2 w-10 h-10 rounded-full bg-accent flex items-center justify-center border-3 border-background">
+                <Verified className="w-5 h-5 text-accent-foreground" />
               </div>
-              <div className="rounded-lg bg-card p-4 shadow-card flex items-center gap-3">
-                <Clock className="w-5 h-5 text-primary" />
-                <div>
-                  <p className="text-sm font-semibold text-foreground">Responds {host.responseTime}</p>
-                  <p className="text-xs text-muted-foreground">Typically very responsive</p>
-                </div>
-              </div>
-              <div className="rounded-lg bg-card p-4 shadow-card flex items-center gap-3">
-                <Star className="w-5 h-5 fill-primary text-primary" />
-                <div>
-                  <p className="text-sm font-semibold text-foreground">{host.rating} · {host.reviewCount} reviews</p>
-                  <p className="text-xs text-muted-foreground">Consistently highly rated</p>
-                </div>
-              </div>
-            </div>
+            )}
           </motion.div>
 
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="lg:col-span-2">
-            <div className="flex items-start justify-between">
+          {/* Name & Meta */}
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
+            className="flex-1">
+            <div className="flex items-start justify-between gap-4">
               <div>
-                <h1 className="text-3xl font-bold text-foreground">{host.name}</h1>
-                <p className="flex items-center gap-1 text-muted-foreground mt-1">
-                  <MapPin className="w-4 h-4" /> {host.city}, India
+                <h1 className="text-3xl sm:text-4xl font-bold text-foreground">{host.name}</h1>
+                <p className="flex items-center gap-1.5 text-muted-foreground mt-1">
+                  <MapPin className="w-4 h-4 text-primary" /> {host.city}, India
                 </p>
+                <p className="text-muted-foreground italic mt-1">"{host.tagline}"</p>
               </div>
-              <div className="text-right">
-                <p className="text-2xl font-bold text-foreground">${host.pricePerDay}</p>
+              <div className="hidden sm:block text-right">
+                <p className="text-3xl font-bold text-foreground">${host.pricePerDay}</p>
                 <p className="text-xs text-muted-foreground">per day</p>
               </div>
             </div>
-            <p className="mt-1 text-lg text-muted-foreground italic">"{host.tagline}"</p>
 
-            <div className="mt-4 flex flex-wrap gap-3">
-              <Link to={`/book/${host.id}`}>
-                <Button size="lg" className="rounded-full bg-primary text-primary-foreground hover:bg-primary/90 px-8 gap-2">
-                  <MessageCircle className="w-4 h-4" /> Book Now
-                </Button>
-              </Link>
-              <Button size="lg" variant="outline" className="rounded-full px-8">Save Host</Button>
+            {/* Stats Bar */}
+            <div className="mt-4 flex flex-wrap gap-4">
+              <div className="flex items-center gap-1.5 text-sm">
+                <Star className="w-4 h-4 fill-primary text-primary" />
+                <span className="font-bold text-foreground">{host.rating}</span>
+                <span className="text-muted-foreground">({host.reviewCount} reviews)</span>
+              </div>
+              <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                <Shield className="w-4 h-4 text-accent" />
+                Safety: {host.safetyScore}/100
+              </div>
+              <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                <Clock className="w-4 h-4" />
+                Responds {host.responseTime}
+              </div>
+              <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                <Globe className="w-4 h-4" />
+                {host.languages.join(", ")}
+              </div>
             </div>
+          </motion.div>
+        </div>
 
-            {/* Tabs */}
-            <div className="mt-6 flex gap-1 overflow-x-auto border-b border-border pb-px">
-              {tabs.map(t => (
+        {/* Action Buttons */}
+        <div className="flex flex-wrap gap-3 mb-8">
+          <Link to={`/book/${host.id}`}>
+            <Button size="lg" className="rounded-full px-8 gap-2 shadow-elevated">
+              <MessageCircle className="w-4 h-4" /> Book Now
+            </Button>
+          </Link>
+          <Button size="lg" variant="outline" className="rounded-full px-6 gap-2" onClick={() => setLiked(!liked)}>
+            <Heart className={`w-4 h-4 ${liked ? "fill-destructive text-destructive" : ""}`} />
+            {liked ? "Saved" : "Save"}
+          </Button>
+          <Button size="lg" variant="outline" className="rounded-full px-6 gap-2">
+            <Share2 className="w-4 h-4" /> Share
+          </Button>
+        </div>
+
+        {/* ═══ Services Grid ═══ */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-8">
+          {host.services.map(s => {
+            const Icon = serviceIcons[s] || Compass;
+            return (
+              <motion.div key={s} whileHover={{ y: -2 }}
+                className={`rounded-2xl bg-gradient-to-br ${serviceColors[s] || "from-secondary to-muted"} p-5 text-center cursor-pointer transition-shadow hover:shadow-card`}
+                onClick={() => {
+                  if (s === "Stay" && host.stayInfo) setActiveTab("stay");
+                  if (s === "Transport" && host.transportInfo) setActiveTab("transport");
+                  if (s === "Food" && host.foodInfo) setActiveTab("food");
+                  if (s === "Guide") setActiveTab("experiences");
+                }}
+              >
+                <Icon className="w-7 h-7 text-primary mx-auto mb-2" />
+                <span className="text-sm font-semibold text-foreground">{s}</span>
+              </motion.div>
+            );
+          })}
+        </div>
+
+        {/* ═══ Instagram-Style Video Reels ═══ */}
+        <motion.section initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
+          className="mb-10">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
+              <Play className="w-5 h-5 text-primary" /> Reels & Stories
+            </h2>
+            <span className="text-xs text-muted-foreground">{reels.length} videos</span>
+          </div>
+
+          <div className="flex gap-3 overflow-x-auto pb-4 snap-x snap-mandatory scrollbar-hide">
+            {reels.map((reel, i) => (
+              <motion.div
+                key={reel.id}
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: i * 0.05 }}
+                whileHover={{ scale: 1.03, y: -4 }}
+                onClick={() => setActiveReel(activeReel === i ? null : i)}
+                className={`relative shrink-0 w-36 sm:w-44 aspect-[9/16] rounded-2xl overflow-hidden cursor-pointer snap-start transition-all duration-300 ${activeReel === i ? "ring-3 ring-primary shadow-elevated" : "shadow-card hover:shadow-card-hover"}`}
+              >
+                <img src={reel.thumbnail} alt={reel.title} className="w-full h-full object-cover" />
+                <div className="absolute inset-0 bg-gradient-to-t from-foreground/70 via-transparent to-foreground/10" />
+
+                {/* Play Button */}
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <motion.div
+                    animate={activeReel === i ? { scale: [1, 1.2, 1] } : {}}
+                    transition={{ repeat: Infinity, duration: 1.5 }}
+                    className="w-10 h-10 rounded-full bg-primary/80 backdrop-blur-sm flex items-center justify-center"
+                  >
+                    <Play className="w-4 h-4 text-primary-foreground ml-0.5" />
+                  </motion.div>
+                </div>
+
+                {/* Duration Badge */}
+                <span className="absolute top-2 right-2 bg-foreground/60 backdrop-blur-sm text-primary-foreground text-[10px] font-medium px-1.5 py-0.5 rounded">
+                  {reel.duration}
+                </span>
+
+                {/* Bottom Info */}
+                <div className="absolute bottom-2 left-2 right-2">
+                  <p className="text-primary-foreground text-xs font-semibold leading-tight truncate">{reel.title}</p>
+                  <p className="text-primary-foreground/70 text-[10px] flex items-center gap-1 mt-0.5">
+                    <Camera className="w-2.5 h-2.5" /> {reel.views} views
+                  </p>
+                </div>
+
+                {/* Live Indicator for active */}
+                {activeReel === i && (
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="absolute top-2 left-2 flex items-center gap-1 bg-destructive text-primary-foreground text-[10px] font-bold px-2 py-0.5 rounded-full"
+                  >
+                    <span className="w-1.5 h-1.5 rounded-full bg-primary-foreground animate-pulse" />
+                    PLAYING
+                  </motion.div>
+                )}
+              </motion.div>
+            ))}
+          </div>
+        </motion.section>
+
+        {/* ═══ Content Tabs ═══ */}
+        <div className="sticky top-16 z-20 bg-background/80 backdrop-blur-md border-b border-border mb-6 -mx-4 px-4 sm:-mx-6 sm:px-6">
+          <div className="flex gap-1 overflow-x-auto py-2">
+            {tabs.map(t => {
+              const Icon = t.icon;
+              return (
                 <button key={t.id} onClick={() => setActiveTab(t.id)}
-                  className={`px-4 py-2 text-sm font-medium whitespace-nowrap transition-colors rounded-t-lg ${activeTab === t.id ? "bg-card text-primary border-b-2 border-primary" : "text-muted-foreground hover:text-foreground"}`}>
+                  className={`flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium whitespace-nowrap rounded-full transition-all ${activeTab === t.id ? "bg-primary text-primary-foreground shadow-card" : "text-muted-foreground hover:bg-secondary hover:text-foreground"}`}
+                >
+                  <Icon className="w-3.5 h-3.5" />
                   {t.label}
+                  {t.id === "reviews" && <span className="text-xs opacity-70">({hostReviews.length})</span>}
                 </button>
-              ))}
-            </div>
+              );
+            })}
+          </div>
+        </div>
 
-            {/* Overview Tab */}
+        {/* ═══ Tab Content ═══ */}
+        <AnimatePresence mode="wait">
+          <motion.div key={activeTab} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.2 }}>
+
+            {/* OVERVIEW TAB */}
             {activeTab === "overview" && (
-              <div className="mt-6 space-y-6">
-                <div>
-                  <h3 className="text-sm font-semibold text-foreground uppercase tracking-wider mb-2">About</h3>
-                  <p className="text-muted-foreground leading-relaxed">{host.bio}</p>
-                </div>
-                <div>
-                  <h3 className="text-sm font-semibold text-foreground uppercase tracking-wider mb-2">Languages</h3>
-                  <div className="flex items-center gap-2">
-                    <Globe className="w-4 h-4 text-muted-foreground" />
-                    <span className="text-sm text-muted-foreground">{host.languages.join(", ")}</span>
-                  </div>
-                </div>
-                <div>
-                  <h3 className="text-sm font-semibold text-foreground uppercase tracking-wider mb-3">Services Offered</h3>
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                    {host.services.map(s => {
-                      const Icon = serviceIcons[s] || Compass;
-                      return (
-                        <div key={s} className="rounded-lg bg-secondary p-4 flex flex-col items-center gap-2">
-                          <Icon className="w-6 h-6 text-primary" />
-                          <span className="text-sm font-medium text-foreground">{s}</span>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-                <div>
-                  <h3 className="text-sm font-semibold text-foreground uppercase tracking-wider mb-3">📹 Video Testimonials</h3>
-                  <div className="grid grid-cols-3 gap-3">
-                    {[1, 2, 3].map(i => (
-                      <div key={i} className="relative aspect-[9/16] rounded-lg overflow-hidden bg-secondary group cursor-pointer">
-                        <img src={host.image} alt="testimonial" className="w-full h-full object-cover opacity-70" />
-                        <div className="absolute inset-0 flex items-center justify-center">
-                          <div className="w-10 h-10 rounded-full bg-primary/80 flex items-center justify-center backdrop-blur-sm group-hover:scale-110 transition-transform">
-                            <Play className="w-4 h-4 text-primary-foreground ml-0.5" />
-                          </div>
-                        </div>
-                        <div className="absolute bottom-2 left-2 text-xs font-medium text-primary-foreground bg-foreground/40 backdrop-blur-sm px-2 py-0.5 rounded">
-                          Traveler #{i}
-                        </div>
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <div className="lg:col-span-2 space-y-8">
+                  {/* About */}
+                  <div className="rounded-2xl bg-card shadow-card p-6">
+                    <h3 className="text-lg font-bold text-foreground mb-3">About {host.name}</h3>
+                    <p className="text-muted-foreground leading-relaxed">{host.bio}</p>
+                    {host.specialties && (
+                      <div className="mt-4 flex flex-wrap gap-2">
+                        {host.specialties.map(s => (
+                          <span key={s} className="text-xs bg-primary/10 text-primary px-3 py-1 rounded-full font-medium">{s}</span>
+                        ))}
                       </div>
-                    ))}
+                    )}
+                  </div>
+
+                  {/* Highlights Grid */}
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="rounded-2xl bg-gradient-to-br from-primary/10 to-primary/5 p-5">
+                      <Award className="w-6 h-6 text-primary mb-2" />
+                      <p className="text-2xl font-bold text-foreground">{host.reviewCount}+</p>
+                      <p className="text-xs text-muted-foreground">Happy travelers</p>
+                    </div>
+                    <div className="rounded-2xl bg-gradient-to-br from-accent/10 to-accent/5 p-5">
+                      <Shield className="w-6 h-6 text-accent mb-2" />
+                      <p className="text-2xl font-bold text-foreground">{host.safetyScore}%</p>
+                      <p className="text-xs text-muted-foreground">Safety score</p>
+                    </div>
+                    <div className="rounded-2xl bg-gradient-to-br from-primary/10 to-primary/5 p-5">
+                      <Star className="w-6 h-6 text-primary mb-2" />
+                      <p className="text-2xl font-bold text-foreground">{host.rating}</p>
+                      <p className="text-xs text-muted-foreground">Average rating</p>
+                    </div>
+                    <div className="rounded-2xl bg-gradient-to-br from-accent/10 to-accent/5 p-5">
+                      <Clock className="w-6 h-6 text-accent mb-2" />
+                      <p className="text-2xl font-bold text-foreground">{host.responseTime}</p>
+                      <p className="text-xs text-muted-foreground">Response time</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Sidebar */}
+                <div className="space-y-4">
+                  <div className="rounded-2xl bg-card shadow-card p-5">
+                    <h4 className="text-sm font-bold text-foreground uppercase tracking-wider mb-3">Quick Info</h4>
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-3 text-sm">
+                        <Globe className="w-4 h-4 text-primary shrink-0" />
+                        <span className="text-muted-foreground">{host.languages.join(", ")}</span>
+                      </div>
+                      <div className="flex items-center gap-3 text-sm">
+                        <MapPin className="w-4 h-4 text-primary shrink-0" />
+                        <span className="text-muted-foreground">{host.city}, India</span>
+                      </div>
+                      <div className="flex items-center gap-3 text-sm">
+                        <Calendar className="w-4 h-4 text-primary shrink-0" />
+                        <span className="text-muted-foreground">Available year-round</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Booking Card */}
+                  <div className="rounded-2xl bg-primary/5 border border-primary/20 p-5">
+                    <p className="text-2xl font-bold text-foreground">${host.pricePerDay}<span className="text-sm font-normal text-muted-foreground">/day</span></p>
+                    <p className="text-xs text-muted-foreground mt-1">All services included</p>
+                    <Link to={`/book/${host.id}`}>
+                      <Button className="w-full mt-4 rounded-full gap-2">
+                        <MessageCircle className="w-4 h-4" /> Book {host.name}
+                      </Button>
+                    </Link>
                   </div>
                 </div>
               </div>
             )}
 
-            {/* Stay Tab */}
+            {/* STAY TAB */}
             {activeTab === "stay" && host.stayInfo && (
-              <div className="mt-6 space-y-6">
-                <div>
-                  <div className="flex items-center gap-2 mb-1">
-                    <Home className="w-5 h-5 text-primary" />
-                    <h3 className="text-lg font-bold text-foreground">{host.stayInfo.propertyName}</h3>
+              <div className="space-y-6">
+                <div className="rounded-2xl bg-card shadow-card overflow-hidden">
+                  <div className="relative aspect-[21/9] overflow-hidden">
+                    <motion.img
+                      key={activeStayImage}
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      src={host.stayInfo.images[activeStayImage]}
+                      alt="Property"
+                      className="w-full h-full object-cover"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-foreground/40 to-transparent" />
+                    <div className="absolute bottom-4 left-4">
+                      <span className="bg-primary text-primary-foreground text-xs font-bold px-3 py-1 rounded-full">{host.stayInfo.propertyType}</span>
+                      <h3 className="text-2xl font-bold text-primary-foreground mt-2">{host.stayInfo.propertyName}</h3>
+                    </div>
                   </div>
-                  <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full">{host.stayInfo.propertyType}</span>
-                  <p className="mt-3 text-muted-foreground leading-relaxed">{host.stayInfo.description}</p>
-                </div>
-                <div>
-                  <div className="aspect-video rounded-lg overflow-hidden bg-secondary">
-                    <img src={host.stayInfo.images[activeStayImage]} alt="Property" className="w-full h-full object-cover" />
-                  </div>
-                  <div className="mt-2 flex gap-2">
+                  <div className="flex gap-2 p-3 overflow-x-auto">
                     {host.stayInfo.images.map((img, i) => (
                       <button key={i} onClick={() => setActiveStayImage(i)}
-                        className={`w-16 h-16 rounded-md overflow-hidden border-2 transition-colors ${i === activeStayImage ? "border-primary" : "border-transparent"}`}>
+                        className={`w-20 h-14 rounded-lg overflow-hidden shrink-0 border-2 transition-all ${i === activeStayImage ? "border-primary scale-105" : "border-transparent opacity-60 hover:opacity-100"}`}>
                         <img src={img} alt={`View ${i + 1}`} className="w-full h-full object-cover" />
                       </button>
                     ))}
                   </div>
                 </div>
-                <div>
-                  <h3 className="text-sm font-semibold text-foreground uppercase tracking-wider mb-3">Available Rooms</h3>
-                  <div className="space-y-3">
-                    {host.stayInfo.rooms.map(room => (
-                      <div key={room.name} className="rounded-lg bg-card border border-border p-4 shadow-card">
-                        <div className="flex items-start justify-between">
-                          <div>
-                            <h4 className="font-bold text-foreground">{room.name}</h4>
-                            <span className="text-xs bg-secondary text-muted-foreground px-2 py-0.5 rounded-full">{room.type}</span>
-                          </div>
-                          <div className="text-right">
-                            <p className="text-lg font-bold text-foreground">${room.pricePerNight}</p>
-                            <p className="text-xs text-muted-foreground">per night</p>
-                          </div>
+
+                <p className="text-muted-foreground leading-relaxed">{host.stayInfo.description}</p>
+
+                <h4 className="text-lg font-bold text-foreground flex items-center gap-2">
+                  <Bed className="w-5 h-5 text-primary" /> Available Rooms
+                </h4>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {host.stayInfo.rooms.map(room => (
+                    <motion.div key={room.name} whileHover={{ y: -2 }}
+                      className="rounded-2xl bg-card shadow-card border border-border p-5 hover:shadow-elevated transition-shadow">
+                      <div className="flex justify-between items-start mb-2">
+                        <div>
+                          <h5 className="font-bold text-foreground">{room.name}</h5>
+                          <span className="text-xs bg-secondary text-muted-foreground px-2 py-0.5 rounded-full">{room.type}</span>
                         </div>
-                        <p className="mt-2 text-sm text-muted-foreground">{room.description}</p>
-                        <div className="mt-3 flex items-center gap-4 text-xs text-muted-foreground">
-                          <span className="flex items-center gap-1"><Bed className="w-3 h-3" />{room.beds} bed{room.beds > 1 ? "s" : ""}</span>
-                          <span className="flex items-center gap-1"><Users className="w-3 h-3" />Max {room.maxGuests} guests</span>
-                        </div>
-                        <div className="mt-2 flex flex-wrap gap-1.5">
-                          {room.amenities.map(a => (
-                            <span key={a} className="text-xs bg-secondary text-muted-foreground px-2 py-0.5 rounded-full">{a}</span>
-                          ))}
+                        <div className="text-right">
+                          <p className="text-xl font-bold text-foreground">${room.pricePerNight}</p>
+                          <p className="text-xs text-muted-foreground">/night</p>
                         </div>
                       </div>
-                    ))}
-                  </div>
+                      <p className="text-sm text-muted-foreground mt-2">{room.description}</p>
+                      <div className="mt-3 flex gap-3 text-xs text-muted-foreground">
+                        <span className="flex items-center gap-1"><Bed className="w-3 h-3" />{room.beds} bed{room.beds > 1 ? "s" : ""}</span>
+                        <span className="flex items-center gap-1"><Users className="w-3 h-3" />Max {room.maxGuests}</span>
+                      </div>
+                      <div className="mt-3 flex flex-wrap gap-1.5">
+                        {room.amenities.map(a => (
+                          <span key={a} className="text-[11px] bg-secondary text-muted-foreground px-2 py-0.5 rounded-full">{a}</span>
+                        ))}
+                      </div>
+                    </motion.div>
+                  ))}
                 </div>
-                <div>
-                  <h3 className="text-sm font-semibold text-foreground uppercase tracking-wider mb-3">Property Amenities</h3>
+
+                <div className="rounded-2xl bg-card shadow-card p-5">
+                  <h4 className="text-sm font-bold text-foreground uppercase tracking-wider mb-3">Property Amenities</h4>
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                     {host.stayInfo.amenities.map(a => (
-                      <div key={a} className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <CheckCircle className="w-3 h-3 text-accent shrink-0" /> {a}
-                      </div>
+                      <span key={a} className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                        <CheckCircle className="w-3.5 h-3.5 text-accent shrink-0" /> {a}
+                      </span>
                     ))}
                   </div>
                 </div>
+
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="rounded-lg bg-secondary p-4">
-                    <h4 className="text-xs font-semibold text-foreground uppercase tracking-wider mb-2">Check-in / Check-out</h4>
+                  <div className="rounded-2xl bg-secondary p-5">
+                    <h4 className="text-sm font-bold text-foreground uppercase tracking-wider mb-2">Timing</h4>
                     <p className="text-sm text-muted-foreground">Check-in: {host.stayInfo.checkIn}</p>
                     <p className="text-sm text-muted-foreground">Check-out: {host.stayInfo.checkOut}</p>
                   </div>
-                  <div className="rounded-lg bg-secondary p-4">
-                    <h4 className="text-xs font-semibold text-foreground uppercase tracking-wider mb-2">House Rules</h4>
+                  <div className="rounded-2xl bg-secondary p-5">
+                    <h4 className="text-sm font-bold text-foreground uppercase tracking-wider mb-2">House Rules</h4>
                     <ul className="space-y-1">
                       {host.stayInfo.houseRules.map(r => (
-                        <li key={r} className="text-sm text-muted-foreground flex items-start gap-1">
-                          <span className="text-primary">•</span> {r}
+                        <li key={r} className="text-sm text-muted-foreground flex items-start gap-1.5">
+                          <span className="text-primary mt-0.5">•</span> {r}
                         </li>
                       ))}
                     </ul>
@@ -248,203 +422,215 @@ const HostProfile = () => {
               </div>
             )}
 
-            {/* Transport Tab */}
+            {/* TRANSPORT TAB */}
             {activeTab === "transport" && host.transportInfo && (
-              <div className="mt-6 space-y-6">
-                <div>
-                  <div className="flex items-center gap-2 mb-2">
-                    <Car className="w-5 h-5 text-primary" />
+              <div className="space-y-6">
+                <div className="rounded-2xl bg-card shadow-card p-6">
+                  <div className="flex items-center gap-3 mb-3">
+                    <Car className="w-6 h-6 text-primary" />
                     <h3 className="text-lg font-bold text-foreground">Transport Services</h3>
                   </div>
                   <p className="text-muted-foreground leading-relaxed">{host.transportInfo.description}</p>
                 </div>
-                <div>
-                  <h3 className="text-sm font-semibold text-foreground uppercase tracking-wider mb-3">Available Vehicles</h3>
-                  <div className="space-y-3">
-                    {host.transportInfo.vehicles.map(v => (
-                      <div key={v.model} className="rounded-lg bg-card border border-border p-4 shadow-card">
-                        <div className="flex items-start justify-between">
-                          <div>
-                            <div className="flex items-center gap-2">
-                              <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full font-medium">{v.type}</span>
-                              <h4 className="font-bold text-foreground">{v.model}</h4>
-                            </div>
-                            <div className="mt-2 flex items-center gap-4 text-xs text-muted-foreground">
-                              <span className="flex items-center gap-1"><Users className="w-3 h-3" />{v.capacity} passengers</span>
-                              <span>{v.ac ? "❄️ AC" : "🌀 Non-AC"}</span>
-                              {v.pricePerKm > 0 && <span className="flex items-center gap-1"><Gauge className="w-3 h-3" />${v.pricePerKm}/km</span>}
-                            </div>
-                          </div>
-                          <div className="text-right">
-                            <p className="text-lg font-bold text-foreground">${v.pricePerDay}</p>
-                            <p className="text-xs text-muted-foreground">per day</p>
-                          </div>
-                        </div>
-                        <div className="mt-3 flex flex-wrap gap-1.5">
-                          {v.features.map(f => (
-                            <span key={f} className="text-xs bg-secondary text-muted-foreground px-2 py-0.5 rounded-full">{f}</span>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {host.transportInfo.vehicles.map(v => (
+                    <motion.div key={v.model} whileHover={{ y: -2 }}
+                      className="rounded-2xl bg-card shadow-card border border-border p-5 hover:shadow-elevated transition-shadow">
+                      <div className="flex items-center gap-2 mb-3">
+                        <span className="text-xs bg-primary text-primary-foreground px-2.5 py-1 rounded-full font-bold">{v.type}</span>
+                        <h4 className="font-bold text-foreground">{v.model}</h4>
+                      </div>
+                      <div className="flex items-center gap-4 text-xs text-muted-foreground mb-3">
+                        <span className="flex items-center gap-1"><Users className="w-3 h-3" />{v.capacity} pax</span>
+                        <span>{v.ac ? "❄️ AC" : "🌀 Non-AC"}</span>
+                        {v.pricePerKm > 0 && <span className="flex items-center gap-1"><Gauge className="w-3 h-3" />${v.pricePerKm}/km</span>}
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <div className="flex flex-wrap gap-1">
+                          {v.features.slice(0, 3).map(f => (
+                            <span key={f} className="text-[10px] bg-secondary text-muted-foreground px-2 py-0.5 rounded-full">{f}</span>
                           ))}
                         </div>
+                        <p className="text-xl font-bold text-foreground">${v.pricePerDay}<span className="text-xs font-normal text-muted-foreground">/day</span></p>
                       </div>
-                    ))}
-                  </div>
+                    </motion.div>
+                  ))}
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="rounded-lg bg-secondary p-4">
-                    <h4 className="text-xs font-semibold text-foreground uppercase tracking-wider mb-2">Airport Transfers</h4>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div className="rounded-2xl bg-secondary p-5">
+                    <h4 className="text-xs font-bold text-foreground uppercase tracking-wider mb-2">✈️ Airports</h4>
                     {host.transportInfo.airports.map(a => (
-                      <p key={a} className="text-sm text-muted-foreground flex items-center gap-1">✈️ {a}</p>
+                      <p key={a} className="text-sm text-muted-foreground">{a}</p>
                     ))}
                   </div>
-                  <div className="rounded-lg bg-secondary p-4">
-                    <h4 className="text-xs font-semibold text-foreground uppercase tracking-wider mb-2">Driver Languages</h4>
+                  <div className="rounded-2xl bg-secondary p-5">
+                    <h4 className="text-xs font-bold text-foreground uppercase tracking-wider mb-2">🗣️ Driver Languages</h4>
                     <p className="text-sm text-muted-foreground">{host.transportInfo.driverLanguages.join(", ")}</p>
                   </div>
-                </div>
-                <div>
-                  <h4 className="text-xs font-semibold text-foreground uppercase tracking-wider mb-2">Coverage Area</h4>
-                  <div className="flex flex-wrap gap-2">
-                    {host.transportInfo.coverage.map(c => (
-                      <span key={c} className="text-xs bg-card border border-border text-muted-foreground px-3 py-1 rounded-full flex items-center gap-1">
-                        <MapPin className="w-3 h-3 text-primary" />{c}
-                      </span>
-                    ))}
+                  <div className="rounded-2xl bg-secondary p-5">
+                    <h4 className="text-xs font-bold text-foreground uppercase tracking-wider mb-2">📍 Coverage</h4>
+                    <div className="flex flex-wrap gap-1">
+                      {host.transportInfo.coverage.map(c => (
+                        <span key={c} className="text-xs bg-card text-muted-foreground px-2 py-0.5 rounded-full">{c}</span>
+                      ))}
+                    </div>
                   </div>
                 </div>
               </div>
             )}
 
-            {/* Food Tab */}
+            {/* FOOD TAB */}
             {activeTab === "food" && host.foodInfo && (
-              <div className="mt-6 space-y-6">
-                <div>
-                  <div className="flex items-center gap-2 mb-2">
-                    <UtensilsCrossed className="w-5 h-5 text-primary" />
+              <div className="space-y-6">
+                <div className="rounded-2xl bg-card shadow-card p-6">
+                  <div className="flex items-center gap-3 mb-3">
+                    <UtensilsCrossed className="w-6 h-6 text-primary" />
                     <h3 className="text-lg font-bold text-foreground">Food & Dining</h3>
                   </div>
                   <p className="text-muted-foreground leading-relaxed">{host.foodInfo.description}</p>
                 </div>
 
-                {/* Cuisines & Meal Types */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="rounded-lg bg-secondary p-4">
-                    <h4 className="text-xs font-semibold text-foreground uppercase tracking-wider mb-2 flex items-center gap-1">
-                      <ChefHat className="w-3 h-3" /> Cuisines
-                    </h4>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div className="rounded-2xl bg-secondary p-5">
+                    <ChefHat className="w-5 h-5 text-primary mb-2" />
+                    <h4 className="text-xs font-bold text-foreground uppercase tracking-wider mb-2">Cuisines</h4>
                     <div className="flex flex-wrap gap-1.5">
                       {host.foodInfo.cuisines.map(c => (
                         <span key={c} className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full">{c}</span>
                       ))}
                     </div>
                   </div>
-                  <div className="rounded-lg bg-secondary p-4">
-                    <h4 className="text-xs font-semibold text-foreground uppercase tracking-wider mb-2">Meal Types</h4>
+                  <div className="rounded-2xl bg-secondary p-5">
+                    <Calendar className="w-5 h-5 text-primary mb-2" />
+                    <h4 className="text-xs font-bold text-foreground uppercase tracking-wider mb-2">Meal Types</h4>
                     <div className="flex flex-wrap gap-1.5">
                       {host.foodInfo.mealTypes.map(m => (
                         <span key={m} className="text-xs bg-accent/10 text-accent px-2 py-0.5 rounded-full">{m}</span>
                       ))}
                     </div>
                   </div>
-                </div>
-
-                {/* Dietary Options */}
-                <div>
-                  <h4 className="text-xs font-semibold text-foreground uppercase tracking-wider mb-2 flex items-center gap-1">
-                    <Leaf className="w-3 h-3 text-accent" /> Dietary Options
-                  </h4>
-                  <div className="flex flex-wrap gap-2">
-                    {host.foodInfo.dietaryOptions.map(d => (
-                      <span key={d} className="text-xs bg-card border border-border text-muted-foreground px-3 py-1 rounded-full flex items-center gap-1">
-                        <CheckCircle className="w-3 h-3 text-accent" /> {d}
-                      </span>
-                    ))}
+                  <div className="rounded-2xl bg-secondary p-5">
+                    <Leaf className="w-5 h-5 text-accent mb-2" />
+                    <h4 className="text-xs font-bold text-foreground uppercase tracking-wider mb-2">Dietary</h4>
+                    <div className="flex flex-wrap gap-1.5">
+                      {host.foodInfo.dietaryOptions.map(d => (
+                        <span key={d} className="text-xs bg-card border border-border text-muted-foreground px-2 py-0.5 rounded-full">{d}</span>
+                      ))}
+                    </div>
                   </div>
                 </div>
 
-                {/* Menu / Dishes */}
-                <div>
-                  <h3 className="text-sm font-semibold text-foreground uppercase tracking-wider mb-3">🍽️ Menu</h3>
-                  <div className="space-y-3">
-                    {host.foodInfo.dishes.map(dish => (
-                      <div key={dish.name} className="rounded-lg bg-card border border-border p-4 shadow-card">
-                        <div className="flex items-start justify-between">
-                          <div>
-                            <h4 className="font-bold text-foreground">{dish.name}</h4>
-                            <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full">{dish.cuisine}</span>
-                          </div>
-                          <div className="text-right">
-                            <p className="text-lg font-bold text-foreground">${dish.price}</p>
-                            <p className="text-xs text-muted-foreground">per person</p>
-                          </div>
+                <h4 className="text-lg font-bold text-foreground">🍽️ Menu</h4>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {host.foodInfo.dishes.map(dish => (
+                    <motion.div key={dish.name} whileHover={{ y: -2 }}
+                      className="rounded-2xl bg-card shadow-card border border-border p-5 hover:shadow-elevated transition-shadow">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <h5 className="font-bold text-foreground">{dish.name}</h5>
+                          <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full">{dish.cuisine}</span>
                         </div>
-                        <p className="mt-2 text-sm text-muted-foreground">{dish.description}</p>
-                        <div className="mt-2 flex flex-wrap gap-1.5">
-                          {dish.dietaryTags.map(t => (
-                            <span key={t} className="text-xs bg-secondary text-muted-foreground px-2 py-0.5 rounded-full">{t}</span>
-                          ))}
-                        </div>
+                        <p className="text-xl font-bold text-foreground">${dish.price}</p>
                       </div>
-                    ))}
-                  </div>
+                      <p className="mt-2 text-sm text-muted-foreground">{dish.description}</p>
+                      <div className="mt-2 flex flex-wrap gap-1.5">
+                        {dish.dietaryTags.map(t => (
+                          <span key={t} className="text-[11px] bg-secondary text-muted-foreground px-2 py-0.5 rounded-full">{t}</span>
+                        ))}
+                      </div>
+                    </motion.div>
+                  ))}
                 </div>
 
-                {/* Specialties */}
-                <div>
-                  <h4 className="text-xs font-semibold text-foreground uppercase tracking-wider mb-2">Signature Specialties</h4>
-                  <div className="flex flex-wrap gap-2">
-                    {host.foodInfo.specialties.map(s => (
-                      <span key={s} className="text-sm bg-primary/5 text-foreground border border-primary/20 px-3 py-1.5 rounded-full">⭐ {s}</span>
-                    ))}
-                  </div>
+                <div className="flex flex-wrap gap-2">
+                  {host.foodInfo.specialties.map(s => (
+                    <span key={s} className="text-sm bg-primary/5 text-foreground border border-primary/20 px-3 py-1.5 rounded-full">⭐ {s}</span>
+                  ))}
                 </div>
 
-                {/* Ordering Info */}
-                <div className="rounded-lg bg-primary/5 border border-primary/20 p-4">
-                  <h4 className="text-sm font-bold text-foreground mb-2">📋 Ordering Information</h4>
-                  <div className="space-y-1 text-sm text-muted-foreground">
-                    {host.foodInfo.minimumOrder && <p>Minimum order: {host.foodInfo.minimumOrder} persons</p>}
-                    {host.foodInfo.advanceNotice && <p>Advance notice: {host.foodInfo.advanceNotice}</p>}
-                    <p>All meals are freshly prepared. Prices are per person.</p>
+                {(host.foodInfo.minimumOrder || host.foodInfo.advanceNotice) && (
+                  <div className="rounded-2xl bg-primary/5 border border-primary/20 p-5">
+                    <h4 className="text-sm font-bold text-foreground mb-2">📋 Ordering Info</h4>
+                    <div className="space-y-1 text-sm text-muted-foreground">
+                      {host.foodInfo.minimumOrder && <p>Minimum: {host.foodInfo.minimumOrder} persons</p>}
+                      {host.foodInfo.advanceNotice && <p>Advance notice: {host.foodInfo.advanceNotice}</p>}
+                    </div>
                   </div>
-                </div>
-              </div>
-            )}
-
-            {/* Experiences Tab */}
-            {activeTab === "experiences" && (
-              <div className="mt-6">
-                {hostExperiences.length > 0 ? (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    {hostExperiences.map(exp => (
-                      <Link to={`/experience/${exp.id}`} key={exp.id} className="group rounded-lg overflow-hidden shadow-card hover:shadow-card-hover transition-shadow">
-                        <div className="relative aspect-video overflow-hidden">
-                          <img src={exp.image} alt={exp.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
-                          <div className="absolute inset-0 bg-gradient-to-t from-foreground/60 via-transparent to-transparent" />
-                          <div className="absolute bottom-2 left-2 right-2">
-                            <p className="text-sm font-semibold text-primary-foreground">{exp.title}</p>
-                            <p className="text-xs text-primary-foreground/80">${exp.price} · {exp.duration} · {exp.category}</p>
-                          </div>
-                        </div>
-                      </Link>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-muted-foreground text-center py-8">No experiences listed yet.</p>
                 )}
               </div>
             )}
 
-            {/* Reviews Tab */}
+            {/* EXPERIENCES TAB */}
+            {activeTab === "experiences" && (
+              <div>
+                {hostExperiences.length > 0 ? (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {hostExperiences.map(exp => (
+                      <Link to={`/experience/${exp.id}`} key={exp.id}>
+                        <motion.div whileHover={{ y: -4 }}
+                          className="rounded-2xl overflow-hidden bg-card shadow-card hover:shadow-elevated transition-all group">
+                          <div className="relative aspect-video overflow-hidden">
+                            <img src={exp.image} alt={exp.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                            <div className="absolute inset-0 bg-gradient-to-t from-foreground/60 via-transparent to-transparent" />
+                            <span className="absolute top-3 left-3 bg-primary text-primary-foreground text-xs font-bold px-2.5 py-1 rounded-full">{exp.category}</span>
+                            <div className="absolute bottom-3 left-3 right-3">
+                              <p className="text-primary-foreground font-bold text-sm">{exp.title}</p>
+                              <p className="text-primary-foreground/80 text-xs">${exp.price} · {exp.duration}</p>
+                            </div>
+                          </div>
+                        </motion.div>
+                      </Link>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-muted-foreground text-center py-12">No experiences listed yet.</p>
+                )}
+              </div>
+            )}
+
+            {/* REVIEWS TAB */}
             {activeTab === "reviews" && (
-              <div className="mt-6 space-y-4">
+              <div className="space-y-4">
+                <div className="rounded-2xl bg-card shadow-card p-6 mb-6">
+                  <div className="flex items-center gap-4">
+                    <div className="text-center">
+                      <p className="text-4xl font-bold text-foreground">{host.rating}</p>
+                      <div className="flex gap-0.5 mt-1">
+                        {Array.from({ length: 5 }).map((_, j) => (
+                          <Star key={j} className={`w-4 h-4 ${j < Math.floor(host.rating) ? "fill-primary text-primary" : "text-muted"}`} />
+                        ))}
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-1">{host.reviewCount} reviews</p>
+                    </div>
+                    <div className="flex-1 space-y-1">
+                      {[5, 4, 3, 2, 1].map(n => {
+                        const count = hostReviews.filter(r => r.rating === n).length;
+                        const pct = hostReviews.length > 0 ? (count / hostReviews.length) * 100 : 0;
+                        return (
+                          <div key={n} className="flex items-center gap-2 text-xs">
+                            <span className="w-3 text-muted-foreground">{n}</span>
+                            <div className="flex-1 h-2 bg-secondary rounded-full overflow-hidden">
+                              <div className="h-full bg-primary rounded-full transition-all" style={{ width: `${pct}%` }} />
+                            </div>
+                            <span className="w-6 text-right text-muted-foreground">{count}</span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+
                 {hostReviews.map(review => (
-                  <div key={review.id} className="rounded-lg bg-card p-4 shadow-card">
-                    <div className="flex items-center gap-2">
-                      <div className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center text-xs font-bold text-foreground">
+                  <motion.div key={review.id} initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
+                    className="rounded-2xl bg-card shadow-card p-5">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-sm font-bold text-primary">
                         {review.travelerName[0]}
                       </div>
-                      <div>
-                        <p className="text-sm font-medium text-foreground">{review.travelerName} <span className="text-muted-foreground font-normal">· {review.country}</span></p>
+                      <div className="flex-1">
+                        <p className="text-sm font-semibold text-foreground">{review.travelerName} <span className="text-muted-foreground font-normal">· {review.country}</span></p>
                         <div className="flex gap-0.5">
                           {Array.from({ length: review.rating }).map((_, j) => (
                             <Star key={j} className="w-3 h-3 fill-primary text-primary" />
@@ -452,17 +638,20 @@ const HostProfile = () => {
                         </div>
                       </div>
                       {review.experienceType && (
-                        <span className="ml-auto text-xs bg-secondary px-2 py-0.5 rounded-full text-muted-foreground">{review.experienceType}</span>
+                        <span className="text-xs bg-secondary text-muted-foreground px-2.5 py-1 rounded-full">{review.experienceType}</span>
                       )}
                     </div>
-                    <p className="mt-2 text-sm text-muted-foreground leading-relaxed">{review.text}</p>
-                  </div>
+                    <p className="mt-3 text-sm text-muted-foreground leading-relaxed">{review.text}</p>
+                    <p className="text-xs text-muted-foreground/60 mt-2">{review.date}</p>
+                  </motion.div>
                 ))}
               </div>
             )}
+
           </motion.div>
-        </div>
+        </AnimatePresence>
       </div>
+
       <Footer />
     </div>
   );

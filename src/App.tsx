@@ -12,6 +12,7 @@ import Booking from "./pages/Booking.tsx";
 import BecomeHost from "./pages/BecomeHost.tsx";
 import Signup from "./pages/Signup.tsx";
 import Destinations from "./pages/Destinations.tsx";
+import DestinationDetail from "./pages/DestinationDetail.tsx";
 import Community from "./pages/Community.tsx";
 import Resources from "./pages/Resources.tsx";
 import TravelerDashboard from "./pages/dashboard/TravelerDashboard.tsx";
