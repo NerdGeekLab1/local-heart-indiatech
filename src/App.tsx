@@ -12,6 +12,7 @@ import Booking from "./pages/Booking.tsx";
 import BecomeHost from "./pages/BecomeHost.tsx";
 import Signup from "./pages/Signup.tsx";
 import Destinations from "./pages/Destinations.tsx";
+import DestinationDetail from "./pages/DestinationDetail.tsx";
 import Community from "./pages/Community.tsx";
 import Resources from "./pages/Resources.tsx";
 import TravelerDashboard from "./pages/dashboard/TravelerDashboard.tsx";
@@ -40,6 +41,7 @@ const App = () => (
           <Route path="/become-host" element={<BecomeHost />} />
           <Route path="/signup" element={<Signup />} />
           <Route path="/destinations" element={<Destinations />} />
+          <Route path="/destination/:name" element={<DestinationDetail />} />
           <Route path="/community" element={<Community />} />
           <Route path="/resources" element={<Resources />} />
           <Route path="/dashboard/traveler" element={<TravelerDashboard />} />

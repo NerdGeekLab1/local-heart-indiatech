@@ -89,10 +89,10 @@ const Destinations = () => {
                           <MapPin className="w-5 h-5 text-primary" />
                         </div>
                         <div>
-                          <h3 className="text-xl font-bold text-foreground">{d.name}</h3>
+                          <Link to={`/destination/${d.name.toLowerCase()}`} className="text-xl font-bold text-foreground hover:text-primary transition-colors">{d.name}</Link>
                           <p className="text-xs text-muted-foreground">{d.state}</p>
                         </div>
-                        <span className="text-sm font-medium text-primary ml-2">{d.tagline}</span>
+                        <Link to={`/destination/${d.name.toLowerCase()}`} className="text-sm font-medium text-primary ml-2 hover:underline">{d.tagline}</Link>
                       </div>
                       <p className="text-sm text-muted-foreground mt-2">{d.description}</p>
 
