@@ -51,6 +51,7 @@ const App = () => (
           <Route path="/help" element={<HelpCenter />} />
           <Route path="/safety" element={<Safety />} />
           <Route path="/terms" element={<Terms />} />
+          <Route path="/docs" element={<Docs />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
