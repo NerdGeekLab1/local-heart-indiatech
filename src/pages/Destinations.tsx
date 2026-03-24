@@ -126,6 +126,14 @@ const Destinations = () => {
                           ))}
                         </div>
                       )}
+                      {/* Experience Tags */}
+                      {d.experienceTags && d.experienceTags.length > 0 && (
+                        <div className="mt-2 flex flex-wrap gap-1.5">
+                          {d.experienceTags.map(tag => (
+                            <span key={tag} className="text-[10px] bg-primary/10 text-primary px-2 py-0.5 rounded-full font-medium">{tag}</span>
+                          ))}
+                        </div>
+                      )}
                     </div>
 
                     {/* Host Avatars & Expand */}

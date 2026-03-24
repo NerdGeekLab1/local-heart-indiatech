@@ -34,7 +34,8 @@ const Footer = () => (
             <Link to="/community" className="block text-sm text-muted-foreground hover:text-foreground transition-colors">Traveler Stories</Link>
             <Link to="/community" className="block text-sm text-muted-foreground hover:text-foreground transition-colors">Host Spotlights</Link>
             <Link to="/community?tab=tips" className="block text-sm text-muted-foreground hover:text-foreground transition-colors">Travel Tips</Link>
-            <Link to="/community" className="block text-sm text-muted-foreground hover:text-foreground transition-colors">Blog</Link>
+            <Link to="/community?tab=blog" className="block text-sm text-muted-foreground hover:text-foreground transition-colors">Blog</Link>
+            <Link to="/docs" className="block text-sm text-muted-foreground hover:text-foreground transition-colors">Documentation</Link>
           </div>
         </div>
         <div>

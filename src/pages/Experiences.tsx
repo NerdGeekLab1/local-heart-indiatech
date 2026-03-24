@@ -72,7 +72,14 @@ const Experiences = () => {
         <div className="mt-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {filtered.map((exp, i) => (
             <Link to={`/experience/${exp.id}`} key={exp.id}>
-              <ExperienceCard experience={exp} index={i} />
+              <div className="relative">
+                <ExperienceCard experience={exp} index={i} />
+                {exp.difficulty && (
+                  <span className={`absolute top-3 left-3 text-[10px] font-bold px-2 py-0.5 rounded-full ${exp.difficulty === "Extreme" ? "bg-destructive text-destructive-foreground" : exp.difficulty === "Hard" ? "bg-primary text-primary-foreground" : exp.difficulty === "Moderate" ? "bg-accent text-accent-foreground" : "bg-secondary text-secondary-foreground"}`}>
+                    {exp.difficulty}
+                  </span>
+                )}
+              </div>
             </Link>
           ))}
         </div>

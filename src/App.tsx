@@ -21,6 +21,7 @@ import AdminDashboard from "./pages/dashboard/AdminDashboard.tsx";
 import HelpCenter from "./pages/HelpCenter.tsx";
 import Safety from "./pages/Safety.tsx";
 import Terms from "./pages/Terms.tsx";
+import Docs from "./pages/Docs.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
@@ -50,6 +51,7 @@ const App = () => (
           <Route path="/help" element={<HelpCenter />} />
           <Route path="/safety" element={<Safety />} />
           <Route path="/terms" element={<Terms />} />
+          <Route path="/docs" element={<Docs />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
