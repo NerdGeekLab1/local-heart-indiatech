@@ -11,7 +11,7 @@ import { hosts, experiences, vibeCategories, communityReels, destinations, blogP
 
 const floatingAnimation = {
   animate: { y: [0, -10, 0] },
-  transition: { duration: 4, repeat: Infinity, ease: "easeInOut" },
+  transition: { duration: 4, repeat: Infinity, ease: "easeInOut" as const },
 };
 
 const Index = () => {
