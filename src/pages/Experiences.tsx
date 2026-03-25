@@ -386,7 +386,7 @@ const Experiences = () => {
                 <ExperienceCard experience={exp} index={i} />
                 <div className="absolute top-3 left-3 flex gap-1.5">
                   {exp.difficulty && (
-                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${exp.difficulty === "Extreme" ? "bg-destructive text-destructive-foreground" : exp.difficulty === "Hard" ? "bg-primary text-primary-foreground" : exp.difficulty === "Moderate" ? "bg-accent text-accent-foreground" : "bg-secondary text-secondary-foreground"}`}>
+                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${(exp.difficulty as string) === "Extreme" ? "bg-destructive text-destructive-foreground" : exp.difficulty === "Hard" ? "bg-primary text-primary-foreground" : exp.difficulty === "Moderate" ? "bg-accent text-accent-foreground" : "bg-secondary text-secondary-foreground"}`}>
                       {exp.difficulty}
                     </span>
                   )}
