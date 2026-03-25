@@ -7,6 +7,7 @@ import {
   Heart, Share2, Calendar, Navigation, Eye
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import VirtualTour from "@/components/VirtualTour";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { destinations, hosts, experiences, reviews } from "@/lib/data";
