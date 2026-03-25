@@ -3,6 +3,7 @@ import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { AuthProvider } from "@/contexts/AuthContext";
 import Index from "./pages/Index.tsx";
 import Explore from "./pages/Explore.tsx";
 import Experiences from "./pages/Experiences.tsx";
@@ -28,34 +29,36 @@ const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/explore" element={<Explore />} />
-          <Route path="/experiences" element={<Experiences />} />
-          <Route path="/experience/:id" element={<ExperienceDetail />} />
-          <Route path="/host/:id" element={<HostProfile />} />
-          <Route path="/book/:id" element={<Booking />} />
-          <Route path="/become-host" element={<BecomeHost />} />
-          <Route path="/signup" element={<Signup />} />
-          <Route path="/destinations" element={<Destinations />} />
-          <Route path="/destination/:name" element={<DestinationDetail />} />
-          <Route path="/community" element={<Community />} />
-          <Route path="/resources" element={<Resources />} />
-          <Route path="/dashboard/traveler" element={<TravelerDashboard />} />
-          <Route path="/dashboard/host" element={<HostDashboard />} />
-          <Route path="/dashboard/admin" element={<AdminDashboard />} />
-          <Route path="/help" element={<HelpCenter />} />
-          <Route path="/safety" element={<Safety />} />
-          <Route path="/terms" element={<Terms />} />
-          <Route path="/docs" element={<Docs />} />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
-    </TooltipProvider>
+    <AuthProvider>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/explore" element={<Explore />} />
+            <Route path="/experiences" element={<Experiences />} />
+            <Route path="/experience/:id" element={<ExperienceDetail />} />
+            <Route path="/host/:id" element={<HostProfile />} />
+            <Route path="/book/:id" element={<Booking />} />
+            <Route path="/become-host" element={<BecomeHost />} />
+            <Route path="/signup" element={<Signup />} />
+            <Route path="/destinations" element={<Destinations />} />
+            <Route path="/destination/:name" element={<DestinationDetail />} />
+            <Route path="/community" element={<Community />} />
+            <Route path="/resources" element={<Resources />} />
+            <Route path="/dashboard/traveler" element={<TravelerDashboard />} />
+            <Route path="/dashboard/host" element={<HostDashboard />} />
+            <Route path="/dashboard/admin" element={<AdminDashboard />} />
+            <Route path="/help" element={<HelpCenter />} />
+            <Route path="/safety" element={<Safety />} />
+            <Route path="/terms" element={<Terms />} />
+            <Route path="/docs" element={<Docs />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
+      </TooltipProvider>
+    </AuthProvider>
   </QueryClientProvider>
 );
 
