@@ -268,9 +268,7 @@ const DestinationDetail = () => {
                           <Button className="rounded-full gap-2 flex-1">
                             <Navigation className="w-4 h-4" /> Get Directions
                           </Button>
-                          <Button variant="outline" className="rounded-full gap-2 flex-1">
-                            <Eye className="w-4 h-4" /> Virtual Tour
-                          </Button>
+                          <VirtualTour siteName={destination.sites[selectedSite].name} siteType={destination.sites[selectedSite].type} />
                         </div>
                       </div>
                     </motion.div>
