@@ -292,7 +292,7 @@ const Experiences = () => {
                           {exp.vehicleType === "Motorcycle" ? "🏍️ Bike" : "🛵 Scooty"}
                         </span>
                         {exp.difficulty && (
-                          <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full ${exp.difficulty === "Extreme" ? "bg-destructive text-destructive-foreground" : exp.difficulty === "Hard" ? "bg-primary text-primary-foreground" : "bg-secondary text-secondary-foreground"}`}>
+                          <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full ${(exp.difficulty as string) === "Extreme" ? "bg-destructive text-destructive-foreground" : exp.difficulty === "Hard" ? "bg-primary text-primary-foreground" : "bg-secondary text-secondary-foreground"}`}>
                             {exp.difficulty}
                           </span>
                         )}
