@@ -492,7 +492,7 @@ const HostDashboard = () => {
 
       <EditDialog open={editDialog.open} title={editDialog.title} fields={editDialog.fields}
         initialData={editDialog.data} onSave={(d) => { editDialog.onSave(d); setEditDialog(p => ({ ...p, open: false })); }}
-        onDelete={editDialog.onDelete ? () => { editDialog.onDelete!(); setEditDialog(p => ({ ...p, open: false })); } : undefined
+        onDelete={editDialog.onDelete ? () => { editDialog.onDelete!(); setEditDialog(p => ({ ...p, open: false })); } : undefined}
         onClose={() => setEditDialog(p => ({ ...p, open: false }))} />
       <Footer />
     </div>
