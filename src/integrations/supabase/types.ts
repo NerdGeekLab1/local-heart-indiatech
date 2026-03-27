@@ -250,6 +250,103 @@ export type Database = {
         }
         Relationships: []
       }
+      grievances: {
+        Row: {
+          admin_notes: string | null
+          against: string
+          booking_id: string | null
+          category: string
+          created_at: string
+          description: string
+          filed_by: string
+          id: string
+          priority: string | null
+          resolution: string | null
+          resolved_by: string | null
+          status: string
+          subject: string
+          updated_at: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          against: string
+          booking_id?: string | null
+          category?: string
+          created_at?: string
+          description: string
+          filed_by: string
+          id?: string
+          priority?: string | null
+          resolution?: string | null
+          resolved_by?: string | null
+          status?: string
+          subject: string
+          updated_at?: string
+        }
+        Update: {
+          admin_notes?: string | null
+          against?: string
+          booking_id?: string | null
+          category?: string
+          created_at?: string
+          description?: string
+          filed_by?: string
+          id?: string
+          priority?: string | null
+          resolution?: string | null
+          resolved_by?: string | null
+          status?: string
+          subject?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "grievances_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      messages: {
+        Row: {
+          booking_id: string | null
+          content: string
+          created_at: string
+          id: string
+          read: boolean | null
+          receiver_id: string
+          sender_id: string
+        }
+        Insert: {
+          booking_id?: string | null
+          content: string
+          created_at?: string
+          id?: string
+          read?: boolean | null
+          receiver_id: string
+          sender_id: string
+        }
+        Update: {
+          booking_id?: string | null
+          content?: string
+          created_at?: string
+          id?: string
+          read?: boolean | null
+          receiver_id?: string
+          sender_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "messages_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -338,6 +435,87 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      trip_listings: {
+        Row: {
+          created_at: string
+          creator_id: string
+          description: string | null
+          destination: string | null
+          duration: string | null
+          end_date: string | null
+          highlights: string[] | null
+          id: string
+          image_url: string | null
+          includes_activities: boolean | null
+          includes_food: boolean | null
+          includes_stay: boolean | null
+          includes_transport: boolean | null
+          inclusions: string[] | null
+          max_travelers: number | null
+          nature: string
+          price_model: string
+          route: string | null
+          start_date: string | null
+          status: string | null
+          title: string
+          total_price: number
+          trip_direction: string | null
+          trip_type: string
+        }
+        Insert: {
+          created_at?: string
+          creator_id: string
+          description?: string | null
+          destination?: string | null
+          duration?: string | null
+          end_date?: string | null
+          highlights?: string[] | null
+          id?: string
+          image_url?: string | null
+          includes_activities?: boolean | null
+          includes_food?: boolean | null
+          includes_stay?: boolean | null
+          includes_transport?: boolean | null
+          inclusions?: string[] | null
+          max_travelers?: number | null
+          nature?: string
+          price_model?: string
+          route?: string | null
+          start_date?: string | null
+          status?: string | null
+          title: string
+          total_price?: number
+          trip_direction?: string | null
+          trip_type?: string
+        }
+        Update: {
+          created_at?: string
+          creator_id?: string
+          description?: string | null
+          destination?: string | null
+          duration?: string | null
+          end_date?: string | null
+          highlights?: string[] | null
+          id?: string
+          image_url?: string | null
+          includes_activities?: boolean | null
+          includes_food?: boolean | null
+          includes_stay?: boolean | null
+          includes_transport?: boolean | null
+          inclusions?: string[] | null
+          max_travelers?: number | null
+          nature?: string
+          price_model?: string
+          route?: string | null
+          start_date?: string | null
+          status?: string | null
+          title?: string
+          total_price?: number
+          trip_direction?: string | null
+          trip_type?: string
+        }
+        Relationships: []
       }
       user_roles: {
         Row: {
