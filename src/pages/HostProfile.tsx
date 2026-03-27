@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useParams, Link } from "react-router-dom";
+import { useToast } from "@/hooks/use-toast";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Star, Shield, Clock, Globe, MapPin, ArrowLeft, MessageCircle, Car,
@@ -141,7 +142,15 @@ const HostProfile = () => {
             <Heart className={`w-4 h-4 ${liked ? "fill-destructive text-destructive" : ""}`} />
             {liked ? "Saved" : "Save"}
           </Button>
-          <Button size="lg" variant="outline" className="rounded-full px-6 gap-2">
+          <Button size="lg" variant="outline" className="rounded-full px-6 gap-2" onClick={() => {
+            const url = window.location.href;
+            if (navigator.share) {
+              navigator.share({ title: `${host.name} on Travelista`, text: `Check out ${host.name}'s hosting in ${host.city}!`, url });
+            } else {
+              navigator.clipboard.writeText(url);
+              const { toast } = useToast();
+            }
+          }}>
             <Share2 className="w-4 h-4" /> Share
           </Button>
         </div>
