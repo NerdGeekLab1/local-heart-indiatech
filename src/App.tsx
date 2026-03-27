@@ -26,6 +26,8 @@ import Docs from "./pages/Docs.tsx";
 import HostTrip from "./pages/HostTrip.tsx";
 import Grievances from "./pages/Grievances.tsx";
 import BikeToursDetail from "./pages/BikeToursDetail.tsx";
+import Trips from "./pages/Trips.tsx";
+import TripDetail from "./pages/TripDetail.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
