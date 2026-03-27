@@ -11,7 +11,7 @@ import EditDialog, { FieldConfig } from "@/components/EditDialog";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
-type Tab = "overview" | "hosts" | "bookings" | "experiences" | "destinations" | "trips" | "grievances" | "moderation" | "analytics" | "settings";
+type Tab = "overview" | "hosts" | "bookings" | "experiences" | "destinations" | "trips" | "grievances" | "users" | "moderation" | "analytics" | "settings";
 
 const destinationFields: FieldConfig[] = [
   { key: "name", label: "City Name", required: true },
@@ -66,17 +66,23 @@ const AdminDashboard = () => {
   const [dbExperienceRequests, setDbExperienceRequests] = useState<any[]>([]);
   const [tripNotes, setTripNotes] = useState<Record<string, string>>({});
   const [grievanceNotes, setGrievanceNotes] = useState<Record<string, string>>({});
+  const [dbUsers, setDbUsers] = useState<any[]>([]);
+  const [userRoles, setUserRoles] = useState<any[]>([]);
 
   useEffect(() => {
     const fetchData = async () => {
-      const [{ data: trips }, { data: grievances }, { data: expReqs }] = await Promise.all([
+      const [{ data: trips }, { data: grievances }, { data: expReqs }, { data: profiles }, { data: roles }] = await Promise.all([
         supabase.from("trip_listings").select("*").order("created_at", { ascending: false }),
         supabase.from("grievances").select("*").order("created_at", { ascending: false }),
         supabase.from("experience_requests").select("*").order("created_at", { ascending: false }),
+        supabase.from("profiles").select("*").order("created_at", { ascending: false }),
+        supabase.from("user_roles").select("*"),
       ]);
       setDbTrips(trips || []);
       setDbGrievances(grievances || []);
       setDbExperienceRequests(expReqs || []);
+      setDbUsers(profiles || []);
+      setUserRoles(roles || []);
     };
     fetchData();
   }, []);
@@ -126,6 +132,7 @@ const AdminDashboard = () => {
     { id: "experiences", label: "Experiences", icon: Globe },
     { id: "trips", label: "Trips", icon: Compass },
     { id: "grievances", label: "Grievances", icon: MessageSquare },
+    { id: "users", label: "Users", icon: Users },
     { id: "destinations", label: "Destinations", icon: MapPin },
     { id: "moderation", label: "Moderation", icon: Shield },
     { id: "analytics", label: "Analytics", icon: TrendingUp },
@@ -609,6 +616,60 @@ const AdminDashboard = () => {
                 })}
               </div>
             </div>
+          </div>
+        )}
+
+        {/* Users Tab */}
+        {activeTab === "users" && (
+          <div className="mt-6">
+            <h2 className="text-xl font-bold text-foreground mb-4">User Management ({dbUsers.length} users)</h2>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
+              {[
+                { label: "Total Users", value: dbUsers.length, color: "text-primary" },
+                { label: "Travelers", value: userRoles.filter(r => r.role === "traveler").length, color: "text-accent" },
+                { label: "Hosts", value: userRoles.filter(r => r.role === "host").length, color: "text-primary" },
+                { label: "Admins", value: userRoles.filter(r => r.role === "admin").length, color: "text-destructive" },
+              ].map(s => (
+                <div key={s.label} className="rounded-lg bg-card p-4 shadow-card text-center">
+                  <p className={`text-2xl font-bold ${s.color}`}>{s.value}</p>
+                  <p className="text-xs text-muted-foreground">{s.label}</p>
+                </div>
+              ))}
+            </div>
+            {dbUsers.length === 0 ? (
+              <p className="text-muted-foreground text-center py-8">No users registered yet.</p>
+            ) : (
+              <div className="space-y-3">
+                {dbUsers.map(u => {
+                  const roles = userRoles.filter(r => r.user_id === u.id);
+                  return (
+                    <div key={u.id} className="rounded-xl bg-card p-4 shadow-card flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-sm font-bold text-primary">
+                          {(u.first_name || "U")[0]}
+                        </div>
+                        <div>
+                          <p className="font-semibold text-foreground">{u.first_name} {u.last_name || ""}</p>
+                          <p className="text-xs text-muted-foreground">{u.email || "No email"}</p>
+                          <div className="flex gap-1 mt-1">
+                            {roles.map(r => (
+                              <span key={r.id} className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${r.role === "admin" ? "bg-destructive/10 text-destructive" : r.role === "host" ? "bg-primary/10 text-primary" : "bg-accent/10 text-accent"}`}>
+                                {r.role}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                        <span>{u.nationality || "—"}</span>
+                        <span>·</span>
+                        <span>Joined {new Date(u.created_at).toLocaleDateString()}</span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
         )}
 
