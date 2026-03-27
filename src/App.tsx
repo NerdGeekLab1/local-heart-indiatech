@@ -23,6 +23,9 @@ import HelpCenter from "./pages/HelpCenter.tsx";
 import Safety from "./pages/Safety.tsx";
 import Terms from "./pages/Terms.tsx";
 import Docs from "./pages/Docs.tsx";
+import HostTrip from "./pages/HostTrip.tsx";
+import Grievances from "./pages/Grievances.tsx";
+import BikeToursDetail from "./pages/BikeToursDetail.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
