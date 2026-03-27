@@ -52,6 +52,7 @@ const Navbar = () => {
               <Link to="/experiences" className="block py-2 text-sm font-medium" onClick={() => setMobileOpen(false)}>Experiences</Link>
               <Link to="/destinations" className="block py-2 text-sm font-medium" onClick={() => setMobileOpen(false)}>Destinations</Link>
               <Link to="/become-host" className="block py-2 text-sm font-medium" onClick={() => setMobileOpen(false)}>Become a Host</Link>
+              <Link to="/host-trip" className="block py-2 text-sm font-medium" onClick={() => setMobileOpen(false)}>Host a Trip</Link>
               <Link to="/community" className="block py-2 text-sm font-medium" onClick={() => setMobileOpen(false)}>Community</Link>
               <Link to="/signup" onClick={() => setMobileOpen(false)}>
                 <Button className="w-full rounded-full bg-primary text-primary-foreground">Sign Up</Button>
