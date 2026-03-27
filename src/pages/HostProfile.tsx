@@ -23,6 +23,7 @@ const serviceColors: Record<string, string> = {
 };
 
 const HostProfile = () => {
+  const { toast } = useToast();
   const { id } = useParams();
   const host = hosts.find(h => h.id === id);
   const [activeStayImage, setActiveStayImage] = useState(0);
@@ -148,7 +149,7 @@ const HostProfile = () => {
               navigator.share({ title: `${host.name} on Travelista`, text: `Check out ${host.name}'s hosting in ${host.city}!`, url });
             } else {
               navigator.clipboard.writeText(url);
-              const { toast } = useToast();
+              toast({ title: "Link copied!", description: "Share link copied to clipboard" });
             }
           }}>
             <Share2 className="w-4 h-4" /> Share
