@@ -22,6 +22,7 @@ export interface StayRoom {
   pricePerNight: number;
   amenities: string[];
   description: string;
+  images?: string[];
 }
 
 export interface StayInfo {
