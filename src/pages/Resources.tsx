@@ -99,9 +99,11 @@ const Resources = () => (
                     <p className="text-xs text-primary font-medium">+{r.details.length - 3} more topics</p>
                   )}
                 </div>
-                <Button variant="ghost" size="sm" className="mt-3 text-primary text-xs px-0 hover:bg-transparent gap-1 group-hover:gap-2 transition-all">
-                  Read Guide <ArrowRight className="w-3 h-3" />
-                </Button>
+                <Link to={`/resource/${r.link.replace('#', '')}`}>
+                  <Button variant="ghost" size="sm" className="mt-3 text-primary text-xs px-0 hover:bg-transparent gap-1 group-hover:gap-2 transition-all">
+                    Read Guide <ArrowRight className="w-3 h-3" />
+                  </Button>
+                </Link>
               </motion.div>
             ))}
           </div>

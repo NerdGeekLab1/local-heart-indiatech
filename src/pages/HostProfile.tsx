@@ -376,26 +376,48 @@ const HostProfile = () => {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {host.stayInfo.rooms.map(room => (
                     <motion.div key={room.name} whileHover={{ y: -2 }}
-                      className="rounded-2xl bg-card shadow-card border border-border p-5 hover:shadow-elevated transition-shadow">
-                      <div className="flex justify-between items-start mb-2">
-                        <div>
-                          <h5 className="font-bold text-foreground">{room.name}</h5>
-                          <span className="text-xs bg-secondary text-muted-foreground px-2 py-0.5 rounded-full">{room.type}</span>
+                      className="rounded-2xl bg-card shadow-card border border-border overflow-hidden hover:shadow-elevated transition-shadow">
+                      {/* Room Images */}
+                      {room.images && room.images.length > 0 ? (
+                        <div className="relative aspect-video overflow-hidden">
+                          <img src={room.images[0]} alt={room.name} className="w-full h-full object-cover" />
+                          <div className="absolute inset-0 bg-gradient-to-t from-foreground/40 to-transparent" />
+                          {room.images.length > 1 && (
+                            <span className="absolute bottom-2 right-2 bg-foreground/60 backdrop-blur-sm text-primary-foreground text-[10px] font-medium px-2 py-0.5 rounded">
+                              +{room.images.length - 1} photos
+                            </span>
+                          )}
+                          <span className="absolute top-2 left-2 text-xs bg-primary text-primary-foreground px-2 py-0.5 rounded-full font-bold">{room.type}</span>
                         </div>
-                        <div className="text-right">
-                          <p className="text-xl font-bold text-foreground">${room.pricePerNight}</p>
-                          <p className="text-xs text-muted-foreground">/night</p>
+                      ) : (
+                        <div className="aspect-video bg-secondary flex items-center justify-center">
+                          <Bed className="w-10 h-10 text-muted-foreground/30" />
                         </div>
-                      </div>
-                      <p className="text-sm text-muted-foreground mt-2">{room.description}</p>
-                      <div className="mt-3 flex gap-3 text-xs text-muted-foreground">
-                        <span className="flex items-center gap-1"><Bed className="w-3 h-3" />{room.beds} bed{room.beds > 1 ? "s" : ""}</span>
-                        <span className="flex items-center gap-1"><Users className="w-3 h-3" />Max {room.maxGuests}</span>
-                      </div>
-                      <div className="mt-3 flex flex-wrap gap-1.5">
-                        {room.amenities.map(a => (
-                          <span key={a} className="text-[11px] bg-secondary text-muted-foreground px-2 py-0.5 rounded-full">{a}</span>
-                        ))}
+                      )}
+                      <div className="p-5">
+                        <div className="flex justify-between items-start mb-2">
+                          <div>
+                            <h5 className="font-bold text-foreground">{room.name}</h5>
+                            {!room.images?.length && <span className="text-xs bg-secondary text-muted-foreground px-2 py-0.5 rounded-full">{room.type}</span>}
+                          </div>
+                          <div className="text-right">
+                            <p className="text-xl font-bold text-foreground">${room.pricePerNight}</p>
+                            <p className="text-xs text-muted-foreground">/night</p>
+                          </div>
+                        </div>
+                        <p className="text-sm text-muted-foreground mt-2">{room.description}</p>
+                        <div className="mt-3 flex gap-3 text-xs text-muted-foreground">
+                          <span className="flex items-center gap-1"><Bed className="w-3 h-3" />{room.beds} bed{room.beds > 1 ? "s" : ""}</span>
+                          <span className="flex items-center gap-1"><Users className="w-3 h-3" />Max {room.maxGuests}</span>
+                        </div>
+                        <div className="mt-3 flex flex-wrap gap-1.5">
+                          {room.amenities.map(a => (
+                            <span key={a} className="text-[11px] bg-secondary text-muted-foreground px-2 py-0.5 rounded-full">{a}</span>
+                          ))}
+                        </div>
+                        <Link to={`/book/${host.id}`}>
+                          <Button size="sm" className="w-full mt-3 rounded-full text-xs">Book This Room</Button>
+                        </Link>
                       </div>
                     </motion.div>
                   ))}
@@ -446,23 +468,36 @@ const HostProfile = () => {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {host.transportInfo.vehicles.map(v => (
                     <motion.div key={v.model} whileHover={{ y: -2 }}
-                      className="rounded-2xl bg-card shadow-card border border-border p-5 hover:shadow-elevated transition-shadow">
-                      <div className="flex items-center gap-2 mb-3">
-                        <span className="text-xs bg-primary text-primary-foreground px-2.5 py-1 rounded-full font-bold">{v.type}</span>
+                      className="rounded-2xl bg-card shadow-card border border-border overflow-hidden hover:shadow-elevated transition-shadow">
+                      {/* Vehicle Image */}
+                      {v.image ? (
+                        <div className="relative aspect-video overflow-hidden">
+                          <img src={v.image} alt={v.model} className="w-full h-full object-cover" />
+                          <span className="absolute top-2 left-2 text-xs bg-primary text-primary-foreground px-2.5 py-1 rounded-full font-bold">{v.type}</span>
+                        </div>
+                      ) : (
+                        <div className="aspect-video bg-secondary flex items-center justify-center">
+                          <Car className="w-10 h-10 text-muted-foreground/30" />
+                        </div>
+                      )}
+                      <div className="p-5">
                         <h4 className="font-bold text-foreground">{v.model}</h4>
-                      </div>
-                      <div className="flex items-center gap-4 text-xs text-muted-foreground mb-3">
-                        <span className="flex items-center gap-1"><Users className="w-3 h-3" />{v.capacity} pax</span>
-                        <span>{v.ac ? "❄️ AC" : "🌀 Non-AC"}</span>
-                        {v.pricePerKm > 0 && <span className="flex items-center gap-1"><Gauge className="w-3 h-3" />${v.pricePerKm}/km</span>}
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <div className="flex flex-wrap gap-1">
-                          {v.features.slice(0, 3).map(f => (
+                        <div className="flex items-center gap-4 text-xs text-muted-foreground mt-2 mb-3">
+                          <span className="flex items-center gap-1"><Users className="w-3 h-3" />{v.capacity} pax</span>
+                          <span>{v.ac ? "❄️ AC" : "🌀 Non-AC"}</span>
+                          {v.pricePerKm > 0 && <span className="flex items-center gap-1"><Gauge className="w-3 h-3" />${v.pricePerKm}/km</span>}
+                        </div>
+                        <div className="flex flex-wrap gap-1 mb-3">
+                          {v.features.map(f => (
                             <span key={f} className="text-[10px] bg-secondary text-muted-foreground px-2 py-0.5 rounded-full">{f}</span>
                           ))}
                         </div>
-                        <p className="text-xl font-bold text-foreground">${v.pricePerDay}<span className="text-xs font-normal text-muted-foreground">/day</span></p>
+                        <div className="flex items-center justify-between">
+                          <p className="text-xl font-bold text-foreground">${v.pricePerDay}<span className="text-xs font-normal text-muted-foreground">/day</span></p>
+                          <Link to={`/book/${host.id}`}>
+                            <Button size="sm" className="rounded-full text-xs">Book</Button>
+                          </Link>
+                        </div>
                       </div>
                     </motion.div>
                   ))}

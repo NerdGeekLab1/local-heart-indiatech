@@ -16,6 +16,7 @@ import Destinations from "./pages/Destinations.tsx";
 import DestinationDetail from "./pages/DestinationDetail.tsx";
 import Community from "./pages/Community.tsx";
 import Resources from "./pages/Resources.tsx";
+import ResourceGuide from "./pages/ResourceGuide.tsx";
 import TravelerDashboard from "./pages/dashboard/TravelerDashboard.tsx";
 import HostDashboard from "./pages/dashboard/HostDashboard.tsx";
 import AdminDashboard from "./pages/dashboard/AdminDashboard.tsx";
@@ -52,6 +53,7 @@ const App = () => (
             <Route path="/destination/:name" element={<DestinationDetail />} />
             <Route path="/community" element={<Community />} />
             <Route path="/resources" element={<Resources />} />
+            <Route path="/resource/:slug" element={<ResourceGuide />} />
             <Route path="/dashboard/traveler" element={<TravelerDashboard />} />
             <Route path="/dashboard/host" element={<HostDashboard />} />
             <Route path="/dashboard/admin" element={<AdminDashboard />} />

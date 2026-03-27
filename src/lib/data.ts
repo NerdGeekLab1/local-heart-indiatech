@@ -22,6 +22,7 @@ export interface StayRoom {
   pricePerNight: number;
   amenities: string[];
   description: string;
+  images?: string[];
 }
 
 export interface StayInfo {
@@ -226,9 +227,9 @@ export const hosts: Host[] = [
       description: "A beautifully restored 150-year-old haveli in the heart of the old city. Original Rajasthani frescoes adorn the walls, while modern comforts ensure a luxurious stay.",
       images: [hostRavi, hostRavi, hostRavi, hostRavi],
       rooms: [
-        { name: "Maharaja Suite", type: "Heritage Suite", beds: 1, maxGuests: 2, pricePerNight: 65, amenities: ["AC", "Ensuite Bathroom", "Palace View", "King Bed", "Mini Fridge"], description: "Our signature room with hand-painted walls and a private balcony overlooking Nahargarh Fort." },
-        { name: "Rani Room", type: "Private Room", beds: 1, maxGuests: 2, pricePerNight: 45, amenities: ["AC", "Ensuite Bathroom", "Queen Bed", "Desk"], description: "A charming private room with traditional jaali windows." },
-        { name: "Courtyard Room", type: "Private Room", beds: 2, maxGuests: 3, pricePerNight: 35, amenities: ["Fan", "Shared Bathroom", "Twin Beds"], description: "Opens directly into the central courtyard." },
+        { name: "Maharaja Suite", type: "Heritage Suite", beds: 1, maxGuests: 2, pricePerNight: 65, amenities: ["AC", "Ensuite Bathroom", "Palace View", "King Bed", "Mini Fridge"], description: "Our signature room with hand-painted walls and a private balcony overlooking Nahargarh Fort.", images: [hostRavi, hostRavi, hostRavi] },
+        { name: "Rani Room", type: "Private Room", beds: 1, maxGuests: 2, pricePerNight: 45, amenities: ["AC", "Ensuite Bathroom", "Queen Bed", "Desk"], description: "A charming private room with traditional jaali windows.", images: [hostRavi, hostRavi] },
+        { name: "Courtyard Room", type: "Private Room", beds: 2, maxGuests: 3, pricePerNight: 35, amenities: ["Fan", "Shared Bathroom", "Twin Beds"], description: "Opens directly into the central courtyard.", images: [hostRavi] },
       ],
       amenities: ["Free WiFi", "Rooftop Terrace", "Home-Cooked Meals", "Laundry", "24hr Hot Water", "Courtyard Garden", "Library", "Bicycle Rental"],
       checkIn: "2:00 PM",
@@ -238,9 +239,9 @@ export const hosts: Host[] = [
     transportInfo: {
       description: "Comfortable and reliable transport across Rajasthan.",
       vehicles: [
-        { type: "Sedan", model: "Maruti Suzuki Dzire", capacity: 4, ac: true, pricePerDay: 35, pricePerKm: 0.15, pricingModel: "both", features: ["AC", "Music System", "Phone Charger", "First Aid Kit"] },
-        { type: "SUV", model: "Toyota Innova Crysta", capacity: 7, ac: true, pricePerDay: 55, pricePerKm: 0.20, pricingModel: "both", features: ["AC", "Music System", "Extra Luggage Space", "Phone Charger", "Water Bottles"] },
-        { type: "Vintage Jeep", model: "Mahindra Thar (Open Top)", capacity: 4, ac: false, pricePerDay: 65, pricePerKm: 0.25, pricingModel: "per_day", features: ["Open Top", "Desert Ready", "Great for Photos"] },
+        { type: "Sedan", model: "Maruti Suzuki Dzire", capacity: 4, ac: true, pricePerDay: 35, pricePerKm: 0.15, pricingModel: "both", features: ["AC", "Music System", "Phone Charger", "First Aid Kit"], image: hostRavi },
+        { type: "SUV", model: "Toyota Innova Crysta", capacity: 7, ac: true, pricePerDay: 55, pricePerKm: 0.20, pricingModel: "both", features: ["AC", "Music System", "Extra Luggage Space", "Phone Charger", "Water Bottles"], image: hostRavi },
+        { type: "Vintage Jeep", model: "Mahindra Thar (Open Top)", capacity: 4, ac: false, pricePerDay: 65, pricePerKm: 0.25, pricingModel: "per_day", features: ["Open Top", "Desert Ready", "Great for Photos"], image: hostRavi },
       ],
       airports: ["Jaipur International Airport (JAI)"],
       coverage: ["Jaipur City", "Amber Fort", "Pushkar", "Ajmer", "Ranthambore", "Jodhpur", "Udaipur"],
@@ -284,8 +285,8 @@ export const hosts: Host[] = [
       description: "A traditional Kerala home right on the backwaters, surrounded by coconut palms.",
       images: [hostPriya, hostPriya, hostPriya],
       rooms: [
-        { name: "Backwater View Room", type: "Private Room", beds: 1, maxGuests: 2, pricePerNight: 40, amenities: ["Fan", "Ensuite Bathroom", "Backwater View", "Mosquito Net"], description: "Peaceful room overlooking the serene backwaters." },
-        { name: "Garden Room", type: "Private Room", beds: 1, maxGuests: 2, pricePerNight: 30, amenities: ["Fan", "Shared Bathroom", "Garden View"], description: "Cozy room opening to the spice garden." },
+        { name: "Backwater View Room", type: "Private Room", beds: 1, maxGuests: 2, pricePerNight: 40, amenities: ["Fan", "Ensuite Bathroom", "Backwater View", "Mosquito Net"], description: "Peaceful room overlooking the serene backwaters.", images: [hostPriya, hostPriya] },
+        { name: "Garden Room", type: "Private Room", beds: 1, maxGuests: 2, pricePerNight: 30, amenities: ["Fan", "Shared Bathroom", "Garden View"], description: "Cozy room opening to the spice garden.", images: [hostPriya] },
       ],
       amenities: ["Home-Cooked Kerala Meals", "Canoe Rides", "Spice Garden Tour", "Free WiFi", "Yoga Deck", "Cooking Classes"],
       checkIn: "1:00 PM",
@@ -357,9 +358,9 @@ export const hosts: Host[] = [
       description: "A charming Portuguese-style villa just 200 meters from Benaulim Beach.",
       images: [hostMeera, hostMeera, hostMeera, hostMeera],
       rooms: [
-        { name: "Ocean Breeze Suite", type: "Entire Home", beds: 2, maxGuests: 4, pricePerNight: 75, amenities: ["AC", "Kitchen", "Living Room", "Garden", "Beach Access"], description: "Entire ground floor with a private garden." },
-        { name: "Balcão Room", type: "Private Room", beds: 1, maxGuests: 2, pricePerNight: 45, amenities: ["AC", "Ensuite Bathroom", "Balcony", "Sea Breeze"], description: "First-floor room with a traditional Goan balcão." },
-        { name: "Backpacker Bunk", type: "Shared Room", beds: 4, maxGuests: 4, pricePerNight: 15, amenities: ["Fan", "Shared Bathroom", "Locker"], description: "Social dorm-style room for budget travelers." },
+        { name: "Ocean Breeze Suite", type: "Entire Home", beds: 2, maxGuests: 4, pricePerNight: 75, amenities: ["AC", "Kitchen", "Living Room", "Garden", "Beach Access"], description: "Entire ground floor with a private garden.", images: [hostMeera, hostMeera, hostMeera] },
+        { name: "Balcão Room", type: "Private Room", beds: 1, maxGuests: 2, pricePerNight: 45, amenities: ["AC", "Ensuite Bathroom", "Balcony", "Sea Breeze"], description: "First-floor room with a traditional Goan balcão.", images: [hostMeera, hostMeera] },
+        { name: "Backpacker Bunk", type: "Shared Room", beds: 4, maxGuests: 4, pricePerNight: 15, amenities: ["Fan", "Shared Bathroom", "Locker"], description: "Social dorm-style room for budget travelers.", images: [hostMeera] },
       ],
       amenities: ["Beach Towels", "Bicycle Rental", "BBQ Area", "Free WiFi", "Hammocks", "Outdoor Shower", "Scooter Rental Available"],
       checkIn: "3:00 PM",
@@ -369,9 +370,9 @@ export const hosts: Host[] = [
     transportInfo: {
       description: "Explore all of Goa at your own pace.",
       vehicles: [
-        { type: "Scooter", model: "Honda Activa 6G", capacity: 2, ac: false, pricePerDay: 8, pricePerKm: 0, pricingModel: "per_day", features: ["Helmet Included", "Fuel Efficient"] },
-        { type: "Motorcycle", model: "Royal Enfield Classic 350", capacity: 2, ac: false, pricePerDay: 18, pricePerKm: 0, pricingModel: "per_day", features: ["Iconic Ride", "Touring Ready"] },
-        { type: "Hatchback", model: "Maruti Suzuki Swift", capacity: 4, ac: true, pricePerDay: 30, pricePerKm: 0.12, pricingModel: "both", features: ["AC", "Music System", "GPS"] },
+        { type: "Scooter", model: "Honda Activa 6G", capacity: 2, ac: false, pricePerDay: 8, pricePerKm: 0, pricingModel: "per_day", features: ["Helmet Included", "Fuel Efficient"], image: hostMeera },
+        { type: "Motorcycle", model: "Royal Enfield Classic 350", capacity: 2, ac: false, pricePerDay: 18, pricePerKm: 0, pricingModel: "per_day", features: ["Iconic Ride", "Touring Ready"], image: hostMeera },
+        { type: "Hatchback", model: "Maruti Suzuki Swift", capacity: 4, ac: true, pricePerDay: 30, pricePerKm: 0.12, pricingModel: "both", features: ["AC", "Music System", "GPS"], image: hostMeera },
       ],
       airports: ["Goa International Airport (GOI)", "Manohar International Airport (GOX)"],
       coverage: ["North Goa Beaches", "South Goa Beaches", "Old Goa", "Dudhsagar Falls", "Palolem", "Anjuna", "Panjim"],
@@ -457,8 +458,8 @@ export const hosts: Host[] = [
       description: "A lovingly restored 200-year-old haveli on the shores of Lake Pichola.",
       images: [hostSunita, hostSunita, hostSunita],
       rooms: [
-        { name: "Lake Palace View Suite", type: "Heritage Suite", beds: 1, maxGuests: 2, pricePerNight: 85, amenities: ["AC", "Ensuite Bathroom", "Lake View", "King Bed", "Minibar"], description: "Panoramic views of Lake Palace from your private balcony." },
-        { name: "Courtyard Room", type: "Private Room", beds: 1, maxGuests: 2, pricePerNight: 55, amenities: ["AC", "Ensuite Bathroom", "Courtyard Access"], description: "Opens to the inner courtyard." },
+        { name: "Lake Palace View Suite", type: "Heritage Suite", beds: 1, maxGuests: 2, pricePerNight: 85, amenities: ["AC", "Ensuite Bathroom", "Lake View", "King Bed", "Minibar"], description: "Panoramic views of Lake Palace from your private balcony.", images: [hostSunita, hostSunita, hostSunita] },
+        { name: "Courtyard Room", type: "Private Room", beds: 1, maxGuests: 2, pricePerNight: 55, amenities: ["AC", "Ensuite Bathroom", "Courtyard Access"], description: "Opens to the inner courtyard.", images: [hostSunita] },
       ],
       amenities: ["Rooftop Restaurant", "Lake Views", "Art Gallery", "Heritage Walk", "Free WiFi", "Airport Transfer"],
       checkIn: "2:00 PM",
@@ -485,8 +486,8 @@ export const hosts: Host[] = [
     transportInfo: {
       description: "Get around Mumbai like a local.",
       vehicles: [
-        { type: "Sedan", model: "Maruti Suzuki Ciaz", capacity: 4, ac: true, pricePerDay: 40, pricePerKm: 0.15, pricingModel: "both", features: ["AC", "Music System", "Phone Charger"] },
-        { type: "Taxi", model: "Classic Mumbai Kaali-Peeli", capacity: 4, ac: false, pricePerDay: 25, pricePerKm: 0.10, pricingModel: "per_km", features: ["Iconic Experience", "Meter-Based"] },
+        { type: "Sedan", model: "Maruti Suzuki Ciaz", capacity: 4, ac: true, pricePerDay: 40, pricePerKm: 0.15, pricingModel: "both", features: ["AC", "Music System", "Phone Charger"], image: hostKiran },
+        { type: "Taxi", model: "Classic Mumbai Kaali-Peeli", capacity: 4, ac: false, pricePerDay: 25, pricePerKm: 0.10, pricingModel: "per_km", features: ["Iconic Experience", "Meter-Based"], image: hostKiran },
         { type: "Premium MPV", model: "Kia Carens", capacity: 7, ac: true, pricePerDay: 55, pricePerKm: 0.20, pricingModel: "both", features: ["Premium AC", "Entertainment System"] },
       ],
       airports: ["Chhatrapati Shivaji Maharaj International Airport (BOM)"],
