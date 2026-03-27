@@ -16,6 +16,7 @@ const Footer = () => (
             <Link to="/explore" className="block text-sm text-muted-foreground hover:text-foreground transition-colors">Find Hosts</Link>
             <Link to="/experiences" className="block text-sm text-muted-foreground hover:text-foreground transition-colors">Experiences</Link>
             <Link to="/destinations" className="block text-sm text-muted-foreground hover:text-foreground transition-colors">Destinations</Link>
+            <Link to="/trips" className="block text-sm text-muted-foreground hover:text-foreground transition-colors">Published Trips</Link>
             <Link to="/dashboard/traveler" className="block text-sm text-muted-foreground hover:text-foreground transition-colors">Traveler Dashboard</Link>
           </div>
         </div>
@@ -23,6 +24,7 @@ const Footer = () => (
           <h5 className="text-sm font-semibold text-foreground mb-3">Host</h5>
           <div className="space-y-2">
             <Link to="/become-host" className="block text-sm text-muted-foreground hover:text-foreground transition-colors">Become a Host</Link>
+            <Link to="/host-trip" className="block text-sm text-muted-foreground hover:text-foreground transition-colors">Host a Trip</Link>
             <Link to="/dashboard/host" className="block text-sm text-muted-foreground hover:text-foreground transition-colors">Host Dashboard</Link>
             <Link to="/resources" className="block text-sm text-muted-foreground hover:text-foreground transition-colors">Host Resources</Link>
             <Link to="/dashboard/admin" className="block text-sm text-muted-foreground hover:text-foreground transition-colors">Admin Panel</Link>
@@ -43,6 +45,7 @@ const Footer = () => (
           <div className="space-y-2">
             <Link to="/help" className="block text-sm text-muted-foreground hover:text-foreground transition-colors">Help Center</Link>
             <Link to="/safety" className="block text-sm text-muted-foreground hover:text-foreground transition-colors">Safety</Link>
+            <Link to="/grievances" className="block text-sm text-muted-foreground hover:text-foreground transition-colors">Grievance Resolution</Link>
             <Link to="/terms" className="block text-sm text-muted-foreground hover:text-foreground transition-colors">Terms</Link>
             <Link to="/resources" className="block text-sm text-muted-foreground hover:text-foreground transition-colors">Resources</Link>
           </div>
