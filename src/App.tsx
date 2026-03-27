@@ -23,6 +23,9 @@ import HelpCenter from "./pages/HelpCenter.tsx";
 import Safety from "./pages/Safety.tsx";
 import Terms from "./pages/Terms.tsx";
 import Docs from "./pages/Docs.tsx";
+import HostTrip from "./pages/HostTrip.tsx";
+import Grievances from "./pages/Grievances.tsx";
+import BikeToursDetail from "./pages/BikeToursDetail.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
@@ -54,6 +57,9 @@ const App = () => (
             <Route path="/safety" element={<Safety />} />
             <Route path="/terms" element={<Terms />} />
             <Route path="/docs" element={<Docs />} />
+            <Route path="/host-trip" element={<HostTrip />} />
+            <Route path="/grievances" element={<Grievances />} />
+            <Route path="/bike-tours" element={<BikeToursDetail />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
