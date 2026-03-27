@@ -1,13 +1,15 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Search, Menu, X, Globe } from "lucide-react";
+import { Search, Menu, X, Globe, Compass } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Navbar = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const location = useLocation();
   const isHome = location.pathname === "/";
+  const { user, userRole } = useAuth();
 
   return (
     <nav className={`fixed top-0 left-0 right-0 z-50 transition-colors duration-300 ${isHome ? "bg-transparent" : "bg-card/80 backdrop-blur-xl shadow-card"}`}>
@@ -21,8 +23,10 @@ const Navbar = () => {
             <Link to="/explore" className="text-sm font-medium text-foreground/70 hover:text-foreground transition-colors">Explore</Link>
             <Link to="/experiences" className="text-sm font-medium text-foreground/70 hover:text-foreground transition-colors">Experiences</Link>
             <Link to="/destinations" className="text-sm font-medium text-foreground/70 hover:text-foreground transition-colors">Destinations</Link>
+            <Link to="/trips" className="text-sm font-medium text-foreground/70 hover:text-foreground transition-colors flex items-center gap-1">
+              <Compass className="w-3.5 h-3.5" /> Trips
+            </Link>
             <Link to="/become-host" className="text-sm font-medium text-foreground/70 hover:text-foreground transition-colors">Become a Host</Link>
-            <Link to="/host-trip" className="text-sm font-medium text-foreground/70 hover:text-foreground transition-colors">Host a Trip</Link>
           </div>
 
           <div className="hidden md:flex items-center gap-3">
@@ -32,9 +36,15 @@ const Navbar = () => {
             <Button variant="ghost" size="icon" className="rounded-full">
               <Globe className="h-4 w-4" />
             </Button>
-            <Link to="/signup">
-              <Button className="rounded-full bg-primary text-primary-foreground hover:bg-primary/90 px-6">Sign Up</Button>
-            </Link>
+            {user ? (
+              <Link to={userRole === "admin" ? "/dashboard/admin" : userRole === "host" ? "/dashboard/host" : "/dashboard/traveler"}>
+                <Button variant="outline" className="rounded-full px-6">Dashboard</Button>
+              </Link>
+            ) : (
+              <Link to="/signup">
+                <Button className="rounded-full bg-primary text-primary-foreground hover:bg-primary/90 px-6">Sign Up</Button>
+              </Link>
+            )}
           </div>
 
           <button onClick={() => setMobileOpen(!mobileOpen)} className="md:hidden p-2">
@@ -51,12 +61,20 @@ const Navbar = () => {
               <Link to="/explore" className="block py-2 text-sm font-medium" onClick={() => setMobileOpen(false)}>Explore</Link>
               <Link to="/experiences" className="block py-2 text-sm font-medium" onClick={() => setMobileOpen(false)}>Experiences</Link>
               <Link to="/destinations" className="block py-2 text-sm font-medium" onClick={() => setMobileOpen(false)}>Destinations</Link>
+              <Link to="/trips" className="block py-2 text-sm font-medium" onClick={() => setMobileOpen(false)}>Published Trips</Link>
               <Link to="/become-host" className="block py-2 text-sm font-medium" onClick={() => setMobileOpen(false)}>Become a Host</Link>
               <Link to="/host-trip" className="block py-2 text-sm font-medium" onClick={() => setMobileOpen(false)}>Host a Trip</Link>
               <Link to="/community" className="block py-2 text-sm font-medium" onClick={() => setMobileOpen(false)}>Community</Link>
-              <Link to="/signup" onClick={() => setMobileOpen(false)}>
-                <Button className="w-full rounded-full bg-primary text-primary-foreground">Sign Up</Button>
-              </Link>
+              <Link to="/grievances" className="block py-2 text-sm font-medium" onClick={() => setMobileOpen(false)}>Grievances</Link>
+              {user ? (
+                <Link to={userRole === "admin" ? "/dashboard/admin" : userRole === "host" ? "/dashboard/host" : "/dashboard/traveler"} onClick={() => setMobileOpen(false)}>
+                  <Button variant="outline" className="w-full rounded-full">Dashboard</Button>
+                </Link>
+              ) : (
+                <Link to="/signup" onClick={() => setMobileOpen(false)}>
+                  <Button className="w-full rounded-full bg-primary text-primary-foreground">Sign Up</Button>
+                </Link>
+              )}
             </div>
           </motion.div>
         )}
