@@ -15,17 +15,17 @@ import { experiences, vibeCategories, destinations, hosts } from "@/lib/data";
 const locationOptions = [...new Set(experiences.map(e => e.hostCity))].sort();
 const difficultyOptions = ["Easy", "Moderate", "Hard", "Extreme"];
 const priceRanges = [
-  { label: "Under $50", min: 0, max: 50 },
-  { label: "$50 – $100", min: 50, max: 100 },
-  { label: "$100 – $200", min: 100, max: 200 },
-  { label: "$200+", min: 200, max: Infinity },
+  { label: "Under ₹3,000", min: 0, max: 3000 },
+  { label: "₹3,000 – ₹8,000", min: 3000, max: 8000 },
+  { label: "₹8,000 – ₹15,000", min: 8000, max: 15000 },
+  { label: "₹15,000+", min: 15000, max: Infinity },
 ];
 
 const bikeExperiences = [
   {
     id: "exp-bike-ladakh", title: "Leh-Ladakh Bike Expedition", description: "Ride through the world's highest motorable passes on a Royal Enfield. Cross Khardung La (18,380 ft) and experience breathtaking Himalayan landscapes.",
     image: "https://images.unsplash.com/photo-1558618666-fcd25c85f82e?w=600&q=80",
-    price: 350, duration: "7 Days", category: "Bike Tour", hostId: "arjun-varanasi", hostName: "Arjun", hostCity: "Varanasi", rating: 4.9, reviewCount: 45,
+    price: 29000, duration: "7 Days", category: "Bike Tour", hostId: "arjun-varanasi", hostName: "Arjun", hostCity: "Varanasi", rating: 4.9, reviewCount: 45,
     difficulty: "Hard" as const, groupSize: "4-8", maxGuests: 8,
     includes: ["Royal Enfield 500cc", "Fuel", "Mechanic support", "Camping gear", "Meals", "Permits", "First aid", "Oxygen cylinder"],
     highlights: ["Khardung La Pass", "Pangong Lake", "Nubra Valley", "Magnetic Hill", "Monasteries"],
@@ -35,7 +35,7 @@ const bikeExperiences = [
   {
     id: "exp-bike-mahabaleshwar", title: "Mahabaleshwar Scooty Tour", description: "Explore the lush Western Ghats on a scooty — visit strawberry farms, ancient temples, and stunning viewpoints.",
     image: "https://images.unsplash.com/photo-1449824913935-59a10b8d2000?w=600&q=80",
-    price: 45, duration: "Full Day", category: "Bike Tour", hostId: "kiran-mumbai", hostName: "Kiran", hostCity: "Mumbai", rating: 4.7, reviewCount: 32,
+    price: 3750, duration: "Full Day", category: "Bike Tour", hostId: "kiran-mumbai", hostName: "Kiran", hostCity: "Mumbai", rating: 4.7, reviewCount: 32,
     difficulty: "Easy" as const, groupSize: "2-6", maxGuests: 6,
     includes: ["Honda Activa", "Helmet", "Route map", "Lunch", "Strawberry farm entry"],
     highlights: ["Arthur's Seat", "Elephant's Head Point", "Strawberry Farms", "Mapro Garden", "Ancient Temples"],
@@ -45,7 +45,7 @@ const bikeExperiences = [
   {
     id: "exp-bike-goa-cruise", title: "Goa Coastal Bike Cruise", description: "Cruise along Goa's scenic coastal roads on a Royal Enfield, stopping at hidden beaches, Portuguese forts, and local tavernas.",
     image: "https://images.unsplash.com/photo-1506929562872-bb421503ef21?w=600&q=80",
-    price: 65, duration: "Full Day", category: "Bike Tour", hostId: "meera-goa", hostName: "Meera", hostCity: "Goa", rating: 4.8, reviewCount: 28,
+    price: 5400, duration: "Full Day", category: "Bike Tour", hostId: "meera-goa", hostName: "Meera", hostCity: "Goa", rating: 4.8, reviewCount: 28,
     difficulty: "Easy" as const, groupSize: "2-10", maxGuests: 10,
     includes: ["Royal Enfield Classic 350", "Helmet", "Fuel", "Lunch at beach shack", "GoPro footage"],
     highlights: ["Fort Aguada", "Vagator Beach", "Chapora Fort", "Spice Plantation", "Beach Sunset"],
@@ -55,7 +55,7 @@ const bikeExperiences = [
   {
     id: "exp-bike-rajasthan", title: "Royal Rajasthan Bike Safari", description: "Ride through desert landscapes, visit ancient forts, and camp under the stars in the Thar Desert.",
     image: "https://images.unsplash.com/photo-1477587458883-47145ed94245?w=600&q=80",
-    price: 280, duration: "5 Days", category: "Bike Tour", hostId: "ravi-jaipur", hostName: "Ravi", hostCity: "Jaipur", rating: 4.9, reviewCount: 19,
+    price: 23200, duration: "5 Days", category: "Bike Tour", hostId: "ravi-jaipur", hostName: "Ravi", hostCity: "Jaipur", rating: 4.9, reviewCount: 19,
     difficulty: "Moderate" as const, groupSize: "4-12", maxGuests: 12,
     includes: ["Royal Enfield Himalayan", "Fuel", "Desert camping", "All meals", "Support vehicle", "Mechanic"],
     highlights: ["Mehrangarh Fort", "Thar Desert", "Jaisalmer", "Sam Sand Dunes", "Village stays"],
@@ -316,7 +316,7 @@ const Experiences = () => {
                         <div className="flex items-center gap-1 text-xs text-muted-foreground">
                           <Users className="w-3 h-3" /> Max {exp.maxGuests}
                         </div>
-                        <span className="text-lg font-bold text-foreground">${exp.price}</span>
+                        <span className="text-lg font-bold text-foreground">₹{exp.price.toLocaleString("en-IN")}</span>
                       </div>
                       {!exp.isYearRound && exp.validFrom && (
                         <div className="mt-2 flex items-center gap-1 text-[10px] text-muted-foreground bg-secondary px-2 py-1 rounded-full w-fit">
