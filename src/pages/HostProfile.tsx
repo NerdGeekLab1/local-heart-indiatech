@@ -280,6 +280,15 @@ const HostProfile = () => {
                         ))}
                       </div>
                     )}
+                    {host.expertiseTags && (
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        {host.expertiseTags.map(t => (
+                          <span key={t} className="text-xs bg-accent/10 text-accent px-3 py-1 rounded-full font-medium flex items-center gap-1">
+                            <Tag className="w-3 h-3" /> {t}
+                          </span>
+                        ))}
+                      </div>
+                    )}
                   </div>
 
                   {/* Highlights Grid */}
