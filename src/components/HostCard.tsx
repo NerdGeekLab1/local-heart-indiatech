@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { Star } from "lucide-react";
 import { motion } from "framer-motion";
 import type { Host } from "@/lib/data";
+import { useCurrency } from "@/contexts/CurrencyContext";
 
 interface HostCardProps {
   host: Host;
@@ -9,6 +10,7 @@ interface HostCardProps {
 }
 
 const HostCard = ({ host, index = 0 }: HostCardProps) => {
+  const { format } = useCurrency();
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -42,7 +44,7 @@ const HostCard = ({ host, index = 0 }: HostCardProps) => {
                 </span>
               ))}
             </div>
-            <p className="mt-2 text-sm font-semibold text-foreground">From ${host.pricePerDay}<span className="font-normal text-muted-foreground">/day</span></p>
+            <p className="mt-2 text-sm font-semibold text-foreground">From {format(host.pricePerDay)}<span className="font-normal text-muted-foreground">/day</span></p>
           </div>
         </div>
       </Link>
