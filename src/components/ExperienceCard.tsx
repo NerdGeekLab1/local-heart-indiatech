@@ -1,6 +1,7 @@
 import { Star } from "lucide-react";
 import { motion } from "framer-motion";
 import type { Experience } from "@/lib/data";
+import { useCurrency } from "@/contexts/CurrencyContext";
 
 interface ExperienceCardProps {
   experience: Experience;
@@ -8,6 +9,7 @@ interface ExperienceCardProps {
 }
 
 const ExperienceCard = ({ experience, index = 0 }: ExperienceCardProps) => {
+  const { format } = useCurrency();
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -29,7 +31,7 @@ const ExperienceCard = ({ experience, index = 0 }: ExperienceCardProps) => {
           <p className="text-sm text-primary-foreground/80 line-clamp-1 mt-1">{experience.description}</p>
           <div className="flex items-center justify-between mt-3">
             <span className="text-sm font-semibold text-primary-foreground">
-              ${experience.price} <span className="font-normal text-primary-foreground/70">· {experience.duration}</span>
+              {format(experience.price)} <span className="font-normal text-primary-foreground/70">· {experience.duration}</span>
             </span>
             <span className="flex items-center gap-1 text-sm text-primary-foreground/90">
               <Star className="w-3 h-3 fill-primary text-primary" /> {experience.rating}

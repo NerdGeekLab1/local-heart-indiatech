@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Search, Menu, X, Globe, Compass } from "lucide-react";
+import { Search, Menu, X, Compass } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
+import CurrencySwitcher from "@/components/CurrencySwitcher";
 
 const Navbar = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -33,9 +34,7 @@ const Navbar = () => {
             <Button variant="ghost" size="icon" className="rounded-full">
               <Search className="h-4 w-4" />
             </Button>
-            <Button variant="ghost" size="icon" className="rounded-full">
-              <Globe className="h-4 w-4" />
-            </Button>
+            <CurrencySwitcher />
             {user ? (
               <Link to={userRole === "admin" ? "/dashboard/admin" : userRole === "host" ? "/dashboard/host" : "/dashboard/traveler"}>
                 <Button variant="outline" className="rounded-full px-6">Dashboard</Button>

@@ -231,7 +231,7 @@ const TripDetail = () => {
               <div className="sticky top-24 space-y-4">
                 <div className="rounded-2xl bg-card p-5 shadow-card">
                   <div className="flex items-baseline gap-1 mb-2">
-                    <span className="text-3xl font-bold text-foreground">${trip.total_price}</span>
+                    <span className="text-3xl font-bold text-foreground">₹{trip.total_price?.toLocaleString("en-IN")}</span>
                     <span className="text-sm text-muted-foreground">
                       {trip.price_model === "per_person" ? "/person" : trip.price_model === "split" ? " (split equally)" : " total"}
                     </span>

@@ -219,6 +219,39 @@ const Signup = () => {
               <>Don't have an account? <button onClick={() => setMode("signup")} className="text-primary font-medium hover:underline">Sign up</button></>
             )}
           </p>
+
+          {/* Demo Accounts */}
+          <div className="mt-6 rounded-xl bg-secondary/50 border border-border p-4">
+            <p className="text-xs font-bold text-foreground mb-3 text-center">🔑 Quick Demo Login</p>
+            <div className="grid grid-cols-3 gap-2">
+              {[
+                { label: "Traveler", emoji: "🧳", email: "demo.traveler@travelista.app", password: "demo123456" },
+                { label: "Host", emoji: "🏠", email: "demo.host@travelista.app", password: "demo123456" },
+                { label: "Admin", emoji: "👑", email: "demo.admin@travelista.app", password: "demo123456" },
+              ].map(demo => (
+                <button
+                  key={demo.label}
+                  onClick={async () => {
+                    setLoading(true);
+                    const { error } = await supabase.auth.signInWithPassword({ email: demo.email, password: demo.password });
+                    setLoading(false);
+                    if (error) {
+                      toast({ title: `Demo ${demo.label} not set up yet`, description: "Please sign up first with this email", variant: "destructive" });
+                    } else {
+                      toast({ title: `Welcome, Demo ${demo.label}! 🎉` });
+                      navigate(demo.label === "Admin" ? "/dashboard/admin" : demo.label === "Host" ? "/dashboard/host" : "/dashboard/traveler");
+                    }
+                  }}
+                  disabled={loading}
+                  className="flex flex-col items-center gap-1 rounded-lg bg-card border border-border p-3 hover:border-primary/30 hover:shadow-card transition-all text-center"
+                >
+                  <span className="text-xl">{demo.emoji}</span>
+                  <span className="text-xs font-semibold text-foreground">{demo.label}</span>
+                </button>
+              ))}
+            </div>
+            <p className="text-[10px] text-muted-foreground text-center mt-2">Demo accounts for testing all features</p>
+          </div>
         </motion.div>
       </div>
 

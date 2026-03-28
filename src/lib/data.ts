@@ -92,6 +92,8 @@ export interface Host {
   safetyScore: number;
   responseTime: string;
   specialties?: string[];
+  expertiseTags?: string[];
+  introVideoUrl?: string;
   stayInfo?: StayInfo;
   transportInfo?: TransportInfo;
   foodInfo?: FoodInfo;
@@ -216,7 +218,9 @@ export const hosts: Host[] = [
     reviewCount: 127,
     services: ["Guide", "Stay", "Transport", "Food"],
     languages: ["English", "Hindi", "French"],
-    pricePerDay: 45,
+    pricePerDay: 3750,
+    expertiseTags: ["Local Guide", "Cultural Expert", "Wedding Specialist", "Heritage Curator"],
+    introVideoUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ",
     verified: true,
     safetyScore: 98,
     responseTime: "< 1 hour",
@@ -227,9 +231,9 @@ export const hosts: Host[] = [
       description: "A beautifully restored 150-year-old haveli in the heart of the old city. Original Rajasthani frescoes adorn the walls, while modern comforts ensure a luxurious stay.",
       images: [hostRavi, hostRavi, hostRavi, hostRavi],
       rooms: [
-        { name: "Maharaja Suite", type: "Heritage Suite", beds: 1, maxGuests: 2, pricePerNight: 65, amenities: ["AC", "Ensuite Bathroom", "Palace View", "King Bed", "Mini Fridge"], description: "Our signature room with hand-painted walls and a private balcony overlooking Nahargarh Fort.", images: [hostRavi, hostRavi, hostRavi] },
-        { name: "Rani Room", type: "Private Room", beds: 1, maxGuests: 2, pricePerNight: 45, amenities: ["AC", "Ensuite Bathroom", "Queen Bed", "Desk"], description: "A charming private room with traditional jaali windows.", images: [hostRavi, hostRavi] },
-        { name: "Courtyard Room", type: "Private Room", beds: 2, maxGuests: 3, pricePerNight: 35, amenities: ["Fan", "Shared Bathroom", "Twin Beds"], description: "Opens directly into the central courtyard.", images: [hostRavi] },
+        { name: "Maharaja Suite", type: "Heritage Suite", beds: 1, maxGuests: 2, pricePerNight: 5400, amenities: ["AC", "Ensuite Bathroom", "Palace View", "King Bed", "Mini Fridge"], description: "Our signature room with hand-painted walls and a private balcony overlooking Nahargarh Fort.", images: [hostRavi, hostRavi, hostRavi] },
+        { name: "Rani Room", type: "Private Room", beds: 1, maxGuests: 2, pricePerNight: 3750, amenities: ["AC", "Ensuite Bathroom", "Queen Bed", "Desk"], description: "A charming private room with traditional jaali windows.", images: [hostRavi, hostRavi] },
+        { name: "Courtyard Room", type: "Private Room", beds: 2, maxGuests: 3, pricePerNight: 2900, amenities: ["Fan", "Shared Bathroom", "Twin Beds"], description: "Opens directly into the central courtyard.", images: [hostRavi] },
       ],
       amenities: ["Free WiFi", "Rooftop Terrace", "Home-Cooked Meals", "Laundry", "24hr Hot Water", "Courtyard Garden", "Library", "Bicycle Rental"],
       checkIn: "2:00 PM",
@@ -239,9 +243,9 @@ export const hosts: Host[] = [
     transportInfo: {
       description: "Comfortable and reliable transport across Rajasthan.",
       vehicles: [
-        { type: "Sedan", model: "Maruti Suzuki Dzire", capacity: 4, ac: true, pricePerDay: 35, pricePerKm: 0.15, pricingModel: "both", features: ["AC", "Music System", "Phone Charger", "First Aid Kit"], image: hostRavi },
-        { type: "SUV", model: "Toyota Innova Crysta", capacity: 7, ac: true, pricePerDay: 55, pricePerKm: 0.20, pricingModel: "both", features: ["AC", "Music System", "Extra Luggage Space", "Phone Charger", "Water Bottles"], image: hostRavi },
-        { type: "Vintage Jeep", model: "Mahindra Thar (Open Top)", capacity: 4, ac: false, pricePerDay: 65, pricePerKm: 0.25, pricingModel: "per_day", features: ["Open Top", "Desert Ready", "Great for Photos"], image: hostRavi },
+        { type: "Sedan", model: "Maruti Suzuki Dzire", capacity: 4, ac: true, pricePerDay: 2900, pricePerKm: 12, pricingModel: "both", features: ["AC", "Music System", "Phone Charger", "First Aid Kit"], image: hostRavi },
+        { type: "SUV", model: "Toyota Innova Crysta", capacity: 7, ac: true, pricePerDay: 4600, pricePerKm: 17, pricingModel: "both", features: ["AC", "Music System", "Extra Luggage Space", "Phone Charger", "Water Bottles"], image: hostRavi },
+        { type: "Vintage Jeep", model: "Mahindra Thar (Open Top)", capacity: 4, ac: false, pricePerDay: 5400, pricePerKm: 21, pricingModel: "per_day", features: ["Open Top", "Desert Ready", "Great for Photos"], image: hostRavi },
       ],
       airports: ["Jaipur International Airport (JAI)"],
       coverage: ["Jaipur City", "Amber Fort", "Pushkar", "Ajmer", "Ranthambore", "Jodhpur", "Udaipur"],
@@ -254,10 +258,10 @@ export const hosts: Host[] = [
       specialties: ["Dal Baati Churma", "Laal Maas", "Ghevar", "Pyaaz Kachori"],
       dietaryOptions: ["Vegetarian", "Vegan", "Jain"],
       dishes: [
-        { name: "Dal Baati Churma", description: "Rajasthani signature — baked wheat balls with spiced lentils", cuisine: "Rajasthani", dietaryTags: ["Vegetarian"], price: 8 },
-        { name: "Laal Maas", description: "Fiery red mutton curry slow-cooked with mathania chillies", cuisine: "Rajasthani", dietaryTags: ["Non-Veg", "Spicy"], price: 12 },
-        { name: "Ker Sangri", description: "Desert beans and berries in a tangy spice mix", cuisine: "Rajasthani", dietaryTags: ["Vegan"], price: 7 },
-        { name: "Rajasthani Thali", description: "Full traditional thali with 12 items including sweets", cuisine: "Rajasthani", dietaryTags: ["Vegetarian"], price: 15 },
+        { name: "Dal Baati Churma", description: "Rajasthani signature — baked wheat balls with spiced lentils", cuisine: "Rajasthani", dietaryTags: ["Vegetarian"], price: 650 },
+        { name: "Laal Maas", description: "Fiery red mutton curry slow-cooked with mathania chillies", cuisine: "Rajasthani", dietaryTags: ["Non-Veg", "Spicy"], price: 1000 },
+        { name: "Ker Sangri", description: "Desert beans and berries in a tangy spice mix", cuisine: "Rajasthani", dietaryTags: ["Vegan"], price: 580 },
+        { name: "Rajasthani Thali", description: "Full traditional thali with 12 items including sweets", cuisine: "Rajasthani", dietaryTags: ["Vegetarian"], price: 1250 },
       ],
       minimumOrder: 2,
       advanceNotice: "4 hours",
@@ -274,7 +278,9 @@ export const hosts: Host[] = [
     reviewCount: 89,
     services: ["Guide", "Stay", "Food"],
     languages: ["English", "Hindi", "Malayalam"],
-    pricePerDay: 35,
+    pricePerDay: 2900,
+    expertiseTags: ["Backwater Expert", "Ayurveda Guide", "Culinary Host", "Explorer"],
+    introVideoUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ",
     verified: true,
     safetyScore: 97,
     responseTime: "< 2 hours",
@@ -285,8 +291,8 @@ export const hosts: Host[] = [
       description: "A traditional Kerala home right on the backwaters, surrounded by coconut palms.",
       images: [hostPriya, hostPriya, hostPriya],
       rooms: [
-        { name: "Backwater View Room", type: "Private Room", beds: 1, maxGuests: 2, pricePerNight: 40, amenities: ["Fan", "Ensuite Bathroom", "Backwater View", "Mosquito Net"], description: "Peaceful room overlooking the serene backwaters.", images: [hostPriya, hostPriya] },
-        { name: "Garden Room", type: "Private Room", beds: 1, maxGuests: 2, pricePerNight: 30, amenities: ["Fan", "Shared Bathroom", "Garden View"], description: "Cozy room opening to the spice garden.", images: [hostPriya] },
+        { name: "Backwater View Room", type: "Private Room", beds: 1, maxGuests: 2, pricePerNight: 3300, amenities: ["Fan", "Ensuite Bathroom", "Backwater View", "Mosquito Net"], description: "Peaceful room overlooking the serene backwaters.", images: [hostPriya, hostPriya] },
+        { name: "Garden Room", type: "Private Room", beds: 1, maxGuests: 2, pricePerNight: 2500, amenities: ["Fan", "Shared Bathroom", "Garden View"], description: "Cozy room opening to the spice garden.", images: [hostPriya] },
       ],
       amenities: ["Home-Cooked Kerala Meals", "Canoe Rides", "Spice Garden Tour", "Free WiFi", "Yoga Deck", "Cooking Classes"],
       checkIn: "1:00 PM",
@@ -300,10 +306,10 @@ export const hosts: Host[] = [
       specialties: ["Kerala Fish Curry", "Appam & Stew", "Banana Leaf Sadhya", "Payasam"],
       dietaryOptions: ["Vegetarian", "Vegan", "Pescatarian", "Ayurvedic"],
       dishes: [
-        { name: "Kerala Sadhya", description: "Grand vegetarian feast served on banana leaf with 20+ items", cuisine: "Kerala", dietaryTags: ["Vegetarian"], price: 12 },
-        { name: "Meen Pollichathu", description: "Pearl spot fish marinated in spices, wrapped in banana leaf and grilled", cuisine: "Kerala", dietaryTags: ["Pescatarian"], price: 14 },
-        { name: "Appam & Vegetable Stew", description: "Lacy rice pancakes with coconut milk stew", cuisine: "Kerala", dietaryTags: ["Vegetarian"], price: 8 },
-        { name: "Cooking Class (3 dishes)", description: "Learn to make Kerala curry, appam, and payasam", cuisine: "Kerala", dietaryTags: ["Vegetarian"], price: 25 },
+        { name: "Kerala Sadhya", description: "Grand vegetarian feast served on banana leaf with 20+ items", cuisine: "Kerala", dietaryTags: ["Vegetarian"], price: 1000 },
+        { name: "Meen Pollichathu", description: "Pearl spot fish marinated in spices, wrapped in banana leaf and grilled", cuisine: "Kerala", dietaryTags: ["Pescatarian"], price: 1150 },
+        { name: "Appam & Vegetable Stew", description: "Lacy rice pancakes with coconut milk stew", cuisine: "Kerala", dietaryTags: ["Vegetarian"], price: 650 },
+        { name: "Cooking Class (3 dishes)", description: "Learn to make Kerala curry, appam, and payasam", cuisine: "Kerala", dietaryTags: ["Vegetarian"], price: 2100 },
       ],
       advanceNotice: "Same day morning",
     },
@@ -319,7 +325,9 @@ export const hosts: Host[] = [
     reviewCount: 203,
     services: ["Guide", "Transport"],
     languages: ["English", "Hindi", "Sanskrit"],
-    pricePerDay: 40,
+    pricePerDay: 3300,
+    expertiseTags: ["Spiritual Guide", "Sanskrit Scholar", "Adventurer", "Travel Curator"],
+    introVideoUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ",
     verified: true,
     safetyScore: 99,
     responseTime: "< 30 min",
@@ -327,9 +335,9 @@ export const hosts: Host[] = [
     transportInfo: {
       description: "Navigate Varanasi's ancient lanes and beyond.",
       vehicles: [
-        { type: "Boat", model: "Traditional Wooden Boat", capacity: 6, ac: false, pricePerDay: 25, pricePerKm: 0, pricingModel: "per_day", features: ["Sunrise Rides", "Aarti Viewing", "Photography Friendly"] },
-        { type: "Auto Rickshaw", model: "Bajaj RE", capacity: 3, ac: false, pricePerDay: 15, pricePerKm: 0.08, pricingModel: "both", features: ["City Navigation", "Narrow Lane Access"] },
-        { type: "Sedan", model: "Maruti Suzuki Ertiga", capacity: 6, ac: true, pricePerDay: 40, pricePerKm: 0.15, pricingModel: "both", features: ["AC", "Airport Transfers", "Outstation Trips"] },
+        { type: "Boat", model: "Traditional Wooden Boat", capacity: 6, ac: false, pricePerDay: 2100, pricePerKm: 0, pricingModel: "per_day", features: ["Sunrise Rides", "Aarti Viewing", "Photography Friendly"] },
+        { type: "Auto Rickshaw", model: "Bajaj RE", capacity: 3, ac: false, pricePerDay: 1250, pricePerKm: 7, pricingModel: "both", features: ["City Navigation", "Narrow Lane Access"] },
+        { type: "Sedan", model: "Maruti Suzuki Ertiga", capacity: 6, ac: true, pricePerDay: 3300, pricePerKm: 12, pricingModel: "both", features: ["AC", "Airport Transfers", "Outstation Trips"] },
       ],
       airports: ["Lal Bahadur Shastri Airport (VNS)"],
       coverage: ["Varanasi Ghats", "Sarnath", "Ramnagar Fort", "Chunar Fort", "Allahabad (Prayagraj)"],
@@ -347,7 +355,9 @@ export const hosts: Host[] = [
     reviewCount: 64,
     services: ["Guide", "Stay", "Transport", "Food"],
     languages: ["English", "Hindi", "Konkani", "Portuguese"],
-    pricePerDay: 40,
+    pricePerDay: 3300,
+    expertiseTags: ["Beach Expert", "Foodie Host", "Festival Guide", "Explorer"],
+    introVideoUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ",
     verified: true,
     safetyScore: 96,
     responseTime: "< 1 hour",
@@ -358,9 +368,9 @@ export const hosts: Host[] = [
       description: "A charming Portuguese-style villa just 200 meters from Benaulim Beach.",
       images: [hostMeera, hostMeera, hostMeera, hostMeera],
       rooms: [
-        { name: "Ocean Breeze Suite", type: "Entire Home", beds: 2, maxGuests: 4, pricePerNight: 75, amenities: ["AC", "Kitchen", "Living Room", "Garden", "Beach Access"], description: "Entire ground floor with a private garden.", images: [hostMeera, hostMeera, hostMeera] },
-        { name: "Balcão Room", type: "Private Room", beds: 1, maxGuests: 2, pricePerNight: 45, amenities: ["AC", "Ensuite Bathroom", "Balcony", "Sea Breeze"], description: "First-floor room with a traditional Goan balcão.", images: [hostMeera, hostMeera] },
-        { name: "Backpacker Bunk", type: "Shared Room", beds: 4, maxGuests: 4, pricePerNight: 15, amenities: ["Fan", "Shared Bathroom", "Locker"], description: "Social dorm-style room for budget travelers.", images: [hostMeera] },
+        { name: "Ocean Breeze Suite", type: "Entire Home", beds: 2, maxGuests: 4, pricePerNight: 6200, amenities: ["AC", "Kitchen", "Living Room", "Garden", "Beach Access"], description: "Entire ground floor with a private garden.", images: [hostMeera, hostMeera, hostMeera] },
+        { name: "Balcão Room", type: "Private Room", beds: 1, maxGuests: 2, pricePerNight: 3750, amenities: ["AC", "Ensuite Bathroom", "Balcony", "Sea Breeze"], description: "First-floor room with a traditional Goan balcão.", images: [hostMeera, hostMeera] },
+        { name: "Backpacker Bunk", type: "Shared Room", beds: 4, maxGuests: 4, pricePerNight: 1250, amenities: ["Fan", "Shared Bathroom", "Locker"], description: "Social dorm-style room for budget travelers.", images: [hostMeera] },
       ],
       amenities: ["Beach Towels", "Bicycle Rental", "BBQ Area", "Free WiFi", "Hammocks", "Outdoor Shower", "Scooter Rental Available"],
       checkIn: "3:00 PM",
@@ -370,9 +380,9 @@ export const hosts: Host[] = [
     transportInfo: {
       description: "Explore all of Goa at your own pace.",
       vehicles: [
-        { type: "Scooter", model: "Honda Activa 6G", capacity: 2, ac: false, pricePerDay: 8, pricePerKm: 0, pricingModel: "per_day", features: ["Helmet Included", "Fuel Efficient"], image: hostMeera },
-        { type: "Motorcycle", model: "Royal Enfield Classic 350", capacity: 2, ac: false, pricePerDay: 18, pricePerKm: 0, pricingModel: "per_day", features: ["Iconic Ride", "Touring Ready"], image: hostMeera },
-        { type: "Hatchback", model: "Maruti Suzuki Swift", capacity: 4, ac: true, pricePerDay: 30, pricePerKm: 0.12, pricingModel: "both", features: ["AC", "Music System", "GPS"], image: hostMeera },
+        { type: "Scooter", model: "Honda Activa 6G", capacity: 2, ac: false, pricePerDay: 650, pricePerKm: 0, pricingModel: "per_day", features: ["Helmet Included", "Fuel Efficient"], image: hostMeera },
+        { type: "Motorcycle", model: "Royal Enfield Classic 350", capacity: 2, ac: false, pricePerDay: 1500, pricePerKm: 0, pricingModel: "per_day", features: ["Iconic Ride", "Touring Ready"], image: hostMeera },
+        { type: "Hatchback", model: "Maruti Suzuki Swift", capacity: 4, ac: true, pricePerDay: 2500, pricePerKm: 10, pricingModel: "both", features: ["AC", "Music System", "GPS"], image: hostMeera },
       ],
       airports: ["Goa International Airport (GOI)", "Manohar International Airport (GOX)"],
       coverage: ["North Goa Beaches", "South Goa Beaches", "Old Goa", "Dudhsagar Falls", "Palolem", "Anjuna", "Panjim"],
@@ -385,10 +395,10 @@ export const hosts: Host[] = [
       specialties: ["Goan Fish Curry Rice", "Pork Vindaloo", "Bebinca", "Prawn Balchão"],
       dietaryOptions: ["Vegetarian", "Vegan", "Pescatarian", "Gluten-Free"],
       dishes: [
-        { name: "Goan Fish Curry Rice", description: "Coconut-based fish curry with local red rice", cuisine: "Goan", dietaryTags: ["Pescatarian"], price: 10 },
-        { name: "Pork Vindaloo", description: "Portuguese-influenced pork in tangy vinegar-chili sauce", cuisine: "Goan", dietaryTags: ["Non-Veg", "Spicy"], price: 12 },
-        { name: "Pad Thai Night", description: "Authentic Pad Thai with fresh prawns", cuisine: "Thai", dietaryTags: ["Pescatarian"], price: 14 },
-        { name: "Beach BBQ Platter", description: "Grilled seafood platter with Goan sausages", cuisine: "Goan", dietaryTags: ["Non-Veg"], price: 25 },
+        { name: "Goan Fish Curry Rice", description: "Coconut-based fish curry with local red rice", cuisine: "Goan", dietaryTags: ["Pescatarian"], price: 830 },
+        { name: "Pork Vindaloo", description: "Portuguese-influenced pork in tangy vinegar-chili sauce", cuisine: "Goan", dietaryTags: ["Non-Veg", "Spicy"], price: 1000 },
+        { name: "Pad Thai Night", description: "Authentic Pad Thai with fresh prawns", cuisine: "Thai", dietaryTags: ["Pescatarian"], price: 1150 },
+        { name: "Beach BBQ Platter", description: "Grilled seafood platter with Goan sausages", cuisine: "Goan", dietaryTags: ["Non-Veg"], price: 2100 },
       ],
       minimumOrder: 2,
       advanceNotice: "6 hours",
@@ -405,7 +415,9 @@ export const hosts: Host[] = [
     reviewCount: 156,
     services: ["Guide", "Transport", "Food"],
     languages: ["English", "Hindi", "Urdu", "Punjabi"],
-    pricePerDay: 50,
+    pricePerDay: 4150,
+    expertiseTags: ["Food Connoisseur", "Storyteller", "City Navigator", "Adventurer"],
+    introVideoUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ",
     verified: true,
     safetyScore: 97,
     responseTime: "< 1 hour",
@@ -413,9 +425,9 @@ export const hosts: Host[] = [
     transportInfo: {
       description: "Navigate Delhi's sprawling cityscape in comfort.",
       vehicles: [
-        { type: "Sedan", model: "Honda City", capacity: 4, ac: true, pricePerDay: 40, pricePerKm: 0.15, pricingModel: "both", features: ["AC", "Music System", "Phone Charger"] },
-        { type: "SUV", model: "Toyota Fortuner", capacity: 7, ac: true, pricePerDay: 70, pricePerKm: 0.25, pricingModel: "both", features: ["Premium AC", "Leather Seats", "WiFi Hotspot"] },
-        { type: "Auto Rickshaw", model: "Bajaj RE (Guided)", capacity: 3, ac: false, pricePerDay: 20, pricePerKm: 0.05, pricingModel: "per_day", features: ["Authentic Experience", "Old Delhi Navigation"] },
+        { type: "Sedan", model: "Honda City", capacity: 4, ac: true, pricePerDay: 3300, pricePerKm: 12, pricingModel: "both", features: ["AC", "Music System", "Phone Charger"] },
+        { type: "SUV", model: "Toyota Fortuner", capacity: 7, ac: true, pricePerDay: 5800, pricePerKm: 21, pricingModel: "both", features: ["Premium AC", "Leather Seats", "WiFi Hotspot"] },
+        { type: "Auto Rickshaw", model: "Bajaj RE (Guided)", capacity: 3, ac: false, pricePerDay: 1650, pricePerKm: 4, pricingModel: "per_day", features: ["Authentic Experience", "Old Delhi Navigation"] },
       ],
       airports: ["Indira Gandhi International Airport (DEL)"],
       coverage: ["Old Delhi", "New Delhi", "Gurugram", "Noida", "Agra Day Trip", "Mathura-Vrindavan"],
@@ -428,10 +440,10 @@ export const hosts: Host[] = [
       specialties: ["Kebabs", "Parathas", "Chole Bhature", "Jalebi"],
       dietaryOptions: ["Vegetarian", "Non-Veg", "Halal"],
       dishes: [
-        { name: "Old Delhi Food Walk", description: "4-hour guided walk through Chandni Chowk covering 12+ stops", cuisine: "Street Food", dietaryTags: ["Vegetarian", "Non-Veg"], price: 20 },
-        { name: "Mughlai Dinner", description: "Royal Mughlai feast — biryani, kebabs, korma", cuisine: "Mughlai", dietaryTags: ["Non-Veg", "Halal"], price: 18 },
-        { name: "Paratha Breakfast", description: "Paranthe Wali Gali's legendary stuffed parathas", cuisine: "North Indian", dietaryTags: ["Vegetarian"], price: 6 },
-        { name: "Indo-Chinese Feast", description: "Chili chicken, hakka noodles, manchurian", cuisine: "Chinese-Indian", dietaryTags: ["Non-Veg"], price: 12 },
+        { name: "Old Delhi Food Walk", description: "4-hour guided walk through Chandni Chowk covering 12+ stops", cuisine: "Street Food", dietaryTags: ["Vegetarian", "Non-Veg"], price: 1650 },
+        { name: "Mughlai Dinner", description: "Royal Mughlai feast — biryani, kebabs, korma", cuisine: "Mughlai", dietaryTags: ["Non-Veg", "Halal"], price: 1500 },
+        { name: "Paratha Breakfast", description: "Paranthe Wali Gali's legendary stuffed parathas", cuisine: "North Indian", dietaryTags: ["Vegetarian"], price: 500 },
+        { name: "Indo-Chinese Feast", description: "Chili chicken, hakka noodles, manchurian", cuisine: "Chinese-Indian", dietaryTags: ["Non-Veg"], price: 1000 },
       ],
       advanceNotice: "2 hours",
     },
@@ -447,7 +459,9 @@ export const hosts: Host[] = [
     reviewCount: 112,
     services: ["Guide", "Stay"],
     languages: ["English", "Hindi", "Mewari"],
-    pricePerDay: 55,
+    pricePerDay: 4600,
+    expertiseTags: ["Art Historian", "Heritage Expert", "Wellness Guide", "Travel Curator"],
+    introVideoUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ",
     verified: true,
     safetyScore: 99,
     responseTime: "< 30 min",
@@ -458,8 +472,8 @@ export const hosts: Host[] = [
       description: "A lovingly restored 200-year-old haveli on the shores of Lake Pichola.",
       images: [hostSunita, hostSunita, hostSunita],
       rooms: [
-        { name: "Lake Palace View Suite", type: "Heritage Suite", beds: 1, maxGuests: 2, pricePerNight: 85, amenities: ["AC", "Ensuite Bathroom", "Lake View", "King Bed", "Minibar"], description: "Panoramic views of Lake Palace from your private balcony.", images: [hostSunita, hostSunita, hostSunita] },
-        { name: "Courtyard Room", type: "Private Room", beds: 1, maxGuests: 2, pricePerNight: 55, amenities: ["AC", "Ensuite Bathroom", "Courtyard Access"], description: "Opens to the inner courtyard.", images: [hostSunita] },
+        { name: "Lake Palace View Suite", type: "Heritage Suite", beds: 1, maxGuests: 2, pricePerNight: 7100, amenities: ["AC", "Ensuite Bathroom", "Lake View", "King Bed", "Minibar"], description: "Panoramic views of Lake Palace from your private balcony.", images: [hostSunita, hostSunita, hostSunita] },
+        { name: "Courtyard Room", type: "Private Room", beds: 1, maxGuests: 2, pricePerNight: 4600, amenities: ["AC", "Ensuite Bathroom", "Courtyard Access"], description: "Opens to the inner courtyard.", images: [hostSunita] },
       ],
       amenities: ["Rooftop Restaurant", "Lake Views", "Art Gallery", "Heritage Walk", "Free WiFi", "Airport Transfer"],
       checkIn: "2:00 PM",
@@ -478,7 +492,9 @@ export const hosts: Host[] = [
     reviewCount: 78,
     services: ["Guide", "Transport"],
     languages: ["English", "Hindi", "Marathi"],
-    pricePerDay: 45,
+    pricePerDay: 3750,
+    expertiseTags: ["City Explorer", "Bollywood Expert", "Street Food Guide", "Adventurer"],
+    introVideoUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ",
     verified: true,
     safetyScore: 95,
     responseTime: "< 2 hours",
@@ -486,9 +502,9 @@ export const hosts: Host[] = [
     transportInfo: {
       description: "Get around Mumbai like a local.",
       vehicles: [
-        { type: "Sedan", model: "Maruti Suzuki Ciaz", capacity: 4, ac: true, pricePerDay: 40, pricePerKm: 0.15, pricingModel: "both", features: ["AC", "Music System", "Phone Charger"], image: hostKiran },
-        { type: "Taxi", model: "Classic Mumbai Kaali-Peeli", capacity: 4, ac: false, pricePerDay: 25, pricePerKm: 0.10, pricingModel: "per_km", features: ["Iconic Experience", "Meter-Based"], image: hostKiran },
-        { type: "Premium MPV", model: "Kia Carens", capacity: 7, ac: true, pricePerDay: 55, pricePerKm: 0.20, pricingModel: "both", features: ["Premium AC", "Entertainment System"] },
+        { type: "Sedan", model: "Maruti Suzuki Ciaz", capacity: 4, ac: true, pricePerDay: 3300, pricePerKm: 12, pricingModel: "both", features: ["AC", "Music System", "Phone Charger"], image: hostKiran },
+        { type: "Taxi", model: "Classic Mumbai Kaali-Peeli", capacity: 4, ac: false, pricePerDay: 2100, pricePerKm: 8, pricingModel: "per_km", features: ["Iconic Experience", "Meter-Based"], image: hostKiran },
+        { type: "Premium MPV", model: "Kia Carens", capacity: 7, ac: true, pricePerDay: 4600, pricePerKm: 17, pricingModel: "both", features: ["Premium AC", "Entertainment System"] },
       ],
       airports: ["Chhatrapati Shivaji Maharaj International Airport (BOM)"],
       coverage: ["South Mumbai", "Bandra-Juhu", "Film City", "Elephanta Caves", "Lonavala Day Trip", "Alibaug"],
@@ -498,32 +514,32 @@ export const hosts: Host[] = [
 ];
 
 export const experiences: Experience[] = [
-  { id: "exp-wedding", title: "Attend an Indian Wedding", description: "Be a guest at a real Indian wedding celebration — the colors, the music, the joy.", image: expWedding, price: 120, duration: "Full Day", category: "Wedding", hostId: "ravi-jaipur", hostName: "Ravi", hostCity: "Jaipur", rating: 4.9, reviewCount: 34, highlights: ["Traditional ceremonies", "Authentic feast", "Dance & music", "Indian attire"] },
-  { id: "exp-spiritual", title: "Sunrise Yoga & Meditation", description: "Begin your day with yoga on the banks of the Ganges as the sun rises.", image: expSpiritual, price: 30, duration: "3 Hours", category: "Spiritual", hostId: "arjun-varanasi", hostName: "Arjun", hostCity: "Varanasi", rating: 4.8, reviewCount: 67, highlights: ["Ganga aarti viewing", "Guided meditation", "Pranayama", "Herbal tea"] },
-  { id: "exp-village", title: "Village Life Immersion", description: "Spend a day in a Rajasthani village — cook, farm, and celebrate with locals.", image: expVillage, price: 55, duration: "Full Day", category: "Village", hostId: "ravi-jaipur", hostName: "Ravi", hostCity: "Jaipur", rating: 4.7, reviewCount: 45, highlights: ["Farming", "Cook with locals", "Folk music", "Camel ride"] },
-  { id: "exp-food", title: "Street Food Safari", description: "Taste the real India through its street food — guided by a local who knows every stall.", image: expFood, price: 25, duration: "4 Hours", category: "Food", hostId: "deepak-delhi", hostName: "Deepak", hostCity: "Delhi", rating: 4.9, reviewCount: 89, highlights: ["12+ food stops", "Hidden stalls", "History of each dish", "Veg & non-veg"] },
-  { id: "exp-festival", title: "Holi Festival Celebration", description: "Experience the world's most colorful festival with a local family.", image: expFestival, price: 75, duration: "Full Day", category: "Festival", hostId: "deepak-delhi", hostName: "Deepak", hostCity: "Delhi", rating: 4.9, reviewCount: 52, highlights: ["Family celebration", "Traditional sweets", "Color play", "Bonfire night"] },
-  { id: "exp-wellness", title: "Ayurvedic Wellness Retreat", description: "A day of Ayurvedic healing — massages, herbal treatments, and yoga by the backwaters.", image: expWellness, price: 85, duration: "Full Day", category: "Wellness", hostId: "priya-kerala", hostName: "Priya", hostCity: "Alleppey", rating: 4.8, reviewCount: 38, highlights: ["Abhyanga massage", "Herbal steam bath", "Yoga session", "Ayurvedic lunch"] },
-  { id: "exp-adventure", title: "Himalayan Trek & Camping", description: "Trek through stunning mountain trails with camping under the stars.", image: expAdventure, price: 95, duration: "2 Days", category: "Adventure", hostId: "kiran-mumbai", hostName: "Kiran", hostCity: "Mumbai", rating: 4.7, reviewCount: 28, difficulty: "Moderate", groupSize: "4-12", includes: ["Camping gear", "Meals", "Guide", "First aid"], highlights: ["Mountain trails", "Star gazing", "Campfire dinner", "Local guide"] },
-  { id: "exp-beach", title: "Goan Beach & Spice Tour", description: "Explore hidden beaches, spice plantations, and Portuguese heritage.", image: expBeach, price: 45, duration: "Full Day", category: "Adventure", hostId: "meera-goa", hostName: "Meera", hostCity: "Goa", rating: 4.8, reviewCount: 41, highlights: ["Hidden beaches", "Spice plantation", "Portuguese chapel", "Goan lunch"] },
+  { id: "exp-wedding", title: "Attend an Indian Wedding", description: "Be a guest at a real Indian wedding celebration — the colors, the music, the joy.", image: expWedding, price: 10000, duration: "Full Day", category: "Wedding", hostId: "ravi-jaipur", hostName: "Ravi", hostCity: "Jaipur", rating: 4.9, reviewCount: 34, highlights: ["Traditional ceremonies", "Authentic feast", "Dance & music", "Indian attire"] },
+  { id: "exp-spiritual", title: "Sunrise Yoga & Meditation", description: "Begin your day with yoga on the banks of the Ganges as the sun rises.", image: expSpiritual, price: 2500, duration: "3 Hours", category: "Spiritual", hostId: "arjun-varanasi", hostName: "Arjun", hostCity: "Varanasi", rating: 4.8, reviewCount: 67, highlights: ["Ganga aarti viewing", "Guided meditation", "Pranayama", "Herbal tea"] },
+  { id: "exp-village", title: "Village Life Immersion", description: "Spend a day in a Rajasthani village — cook, farm, and celebrate with locals.", image: expVillage, price: 4600, duration: "Full Day", category: "Village", hostId: "ravi-jaipur", hostName: "Ravi", hostCity: "Jaipur", rating: 4.7, reviewCount: 45, highlights: ["Farming", "Cook with locals", "Folk music", "Camel ride"] },
+  { id: "exp-food", title: "Street Food Safari", description: "Taste the real India through its street food — guided by a local who knows every stall.", image: expFood, price: 2100, duration: "4 Hours", category: "Food", hostId: "deepak-delhi", hostName: "Deepak", hostCity: "Delhi", rating: 4.9, reviewCount: 89, highlights: ["12+ food stops", "Hidden stalls", "History of each dish", "Veg & non-veg"] },
+  { id: "exp-festival", title: "Holi Festival Celebration", description: "Experience the world's most colorful festival with a local family.", image: expFestival, price: 6200, duration: "Full Day", category: "Festival", hostId: "deepak-delhi", hostName: "Deepak", hostCity: "Delhi", rating: 4.9, reviewCount: 52, highlights: ["Family celebration", "Traditional sweets", "Color play", "Bonfire night"] },
+  { id: "exp-wellness", title: "Ayurvedic Wellness Retreat", description: "A day of Ayurvedic healing — massages, herbal treatments, and yoga by the backwaters.", image: expWellness, price: 7100, duration: "Full Day", category: "Wellness", hostId: "priya-kerala", hostName: "Priya", hostCity: "Alleppey", rating: 4.8, reviewCount: 38, highlights: ["Abhyanga massage", "Herbal steam bath", "Yoga session", "Ayurvedic lunch"] },
+  { id: "exp-adventure", title: "Himalayan Trek & Camping", description: "Trek through stunning mountain trails with camping under the stars.", image: expAdventure, price: 7900, duration: "2 Days", category: "Adventure", hostId: "kiran-mumbai", hostName: "Kiran", hostCity: "Mumbai", rating: 4.7, reviewCount: 28, difficulty: "Moderate", groupSize: "4-12", includes: ["Camping gear", "Meals", "Guide", "First aid"], highlights: ["Mountain trails", "Star gazing", "Campfire dinner", "Local guide"] },
+  { id: "exp-beach", title: "Goan Beach & Spice Tour", description: "Explore hidden beaches, spice plantations, and Portuguese heritage.", image: expBeach, price: 3750, duration: "Full Day", category: "Adventure", hostId: "meera-goa", hostName: "Meera", hostCity: "Goa", rating: 4.8, reviewCount: 41, highlights: ["Hidden beaches", "Spice plantation", "Portuguese chapel", "Goan lunch"] },
 
   // Adventure Sports
-  { id: "exp-skydiving", title: "Tandem Skydiving over Goa", description: "Freefall from 13,000 feet with breathtaking views of the Arabian Sea and Goa's coastline.", image: expAdventure, price: 280, duration: "Half Day", category: "Adventure Sports", hostId: "meera-goa", hostName: "Meera", hostCity: "Goa", rating: 4.9, reviewCount: 19, difficulty: "Extreme", groupSize: "1-4", includes: ["Tandem instructor", "Video & photos", "Safety gear", "Certificate"], highlights: ["13,000 ft jump", "Sea views", "60-sec freefall", "GoPro footage"] },
-  { id: "exp-rafting", title: "White Water Rafting on Ganges", description: "Navigate thrilling Grade III-IV rapids through the Himalayan foothills in Rishikesh.", image: expAdventure, price: 45, duration: "4 Hours", category: "Adventure Sports", hostId: "arjun-varanasi", hostName: "Arjun", hostCity: "Varanasi", rating: 4.8, reviewCount: 56, difficulty: "Moderate", groupSize: "6-12", includes: ["Safety gear", "Guide", "Transport", "Snacks"], highlights: ["Grade III-IV rapids", "16km stretch", "Cliff jumping", "Beach stop"] },
-  { id: "exp-paragliding", title: "Paragliding over Bir Billing", description: "Soar like an eagle from the world's second-highest paragliding site with Himalayan panoramas.", image: expAdventure, price: 65, duration: "2 Hours", category: "Adventure Sports", hostId: "kiran-mumbai", hostName: "Kiran", hostCity: "Mumbai", rating: 4.9, reviewCount: 42, difficulty: "Easy", groupSize: "1-2", includes: ["Tandem pilot", "Video", "Transport to launch site", "Certificate"], highlights: ["2,400m altitude", "20-30min flight", "Himalayan views", "HD video"] },
-  { id: "exp-bungee", title: "Bungee Jumping at Rishikesh", description: "Leap from India's highest bungee platform at 83 meters over a rocky river gorge.", image: expAdventure, price: 75, duration: "2 Hours", category: "Adventure Sports", hostId: "arjun-varanasi", hostName: "Arjun", hostCity: "Varanasi", rating: 4.7, reviewCount: 33, difficulty: "Extreme", groupSize: "1-6", includes: ["Safety briefing", "Equipment", "Video & photos", "Certificate"], highlights: ["83m platform", "Canyon setting", "GoPro footage", "T-shirt included"] },
-  { id: "exp-scuba", title: "Scuba Diving in Goa", description: "Discover vibrant coral reefs and marine life in the clear waters of Grande Island.", image: expBeach, price: 90, duration: "Half Day", category: "Adventure Sports", hostId: "meera-goa", hostName: "Meera", hostCity: "Goa", rating: 4.6, reviewCount: 27, difficulty: "Easy", groupSize: "2-6", includes: ["PADI instructor", "All equipment", "Boat ride", "Underwater photos"], highlights: ["12m depth", "Coral reefs", "Tropical fish", "No experience needed"] },
-  { id: "exp-desert-safari", title: "Desert Safari & Dune Bashing", description: "Race across the Thar Desert dunes in a 4x4, followed by a traditional desert camp dinner.", image: expVillage, price: 85, duration: "Evening", category: "Adventure Sports", hostId: "ravi-jaipur", hostName: "Ravi", hostCity: "Jaipur", rating: 4.8, reviewCount: 38, difficulty: "Easy", groupSize: "4-10", includes: ["4x4 jeep", "Camel ride", "Desert camp dinner", "Folk music show"], highlights: ["Dune bashing", "Sunset views", "Camel ride", "Starlit dinner"] },
-  { id: "exp-surfing", title: "Surf Lessons on Goa's Waves", description: "Learn to surf on Goa's best beginner-friendly waves with certified instructors.", image: expBeach, price: 35, duration: "3 Hours", category: "Adventure Sports", hostId: "meera-goa", hostName: "Meera", hostCity: "Goa", rating: 4.7, reviewCount: 31, difficulty: "Easy", groupSize: "2-8", includes: ["Board rental", "Instructor", "Rash guard", "Photos"], highlights: ["Beginner friendly", "Warm water", "Sandy beach", "Small groups"] },
+  { id: "exp-skydiving", title: "Tandem Skydiving over Goa", description: "Freefall from 13,000 feet with breathtaking views of the Arabian Sea and Goa's coastline.", image: expAdventure, price: 23200, duration: "Half Day", category: "Adventure Sports", hostId: "meera-goa", hostName: "Meera", hostCity: "Goa", rating: 4.9, reviewCount: 19, difficulty: "Extreme", groupSize: "1-4", includes: ["Tandem instructor", "Video & photos", "Safety gear", "Certificate"], highlights: ["13,000 ft jump", "Sea views", "60-sec freefall", "GoPro footage"] },
+  { id: "exp-rafting", title: "White Water Rafting on Ganges", description: "Navigate thrilling Grade III-IV rapids through the Himalayan foothills in Rishikesh.", image: expAdventure, price: 3750, duration: "4 Hours", category: "Adventure Sports", hostId: "arjun-varanasi", hostName: "Arjun", hostCity: "Varanasi", rating: 4.8, reviewCount: 56, difficulty: "Moderate", groupSize: "6-12", includes: ["Safety gear", "Guide", "Transport", "Snacks"], highlights: ["Grade III-IV rapids", "16km stretch", "Cliff jumping", "Beach stop"] },
+  { id: "exp-paragliding", title: "Paragliding over Bir Billing", description: "Soar like an eagle from the world's second-highest paragliding site with Himalayan panoramas.", image: expAdventure, price: 5400, duration: "2 Hours", category: "Adventure Sports", hostId: "kiran-mumbai", hostName: "Kiran", hostCity: "Mumbai", rating: 4.9, reviewCount: 42, difficulty: "Easy", groupSize: "1-2", includes: ["Tandem pilot", "Video", "Transport to launch site", "Certificate"], highlights: ["2,400m altitude", "20-30min flight", "Himalayan views", "HD video"] },
+  { id: "exp-bungee", title: "Bungee Jumping at Rishikesh", description: "Leap from India's highest bungee platform at 83 meters over a rocky river gorge.", image: expAdventure, price: 6200, duration: "2 Hours", category: "Adventure Sports", hostId: "arjun-varanasi", hostName: "Arjun", hostCity: "Varanasi", rating: 4.7, reviewCount: 33, difficulty: "Extreme", groupSize: "1-6", includes: ["Safety briefing", "Equipment", "Video & photos", "Certificate"], highlights: ["83m platform", "Canyon setting", "GoPro footage", "T-shirt included"] },
+  { id: "exp-scuba", title: "Scuba Diving in Goa", description: "Discover vibrant coral reefs and marine life in the clear waters of Grande Island.", image: expBeach, price: 7500, duration: "Half Day", category: "Adventure Sports", hostId: "meera-goa", hostName: "Meera", hostCity: "Goa", rating: 4.6, reviewCount: 27, difficulty: "Easy", groupSize: "2-6", includes: ["PADI instructor", "All equipment", "Boat ride", "Underwater photos"], highlights: ["12m depth", "Coral reefs", "Tropical fish", "No experience needed"] },
+  { id: "exp-desert-safari", title: "Desert Safari & Dune Bashing", description: "Race across the Thar Desert dunes in a 4x4, followed by a traditional desert camp dinner.", image: expVillage, price: 7100, duration: "Evening", category: "Adventure Sports", hostId: "ravi-jaipur", hostName: "Ravi", hostCity: "Jaipur", rating: 4.8, reviewCount: 38, difficulty: "Easy", groupSize: "4-10", includes: ["4x4 jeep", "Camel ride", "Desert camp dinner", "Folk music show"], highlights: ["Dune bashing", "Sunset views", "Camel ride", "Starlit dinner"] },
+  { id: "exp-surfing", title: "Surf Lessons on Goa's Waves", description: "Learn to surf on Goa's best beginner-friendly waves with certified instructors.", image: expBeach, price: 2900, duration: "3 Hours", category: "Adventure Sports", hostId: "meera-goa", hostName: "Meera", hostCity: "Goa", rating: 4.7, reviewCount: 31, difficulty: "Easy", groupSize: "2-8", includes: ["Board rental", "Instructor", "Rash guard", "Photos"], highlights: ["Beginner friendly", "Warm water", "Sandy beach", "Small groups"] },
 
   // Medical Care
-  { id: "exp-medical-ayurveda", title: "Ayurveda Medical Consultation", description: "Consult with certified Ayurvedic doctors for personalized treatment plans.", image: expWellness, price: 60, duration: "Half Day", category: "Medical Care", hostId: "priya-kerala", hostName: "Priya", hostCity: "Alleppey", rating: 4.9, reviewCount: 22, highlights: ["Certified doctor", "Personalized plan", "Herbal medicine kit", "Diet guidance"] },
-  { id: "exp-medical-dental", title: "Dental Tourism Package", description: "World-class dental care at a fraction of the cost in JCI-accredited clinics.", image: expFood, price: 150, duration: "1-3 Days", category: "Medical Care", hostId: "kiran-mumbai", hostName: "Kiran", hostCity: "Mumbai", rating: 4.6, reviewCount: 15, highlights: ["JCI-accredited", "Airport pickup", "Post-care follow-up", "Recovery lounge"] },
-  { id: "exp-medical-yoga-therapy", title: "Therapeutic Yoga for Chronic Pain", description: "Evidence-based yoga therapy sessions designed for chronic conditions.", image: expSpiritual, price: 40, duration: "5 Days", category: "Medical Care", hostId: "arjun-varanasi", hostName: "Arjun", hostCity: "Varanasi", rating: 4.8, reviewCount: 31, highlights: ["Certified therapist", "Personalized program", "Daily tracking", "Take-home guide"] },
+  { id: "exp-medical-ayurveda", title: "Ayurveda Medical Consultation", description: "Consult with certified Ayurvedic doctors for personalized treatment plans.", image: expWellness, price: 5000, duration: "Half Day", category: "Medical Care", hostId: "priya-kerala", hostName: "Priya", hostCity: "Alleppey", rating: 4.9, reviewCount: 22, highlights: ["Certified doctor", "Personalized plan", "Herbal medicine kit", "Diet guidance"] },
+  { id: "exp-medical-dental", title: "Dental Tourism Package", description: "World-class dental care at a fraction of the cost in JCI-accredited clinics.", image: expFood, price: 12500, duration: "1-3 Days", category: "Medical Care", hostId: "kiran-mumbai", hostName: "Kiran", hostCity: "Mumbai", rating: 4.6, reviewCount: 15, highlights: ["JCI-accredited", "Airport pickup", "Post-care follow-up", "Recovery lounge"] },
+  { id: "exp-medical-yoga-therapy", title: "Therapeutic Yoga for Chronic Pain", description: "Evidence-based yoga therapy sessions designed for chronic conditions.", image: expSpiritual, price: 3300, duration: "5 Days", category: "Medical Care", hostId: "arjun-varanasi", hostName: "Arjun", hostCity: "Varanasi", rating: 4.8, reviewCount: 31, highlights: ["Certified therapist", "Personalized program", "Daily tracking", "Take-home guide"] },
 
   // Wellness
-  { id: "exp-wellness-panchakarma", title: "Panchakarma Detox Program", description: "A traditional 7-day Panchakarma detox and rejuvenation program.", image: expWellness, price: 450, duration: "7 Days", category: "Wellness", hostId: "priya-kerala", hostName: "Priya", hostCity: "Alleppey", rating: 4.9, reviewCount: 19, highlights: ["Doctor consultation", "Daily treatments", "Sattvic diet", "Herbal medicines"] },
-  { id: "exp-wellness-sound", title: "Sound Healing & Crystal Therapy", description: "Immerse yourself in Tibetan singing bowls, crystal healing, and guided meditation.", image: expSpiritual, price: 55, duration: "3 Hours", category: "Wellness", hostId: "sunita-udaipur", hostName: "Sunita", hostCity: "Udaipur", rating: 4.7, reviewCount: 24, highlights: ["Singing bowls", "Crystal healing", "Guided meditation", "Herbal refreshments"] },
+  { id: "exp-wellness-panchakarma", title: "Panchakarma Detox Program", description: "A traditional 7-day Panchakarma detox and rejuvenation program.", image: expWellness, price: 37500, duration: "7 Days", category: "Wellness", hostId: "priya-kerala", hostName: "Priya", hostCity: "Alleppey", rating: 4.9, reviewCount: 19, highlights: ["Doctor consultation", "Daily treatments", "Sattvic diet", "Herbal medicines"] },
+  { id: "exp-wellness-sound", title: "Sound Healing & Crystal Therapy", description: "Immerse yourself in Tibetan singing bowls, crystal healing, and guided meditation.", image: expSpiritual, price: 4600, duration: "3 Hours", category: "Wellness", hostId: "sunita-udaipur", hostName: "Sunita", hostCity: "Udaipur", rating: 4.7, reviewCount: 24, highlights: ["Singing bowls", "Crystal healing", "Guided meditation", "Herbal refreshments"] },
 ];
 
 export const reviews: Review[] = [
@@ -542,11 +558,11 @@ export const reviews: Review[] = [
 ];
 
 export const mockBookings: Booking[] = [
-  { id: "b1", hostId: "ravi-jaipur", travelerId: "t1", services: ["Guide", "Stay"], startDate: "2026-04-15", endDate: "2026-04-18", guests: 2, totalPrice: 270, status: "confirmed", message: "Excited to explore Jaipur!", createdAt: "2026-03-10" },
-  { id: "b2", hostId: "arjun-varanasi", travelerId: "t1", services: ["Guide"], startDate: "2026-05-01", endDate: "2026-05-03", guests: 1, totalPrice: 80, status: "pending", createdAt: "2026-03-15" },
-  { id: "b3", hostId: "priya-kerala", travelerId: "t2", services: ["Guide", "Stay"], startDate: "2026-03-20", endDate: "2026-03-25", guests: 2, totalPrice: 350, status: "completed", createdAt: "2026-02-28" },
-  { id: "b4", hostId: "meera-goa", travelerId: "t1", services: ["Stay", "Transport"], startDate: "2026-06-10", endDate: "2026-06-15", guests: 3, totalPrice: 420, status: "pending", message: "Looking forward to the beach villa!", createdAt: "2026-03-12" },
-  { id: "b5", hostId: "deepak-delhi", travelerId: "t3", services: ["Guide", "Transport"], startDate: "2026-04-01", endDate: "2026-04-03", guests: 4, totalPrice: 200, status: "confirmed", createdAt: "2026-03-08" },
+  { id: "b1", hostId: "ravi-jaipur", travelerId: "t1", services: ["Guide", "Stay"], startDate: "2026-04-15", endDate: "2026-04-18", guests: 2, totalPrice: 22400, status: "confirmed", message: "Excited to explore Jaipur!", createdAt: "2026-03-10" },
+  { id: "b2", hostId: "arjun-varanasi", travelerId: "t1", services: ["Guide"], startDate: "2026-05-01", endDate: "2026-05-03", guests: 1, totalPrice: 6600, status: "pending", createdAt: "2026-03-15" },
+  { id: "b3", hostId: "priya-kerala", travelerId: "t2", services: ["Guide", "Stay"], startDate: "2026-03-20", endDate: "2026-03-25", guests: 2, totalPrice: 29000, status: "completed", createdAt: "2026-02-28" },
+  { id: "b4", hostId: "meera-goa", travelerId: "t1", services: ["Stay", "Transport"], startDate: "2026-06-10", endDate: "2026-06-15", guests: 3, totalPrice: 34900, status: "pending", message: "Looking forward to the beach villa!", createdAt: "2026-03-12" },
+  { id: "b5", hostId: "deepak-delhi", travelerId: "t3", services: ["Guide", "Transport"], startDate: "2026-04-01", endDate: "2026-04-03", guests: 4, totalPrice: 16600, status: "confirmed", createdAt: "2026-03-08" },
 ];
 
 export const vibeCategories = [

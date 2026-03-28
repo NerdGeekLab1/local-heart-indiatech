@@ -4,6 +4,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { CurrencyProvider } from "@/contexts/CurrencyContext";
 import Index from "./pages/Index.tsx";
 import Explore from "./pages/Explore.tsx";
 import Experiences from "./pages/Experiences.tsx";
@@ -36,6 +37,7 @@ const queryClient = new QueryClient();
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
+      <CurrencyProvider>
       <TooltipProvider>
         <Toaster />
         <Sonner />
@@ -70,6 +72,7 @@ const App = () => (
           </Routes>
         </BrowserRouter>
       </TooltipProvider>
+      </CurrencyProvider>
     </AuthProvider>
   </QueryClientProvider>
 );
