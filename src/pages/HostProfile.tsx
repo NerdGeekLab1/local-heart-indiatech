@@ -6,12 +6,13 @@ import {
   Star, Shield, Clock, Globe, MapPin, ArrowLeft, MessageCircle, Car,
   Home, Compass, Play, Bed, Users, Gauge, CheckCircle, UtensilsCrossed,
   Leaf, ChefHat, Heart, Share2, Camera, Award, Verified, Calendar,
-  Phone, Instagram, X as XIcon
+  Phone, Instagram, X as XIcon, Tag
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { hosts, experiences, reviews } from "@/lib/data";
+import { useCurrency } from "@/contexts/CurrencyContext";
 
 const serviceIcons: Record<string, React.ElementType> = {
   Guide: Compass, Stay: Home, Transport: Car, Food: UtensilsCrossed,
@@ -23,6 +24,7 @@ const serviceColors: Record<string, string> = {
 };
 
 const HostProfile = () => {
+  const { format } = useCurrency();
   const { toast } = useToast();
   const { id } = useParams();
   const host = hosts.find(h => h.id === id);
@@ -104,7 +106,7 @@ const HostProfile = () => {
                 <p className="text-muted-foreground italic mt-1">"{host.tagline}"</p>
               </div>
               <div className="hidden sm:block text-right">
-                <p className="text-3xl font-bold text-foreground">${host.pricePerDay}</p>
+                <p className="text-3xl font-bold text-foreground">{format(host.pricePerDay)}</p>
                 <p className="text-xs text-muted-foreground">per day</p>
               </div>
             </div>
@@ -327,7 +329,7 @@ const HostProfile = () => {
 
                   {/* Booking Card */}
                   <div className="rounded-2xl bg-primary/5 border border-primary/20 p-5">
-                    <p className="text-2xl font-bold text-foreground">${host.pricePerDay}<span className="text-sm font-normal text-muted-foreground">/day</span></p>
+                    <p className="text-2xl font-bold text-foreground">{format(host.pricePerDay)}<span className="text-sm font-normal text-muted-foreground">/day</span></p>
                     <p className="text-xs text-muted-foreground mt-1">All services included</p>
                     <Link to={`/book/${host.id}`}>
                       <Button className="w-full mt-4 rounded-full gap-2">
@@ -401,7 +403,7 @@ const HostProfile = () => {
                             {!room.images?.length && <span className="text-xs bg-secondary text-muted-foreground px-2 py-0.5 rounded-full">{room.type}</span>}
                           </div>
                           <div className="text-right">
-                            <p className="text-xl font-bold text-foreground">${room.pricePerNight}</p>
+                            <p className="text-xl font-bold text-foreground">{format(room.pricePerNight)}</p>
                             <p className="text-xs text-muted-foreground">/night</p>
                           </div>
                         </div>
@@ -485,7 +487,7 @@ const HostProfile = () => {
                         <div className="flex items-center gap-4 text-xs text-muted-foreground mt-2 mb-3">
                           <span className="flex items-center gap-1"><Users className="w-3 h-3" />{v.capacity} pax</span>
                           <span>{v.ac ? "❄️ AC" : "🌀 Non-AC"}</span>
-                          {v.pricePerKm > 0 && <span className="flex items-center gap-1"><Gauge className="w-3 h-3" />${v.pricePerKm}/km</span>}
+                          {v.pricePerKm > 0 && <span className="flex items-center gap-1"><Gauge className="w-3 h-3" />{format(v.pricePerKm)}/km</span>}
                         </div>
                         <div className="flex flex-wrap gap-1 mb-3">
                           {v.features.map(f => (
@@ -493,7 +495,7 @@ const HostProfile = () => {
                           ))}
                         </div>
                         <div className="flex items-center justify-between">
-                          <p className="text-xl font-bold text-foreground">${v.pricePerDay}<span className="text-xs font-normal text-muted-foreground">/day</span></p>
+                          <p className="text-xl font-bold text-foreground">{format(v.pricePerDay)}<span className="text-xs font-normal text-muted-foreground">/day</span></p>
                           <Link to={`/book/${host.id}`}>
                             <Button size="sm" className="rounded-full text-xs">Book</Button>
                           </Link>
@@ -577,7 +579,7 @@ const HostProfile = () => {
                           <h5 className="font-bold text-foreground">{dish.name}</h5>
                           <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full">{dish.cuisine}</span>
                         </div>
-                        <p className="text-xl font-bold text-foreground">${dish.price}</p>
+                        <p className="text-xl font-bold text-foreground">{format(dish.price)}</p>
                       </div>
                       <p className="mt-2 text-sm text-muted-foreground">{dish.description}</p>
                       <div className="mt-2 flex flex-wrap gap-1.5">
@@ -622,7 +624,7 @@ const HostProfile = () => {
                             <span className="absolute top-3 left-3 bg-primary text-primary-foreground text-xs font-bold px-2.5 py-1 rounded-full">{exp.category}</span>
                             <div className="absolute bottom-3 left-3 right-3">
                               <p className="text-primary-foreground font-bold text-sm">{exp.title}</p>
-                              <p className="text-primary-foreground/80 text-xs">${exp.price} · {exp.duration}</p>
+                              <p className="text-primary-foreground/80 text-xs">{format(exp.price)} · {exp.duration}</p>
                             </div>
                           </div>
                         </motion.div>
