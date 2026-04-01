@@ -749,6 +749,22 @@ const HostProfile = () => {
       </div>
 
       <Footer />
+
+      {/* Lightbox */}
+      <ImageLightbox
+        images={lightboxImages}
+        initialIndex={lightboxIndex}
+        open={lightboxOpen}
+        onClose={() => setLightboxOpen(false)}
+      />
+
+      {/* Video Modal */}
+      <VideoModal
+        open={videoOpen}
+        onClose={() => setVideoOpen(false)}
+        videoUrl={host.introVideoUrl}
+        title={`${host.name}'s Intro`}
+      />
     </div>
   );
 };
