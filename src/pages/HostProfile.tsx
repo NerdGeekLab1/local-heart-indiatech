@@ -6,8 +6,10 @@ import {
   Star, Shield, Clock, Globe, MapPin, ArrowLeft, MessageCircle, Car,
   Home, Compass, Play, Bed, Users, Gauge, CheckCircle, UtensilsCrossed,
   Leaf, ChefHat, Heart, Share2, Camera, Award, Verified, Calendar,
-  Phone, Instagram, X as XIcon, Tag
+  Phone, Instagram, X as XIcon, Tag, ChevronLeft, ChevronRight
 } from "lucide-react";
+import ImageLightbox from "@/components/ImageLightbox";
+import VideoModal from "@/components/VideoModal";
 import { Button } from "@/components/ui/button";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -32,6 +34,20 @@ const HostProfile = () => {
   const [activeTab, setActiveTab] = useState<"overview" | "stay" | "transport" | "food" | "experiences" | "reviews">("overview");
   const [liked, setLiked] = useState(false);
   const [activeReel, setActiveReel] = useState<number | null>(null);
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [lightboxImages, setLightboxImages] = useState<string[]>([]);
+  const [lightboxIndex, setLightboxIndex] = useState(0);
+  const [videoOpen, setVideoOpen] = useState(false);
+  const [roomSliderIndex, setRoomSliderIndex] = useState<Record<string, number>>({});
+
+  const openLightbox = (images: string[], index: number) => {
+    setLightboxImages(images);
+    setLightboxIndex(index);
+    setLightboxOpen(true);
+  };
+
+  const getRoomSlider = (roomName: string) => roomSliderIndex[roomName] || 0;
+  const setRoomSlider = (roomName: string, idx: number) => setRoomSliderIndex(prev => ({ ...prev, [roomName]: idx }));
 
   if (!host) {
     return (
@@ -197,7 +213,13 @@ const HostProfile = () => {
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: i * 0.05 }}
                 whileHover={{ scale: 1.03, y: -4 }}
-                onClick={() => setActiveReel(activeReel === i ? null : i)}
+                onClick={() => {
+                  if (host.introVideoUrl) {
+                    setVideoOpen(true);
+                  } else {
+                    setActiveReel(activeReel === i ? null : i);
+                  }
+                }}
                 className={`relative shrink-0 w-36 sm:w-44 aspect-[9/16] rounded-2xl overflow-hidden cursor-pointer snap-start transition-all duration-300 ${activeReel === i ? "ring-3 ring-primary shadow-elevated" : "shadow-card hover:shadow-card-hover"}`}
               >
                 <img src={reel.thumbnail} alt={reel.title} className="w-full h-full object-cover" />
@@ -388,15 +410,33 @@ const HostProfile = () => {
                   {host.stayInfo.rooms.map(room => (
                     <motion.div key={room.name} whileHover={{ y: -2 }}
                       className="rounded-2xl bg-card shadow-card border border-border overflow-hidden hover:shadow-elevated transition-shadow">
-                      {/* Room Images */}
+                      {/* Room Image Slider */}
                       {room.images && room.images.length > 0 ? (
-                        <div className="relative aspect-video overflow-hidden">
-                          <img src={room.images[0]} alt={room.name} className="w-full h-full object-cover" />
-                          <div className="absolute inset-0 bg-gradient-to-t from-foreground/40 to-transparent" />
+                        <div className="relative aspect-video overflow-hidden group">
+                          <img src={room.images[getRoomSlider(room.name)]} alt={room.name}
+                            className="w-full h-full object-cover cursor-pointer transition-transform"
+                            onClick={() => openLightbox(room.images!, getRoomSlider(room.name))} />
+                          <div className="absolute inset-0 bg-gradient-to-t from-foreground/40 to-transparent pointer-events-none" />
                           {room.images.length > 1 && (
-                            <span className="absolute bottom-2 right-2 bg-foreground/60 backdrop-blur-sm text-primary-foreground text-[10px] font-medium px-2 py-0.5 rounded">
-                              +{room.images.length - 1} photos
-                            </span>
+                            <>
+                              <button onClick={(e) => { e.stopPropagation(); setRoomSlider(room.name, getRoomSlider(room.name) === 0 ? room.images!.length - 1 : getRoomSlider(room.name) - 1); }}
+                                className="absolute left-2 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-background/60 backdrop-blur-sm flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                <ChevronLeft className="w-4 h-4 text-foreground" />
+                              </button>
+                              <button onClick={(e) => { e.stopPropagation(); setRoomSlider(room.name, getRoomSlider(room.name) === room.images!.length - 1 ? 0 : getRoomSlider(room.name) + 1); }}
+                                className="absolute right-2 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-background/60 backdrop-blur-sm flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                <ChevronRight className="w-4 h-4 text-foreground" />
+                              </button>
+                              <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1">
+                                {room.images.map((_, idx) => (
+                                  <span key={idx} className={`w-1.5 h-1.5 rounded-full transition-all ${idx === getRoomSlider(room.name) ? "bg-background scale-125" : "bg-background/50"}`} />
+                                ))}
+                              </div>
+                              <span className="absolute bottom-2 right-2 bg-foreground/60 backdrop-blur-sm text-primary-foreground text-[10px] font-medium px-2 py-0.5 rounded cursor-pointer"
+                                onClick={() => openLightbox(room.images!, getRoomSlider(room.name))}>
+                                📷 {room.images.length} photos
+                              </span>
+                            </>
                           )}
                           <span className="absolute top-2 left-2 text-xs bg-primary text-primary-foreground px-2 py-0.5 rounded-full font-bold">{room.type}</span>
                         </div>
@@ -709,6 +749,22 @@ const HostProfile = () => {
       </div>
 
       <Footer />
+
+      {/* Lightbox */}
+      <ImageLightbox
+        images={lightboxImages}
+        initialIndex={lightboxIndex}
+        open={lightboxOpen}
+        onClose={() => setLightboxOpen(false)}
+      />
+
+      {/* Video Modal */}
+      <VideoModal
+        open={videoOpen}
+        onClose={() => setVideoOpen(false)}
+        videoUrl={host.introVideoUrl}
+        title={`${host.name}'s Intro`}
+      />
     </div>
   );
 };
