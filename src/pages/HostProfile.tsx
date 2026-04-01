@@ -410,15 +410,33 @@ const HostProfile = () => {
                   {host.stayInfo.rooms.map(room => (
                     <motion.div key={room.name} whileHover={{ y: -2 }}
                       className="rounded-2xl bg-card shadow-card border border-border overflow-hidden hover:shadow-elevated transition-shadow">
-                      {/* Room Images */}
+                      {/* Room Image Slider */}
                       {room.images && room.images.length > 0 ? (
-                        <div className="relative aspect-video overflow-hidden">
-                          <img src={room.images[0]} alt={room.name} className="w-full h-full object-cover" />
-                          <div className="absolute inset-0 bg-gradient-to-t from-foreground/40 to-transparent" />
+                        <div className="relative aspect-video overflow-hidden group">
+                          <img src={room.images[getRoomSlider(room.name)]} alt={room.name}
+                            className="w-full h-full object-cover cursor-pointer transition-transform"
+                            onClick={() => openLightbox(room.images!, getRoomSlider(room.name))} />
+                          <div className="absolute inset-0 bg-gradient-to-t from-foreground/40 to-transparent pointer-events-none" />
                           {room.images.length > 1 && (
-                            <span className="absolute bottom-2 right-2 bg-foreground/60 backdrop-blur-sm text-primary-foreground text-[10px] font-medium px-2 py-0.5 rounded">
-                              +{room.images.length - 1} photos
-                            </span>
+                            <>
+                              <button onClick={(e) => { e.stopPropagation(); setRoomSlider(room.name, getRoomSlider(room.name) === 0 ? room.images!.length - 1 : getRoomSlider(room.name) - 1); }}
+                                className="absolute left-2 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-background/60 backdrop-blur-sm flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                <ChevronLeft className="w-4 h-4 text-foreground" />
+                              </button>
+                              <button onClick={(e) => { e.stopPropagation(); setRoomSlider(room.name, getRoomSlider(room.name) === room.images!.length - 1 ? 0 : getRoomSlider(room.name) + 1); }}
+                                className="absolute right-2 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-background/60 backdrop-blur-sm flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                <ChevronRight className="w-4 h-4 text-foreground" />
+                              </button>
+                              <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1">
+                                {room.images.map((_, idx) => (
+                                  <span key={idx} className={`w-1.5 h-1.5 rounded-full transition-all ${idx === getRoomSlider(room.name) ? "bg-background scale-125" : "bg-background/50"}`} />
+                                ))}
+                              </div>
+                              <span className="absolute bottom-2 right-2 bg-foreground/60 backdrop-blur-sm text-primary-foreground text-[10px] font-medium px-2 py-0.5 rounded cursor-pointer"
+                                onClick={() => openLightbox(room.images!, getRoomSlider(room.name))}>
+                                📷 {room.images.length} photos
+                              </span>
+                            </>
                           )}
                           <span className="absolute top-2 left-2 text-xs bg-primary text-primary-foreground px-2 py-0.5 rounded-full font-bold">{room.type}</span>
                         </div>
