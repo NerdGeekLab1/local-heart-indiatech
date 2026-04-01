@@ -6,8 +6,10 @@ import {
   Star, Shield, Clock, Globe, MapPin, ArrowLeft, MessageCircle, Car,
   Home, Compass, Play, Bed, Users, Gauge, CheckCircle, UtensilsCrossed,
   Leaf, ChefHat, Heart, Share2, Camera, Award, Verified, Calendar,
-  Phone, Instagram, X as XIcon, Tag
+  Phone, Instagram, X as XIcon, Tag, ChevronLeft, ChevronRight
 } from "lucide-react";
+import ImageLightbox from "@/components/ImageLightbox";
+import VideoModal from "@/components/VideoModal";
 import { Button } from "@/components/ui/button";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
