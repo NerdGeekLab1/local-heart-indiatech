@@ -34,6 +34,20 @@ const HostProfile = () => {
   const [activeTab, setActiveTab] = useState<"overview" | "stay" | "transport" | "food" | "experiences" | "reviews">("overview");
   const [liked, setLiked] = useState(false);
   const [activeReel, setActiveReel] = useState<number | null>(null);
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [lightboxImages, setLightboxImages] = useState<string[]>([]);
+  const [lightboxIndex, setLightboxIndex] = useState(0);
+  const [videoOpen, setVideoOpen] = useState(false);
+  const [roomSliderIndex, setRoomSliderIndex] = useState<Record<string, number>>({});
+
+  const openLightbox = (images: string[], index: number) => {
+    setLightboxImages(images);
+    setLightboxIndex(index);
+    setLightboxOpen(true);
+  };
+
+  const getRoomSlider = (roomName: string) => roomSliderIndex[roomName] || 0;
+  const setRoomSlider = (roomName: string, idx: number) => setRoomSliderIndex(prev => ({ ...prev, [roomName]: idx }));
 
   if (!host) {
     return (
