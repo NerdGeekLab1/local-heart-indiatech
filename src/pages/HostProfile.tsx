@@ -213,7 +213,13 @@ const HostProfile = () => {
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: i * 0.05 }}
                 whileHover={{ scale: 1.03, y: -4 }}
-                onClick={() => setActiveReel(activeReel === i ? null : i)}
+                onClick={() => {
+                  if (host.introVideoUrl) {
+                    setVideoOpen(true);
+                  } else {
+                    setActiveReel(activeReel === i ? null : i);
+                  }
+                }}
                 className={`relative shrink-0 w-36 sm:w-44 aspect-[9/16] rounded-2xl overflow-hidden cursor-pointer snap-start transition-all duration-300 ${activeReel === i ? "ring-3 ring-primary shadow-elevated" : "shadow-card hover:shadow-card-hover"}`}
               >
                 <img src={reel.thumbnail} alt={reel.title} className="w-full h-full object-cover" />
