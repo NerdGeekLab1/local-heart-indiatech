@@ -421,6 +421,24 @@ const TripDetail = () => {
                   </div>
                 )}
 
+                {/* Trip Leader Profile Link */}
+                {creator && (
+                  <Link to={`/trip-leader/${creator.id}`}>
+                    <div className="rounded-2xl bg-gradient-to-br from-primary/5 to-accent/5 border border-primary/10 p-4 hover:shadow-elevated transition-shadow cursor-pointer">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-sm font-bold text-primary">
+                          {creator.first_name?.[0] || "?"}
+                        </div>
+                        <div className="flex-1">
+                          <p className="text-sm font-bold text-foreground">{creator.first_name} {creator.last_name || ""}</p>
+                          <p className="text-[10px] text-muted-foreground">View full Trip Leader profile →</p>
+                        </div>
+                        <Compass className="w-4 h-4 text-primary" />
+                      </div>
+                    </div>
+                  </Link>
+                )
+
                 {/* Organizer from DB */}
                 {creator && (
                   <div className="rounded-2xl bg-card p-5 shadow-card">
