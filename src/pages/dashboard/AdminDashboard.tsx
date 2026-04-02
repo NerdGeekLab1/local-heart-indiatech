@@ -72,21 +72,29 @@ const AdminDashboard = () => {
 
   useEffect(() => {
     const fetchData = async () => {
-      const [{ data: trips }, { data: grievances }, { data: expReqs }, { data: profiles }, { data: roles }] = await Promise.all([
+      const [{ data: trips }, { data: grievances }, { data: expReqs }, { data: profiles }, { data: roles }, { data: wanderers }] = await Promise.all([
         supabase.from("trip_listings").select("*").order("created_at", { ascending: false }),
         supabase.from("grievances").select("*").order("created_at", { ascending: false }),
         supabase.from("experience_requests").select("*").order("created_at", { ascending: false }),
         supabase.from("profiles").select("*").order("created_at", { ascending: false }),
         supabase.from("user_roles").select("*"),
+        supabase.from("beta_wanderers").select("*").order("created_at", { ascending: false }),
       ]);
       setDbTrips(trips || []);
       setDbGrievances(grievances || []);
       setDbExperienceRequests(expReqs || []);
       setDbUsers(profiles || []);
       setUserRoles(roles || []);
+      setDbWanderers(wanderers || []);
     };
     fetchData();
   }, []);
+
+  const updateWandererStatus = async (id: string, status: string) => {
+    await supabase.from("beta_wanderers").update({ status, updated_at: new Date().toISOString() }).eq("id", id);
+    setDbWanderers(p => p.map(w => w.id === id ? { ...w, status } : w));
+    toast({ title: `Wanderer ${status}` });
+  };
 
   const updateTripStatus = async (id: string, status: string) => {
     await supabase.from("trip_listings").update({ status }).eq("id", id);
