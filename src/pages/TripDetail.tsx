@@ -439,21 +439,24 @@ const TripDetail = () => {
                   </Link>
                 )
 
-                {/* Organizer from DB */}
-                {creator && (
+                {/* Organizer from DB (fallback) */}
+                {creator && !matchingHost && (
                   <div className="rounded-2xl bg-card p-5 shadow-card">
                     <h3 className="text-sm font-bold text-foreground mb-3">Trip Organizer</h3>
-                    <div className="flex items-center gap-3">
-                      <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-lg font-bold text-primary">
-                        {creator.avatar_url ? (
-                          <img src={creator.avatar_url} alt={creator.first_name} className="w-full h-full rounded-full object-cover" />
-                        ) : (creator.first_name?.[0] || "?")}
+                    <Link to={`/trip-leader/${creator.id}`} className="group">
+                      <div className="flex items-center gap-3">
+                        <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-lg font-bold text-primary">
+                          {creator.avatar_url ? (
+                            <img src={creator.avatar_url} alt={creator.first_name} className="w-full h-full rounded-full object-cover" />
+                          ) : (creator.first_name?.[0] || "?")}
+                        </div>
+                        <div>
+                          <p className="font-semibold text-foreground group-hover:text-primary">{creator.first_name} {creator.last_name || ""}</p>
+                          {creator.nationality && <p className="text-xs text-muted-foreground">📍 {creator.nationality}</p>}
+                          <p className="text-[10px] text-primary">View Leader Profile →</p>
+                        </div>
                       </div>
-                      <div>
-                        <p className="font-semibold text-foreground">{creator.first_name} {creator.last_name || ""}</p>
-                        {creator.nationality && <p className="text-xs text-muted-foreground">📍 {creator.nationality}</p>}
-                      </div>
-                    </div>
+                    </Link>
                   </div>
                 )}
 
