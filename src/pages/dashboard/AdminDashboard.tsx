@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Users, DollarSign, TrendingUp, Shield, AlertTriangle, Star, MapPin, Calendar, Settings, FileText, BarChart3, Globe, Flag, Eye, Plus, Trash2, UtensilsCrossed, Video, ChevronDown, Ban, CheckCircle, Edit, Compass, MessageSquare } from "lucide-react";
+import { Users, DollarSign, TrendingUp, Shield, AlertTriangle, Star, MapPin, Calendar, Settings, FileText, BarChart3, Globe, Flag, Eye, Plus, Trash2, UtensilsCrossed, Video, ChevronDown, Ban, CheckCircle, Edit, Compass, MessageSquare, Target } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import Navbar from "@/components/Navbar";
@@ -11,7 +11,7 @@ import EditDialog, { FieldConfig } from "@/components/EditDialog";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
-type Tab = "overview" | "hosts" | "bookings" | "experiences" | "destinations" | "trips" | "grievances" | "users" | "moderation" | "analytics" | "settings";
+type Tab = "overview" | "hosts" | "bookings" | "experiences" | "destinations" | "trips" | "grievances" | "users" | "wanderers" | "moderation" | "analytics" | "settings";
 
 const destinationFields: FieldConfig[] = [
   { key: "name", label: "City Name", required: true },
@@ -68,24 +68,33 @@ const AdminDashboard = () => {
   const [grievanceNotes, setGrievanceNotes] = useState<Record<string, string>>({});
   const [dbUsers, setDbUsers] = useState<any[]>([]);
   const [userRoles, setUserRoles] = useState<any[]>([]);
+  const [dbWanderers, setDbWanderers] = useState<any[]>([]);
 
   useEffect(() => {
     const fetchData = async () => {
-      const [{ data: trips }, { data: grievances }, { data: expReqs }, { data: profiles }, { data: roles }] = await Promise.all([
+      const [{ data: trips }, { data: grievances }, { data: expReqs }, { data: profiles }, { data: roles }, { data: wanderers }] = await Promise.all([
         supabase.from("trip_listings").select("*").order("created_at", { ascending: false }),
         supabase.from("grievances").select("*").order("created_at", { ascending: false }),
         supabase.from("experience_requests").select("*").order("created_at", { ascending: false }),
         supabase.from("profiles").select("*").order("created_at", { ascending: false }),
         supabase.from("user_roles").select("*"),
+        supabase.from("beta_wanderers").select("*").order("created_at", { ascending: false }),
       ]);
       setDbTrips(trips || []);
       setDbGrievances(grievances || []);
       setDbExperienceRequests(expReqs || []);
       setDbUsers(profiles || []);
       setUserRoles(roles || []);
+      setDbWanderers(wanderers || []);
     };
     fetchData();
   }, []);
+
+  const updateWandererStatus = async (id: string, status: string) => {
+    await supabase.from("beta_wanderers").update({ status, updated_at: new Date().toISOString() }).eq("id", id);
+    setDbWanderers(p => p.map(w => w.id === id ? { ...w, status } : w));
+    toast({ title: `Wanderer ${status}` });
+  };
 
   const updateTripStatus = async (id: string, status: string) => {
     await supabase.from("trip_listings").update({ status }).eq("id", id);
@@ -127,12 +136,13 @@ const AdminDashboard = () => {
 
   const tabs: { id: Tab; label: string; icon: React.ElementType }[] = [
     { id: "overview", label: "Overview", icon: BarChart3 },
+    { id: "users", label: "Users", icon: Users },
     { id: "hosts", label: "Hosts", icon: Users },
     { id: "bookings", label: "Bookings", icon: Calendar },
     { id: "experiences", label: "Experiences", icon: Globe },
     { id: "trips", label: "Trips", icon: Compass },
     { id: "grievances", label: "Grievances", icon: MessageSquare },
-    { id: "users", label: "Users", icon: Users },
+    { id: "wanderers", label: "Wanderers", icon: Target },
     { id: "destinations", label: "Destinations", icon: MapPin },
     { id: "moderation", label: "Moderation", icon: Shield },
     { id: "analytics", label: "Analytics", icon: TrendingUp },
@@ -673,7 +683,77 @@ const AdminDashboard = () => {
           </div>
         )}
 
-        {/* Analytics */}
+        {/* Beta Wanderers Tab */}
+        {activeTab === "wanderers" && (
+          <div className="mt-6">
+            <h2 className="text-xl font-bold text-foreground mb-4">Beta Wanderer Applications ({dbWanderers.length})</h2>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
+              {[
+                { label: "Total", value: dbWanderers.length, color: "text-primary" },
+                { label: "Pending", value: dbWanderers.filter(w => w.status === "pending").length, color: "text-primary" },
+                { label: "Approved", value: dbWanderers.filter(w => w.status === "approved").length, color: "text-accent" },
+                { label: "Rejected", value: dbWanderers.filter(w => w.status === "rejected").length, color: "text-destructive" },
+              ].map(s => (
+                <div key={s.label} className="rounded-lg bg-card p-4 shadow-card text-center">
+                  <p className={`text-2xl font-bold ${s.color}`}>{s.value}</p>
+                  <p className="text-xs text-muted-foreground">{s.label}</p>
+                </div>
+              ))}
+            </div>
+            {dbWanderers.length === 0 ? (
+              <p className="text-muted-foreground text-center py-8">No wanderer applications yet.</p>
+            ) : (
+              <div className="space-y-3">
+                {dbWanderers.map(w => (
+                  <div key={w.id} className={`rounded-xl bg-card p-5 shadow-card ${w.status === "pending" ? "ring-2 ring-primary/20" : ""}`}>
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                      <div className="flex items-center gap-3 flex-1">
+                        <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-sm font-bold text-primary">{w.full_name[0]}</div>
+                        <div>
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <h3 className="font-bold text-foreground">{w.full_name}</h3>
+                            <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${statusBadge(w.status)}`}>{w.status}</span>
+                            <span className="text-xs bg-secondary text-muted-foreground px-2 py-0.5 rounded-full">{w.badge}</span>
+                          </div>
+                          <p className="text-xs text-muted-foreground mt-0.5">{w.city} · {w.email}</p>
+                          {w.bio && <p className="text-xs text-muted-foreground mt-1 line-clamp-1">{w.bio}</p>}
+                          <div className="flex gap-1 mt-1 flex-wrap">
+                            {w.travel_styles?.map((s: string) => (
+                              <span key={s} className="text-[10px] bg-primary/5 text-primary px-2 py-0.5 rounded-full">{s}</span>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex gap-2 shrink-0">
+                        {w.status === "pending" && (
+                          <>
+                            <Button size="sm" className="rounded-full text-xs bg-accent text-accent-foreground" onClick={() => updateWandererStatus(w.id, "approved")}>
+                              <CheckCircle className="w-3 h-3 mr-1" /> Approve
+                            </Button>
+                            <Button size="sm" variant="outline" className="rounded-full text-xs text-destructive" onClick={() => updateWandererStatus(w.id, "rejected")}>
+                              <Ban className="w-3 h-3 mr-1" /> Reject
+                            </Button>
+                          </>
+                        )}
+                        {w.status === "approved" && (
+                          <Button size="sm" variant="outline" className="rounded-full text-xs text-destructive" onClick={() => updateWandererStatus(w.id, "suspended")}>
+                            Suspend
+                          </Button>
+                        )}
+                        {(w.status === "rejected" || w.status === "suspended") && (
+                          <Button size="sm" variant="outline" className="rounded-full text-xs" onClick={() => updateWandererStatus(w.id, "approved")}>
+                            Reactivate
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
         {activeTab === "analytics" && (
           <div className="mt-6 space-y-6">
             <h2 className="text-xl font-bold text-foreground mb-4">Platform Analytics</h2>

@@ -27,6 +27,7 @@ const Navbar = () => {
             <Link to="/trips" className="text-sm font-medium text-foreground/70 hover:text-foreground transition-colors flex items-center gap-1">
               <Compass className="w-3.5 h-3.5" /> Trips
             </Link>
+            <Link to="/beta-wanderers" className="text-sm font-medium text-foreground/70 hover:text-foreground transition-colors">🧭 Wanderers</Link>
             <Link to="/become-host" className="text-sm font-medium text-foreground/70 hover:text-foreground transition-colors">Become a Host</Link>
           </div>
 
@@ -61,6 +62,7 @@ const Navbar = () => {
               <Link to="/experiences" className="block py-2 text-sm font-medium" onClick={() => setMobileOpen(false)}>Experiences</Link>
               <Link to="/destinations" className="block py-2 text-sm font-medium" onClick={() => setMobileOpen(false)}>Destinations</Link>
               <Link to="/trips" className="block py-2 text-sm font-medium" onClick={() => setMobileOpen(false)}>Published Trips</Link>
+              <Link to="/beta-wanderers" className="block py-2 text-sm font-medium" onClick={() => setMobileOpen(false)}>🧭 Beta Wanderers</Link>
               <Link to="/become-host" className="block py-2 text-sm font-medium" onClick={() => setMobileOpen(false)}>Become a Host</Link>
               <Link to="/host-trip" className="block py-2 text-sm font-medium" onClick={() => setMobileOpen(false)}>Host a Trip</Link>
               <Link to="/community" className="block py-2 text-sm font-medium" onClick={() => setMobileOpen(false)}>Community</Link>

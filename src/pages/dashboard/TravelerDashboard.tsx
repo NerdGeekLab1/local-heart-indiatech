@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   MapPin, Calendar, Star, Heart, Clock, Settings, Bell, CreditCard, Shield, Globe,
-  MessageCircle, Video, Save, Instagram, Facebook, Twitter, Compass, FileText, AlertTriangle
+  MessageCircle, Video, Save, Instagram, Facebook, Twitter, Compass, FileText, AlertTriangle, Target
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -21,7 +21,7 @@ const statusColors: Record<string, string> = {
   completed: "bg-secondary text-muted-foreground", cancelled: "bg-destructive/10 text-destructive",
 };
 
-type Tab = "overview" | "bookings" | "trips" | "saved" | "grievances" | "messages" | "reviews" | "settings";
+type Tab = "overview" | "bookings" | "trips" | "saved" | "wanderer" | "grievances" | "messages" | "reviews" | "settings";
 
 const TravelerDashboard = () => {
   const [activeTab, setActiveTab] = useState<Tab>("overview");
@@ -78,6 +78,7 @@ const TravelerDashboard = () => {
     { id: "bookings", label: "Bookings", icon: Calendar },
     { id: "trips", label: "My Trips", icon: Compass },
     { id: "saved", label: "Saved", icon: Heart },
+    { id: "wanderer", label: "🧭 Wanderer", icon: Target },
     { id: "grievances", label: "Grievances", icon: AlertTriangle },
     { id: "messages", label: "Messages", icon: MessageCircle },
     { id: "reviews", label: "Reviews", icon: Star },
@@ -269,6 +270,36 @@ const TravelerDashboard = () => {
                 </div>
               ))}
               {actualSavedHosts.length === 0 && <p className="text-muted-foreground text-center py-8 col-span-2">No saved hosts yet.</p>}
+            </div>
+          </div>
+        )}
+
+        {/* Beta Wanderer */}
+        {activeTab === "wanderer" && (
+          <div className="mt-6">
+            <div className="rounded-2xl bg-gradient-to-br from-primary/10 via-accent/5 to-secondary p-8 text-center mb-6">
+              <div className="text-4xl mb-3">🧭</div>
+              <h2 className="text-2xl font-bold text-foreground">Beta Wanderer Program</h2>
+              <p className="text-muted-foreground mt-2 max-w-lg mx-auto">
+                Travel to unexplored destinations, shoot videos, share feedback, and earn rewards as a community explorer.
+              </p>
+              <div className="flex gap-3 justify-center mt-4">
+                <Link to="/beta-wanderer-apply"><Button className="rounded-full gap-2"><Target className="w-4 h-4" /> Apply Now</Button></Link>
+                <Link to="/beta-wanderers"><Button variant="outline" className="rounded-full">View All Wanderers</Button></Link>
+              </div>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              {[
+                { icon: "📸", title: "Shoot Videos", desc: "Document your travels with authentic video content" },
+                { icon: "🗺️", title: "Explore Places", desc: "Visit new and offbeat destinations across India" },
+                { icon: "🏆", title: "Earn Rewards", desc: "Build your score, earn badges, and get featured" },
+              ].map(b => (
+                <div key={b.title} className="rounded-xl bg-card p-5 shadow-card text-center">
+                  <span className="text-3xl">{b.icon}</span>
+                  <h3 className="font-bold text-foreground mt-2">{b.title}</h3>
+                  <p className="text-xs text-muted-foreground mt-1">{b.desc}</p>
+                </div>
+              ))}
             </div>
           </div>
         )}
