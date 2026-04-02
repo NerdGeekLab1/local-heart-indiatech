@@ -78,6 +78,7 @@ const TravelerDashboard = () => {
     { id: "bookings", label: "Bookings", icon: Calendar },
     { id: "trips", label: "My Trips", icon: Compass },
     { id: "saved", label: "Saved", icon: Heart },
+    { id: "wanderer", label: "🧭 Wanderer", icon: Target },
     { id: "grievances", label: "Grievances", icon: AlertTriangle },
     { id: "messages", label: "Messages", icon: MessageCircle },
     { id: "reviews", label: "Reviews", icon: Star },
