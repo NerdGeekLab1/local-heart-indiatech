@@ -68,6 +68,7 @@ const AdminDashboard = () => {
   const [grievanceNotes, setGrievanceNotes] = useState<Record<string, string>>({});
   const [dbUsers, setDbUsers] = useState<any[]>([]);
   const [userRoles, setUserRoles] = useState<any[]>([]);
+  const [dbWanderers, setDbWanderers] = useState<any[]>([]);
 
   useEffect(() => {
     const fetchData = async () => {
