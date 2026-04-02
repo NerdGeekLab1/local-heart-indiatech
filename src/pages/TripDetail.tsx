@@ -437,7 +437,7 @@ const TripDetail = () => {
                       </div>
                     </div>
                   </Link>
-                )
+                )}
 
                 {/* Organizer from DB (fallback) */}
                 {creator && !matchingHost && (
