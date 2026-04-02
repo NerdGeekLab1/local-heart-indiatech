@@ -30,6 +30,10 @@ import Grievances from "./pages/Grievances.tsx";
 import BikeToursDetail from "./pages/BikeToursDetail.tsx";
 import Trips from "./pages/Trips.tsx";
 import TripDetail from "./pages/TripDetail.tsx";
+import TripLeaderProfile from "./pages/TripLeaderProfile.tsx";
+import BetaWanderers from "./pages/BetaWanderers.tsx";
+import BetaWandererApply from "./pages/BetaWandererApply.tsx";
+import BetaWandererProfile from "./pages/BetaWandererProfile.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
@@ -68,6 +72,10 @@ const App = () => (
             <Route path="/bike-tours" element={<BikeToursDetail />} />
             <Route path="/trips" element={<Trips />} />
             <Route path="/trip/:id" element={<TripDetail />} />
+            <Route path="/trip-leader/:id" element={<TripLeaderProfile />} />
+            <Route path="/beta-wanderers" element={<BetaWanderers />} />
+            <Route path="/beta-wanderer-apply" element={<BetaWandererApply />} />
+            <Route path="/beta-wanderer/:id" element={<BetaWandererProfile />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
