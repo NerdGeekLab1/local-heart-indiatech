@@ -14,6 +14,72 @@ export type Database = {
   }
   public: {
     Tables: {
+      beta_wanderers: {
+        Row: {
+          admin_notes: string | null
+          badge: string | null
+          bio: string | null
+          city: string
+          created_at: string
+          email: string
+          full_name: string
+          id: string
+          missions_completed: number | null
+          phone: string | null
+          preferred_destinations: string[] | null
+          score: number | null
+          social_links: Json | null
+          status: string
+          total_videos: number | null
+          travel_styles: string[] | null
+          updated_at: string
+          user_id: string
+          video_url: string | null
+        }
+        Insert: {
+          admin_notes?: string | null
+          badge?: string | null
+          bio?: string | null
+          city: string
+          created_at?: string
+          email: string
+          full_name: string
+          id?: string
+          missions_completed?: number | null
+          phone?: string | null
+          preferred_destinations?: string[] | null
+          score?: number | null
+          social_links?: Json | null
+          status?: string
+          total_videos?: number | null
+          travel_styles?: string[] | null
+          updated_at?: string
+          user_id: string
+          video_url?: string | null
+        }
+        Update: {
+          admin_notes?: string | null
+          badge?: string | null
+          bio?: string | null
+          city?: string
+          created_at?: string
+          email?: string
+          full_name?: string
+          id?: string
+          missions_completed?: number | null
+          phone?: string | null
+          preferred_destinations?: string[] | null
+          score?: number | null
+          social_links?: Json | null
+          status?: string
+          total_videos?: number | null
+          travel_styles?: string[] | null
+          updated_at?: string
+          user_id?: string
+          video_url?: string | null
+        }
+        Relationships: []
+      }
       bookings: {
         Row: {
           created_at: string
