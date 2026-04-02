@@ -21,7 +21,7 @@ const statusColors: Record<string, string> = {
   completed: "bg-secondary text-muted-foreground", cancelled: "bg-destructive/10 text-destructive",
 };
 
-type Tab = "overview" | "bookings" | "trips" | "saved" | "grievances" | "messages" | "reviews" | "settings";
+type Tab = "overview" | "bookings" | "trips" | "saved" | "wanderer" | "grievances" | "messages" | "reviews" | "settings";
 
 const TravelerDashboard = () => {
   const [activeTab, setActiveTab] = useState<Tab>("overview");
