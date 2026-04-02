@@ -136,12 +136,13 @@ const AdminDashboard = () => {
 
   const tabs: { id: Tab; label: string; icon: React.ElementType }[] = [
     { id: "overview", label: "Overview", icon: BarChart3 },
+    { id: "users", label: "Users", icon: Users },
     { id: "hosts", label: "Hosts", icon: Users },
     { id: "bookings", label: "Bookings", icon: Calendar },
     { id: "experiences", label: "Experiences", icon: Globe },
     { id: "trips", label: "Trips", icon: Compass },
     { id: "grievances", label: "Grievances", icon: MessageSquare },
-    { id: "users", label: "Users", icon: Users },
+    { id: "wanderers", label: "Wanderers", icon: Target },
     { id: "destinations", label: "Destinations", icon: MapPin },
     { id: "moderation", label: "Moderation", icon: Shield },
     { id: "analytics", label: "Analytics", icon: TrendingUp },
