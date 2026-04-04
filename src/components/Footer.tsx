@@ -1,4 +1,6 @@
+
 import { Link } from "react-router-dom";
+import { Instagram, Facebook, Twitter, Youtube, Linkedin } from "lucide-react";
 
 const Footer = () => (
   <footer className="bg-secondary border-t border-border">
@@ -9,6 +11,23 @@ const Footer = () => (
           <p className="text-sm text-muted-foreground leading-relaxed max-w-xs">
             Book a person, not just a place. Authentic India, one host at a time.
           </p>
+          <div className="flex gap-3 mt-4">
+            <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" className="w-9 h-9 rounded-full bg-card border border-border flex items-center justify-center text-muted-foreground hover:text-primary hover:border-primary transition-colors">
+              <Instagram className="w-4 h-4" />
+            </a>
+            <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" className="w-9 h-9 rounded-full bg-card border border-border flex items-center justify-center text-muted-foreground hover:text-primary hover:border-primary transition-colors">
+              <Facebook className="w-4 h-4" />
+            </a>
+            <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" className="w-9 h-9 rounded-full bg-card border border-border flex items-center justify-center text-muted-foreground hover:text-primary hover:border-primary transition-colors">
+              <Twitter className="w-4 h-4" />
+            </a>
+            <a href="https://youtube.com" target="_blank" rel="noopener noreferrer" className="w-9 h-9 rounded-full bg-card border border-border flex items-center justify-center text-muted-foreground hover:text-primary hover:border-primary transition-colors">
+              <Youtube className="w-4 h-4" />
+            </a>
+            <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer" className="w-9 h-9 rounded-full bg-card border border-border flex items-center justify-center text-muted-foreground hover:text-primary hover:border-primary transition-colors">
+              <Linkedin className="w-4 h-4" />
+            </a>
+          </div>
         </div>
         <div>
           <h5 className="text-sm font-semibold text-foreground mb-3">Explore</h5>
@@ -17,7 +36,7 @@ const Footer = () => (
             <Link to="/experiences" className="block text-sm text-muted-foreground hover:text-foreground transition-colors">Experiences</Link>
             <Link to="/destinations" className="block text-sm text-muted-foreground hover:text-foreground transition-colors">Destinations</Link>
             <Link to="/trips" className="block text-sm text-muted-foreground hover:text-foreground transition-colors">Published Trips</Link>
-            <Link to="/dashboard/traveler" className="block text-sm text-muted-foreground hover:text-foreground transition-colors">Traveler Dashboard</Link>
+            <Link to="/beta-wanderers" className="block text-sm text-muted-foreground hover:text-foreground transition-colors">Beta Wanderers</Link>
           </div>
         </div>
         <div>
@@ -27,7 +46,6 @@ const Footer = () => (
             <Link to="/host-trip" className="block text-sm text-muted-foreground hover:text-foreground transition-colors">Host a Trip</Link>
             <Link to="/dashboard/host" className="block text-sm text-muted-foreground hover:text-foreground transition-colors">Host Dashboard</Link>
             <Link to="/resources" className="block text-sm text-muted-foreground hover:text-foreground transition-colors">Host Resources</Link>
-            <Link to="/dashboard/admin" className="block text-sm text-muted-foreground hover:text-foreground transition-colors">Admin Panel</Link>
           </div>
         </div>
         <div>
