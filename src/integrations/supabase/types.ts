@@ -375,6 +375,65 @@ export type Database = {
           },
         ]
       }
+      invoices: {
+        Row: {
+          amount: number
+          booking_id: string | null
+          created_at: string
+          currency: string
+          host_id: string | null
+          id: string
+          invoice_number: string
+          issued_at: string
+          notes: string | null
+          paid_at: string | null
+          status: string
+          tax_amount: number
+          total_amount: number
+          traveler_id: string
+        }
+        Insert: {
+          amount?: number
+          booking_id?: string | null
+          created_at?: string
+          currency?: string
+          host_id?: string | null
+          id?: string
+          invoice_number: string
+          issued_at?: string
+          notes?: string | null
+          paid_at?: string | null
+          status?: string
+          tax_amount?: number
+          total_amount?: number
+          traveler_id: string
+        }
+        Update: {
+          amount?: number
+          booking_id?: string | null
+          created_at?: string
+          currency?: string
+          host_id?: string | null
+          id?: string
+          invoice_number?: string
+          issued_at?: string
+          notes?: string | null
+          paid_at?: string | null
+          status?: string
+          tax_amount?: number
+          total_amount?: number
+          traveler_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoices_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       messages: {
         Row: {
           booking_id: string | null
@@ -583,6 +642,33 @@ export type Database = {
         }
         Relationships: []
       }
+      user_permissions: {
+        Row: {
+          expires_at: string | null
+          granted_at: string
+          granted_by: string
+          id: string
+          permission: string
+          user_id: string
+        }
+        Insert: {
+          expires_at?: string | null
+          granted_at?: string
+          granted_by: string
+          id?: string
+          permission: string
+          user_id: string
+        }
+        Update: {
+          expires_at?: string | null
+          granted_at?: string
+          granted_by?: string
+          id?: string
+          permission?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           id: string
@@ -600,6 +686,59 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      wanderer_missions: {
+        Row: {
+          assigned_by: string
+          completed_at: string | null
+          created_at: string
+          deadline: string | null
+          description: string | null
+          destination: string
+          id: string
+          reward_points: number | null
+          status: string
+          title: string
+          updated_at: string
+          wanderer_id: string
+        }
+        Insert: {
+          assigned_by: string
+          completed_at?: string | null
+          created_at?: string
+          deadline?: string | null
+          description?: string | null
+          destination: string
+          id?: string
+          reward_points?: number | null
+          status?: string
+          title: string
+          updated_at?: string
+          wanderer_id: string
+        }
+        Update: {
+          assigned_by?: string
+          completed_at?: string | null
+          created_at?: string
+          deadline?: string | null
+          description?: string | null
+          destination?: string
+          id?: string
+          reward_points?: number | null
+          status?: string
+          title?: string
+          updated_at?: string
+          wanderer_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wanderer_missions_wanderer_id_fkey"
+            columns: ["wanderer_id"]
+            isOneToOne: false
+            referencedRelation: "beta_wanderers"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
