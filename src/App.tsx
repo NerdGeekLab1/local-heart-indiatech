@@ -77,6 +77,7 @@ const App = () => (
             <Route path="/beta-wanderers" element={<BetaWanderers />} />
             <Route path="/beta-wanderer-apply" element={<BetaWandererApply />} />
             <Route path="/beta-wanderer/:id" element={<BetaWandererProfile />} />
+            <Route path="/leaderboard" element={<Leaderboard />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

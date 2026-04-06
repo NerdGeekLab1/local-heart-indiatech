@@ -89,6 +89,7 @@ const Navbar = () => {
             <Button variant="ghost" size="icon" className="rounded-full">
               <Search className="h-4 w-4" />
             </Button>
+            <ThemeToggle />
             <CurrencySwitcher />
 
             {user ? (
