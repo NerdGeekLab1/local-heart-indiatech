@@ -67,11 +67,18 @@ const BetaWanderers = () => {
                 </div>
               ))}
             </div>
-            <Link to="/beta-wanderer-apply">
-              <Button className="mt-6 rounded-full gap-2 px-8">
-                <Compass className="w-4 h-4" /> Apply to Join
-              </Button>
-            </Link>
+            <div className="flex gap-3 mt-6 justify-center flex-wrap">
+              <Link to="/beta-wanderer-apply">
+                <Button className="rounded-full gap-2 px-8">
+                  <Compass className="w-4 h-4" /> Apply to Join
+                </Button>
+              </Link>
+              <Link to="/leaderboard">
+                <Button variant="outline" className="rounded-full gap-2 px-6">
+                  <Award className="w-4 h-4" /> Leaderboard
+                </Button>
+              </Link>
+            </div>
           </div>
 
           {/* Search */}

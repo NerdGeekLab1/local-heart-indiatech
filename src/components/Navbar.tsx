@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
 import CurrencySwitcher from "@/components/CurrencySwitcher";
+import ThemeToggle from "@/components/ThemeToggle";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
@@ -88,6 +89,7 @@ const Navbar = () => {
             <Button variant="ghost" size="icon" className="rounded-full">
               <Search className="h-4 w-4" />
             </Button>
+            <ThemeToggle />
             <CurrencySwitcher />
 
             {user ? (
@@ -158,6 +160,7 @@ const Navbar = () => {
 
           {/* Mobile Menu Button */}
           <div className="flex items-center gap-2 lg:hidden">
+            <ThemeToggle />
             <CurrencySwitcher />
             {user && (
               <DropdownMenu>

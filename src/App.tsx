@@ -34,6 +34,7 @@ import TripLeaderProfile from "./pages/TripLeaderProfile.tsx";
 import BetaWanderers from "./pages/BetaWanderers.tsx";
 import BetaWandererApply from "./pages/BetaWandererApply.tsx";
 import BetaWandererProfile from "./pages/BetaWandererProfile.tsx";
+import Leaderboard from "./pages/Leaderboard.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
@@ -76,6 +77,7 @@ const App = () => (
             <Route path="/beta-wanderers" element={<BetaWanderers />} />
             <Route path="/beta-wanderer-apply" element={<BetaWandererApply />} />
             <Route path="/beta-wanderer/:id" element={<BetaWandererProfile />} />
+            <Route path="/leaderboard" element={<Leaderboard />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
