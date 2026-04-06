@@ -160,6 +160,7 @@ const Navbar = () => {
 
           {/* Mobile Menu Button */}
           <div className="flex items-center gap-2 lg:hidden">
+            <ThemeToggle />
             <CurrencySwitcher />
             {user && (
               <DropdownMenu>
