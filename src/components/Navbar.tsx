@@ -123,10 +123,10 @@ const Navbar = () => {
                     <DropdownMenuItem onClick={() => navigate(dashboardPath)} className="cursor-pointer">
                       <LayoutDashboard className="mr-2 h-4 w-4" /> Dashboard
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => navigate(dashboardPath)} className="cursor-pointer">
+                    <DropdownMenuItem onClick={() => navigate(`${dashboardPath}?tab=settings`)} className="cursor-pointer">
                       <User className="mr-2 h-4 w-4" /> My Profile
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => navigate(dashboardPath)} className="cursor-pointer">
+                    <DropdownMenuItem onClick={() => navigate(`${dashboardPath}?tab=settings`)} className="cursor-pointer">
                       <Settings className="mr-2 h-4 w-4" /> Settings
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
