@@ -53,7 +53,9 @@ const AVAILABLE_PERMISSIONS = [
 ];
 
 const AdminDashboard = () => {
-  const [activeTab, setActiveTab] = useState<Tab>("overview");
+  const [searchParams] = useSearchParams();
+  const initialTab = (searchParams.get("tab") as Tab) || "overview";
+  const [activeTab, setActiveTab] = useState<Tab>(initialTab);
   const { toast } = useToast();
   const { user } = useAuth();
   const { format } = useCurrency();
