@@ -92,12 +92,18 @@ const HostDashboard = () => {
     vehicleType: "", highlights: "", includes: "", destination: "", subCategory: "",
   });
   const [expRequests, setExpRequests] = useState<any[]>([]);
+  const [hostInvoices, setHostInvoices] = useState<any[]>([]);
   const [submittingExp, setSubmittingExp] = useState(false);
 
   useEffect(() => {
     if (!user) return;
-    supabase.from("experience_requests").select("*").eq("host_id", user.id).order("created_at", { ascending: false })
-      .then(({ data }) => setExpRequests(data || []));
+    Promise.all([
+      supabase.from("experience_requests").select("*").eq("host_id", user.id).order("created_at", { ascending: false }),
+      supabase.from("invoices").select("*").eq("host_id", user.id).order("created_at", { ascending: false }),
+    ]).then(([{ data: reqs }, { data: invs }]) => {
+      setExpRequests(reqs || []);
+      setHostInvoices(invs || []);
+    });
   }, [user]);
 
   const submitExperienceRequest = async () => {
