@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   DollarSign, Users, Star, Calendar, Clock, TrendingUp, MessageCircle, Settings, Home, Car, BarChart3,
-  Bell, UtensilsCrossed, Plus, Save, Instagram, Facebook, Twitter, Globe, Tag, Bike, MapPin, FileText
+  Bell, UtensilsCrossed, Plus, Save, Instagram, Facebook, Twitter, Globe, Tag, Bike, MapPin, FileText, Receipt
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
