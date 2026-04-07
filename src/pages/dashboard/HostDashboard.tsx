@@ -138,6 +138,26 @@ const HostDashboard = () => {
   const getBookingStatus = (id: string, original: string) => bookingStatuses[id] || original;
   const updateBookingStatus = (id: string, status: string) => { setBookingStatuses(p => ({ ...p, [id]: status })); toast({ title: `Booking #${id} ${status}` }); };
 
+  const generateInvoice = async (booking: any) => {
+    if (!user) return;
+    const invoiceNumber = `INV-${new Date().getFullYear()}-${String(Math.floor(Math.random() * 9999)).padStart(4, "0")}`;
+    const taxAmount = Math.round(booking.totalPrice * 0.18);
+    const { data, error } = await supabase.from("invoices").insert({
+      invoice_number: invoiceNumber,
+      traveler_id: booking.travelerId || user.id,
+      host_id: user.id,
+      booking_id: null,
+      amount: booking.totalPrice,
+      tax_amount: taxAmount,
+      total_amount: booking.totalPrice + taxAmount,
+      currency: "INR",
+      status: "unpaid",
+    }).select().single();
+    if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
+    setHostInvoices(p => [data, ...p]);
+    toast({ title: `Invoice ${invoiceNumber} generated! 🧾` });
+  };
+
   const tabs: { id: Tab; label: string; icon: React.ElementType }[] = [
     { id: "overview", label: "Overview", icon: BarChart3 },
     { id: "bookings", label: "Bookings", icon: Calendar },
@@ -146,6 +166,7 @@ const HostDashboard = () => {
     { id: "food", label: "Food Menu", icon: UtensilsCrossed },
     { id: "reviews", label: "Reviews", icon: Star },
     { id: "earnings", label: "Earnings", icon: DollarSign },
+    { id: "invoices", label: "Invoices", icon: Receipt },
     { id: "messages", label: "Messages", icon: MessageCircle },
     { id: "settings", label: "Settings", icon: Settings },
   ];
