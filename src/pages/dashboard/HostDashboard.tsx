@@ -484,6 +484,38 @@ const HostDashboard = () => {
           </div>
         )}
 
+        {/* Invoices */}
+        {activeTab === "invoices" && (
+          <div className="mt-6">
+            <h2 className="text-xl font-bold text-foreground mb-4">Invoices ({hostInvoices.length})</h2>
+            {hostInvoices.length === 0 ? (
+              <div className="text-center py-12">
+                <Receipt className="w-12 h-12 text-muted-foreground/30 mx-auto mb-3" />
+                <p className="text-muted-foreground">No invoices yet. Generate invoices from confirmed bookings.</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {hostInvoices.map(inv => (
+                  <div key={inv.id} className="rounded-lg bg-card p-4 shadow-card flex justify-between items-center">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <Receipt className="w-4 h-4 text-primary" />
+                        <h3 className="font-semibold text-foreground">{inv.invoice_number}</h3>
+                        <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${
+                          inv.status === "paid" ? "bg-accent/10 text-accent" : inv.status === "unpaid" ? "bg-destructive/10 text-destructive" : "bg-primary/10 text-primary"
+                        }`}>{inv.status}</span>
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-1">{inv.currency} {inv.total_amount} (incl. tax {inv.currency} {inv.tax_amount})</p>
+                      <p className="text-xs text-muted-foreground">Issued: {new Date(inv.issued_at).toLocaleDateString()}</p>
+                    </div>
+                    <p className="text-lg font-bold text-foreground">{inv.currency} {inv.total_amount}</p>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
         {activeTab === "messages" && (
           <div className="mt-6">
             <h2 className="text-xl font-bold text-foreground mb-4">Messages</h2>
