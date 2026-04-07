@@ -16,6 +16,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useToast } from "@/hooks/use-toast";
+import NotificationPanel from "@/components/NotificationPanel";
 
 const navLinks = [
   { to: "/explore", label: "Explore" },

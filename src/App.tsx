@@ -83,6 +83,7 @@ const App = () => (
             <Route path="/rewards" element={<Rewards />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
+          <MobileBottomNav />
         </BrowserRouter>
       </TooltipProvider>
       </CurrencyProvider>
