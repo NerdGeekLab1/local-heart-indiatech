@@ -273,6 +273,11 @@ const HostDashboard = () => {
                         <Button size="sm" variant="outline" onClick={() => updateBookingStatus(b.id, "cancelled")} className="rounded-full text-xs px-3">Decline</Button>
                       </div>
                     )}
+                    {(status === "confirmed" || status === "completed") && (
+                      <Button size="sm" variant="outline" onClick={() => generateInvoice(b)} className="rounded-full text-xs px-3 gap-1 mt-1">
+                        <Receipt className="w-3 h-3" /> Invoice
+                      </Button>
+                    )}
                   </div>
                 </div>
               );
