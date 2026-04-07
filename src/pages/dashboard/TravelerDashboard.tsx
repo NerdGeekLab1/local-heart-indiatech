@@ -342,6 +342,104 @@ const TravelerDashboard = () => {
           </div>
         )}
 
+        {/* Invoices */}
+        {activeTab === "invoices" && (
+          <div className="mt-6">
+            <h2 className="text-xl font-bold text-foreground mb-4">My Invoices ({myInvoices.length})</h2>
+            {myInvoices.length === 0 ? (
+              <div className="text-center py-12">
+                <Receipt className="w-12 h-12 text-muted-foreground/30 mx-auto mb-3" />
+                <p className="text-muted-foreground">No invoices yet. Invoices will appear here after bookings.</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {myInvoices.map(inv => (
+                  <div key={inv.id} className="rounded-lg bg-card p-4 shadow-card flex justify-between items-center">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <Receipt className="w-4 h-4 text-primary" />
+                        <h3 className="font-semibold text-foreground">{inv.invoice_number}</h3>
+                        <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${
+                          inv.status === "paid" ? "bg-accent/10 text-accent" : inv.status === "unpaid" ? "bg-destructive/10 text-destructive" : "bg-primary/10 text-primary"
+                        }`}>{inv.status}</span>
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Amount: {inv.currency} {inv.total_amount} · Tax: {inv.currency} {inv.tax_amount}
+                      </p>
+                      <p className="text-xs text-muted-foreground">Issued: {new Date(inv.issued_at).toLocaleDateString()}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-lg font-bold text-foreground">{inv.currency} {inv.total_amount}</p>
+                      {inv.paid_at && <p className="text-[10px] text-accent">Paid {new Date(inv.paid_at).toLocaleDateString()}</p>}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Rewards */}
+        {activeTab === "rewards" && (
+          <div className="mt-6 space-y-6">
+            <div className="rounded-2xl bg-gradient-to-br from-primary/10 via-accent/5 to-secondary p-8 text-center">
+              <Flame className="w-10 h-10 text-primary mx-auto mb-2" />
+              <h2 className="text-2xl font-bold text-foreground">Travel Streak Challenge</h2>
+              <p className="text-muted-foreground mt-1">Travel 11 months in a row and get your 12th trip FREE!</p>
+            </div>
+
+            <div className="grid grid-cols-11 gap-1.5">
+              {Array.from({ length: 11 }).map((_, i) => {
+                const completed = i < 5;
+                return (
+                  <div key={i} className={`aspect-square rounded-lg flex flex-col items-center justify-center text-xs font-bold transition-all ${
+                    completed ? "bg-primary text-primary-foreground shadow-md" : "bg-muted text-muted-foreground"
+                  }`}>
+                    <span>{i + 1}</span>
+                    {completed && <CheckCircle className="w-3 h-3 mt-0.5" />}
+                  </div>
+                );
+              })}
+            </div>
+
+            <div className="flex items-center gap-3 rounded-xl bg-card p-5 shadow-card">
+              <div className="w-14 h-14 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center">
+                <Gift className="w-7 h-7 text-primary-foreground" />
+              </div>
+              <div className="flex-1">
+                <h3 className="font-bold text-foreground">12th Month — FREE Trip!</h3>
+                <p className="text-sm text-muted-foreground">Complete 6 more months to unlock a complimentary trip worth up to ₹15,000</p>
+              </div>
+              <div className="text-right">
+                <p className="text-2xl font-bold text-primary">5/11</p>
+                <p className="text-[10px] text-muted-foreground">months done</p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+              {[
+                { icon: "🗺️", title: "Explorer", desc: "3 trips completed", unlocked: true },
+                { icon: "🧭", title: "Navigator", desc: "5 trips completed", unlocked: true },
+                { icon: "⛰️", title: "Adventurer", desc: "8 trips completed", unlocked: false },
+                { icon: "🏆", title: "Legend", desc: "11 trips completed", unlocked: false },
+              ].map(b => (
+                <div key={b.title} className={`rounded-xl p-4 text-center shadow-card ${b.unlocked ? "bg-card" : "bg-muted/50 opacity-60"}`}>
+                  <span className="text-2xl">{b.icon}</span>
+                  <h4 className="font-bold text-foreground text-sm mt-1">{b.title}</h4>
+                  <p className="text-[10px] text-muted-foreground">{b.desc}</p>
+                  {b.unlocked && <span className="text-[10px] text-accent font-medium">✓ Unlocked</span>}
+                </div>
+              ))}
+            </div>
+
+            <div className="text-center">
+              <Link to="/rewards">
+                <Button className="rounded-full gap-2"><Trophy className="w-4 h-4" /> View Full Rewards Hub</Button>
+              </Link>
+            </div>
+          </div>
+        )}
+
         {/* Messages */}
         {activeTab === "messages" && (
           <div className="mt-6">
