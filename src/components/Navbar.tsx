@@ -16,6 +16,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useToast } from "@/hooks/use-toast";
+import NotificationPanel from "@/components/NotificationPanel";
 
 const navLinks = [
   { to: "/explore", label: "Explore" },
@@ -94,11 +95,7 @@ const Navbar = () => {
 
             {user ? (
               <div className="flex items-center gap-2">
-                {/* Notifications */}
-                <Button variant="ghost" size="icon" className="rounded-full relative">
-                  <Bell className="h-4 w-4" />
-                  <span className="absolute -top-0.5 -right-0.5 w-3 h-3 bg-destructive rounded-full text-[8px] text-destructive-foreground flex items-center justify-center">3</span>
-                </Button>
+                <NotificationPanel />
 
                 {/* Profile Dropdown */}
                 <DropdownMenu>

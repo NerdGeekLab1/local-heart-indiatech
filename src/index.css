@@ -129,4 +129,14 @@
   .text-balance {
     text-wrap: balance;
   }
+  .safe-area-bottom {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+}
+
+/* Add bottom spacing on mobile for the sticky bottom nav */
+@media (max-width: 1023px) {
+  body {
+    padding-bottom: 3.5rem;
+  }
 }

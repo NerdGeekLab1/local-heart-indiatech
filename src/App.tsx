@@ -35,6 +35,8 @@ import BetaWanderers from "./pages/BetaWanderers.tsx";
 import BetaWandererApply from "./pages/BetaWandererApply.tsx";
 import BetaWandererProfile from "./pages/BetaWandererProfile.tsx";
 import Leaderboard from "./pages/Leaderboard.tsx";
+import Rewards from "./pages/Rewards.tsx";
+import MobileBottomNav from "./components/MobileBottomNav.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
@@ -78,8 +80,10 @@ const App = () => (
             <Route path="/beta-wanderer-apply" element={<BetaWandererApply />} />
             <Route path="/beta-wanderer/:id" element={<BetaWandererProfile />} />
             <Route path="/leaderboard" element={<Leaderboard />} />
+            <Route path="/rewards" element={<Rewards />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
+          <MobileBottomNav />
         </BrowserRouter>
       </TooltipProvider>
       </CurrencyProvider>
