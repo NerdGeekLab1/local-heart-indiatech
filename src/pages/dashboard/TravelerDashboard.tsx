@@ -49,15 +49,18 @@ const TravelerDashboard = () => {
   // DB data
   const [myTrips, setMyTrips] = useState<any[]>([]);
   const [myGrievances, setMyGrievances] = useState<any[]>([]);
+  const [myInvoices, setMyInvoices] = useState<any[]>([]);
 
   useEffect(() => {
     if (!user) return;
     Promise.all([
       supabase.from("trip_listings").select("*").eq("creator_id", user.id).order("created_at", { ascending: false }),
       supabase.from("grievances").select("*").eq("filed_by", user.id).order("created_at", { ascending: false }),
-    ]).then(([{ data: trips }, { data: grievances }]) => {
+      supabase.from("invoices").select("*").eq("traveler_id", user.id).order("created_at", { ascending: false }),
+    ]).then(([{ data: trips }, { data: grievances }, { data: invoices }]) => {
       setMyTrips(trips || []);
       setMyGrievances(grievances || []);
+      setMyInvoices(invoices || []);
     });
   }, [user]);
 
