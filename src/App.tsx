@@ -80,6 +80,7 @@ const App = () => (
             <Route path="/beta-wanderer-apply" element={<BetaWandererApply />} />
             <Route path="/beta-wanderer/:id" element={<BetaWandererProfile />} />
             <Route path="/leaderboard" element={<Leaderboard />} />
+            <Route path="/rewards" element={<Rewards />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
