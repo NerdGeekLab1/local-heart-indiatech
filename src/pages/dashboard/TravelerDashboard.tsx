@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   MapPin, Calendar, Star, Heart, Clock, Settings, Bell, CreditCard, Shield, Globe,
-  MessageCircle, Video, Save, Instagram, Facebook, Twitter, Compass, FileText, AlertTriangle, Target
+  MessageCircle, Video, Save, Instagram, Facebook, Twitter, Compass, FileText, AlertTriangle, Target,
+  Receipt, Trophy, Flame, Gift, CheckCircle
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -21,10 +22,12 @@ const statusColors: Record<string, string> = {
   completed: "bg-secondary text-muted-foreground", cancelled: "bg-destructive/10 text-destructive",
 };
 
-type Tab = "overview" | "bookings" | "trips" | "saved" | "wanderer" | "grievances" | "messages" | "reviews" | "settings";
+type Tab = "overview" | "bookings" | "trips" | "saved" | "wanderer" | "grievances" | "messages" | "reviews" | "invoices" | "rewards" | "settings";
 
 const TravelerDashboard = () => {
-  const [activeTab, setActiveTab] = useState<Tab>("overview");
+  const [searchParams] = useSearchParams();
+  const initialTab = (searchParams.get("tab") as Tab) || "overview";
+  const [activeTab, setActiveTab] = useState<Tab>(initialTab);
   const { toast } = useToast();
   const { user } = useAuth();
   const bookings = mockBookings;
@@ -46,15 +49,18 @@ const TravelerDashboard = () => {
   // DB data
   const [myTrips, setMyTrips] = useState<any[]>([]);
   const [myGrievances, setMyGrievances] = useState<any[]>([]);
+  const [myInvoices, setMyInvoices] = useState<any[]>([]);
 
   useEffect(() => {
     if (!user) return;
     Promise.all([
       supabase.from("trip_listings").select("*").eq("creator_id", user.id).order("created_at", { ascending: false }),
       supabase.from("grievances").select("*").eq("filed_by", user.id).order("created_at", { ascending: false }),
-    ]).then(([{ data: trips }, { data: grievances }]) => {
+      supabase.from("invoices").select("*").eq("traveler_id", user.id).order("created_at", { ascending: false }),
+    ]).then(([{ data: trips }, { data: grievances }, { data: invoices }]) => {
       setMyTrips(trips || []);
       setMyGrievances(grievances || []);
+      setMyInvoices(invoices || []);
     });
   }, [user]);
 
@@ -77,6 +83,8 @@ const TravelerDashboard = () => {
     { id: "overview", label: "Overview", icon: Globe },
     { id: "bookings", label: "Bookings", icon: Calendar },
     { id: "trips", label: "My Trips", icon: Compass },
+    { id: "invoices", label: "Invoices", icon: Receipt },
+    { id: "rewards", label: "Rewards", icon: Trophy },
     { id: "saved", label: "Saved", icon: Heart },
     { id: "wanderer", label: "🧭 Wanderer", icon: Target },
     { id: "grievances", label: "Grievances", icon: AlertTriangle },
@@ -331,6 +339,104 @@ const TravelerDashboard = () => {
                 ))}
               </div>
             )}
+          </div>
+        )}
+
+        {/* Invoices */}
+        {activeTab === "invoices" && (
+          <div className="mt-6">
+            <h2 className="text-xl font-bold text-foreground mb-4">My Invoices ({myInvoices.length})</h2>
+            {myInvoices.length === 0 ? (
+              <div className="text-center py-12">
+                <Receipt className="w-12 h-12 text-muted-foreground/30 mx-auto mb-3" />
+                <p className="text-muted-foreground">No invoices yet. Invoices will appear here after bookings.</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {myInvoices.map(inv => (
+                  <div key={inv.id} className="rounded-lg bg-card p-4 shadow-card flex justify-between items-center">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <Receipt className="w-4 h-4 text-primary" />
+                        <h3 className="font-semibold text-foreground">{inv.invoice_number}</h3>
+                        <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${
+                          inv.status === "paid" ? "bg-accent/10 text-accent" : inv.status === "unpaid" ? "bg-destructive/10 text-destructive" : "bg-primary/10 text-primary"
+                        }`}>{inv.status}</span>
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Amount: {inv.currency} {inv.total_amount} · Tax: {inv.currency} {inv.tax_amount}
+                      </p>
+                      <p className="text-xs text-muted-foreground">Issued: {new Date(inv.issued_at).toLocaleDateString()}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-lg font-bold text-foreground">{inv.currency} {inv.total_amount}</p>
+                      {inv.paid_at && <p className="text-[10px] text-accent">Paid {new Date(inv.paid_at).toLocaleDateString()}</p>}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Rewards */}
+        {activeTab === "rewards" && (
+          <div className="mt-6 space-y-6">
+            <div className="rounded-2xl bg-gradient-to-br from-primary/10 via-accent/5 to-secondary p-8 text-center">
+              <Flame className="w-10 h-10 text-primary mx-auto mb-2" />
+              <h2 className="text-2xl font-bold text-foreground">Travel Streak Challenge</h2>
+              <p className="text-muted-foreground mt-1">Travel 11 months in a row and get your 12th trip FREE!</p>
+            </div>
+
+            <div className="grid grid-cols-11 gap-1.5">
+              {Array.from({ length: 11 }).map((_, i) => {
+                const completed = i < 5;
+                return (
+                  <div key={i} className={`aspect-square rounded-lg flex flex-col items-center justify-center text-xs font-bold transition-all ${
+                    completed ? "bg-primary text-primary-foreground shadow-md" : "bg-muted text-muted-foreground"
+                  }`}>
+                    <span>{i + 1}</span>
+                    {completed && <CheckCircle className="w-3 h-3 mt-0.5" />}
+                  </div>
+                );
+              })}
+            </div>
+
+            <div className="flex items-center gap-3 rounded-xl bg-card p-5 shadow-card">
+              <div className="w-14 h-14 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center">
+                <Gift className="w-7 h-7 text-primary-foreground" />
+              </div>
+              <div className="flex-1">
+                <h3 className="font-bold text-foreground">12th Month — FREE Trip!</h3>
+                <p className="text-sm text-muted-foreground">Complete 6 more months to unlock a complimentary trip worth up to ₹15,000</p>
+              </div>
+              <div className="text-right">
+                <p className="text-2xl font-bold text-primary">5/11</p>
+                <p className="text-[10px] text-muted-foreground">months done</p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+              {[
+                { icon: "🗺️", title: "Explorer", desc: "3 trips completed", unlocked: true },
+                { icon: "🧭", title: "Navigator", desc: "5 trips completed", unlocked: true },
+                { icon: "⛰️", title: "Adventurer", desc: "8 trips completed", unlocked: false },
+                { icon: "🏆", title: "Legend", desc: "11 trips completed", unlocked: false },
+              ].map(b => (
+                <div key={b.title} className={`rounded-xl p-4 text-center shadow-card ${b.unlocked ? "bg-card" : "bg-muted/50 opacity-60"}`}>
+                  <span className="text-2xl">{b.icon}</span>
+                  <h4 className="font-bold text-foreground text-sm mt-1">{b.title}</h4>
+                  <p className="text-[10px] text-muted-foreground">{b.desc}</p>
+                  {b.unlocked && <span className="text-[10px] text-accent font-medium">✓ Unlocked</span>}
+                </div>
+              ))}
+            </div>
+
+            <div className="text-center">
+              <Link to="/rewards">
+                <Button className="rounded-full gap-2"><Trophy className="w-4 h-4" /> View Full Rewards Hub</Button>
+              </Link>
+            </div>
           </div>
         )}
 

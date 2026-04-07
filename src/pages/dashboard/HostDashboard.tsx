@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   DollarSign, Users, Star, Calendar, Clock, TrendingUp, MessageCircle, Settings, Home, Car, BarChart3,
-  Bell, UtensilsCrossed, Plus, Save, Instagram, Facebook, Twitter, Globe, Tag, Bike, MapPin, FileText
+  Bell, UtensilsCrossed, Plus, Save, Instagram, Facebook, Twitter, Globe, Tag, Bike, MapPin, FileText, Receipt
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -26,7 +26,7 @@ const statusColors: Record<string, string> = {
   completed: "bg-secondary text-muted-foreground", cancelled: "bg-destructive/10 text-destructive",
 };
 
-type Tab = "overview" | "bookings" | "listings" | "experiences" | "food" | "reviews" | "earnings" | "messages" | "settings";
+type Tab = "overview" | "bookings" | "listings" | "experiences" | "food" | "reviews" | "earnings" | "invoices" | "messages" | "settings";
 
 const profileFields: FieldConfig[] = [
   { key: "name", label: "Name", required: true },
@@ -67,7 +67,9 @@ const dishFields: FieldConfig[] = [
 ];
 
 const HostDashboard = () => {
-  const [activeTab, setActiveTab] = useState<Tab>("overview");
+  const [searchParams] = useSearchParams();
+  const initialTab = (searchParams.get("tab") as Tab) || "overview";
+  const [activeTab, setActiveTab] = useState<Tab>(initialTab);
   const { toast } = useToast();
   const { user } = useAuth();
   const totalEarnings = hostBookings.reduce((sum, b) => sum + b.totalPrice, 0);
@@ -90,12 +92,18 @@ const HostDashboard = () => {
     vehicleType: "", highlights: "", includes: "", destination: "", subCategory: "",
   });
   const [expRequests, setExpRequests] = useState<any[]>([]);
+  const [hostInvoices, setHostInvoices] = useState<any[]>([]);
   const [submittingExp, setSubmittingExp] = useState(false);
 
   useEffect(() => {
     if (!user) return;
-    supabase.from("experience_requests").select("*").eq("host_id", user.id).order("created_at", { ascending: false })
-      .then(({ data }) => setExpRequests(data || []));
+    Promise.all([
+      supabase.from("experience_requests").select("*").eq("host_id", user.id).order("created_at", { ascending: false }),
+      supabase.from("invoices").select("*").eq("host_id", user.id).order("created_at", { ascending: false }),
+    ]).then(([{ data: reqs }, { data: invs }]) => {
+      setExpRequests(reqs || []);
+      setHostInvoices(invs || []);
+    });
   }, [user]);
 
   const submitExperienceRequest = async () => {
@@ -130,6 +138,26 @@ const HostDashboard = () => {
   const getBookingStatus = (id: string, original: string) => bookingStatuses[id] || original;
   const updateBookingStatus = (id: string, status: string) => { setBookingStatuses(p => ({ ...p, [id]: status })); toast({ title: `Booking #${id} ${status}` }); };
 
+  const generateInvoice = async (booking: any) => {
+    if (!user) return;
+    const invoiceNumber = `INV-${new Date().getFullYear()}-${String(Math.floor(Math.random() * 9999)).padStart(4, "0")}`;
+    const taxAmount = Math.round(booking.totalPrice * 0.18);
+    const { data, error } = await supabase.from("invoices").insert({
+      invoice_number: invoiceNumber,
+      traveler_id: booking.travelerId || user.id,
+      host_id: user.id,
+      booking_id: null,
+      amount: booking.totalPrice,
+      tax_amount: taxAmount,
+      total_amount: booking.totalPrice + taxAmount,
+      currency: "INR",
+      status: "unpaid",
+    }).select().single();
+    if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
+    setHostInvoices(p => [data, ...p]);
+    toast({ title: `Invoice ${invoiceNumber} generated! 🧾` });
+  };
+
   const tabs: { id: Tab; label: string; icon: React.ElementType }[] = [
     { id: "overview", label: "Overview", icon: BarChart3 },
     { id: "bookings", label: "Bookings", icon: Calendar },
@@ -138,6 +166,7 @@ const HostDashboard = () => {
     { id: "food", label: "Food Menu", icon: UtensilsCrossed },
     { id: "reviews", label: "Reviews", icon: Star },
     { id: "earnings", label: "Earnings", icon: DollarSign },
+    { id: "invoices", label: "Invoices", icon: Receipt },
     { id: "messages", label: "Messages", icon: MessageCircle },
     { id: "settings", label: "Settings", icon: Settings },
   ];
@@ -243,6 +272,11 @@ const HostDashboard = () => {
                         <Button size="sm" onClick={() => updateBookingStatus(b.id, "confirmed")} className="rounded-full bg-accent text-accent-foreground text-xs px-3">Accept</Button>
                         <Button size="sm" variant="outline" onClick={() => updateBookingStatus(b.id, "cancelled")} className="rounded-full text-xs px-3">Decline</Button>
                       </div>
+                    )}
+                    {(status === "confirmed" || status === "completed") && (
+                      <Button size="sm" variant="outline" onClick={() => generateInvoice(b)} className="rounded-full text-xs px-3 gap-1 mt-1">
+                        <Receipt className="w-3 h-3" /> Invoice
+                      </Button>
                     )}
                   </div>
                 </div>
@@ -447,6 +481,38 @@ const HostDashboard = () => {
               <div className="rounded-lg bg-card p-5 shadow-card"><p className="text-xs text-muted-foreground uppercase">This Month</p><p className="text-3xl font-bold text-accent mt-1">$270</p></div>
               <div className="rounded-lg bg-card p-5 shadow-card"><p className="text-xs text-muted-foreground uppercase">Pending</p><p className="text-3xl font-bold text-primary mt-1">$80</p></div>
             </div>
+          </div>
+        )}
+
+        {/* Invoices */}
+        {activeTab === "invoices" && (
+          <div className="mt-6">
+            <h2 className="text-xl font-bold text-foreground mb-4">Invoices ({hostInvoices.length})</h2>
+            {hostInvoices.length === 0 ? (
+              <div className="text-center py-12">
+                <Receipt className="w-12 h-12 text-muted-foreground/30 mx-auto mb-3" />
+                <p className="text-muted-foreground">No invoices yet. Generate invoices from confirmed bookings.</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {hostInvoices.map(inv => (
+                  <div key={inv.id} className="rounded-lg bg-card p-4 shadow-card flex justify-between items-center">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <Receipt className="w-4 h-4 text-primary" />
+                        <h3 className="font-semibold text-foreground">{inv.invoice_number}</h3>
+                        <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${
+                          inv.status === "paid" ? "bg-accent/10 text-accent" : inv.status === "unpaid" ? "bg-destructive/10 text-destructive" : "bg-primary/10 text-primary"
+                        }`}>{inv.status}</span>
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-1">{inv.currency} {inv.total_amount} (incl. tax {inv.currency} {inv.tax_amount})</p>
+                      <p className="text-xs text-muted-foreground">Issued: {new Date(inv.issued_at).toLocaleDateString()}</p>
+                    </div>
+                    <p className="text-lg font-bold text-foreground">{inv.currency} {inv.total_amount}</p>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
 
