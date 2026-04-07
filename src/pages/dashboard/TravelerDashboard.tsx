@@ -25,7 +25,9 @@ const statusColors: Record<string, string> = {
 type Tab = "overview" | "bookings" | "trips" | "saved" | "wanderer" | "grievances" | "messages" | "reviews" | "invoices" | "rewards" | "settings";
 
 const TravelerDashboard = () => {
-  const [activeTab, setActiveTab] = useState<Tab>("overview");
+  const [searchParams] = useSearchParams();
+  const initialTab = (searchParams.get("tab") as Tab) || "overview";
+  const [activeTab, setActiveTab] = useState<Tab>(initialTab);
   const { toast } = useToast();
   const { user } = useAuth();
   const bookings = mockBookings;
