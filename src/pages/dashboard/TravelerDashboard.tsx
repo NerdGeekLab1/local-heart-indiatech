@@ -26,8 +26,12 @@ type Tab = "overview" | "bookings" | "trips" | "saved" | "wanderer" | "grievance
 
 const TravelerDashboard = () => {
   const [searchParams] = useSearchParams();
-  const initialTab = (searchParams.get("tab") as Tab) || "overview";
-  const [activeTab, setActiveTab] = useState<Tab>(initialTab);
+  const [activeTab, setActiveTab] = useState<Tab>((searchParams.get("tab") as Tab) || "overview");
+
+  useEffect(() => {
+    const tab = searchParams.get("tab") as Tab;
+    if (tab) setActiveTab(tab);
+  }, [searchParams]);
   const { toast } = useToast();
   const { user } = useAuth();
   const bookings = mockBookings;
