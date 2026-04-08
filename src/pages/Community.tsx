@@ -354,6 +354,7 @@ const Community = () => {
             {/* Blog Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {blogPosts.map((post, i) => (
+                <Link to={`/blog/${post.id}`} className="block">
                 <motion.div key={post.id} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.05 }}
                   className="rounded-2xl bg-card shadow-card hover:shadow-card-hover transition-all overflow-hidden group">
                   <div className="h-48 overflow-hidden">
@@ -379,6 +380,7 @@ const Community = () => {
                     </div>
                   </div>
                 </motion.div>
+                </Link>
               ))}
             </div>
           </div>
