@@ -389,7 +389,7 @@ const Index = () => {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {blogPosts.slice(0, 3).map((post, i) => (
               <motion.div key={post.id} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }}>
-                <Link to="/community?tab=blog" className="block group">
+                <Link to={`/blog/${post.id}`} className="block group">
                   <div className="rounded-2xl bg-card shadow-card hover:shadow-card-hover transition-all overflow-hidden">
                     <div className="h-40 overflow-hidden">
                       <img src={post.image} alt={post.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />

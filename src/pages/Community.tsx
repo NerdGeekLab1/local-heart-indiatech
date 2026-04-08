@@ -341,7 +341,7 @@ const Community = () => {
                         <p className="text-xs text-muted-foreground">{post.date} · {post.readTime} read</p>
                       </div>
                     </div>
-                    <Link to={`/community?tab=blog`}>
+                    <Link to={`/blog/${post.id}`}>
                       <Button className="mt-4 rounded-full gap-2 w-fit">
                         Read Article <ArrowRight className="w-4 h-4" />
                       </Button>
