@@ -50,6 +50,7 @@ const TravelerDashboard = () => {
   const [myTrips, setMyTrips] = useState<any[]>([]);
   const [myGrievances, setMyGrievances] = useState<any[]>([]);
   const [myInvoices, setMyInvoices] = useState<any[]>([]);
+  const [myStreaks, setMyStreaks] = useState<any[]>([]);
 
   useEffect(() => {
     if (!user) return;
@@ -57,10 +58,12 @@ const TravelerDashboard = () => {
       supabase.from("trip_listings").select("*").eq("creator_id", user.id).order("created_at", { ascending: false }),
       supabase.from("grievances").select("*").eq("filed_by", user.id).order("created_at", { ascending: false }),
       supabase.from("invoices").select("*").eq("traveler_id", user.id).order("created_at", { ascending: false }),
-    ]).then(([{ data: trips }, { data: grievances }, { data: invoices }]) => {
+      supabase.from("travel_streaks").select("*").eq("user_id", user.id).order("month", { ascending: true }),
+    ]).then(([{ data: trips }, { data: grievances }, { data: invoices }, { data: streaks }]) => {
       setMyTrips(trips || []);
       setMyGrievances(grievances || []);
       setMyInvoices(invoices || []);
+      setMyStreaks(streaks || []);
     });
   }, [user]);
 
@@ -390,46 +393,61 @@ const TravelerDashboard = () => {
 
             <div className="grid grid-cols-11 gap-1.5">
               {Array.from({ length: 11 }).map((_, i) => {
-                const completed = i < 5;
+                const streak = myStreaks[i];
+                const completed = streak?.completed || false;
+                const monthLabel = streak ? new Date(streak.month).toLocaleString('default', { month: 'short' }) : `M${i + 1}`;
                 return (
                   <div key={i} className={`aspect-square rounded-lg flex flex-col items-center justify-center text-xs font-bold transition-all ${
                     completed ? "bg-primary text-primary-foreground shadow-md" : "bg-muted text-muted-foreground"
                   }`}>
-                    <span>{i + 1}</span>
+                    <span>{monthLabel}</span>
                     {completed && <CheckCircle className="w-3 h-3 mt-0.5" />}
                   </div>
                 );
               })}
             </div>
 
-            <div className="flex items-center gap-3 rounded-xl bg-card p-5 shadow-card">
-              <div className="w-14 h-14 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center">
-                <Gift className="w-7 h-7 text-primary-foreground" />
-              </div>
-              <div className="flex-1">
-                <h3 className="font-bold text-foreground">12th Month — FREE Trip!</h3>
-                <p className="text-sm text-muted-foreground">Complete 6 more months to unlock a complimentary trip worth up to ₹15,000</p>
-              </div>
-              <div className="text-right">
-                <p className="text-2xl font-bold text-primary">5/11</p>
-                <p className="text-[10px] text-muted-foreground">months done</p>
-              </div>
-            </div>
+            {(() => {
+              const completedCount = myStreaks.filter(s => s.completed).length;
+              const remaining = 11 - completedCount;
+              return (
+                <div className="flex items-center gap-3 rounded-xl bg-card p-5 shadow-card">
+                  <div className="w-14 h-14 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center">
+                    <Gift className="w-7 h-7 text-primary-foreground" />
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="font-bold text-foreground">12th Month — FREE Trip!</h3>
+                    <p className="text-sm text-muted-foreground">
+                      {remaining > 0 
+                        ? `Complete ${remaining} more month${remaining > 1 ? 's' : ''} to unlock a complimentary trip worth up to ₹15,000`
+                        : "🎉 Congratulations! You've unlocked your free trip!"}
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-2xl font-bold text-primary">{completedCount}/11</p>
+                    <p className="text-[10px] text-muted-foreground">months done</p>
+                  </div>
+                </div>
+              );
+            })()}
 
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
               {[
-                { icon: "🗺️", title: "Explorer", desc: "3 trips completed", unlocked: true },
-                { icon: "🧭", title: "Navigator", desc: "5 trips completed", unlocked: true },
-                { icon: "⛰️", title: "Adventurer", desc: "8 trips completed", unlocked: false },
-                { icon: "🏆", title: "Legend", desc: "11 trips completed", unlocked: false },
-              ].map(b => (
-                <div key={b.title} className={`rounded-xl p-4 text-center shadow-card ${b.unlocked ? "bg-card" : "bg-muted/50 opacity-60"}`}>
-                  <span className="text-2xl">{b.icon}</span>
-                  <h4 className="font-bold text-foreground text-sm mt-1">{b.title}</h4>
-                  <p className="text-[10px] text-muted-foreground">{b.desc}</p>
-                  {b.unlocked && <span className="text-[10px] text-accent font-medium">✓ Unlocked</span>}
-                </div>
-              ))}
+                { icon: "🗺️", title: "Explorer", desc: "3 trips completed", threshold: 3 },
+                { icon: "🧭", title: "Navigator", desc: "5 trips completed", threshold: 5 },
+                { icon: "⛰️", title: "Adventurer", desc: "8 trips completed", threshold: 8 },
+                { icon: "🏆", title: "Legend", desc: "11 trips completed", threshold: 11 },
+              ].map(b => {
+                const unlocked = myStreaks.filter(s => s.completed).length >= b.threshold;
+                return (
+                  <div key={b.title} className={`rounded-xl p-4 text-center shadow-card ${unlocked ? "bg-card" : "bg-muted/50 opacity-60"}`}>
+                    <span className="text-2xl">{b.icon}</span>
+                    <h4 className="font-bold text-foreground text-sm mt-1">{b.title}</h4>
+                    <p className="text-[10px] text-muted-foreground">{b.desc}</p>
+                    {unlocked && <span className="text-[10px] text-accent font-medium">✓ Unlocked</span>}
+                  </div>
+                );
+              })}
             </div>
 
             <div className="text-center">
