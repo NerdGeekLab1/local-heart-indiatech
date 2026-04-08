@@ -36,6 +36,7 @@ import BetaWandererApply from "./pages/BetaWandererApply.tsx";
 import BetaWandererProfile from "./pages/BetaWandererProfile.tsx";
 import Leaderboard from "./pages/Leaderboard.tsx";
 import Rewards from "./pages/Rewards.tsx";
+import BlogDetail from "./pages/BlogDetail.tsx";
 import MobileBottomNav from "./components/MobileBottomNav.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
