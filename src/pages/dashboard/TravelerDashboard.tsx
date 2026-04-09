@@ -162,6 +162,9 @@ const TravelerDashboard = () => {
               </div>
             </div>
             <div className="mt-10">
+              <AIRecommendWidget interests={profile.bio ? [profile.bio] : []} travelStyles={[]} />
+            </div>
+            <div className="mt-8">
               <h2 className="text-xl font-bold text-foreground mb-4">Recommended For You</h2>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                 {recommendedExp.map(exp => (
