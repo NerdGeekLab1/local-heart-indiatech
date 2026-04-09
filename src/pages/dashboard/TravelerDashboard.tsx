@@ -16,6 +16,7 @@ import { useToast } from "@/hooks/use-toast";
 import VideoRecorder from "@/components/VideoRecorder";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import AIRecommendWidget from "@/components/AIRecommendWidget";
 
 const statusColors: Record<string, string> = {
   pending: "bg-primary/10 text-primary", confirmed: "bg-accent/10 text-accent",
