@@ -16,6 +16,7 @@ import { useToast } from "@/hooks/use-toast";
 import VideoRecorder from "@/components/VideoRecorder";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import AIRecommendWidget from "@/components/AIRecommendWidget";
 
 const statusColors: Record<string, string> = {
   pending: "bg-primary/10 text-primary", confirmed: "bg-accent/10 text-accent",
@@ -161,6 +162,9 @@ const TravelerDashboard = () => {
               </div>
             </div>
             <div className="mt-10">
+              <AIRecommendWidget interests={profile.bio ? [profile.bio] : []} travelStyles={[]} />
+            </div>
+            <div className="mt-8">
               <h2 className="text-xl font-bold text-foreground mb-4">Recommended For You</h2>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                 {recommendedExp.map(exp => (
