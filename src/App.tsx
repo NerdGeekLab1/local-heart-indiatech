@@ -38,6 +38,7 @@ import Leaderboard from "./pages/Leaderboard.tsx";
 import Rewards from "./pages/Rewards.tsx";
 import BlogDetail from "./pages/BlogDetail.tsx";
 import MobileBottomNav from "./components/MobileBottomNav.tsx";
+import AIChatRecommender from "./components/AIChatRecommender.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
