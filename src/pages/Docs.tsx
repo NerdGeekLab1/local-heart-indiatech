@@ -304,7 +304,15 @@ All colors use HSL via CSS variables defined in \`index.css\`:
   },
   {
     id: "changelog", icon: Clock, title: "Changelog",
-    content: `**v0.9 — April 2026** (Current)
+    content: `**v1.0 — April 2026** (Current)
+- [x] Unified User & ACL management tab with search, ban, notify, chat
+- [x] Subscription/membership system (4 tiers: Free → Nomad)
+- [x] Trip participant tracking (who's joining)
+- [x] Admin experience edit/update/approve/suspend
+- [x] Trip creator info visible in admin
+- [x] Developer documentation optimization
+
+**v0.9 — April 2026**
 - [x] AI-powered destination recommendations (Lovable AI Gateway)
 - [x] Chat-based AI travel assistant with streaming
 - [x] Full developer documentation portal
