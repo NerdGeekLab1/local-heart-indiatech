@@ -561,6 +561,51 @@ export type Database = {
           },
         ]
       }
+      subscriptions: {
+        Row: {
+          amount: number
+          auto_renew: boolean
+          created_at: string
+          currency: string
+          expires_at: string | null
+          id: string
+          is_active: boolean
+          payment_method: string | null
+          starts_at: string
+          tier: Database["public"]["Enums"]["subscription_tier"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount?: number
+          auto_renew?: boolean
+          created_at?: string
+          currency?: string
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean
+          payment_method?: string | null
+          starts_at?: string
+          tier?: Database["public"]["Enums"]["subscription_tier"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          auto_renew?: boolean
+          created_at?: string
+          currency?: string
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean
+          payment_method?: string | null
+          starts_at?: string
+          tier?: Database["public"]["Enums"]["subscription_tier"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       travel_streaks: {
         Row: {
           booking_id: string | null
@@ -680,6 +725,38 @@ export type Database = {
         }
         Relationships: []
       }
+      trip_participants: {
+        Row: {
+          id: string
+          joined_at: string
+          status: string
+          trip_id: string
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          joined_at?: string
+          status?: string
+          trip_id: string
+          user_id: string
+        }
+        Update: {
+          id?: string
+          joined_at?: string
+          status?: string
+          trip_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trip_participants_trip_id_fkey"
+            columns: ["trip_id"]
+            isOneToOne: false
+            referencedRelation: "trip_listings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_permissions: {
         Row: {
           expires_at: string | null
@@ -793,6 +870,7 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "host" | "traveler"
+      subscription_tier: "free" | "explorer" | "adventurer" | "nomad"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -921,6 +999,7 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "host", "traveler"],
+      subscription_tier: ["free", "explorer", "adventurer", "nomad"],
     },
   },
 } as const

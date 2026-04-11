@@ -83,13 +83,14 @@ supabase/functions/
   },
   {
     id: "database", icon: Database, title: "Database Schema",
-    content: `**13 Tables** with Row-Level Security (RLS) on all:
+    content: `**15 Tables** with Row-Level Security (RLS) on all:
 
 | Table | Purpose | Key Fields |
 |-------|---------|------------|
 | \`profiles\` | User profiles linked to auth | first_name, email, interests, travel_styles |
 | \`user_roles\` | Role management (enum: admin/host/traveler) | user_id, role |
 | \`user_permissions\` | Granular ACL per user | permission, granted_by, expires_at |
+| \`subscriptions\` | Membership tiers (free/explorer/adventurer/nomad) | tier, amount, is_active, auto_renew |
 | \`experiences\` | Experience listings | title, category, price, host_id, rating |
 | \`experience_requests\` | Host-submitted experience proposals | status (pending/approved/rejected) |
 | \`bookings\` | Booking records | traveler_id, host_id, status, total_price |
@@ -98,6 +99,7 @@ supabase/functions/
 | \`messages\` | User-to-user messaging | sender_id, receiver_id, content, read |
 | \`grievances\` | Dispute management | subject, category, priority, resolution |
 | \`trip_listings\` | Trip packages | destination, price_model, inclusions |
+| \`trip_participants\` | Users joining trips | trip_id, user_id, status |
 | \`travel_streaks\` | Monthly gamified streak tracking | month, completed, booking_id |
 | \`beta_wanderers\` | Beta wanderer program members | score, badge, missions_completed |
 | \`wanderer_missions\` | Admin-assigned missions | destination, reward_points, deadline |
@@ -192,13 +194,17 @@ supabase/functions/
 
 - [x] Host discovery with multi-filter search (city, month, expertise, tags, vibes)
 - [x] Experience marketplace with 10+ categories and sub-categories
+- [x] Admin experience management with inline edit/update/approve/suspend
 - [x] Destination guides with site explorer and video reviews
 - [x] Multi-step booking flow with service selection and pricing
 - [x] Community hub: reels, stories, blog with detail views
 - [x] Role-based dashboards (Traveler, Host, Admin)
+- [x] Unified User & ACL management in admin (search, ban, notify, chat, permissions inline)
 - [x] Invoice generation (host→traveler) with 18% GST calculation
 - [x] Gamified rewards: 11-month travel streak for free 12th trip
 - [x] Beta Wanderer program with missions, leaderboard, and badges
+- [x] Subscription/membership system (Free, Explorer, Adventurer, Nomad tiers)
+- [x] Trip listings with creator info and participant tracking
 - [x] Grievance management with admin mediation
 - [x] Granular ACL (Access Control List) for feature permissions
 - [x] AI-powered destination recommendations (widget + chat)
@@ -298,7 +304,15 @@ All colors use HSL via CSS variables defined in \`index.css\`:
   },
   {
     id: "changelog", icon: Clock, title: "Changelog",
-    content: `**v0.9 — April 2026** (Current)
+    content: `**v1.0 — April 2026** (Current)
+- [x] Unified User & ACL management tab with search, ban, notify, chat
+- [x] Subscription/membership system (4 tiers: Free → Nomad)
+- [x] Trip participant tracking (who's joining)
+- [x] Admin experience edit/update/approve/suspend
+- [x] Trip creator info visible in admin
+- [x] Developer documentation optimization
+
+**v0.9 — April 2026**
 - [x] AI-powered destination recommendations (Lovable AI Gateway)
 - [x] Chat-based AI travel assistant with streaming
 - [x] Full developer documentation portal
@@ -358,10 +372,10 @@ const Docs = () => {
         {/* Quick stats */}
         <div className="mt-6 grid grid-cols-2 sm:grid-cols-4 gap-3">
           {[
-            { label: "Tables", value: "13", icon: Database },
+            { label: "Tables", value: "15", icon: Database },
             { label: "Routes", value: "30+", icon: Globe },
             { label: "Edge Functions", value: "2", icon: Server },
-            { label: "Features", value: "19+", icon: Zap },
+            { label: "Features", value: "23+", icon: Zap },
           ].map(s => (
             <div key={s.label} className="rounded-lg bg-card p-3 shadow-card flex items-center gap-3">
               <s.icon className="w-5 h-5 text-primary" />
