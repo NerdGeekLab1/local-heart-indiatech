@@ -372,10 +372,10 @@ const Docs = () => {
         {/* Quick stats */}
         <div className="mt-6 grid grid-cols-2 sm:grid-cols-4 gap-3">
           {[
-            { label: "Tables", value: "13", icon: Database },
+            { label: "Tables", value: "15", icon: Database },
             { label: "Routes", value: "30+", icon: Globe },
             { label: "Edge Functions", value: "2", icon: Server },
-            { label: "Features", value: "19+", icon: Zap },
+            { label: "Features", value: "23+", icon: Zap },
           ].map(s => (
             <div key={s.label} className="rounded-lg bg-card p-3 shadow-card flex items-center gap-3">
               <s.icon className="w-5 h-5 text-primary" />
