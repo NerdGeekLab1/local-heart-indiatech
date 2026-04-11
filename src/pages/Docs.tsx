@@ -83,13 +83,14 @@ supabase/functions/
   },
   {
     id: "database", icon: Database, title: "Database Schema",
-    content: `**13 Tables** with Row-Level Security (RLS) on all:
+    content: `**15 Tables** with Row-Level Security (RLS) on all:
 
 | Table | Purpose | Key Fields |
 |-------|---------|------------|
 | \`profiles\` | User profiles linked to auth | first_name, email, interests, travel_styles |
 | \`user_roles\` | Role management (enum: admin/host/traveler) | user_id, role |
 | \`user_permissions\` | Granular ACL per user | permission, granted_by, expires_at |
+| \`subscriptions\` | Membership tiers (free/explorer/adventurer/nomad) | tier, amount, is_active, auto_renew |
 | \`experiences\` | Experience listings | title, category, price, host_id, rating |
 | \`experience_requests\` | Host-submitted experience proposals | status (pending/approved/rejected) |
 | \`bookings\` | Booking records | traveler_id, host_id, status, total_price |
@@ -98,6 +99,7 @@ supabase/functions/
 | \`messages\` | User-to-user messaging | sender_id, receiver_id, content, read |
 | \`grievances\` | Dispute management | subject, category, priority, resolution |
 | \`trip_listings\` | Trip packages | destination, price_model, inclusions |
+| \`trip_participants\` | Users joining trips | trip_id, user_id, status |
 | \`travel_streaks\` | Monthly gamified streak tracking | month, completed, booking_id |
 | \`beta_wanderers\` | Beta wanderer program members | score, badge, missions_completed |
 | \`wanderer_missions\` | Admin-assigned missions | destination, reward_points, deadline |
