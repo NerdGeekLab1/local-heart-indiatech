@@ -194,13 +194,17 @@ supabase/functions/
 
 - [x] Host discovery with multi-filter search (city, month, expertise, tags, vibes)
 - [x] Experience marketplace with 10+ categories and sub-categories
+- [x] Admin experience management with inline edit/update/approve/suspend
 - [x] Destination guides with site explorer and video reviews
 - [x] Multi-step booking flow with service selection and pricing
 - [x] Community hub: reels, stories, blog with detail views
 - [x] Role-based dashboards (Traveler, Host, Admin)
+- [x] Unified User & ACL management in admin (search, ban, notify, chat, permissions inline)
 - [x] Invoice generation (host→traveler) with 18% GST calculation
 - [x] Gamified rewards: 11-month travel streak for free 12th trip
 - [x] Beta Wanderer program with missions, leaderboard, and badges
+- [x] Subscription/membership system (Free, Explorer, Adventurer, Nomad tiers)
+- [x] Trip listings with creator info and participant tracking
 - [x] Grievance management with admin mediation
 - [x] Granular ACL (Access Control List) for feature permissions
 - [x] AI-powered destination recommendations (widget + chat)
