@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { mockBookings, hosts, reviews, experiences, propertyTypes, vehicleTypes } from "@/lib/data";
+import { hosts, reviews, experiences, propertyTypes, vehicleTypes } from "@/lib/data";
 import { useLocalStorage } from "@/hooks/use-local-storage";
 import EditDialog, { FieldConfig } from "@/components/EditDialog";
 import { useToast } from "@/hooks/use-toast";
