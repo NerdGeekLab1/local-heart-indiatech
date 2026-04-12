@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { mockBookings, hosts, reviews, experiences, propertyTypes, vehicleTypes } from "@/lib/data";
+import { hosts, reviews, experiences, propertyTypes, vehicleTypes } from "@/lib/data";
 import { useLocalStorage } from "@/hooks/use-local-storage";
 import EditDialog, { FieldConfig } from "@/components/EditDialog";
 import { useToast } from "@/hooks/use-toast";
@@ -17,7 +17,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 
 const host = hosts[0];
-const hostBookings = mockBookings.filter(b => b.hostId === host.id);
 const hostReviews = reviews.filter(r => r.hostId === host.id);
 const hostExperiences = experiences.filter(e => e.hostId === host.id);
 
@@ -76,14 +75,15 @@ const HostDashboard = () => {
   }, [searchParams]);
   const { toast } = useToast();
   const { user } = useAuth();
-  const totalEarnings = hostBookings.reduce((sum, b) => sum + b.totalPrice, 0);
+  const [hostBookings, setHostBookings] = useState<any[]>([]);
+  const totalEarnings = hostBookings.reduce((sum: number, b: any) => sum + Number(b.total_price || 0), 0);
 
   const [hostProfile, setHostProfile] = useLocalStorage("host_profile", {
     name: host.name, tagline: host.tagline, bio: host.bio, city: host.city, pricePerDay: host.pricePerDay,
   });
   const [socialMedia, setSocialMedia] = useLocalStorage("host_social_media", { instagram: "", facebook: "", twitter: "", website: "" });
   const [pricing, setPricing] = useLocalStorage("host_pricing", { guidePerDay: host.pricePerDay, cancellationPolicy: "flexible", currency: "USD" });
-  const [bookingStatuses, setBookingStatuses] = useLocalStorage<Record<string, string>>("host_booking_statuses", {});
+  
   const [customExperiences, setCustomExperiences] = useLocalStorage<any[]>("host_custom_experiences", []);
   const [customVehicles, setCustomVehicles] = useLocalStorage<any[]>("host_custom_vehicles", []);
   const [customDishes, setCustomDishes] = useLocalStorage<any[]>("host_custom_dishes", host.foodInfo?.dishes || []);
@@ -104,9 +104,11 @@ const HostDashboard = () => {
     Promise.all([
       supabase.from("experience_requests").select("*").eq("host_id", user.id).order("created_at", { ascending: false }),
       supabase.from("invoices").select("*").eq("host_id", user.id).order("created_at", { ascending: false }),
-    ]).then(([{ data: reqs }, { data: invs }]) => {
+      supabase.from("bookings").select("*").eq("host_id", user.id).order("created_at", { ascending: false }),
+    ]).then(([{ data: reqs }, { data: invs }, { data: bks }]) => {
       setExpRequests(reqs || []);
       setHostInvoices(invs || []);
+      setHostBookings(bks || []);
     });
   }, [user]);
 
@@ -139,21 +141,27 @@ const HostDashboard = () => {
 
   const allExperiences = [...hostExperiences, ...customExperiences];
   const allVehicles = [...(host.transportInfo?.vehicles || []), ...customVehicles];
-  const getBookingStatus = (id: string, original: string) => bookingStatuses[id] || original;
-  const updateBookingStatus = (id: string, status: string) => { setBookingStatuses(p => ({ ...p, [id]: status })); toast({ title: `Booking #${id} ${status}` }); };
+  
+  const updateBookingStatus = async (id: string, status: string) => {
+    const { error } = await supabase.from("bookings").update({ status }).eq("id", id);
+    if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
+    setHostBookings(p => p.map(b => b.id === id ? { ...b, status } : b));
+    toast({ title: `Booking ${status}` });
+  };
 
   const generateInvoice = async (booking: any) => {
     if (!user) return;
     const invoiceNumber = `INV-${new Date().getFullYear()}-${String(Math.floor(Math.random() * 9999)).padStart(4, "0")}`;
-    const taxAmount = Math.round(booking.totalPrice * 0.18);
+    const amount = Number(booking.total_price || 0);
+    const taxAmount = Math.round(amount * 0.18);
     const { data, error } = await supabase.from("invoices").insert({
       invoice_number: invoiceNumber,
-      traveler_id: booking.travelerId || user.id,
+      traveler_id: booking.traveler_id,
       host_id: user.id,
-      booking_id: null,
-      amount: booking.totalPrice,
+      booking_id: booking.id,
+      amount,
       tax_amount: taxAmount,
-      total_amount: booking.totalPrice + taxAmount,
+      total_amount: amount + taxAmount,
       currency: "INR",
       status: "unpaid",
     }).select().single();
@@ -216,20 +224,18 @@ const HostDashboard = () => {
               <div className="lg:col-span-2">
                 <h2 className="text-xl font-bold text-foreground mb-4">Recent Booking Requests</h2>
                 <div className="space-y-3">
-                  {hostBookings.slice(0, 3).map(b => {
-                    const status = getBookingStatus(b.id, b.status);
-                    return (
+                  {hostBookings.slice(0, 3).map(b => (
                       <div key={b.id} className="rounded-lg bg-card p-4 shadow-card flex justify-between items-center">
                         <div>
                           <div className="flex items-center gap-2">
-                            <h3 className="font-semibold text-foreground">Booking #{b.id}</h3>
-                            <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${statusColors[status] || statusColors.pending}`}>{status}</span>
+                            <h3 className="font-semibold text-foreground">Booking #{b.id.slice(0,8)}</h3>
+                            <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${statusColors[b.status] || statusColors.pending}`}>{b.status}</span>
                           </div>
-                          <p className="text-sm text-muted-foreground mt-1"><Clock className="w-3 h-3 inline mr-1" />{b.startDate} → {b.endDate}</p>
+                          <p className="text-sm text-muted-foreground mt-1"><Clock className="w-3 h-3 inline mr-1" />{b.start_date} → {b.end_date}</p>
                         </div>
                         <div className="text-right">
-                          <p className="font-bold text-foreground">${b.totalPrice}</p>
-                          {status === "pending" && (
+                          <p className="font-bold text-foreground">₹{b.total_price}</p>
+                          {b.status === "pending" && (
                             <div className="flex gap-2 mt-1">
                               <Button size="sm" onClick={() => updateBookingStatus(b.id, "confirmed")} className="rounded-full text-xs px-3 bg-accent text-accent-foreground hover:bg-accent/90">Accept</Button>
                               <Button size="sm" variant="outline" onClick={() => updateBookingStatus(b.id, "cancelled")} className="rounded-full text-xs px-3">Decline</Button>
@@ -237,8 +243,7 @@ const HostDashboard = () => {
                           )}
                         </div>
                       </div>
-                    );
-                  })}
+                    ))}
                 </div>
               </div>
               <div className="space-y-4">
@@ -257,35 +262,37 @@ const HostDashboard = () => {
 
         {activeTab === "bookings" && (
           <div className="mt-6 space-y-3">
-            <h2 className="text-xl font-bold text-foreground mb-4">All Bookings</h2>
-            {hostBookings.map(b => {
-              const status = getBookingStatus(b.id, b.status);
-              return (
-                <div key={b.id} className="rounded-lg bg-card p-4 shadow-card flex justify-between items-center">
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <h3 className="font-semibold text-foreground">#{b.id}</h3>
-                      <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${statusColors[status] || statusColors.pending}`}>{status}</span>
-                    </div>
-                    <p className="text-sm text-muted-foreground mt-1">{b.startDate} → {b.endDate} · {b.services.join(", ")} · {b.guests} guest(s)</p>
+            <h2 className="text-xl font-bold text-foreground mb-4">All Bookings ({hostBookings.length})</h2>
+            {hostBookings.length === 0 ? (
+              <div className="text-center py-12">
+                <Calendar className="w-12 h-12 text-muted-foreground/30 mx-auto mb-3" />
+                <p className="text-muted-foreground">No bookings yet.</p>
+              </div>
+            ) : hostBookings.map(b => (
+              <div key={b.id} className="rounded-lg bg-card p-4 shadow-card flex justify-between items-center">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-semibold text-foreground">#{b.id.slice(0,8)}</h3>
+                    <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${statusColors[b.status] || statusColors.pending}`}>{b.status}</span>
                   </div>
-                  <div className="text-right">
-                    <p className="font-bold text-foreground">${b.totalPrice}</p>
-                    {status === "pending" && (
-                      <div className="flex gap-2 mt-2">
-                        <Button size="sm" onClick={() => updateBookingStatus(b.id, "confirmed")} className="rounded-full bg-accent text-accent-foreground text-xs px-3">Accept</Button>
-                        <Button size="sm" variant="outline" onClick={() => updateBookingStatus(b.id, "cancelled")} className="rounded-full text-xs px-3">Decline</Button>
-                      </div>
-                    )}
-                    {(status === "confirmed" || status === "completed") && (
-                      <Button size="sm" variant="outline" onClick={() => generateInvoice(b)} className="rounded-full text-xs px-3 gap-1 mt-1">
-                        <Receipt className="w-3 h-3" /> Invoice
-                      </Button>
-                    )}
-                  </div>
+                  <p className="text-sm text-muted-foreground mt-1">{b.start_date} → {b.end_date} · {(b.services || []).join(", ")} · {b.guests} guest(s)</p>
                 </div>
-              );
-            })}
+                <div className="text-right">
+                  <p className="font-bold text-foreground">₹{b.total_price}</p>
+                  {b.status === "pending" && (
+                    <div className="flex gap-2 mt-2">
+                      <Button size="sm" onClick={() => updateBookingStatus(b.id, "confirmed")} className="rounded-full bg-accent text-accent-foreground text-xs px-3">Accept</Button>
+                      <Button size="sm" variant="outline" onClick={() => updateBookingStatus(b.id, "cancelled")} className="rounded-full text-xs px-3">Decline</Button>
+                    </div>
+                  )}
+                  {(b.status === "confirmed" || b.status === "completed") && (
+                    <Button size="sm" variant="outline" onClick={() => generateInvoice(b)} className="rounded-full text-xs px-3 gap-1 mt-1">
+                      <Receipt className="w-3 h-3" /> Invoice
+                    </Button>
+                  )}
+                </div>
+              </div>
+            ))}
           </div>
         )}
 
