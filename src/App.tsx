@@ -37,6 +37,7 @@ import BetaWandererProfile from "./pages/BetaWandererProfile.tsx";
 import Leaderboard from "./pages/Leaderboard.tsx";
 import Rewards from "./pages/Rewards.tsx";
 import BlogDetail from "./pages/BlogDetail.tsx";
+import Membership from "./pages/Membership.tsx";
 import MobileBottomNav from "./components/MobileBottomNav.tsx";
 import AIChatRecommender from "./components/AIChatRecommender.tsx";
 import NotFound from "./pages/NotFound.tsx";
@@ -84,6 +85,7 @@ const App = () => (
             <Route path="/leaderboard" element={<Leaderboard />} />
             <Route path="/rewards" element={<Rewards />} />
             <Route path="/blog/:id" element={<BlogDetail />} />
+            <Route path="/membership" element={<Membership />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
           <MobileBottomNav />
