@@ -83,7 +83,7 @@ const HostDashboard = () => {
   });
   const [socialMedia, setSocialMedia] = useLocalStorage("host_social_media", { instagram: "", facebook: "", twitter: "", website: "" });
   const [pricing, setPricing] = useLocalStorage("host_pricing", { guidePerDay: host.pricePerDay, cancellationPolicy: "flexible", currency: "USD" });
-  const [bookingStatuses, setBookingStatuses] = useLocalStorage<Record<string, string>>("host_booking_statuses", {});
+  
   const [customExperiences, setCustomExperiences] = useLocalStorage<any[]>("host_custom_experiences", []);
   const [customVehicles, setCustomVehicles] = useLocalStorage<any[]>("host_custom_vehicles", []);
   const [customDishes, setCustomDishes] = useLocalStorage<any[]>("host_custom_dishes", host.foodInfo?.dishes || []);
@@ -141,7 +141,7 @@ const HostDashboard = () => {
 
   const allExperiences = [...hostExperiences, ...customExperiences];
   const allVehicles = [...(host.transportInfo?.vehicles || []), ...customVehicles];
-  const getBookingStatus = (id: string, original: string) => bookingStatuses[id] || original;
+  
   const updateBookingStatus = async (id: string, status: string) => {
     const { error } = await supabase.from("bookings").update({ status }).eq("id", id);
     if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
