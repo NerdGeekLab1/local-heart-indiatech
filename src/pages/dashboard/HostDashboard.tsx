@@ -142,20 +142,26 @@ const HostDashboard = () => {
   const allExperiences = [...hostExperiences, ...customExperiences];
   const allVehicles = [...(host.transportInfo?.vehicles || []), ...customVehicles];
   const getBookingStatus = (id: string, original: string) => bookingStatuses[id] || original;
-  const updateBookingStatus = (id: string, status: string) => { setBookingStatuses(p => ({ ...p, [id]: status })); toast({ title: `Booking #${id} ${status}` }); };
+  const updateBookingStatus = async (id: string, status: string) => {
+    const { error } = await supabase.from("bookings").update({ status }).eq("id", id);
+    if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
+    setHostBookings(p => p.map(b => b.id === id ? { ...b, status } : b));
+    toast({ title: `Booking ${status}` });
+  };
 
   const generateInvoice = async (booking: any) => {
     if (!user) return;
     const invoiceNumber = `INV-${new Date().getFullYear()}-${String(Math.floor(Math.random() * 9999)).padStart(4, "0")}`;
-    const taxAmount = Math.round(booking.totalPrice * 0.18);
+    const amount = Number(booking.total_price || 0);
+    const taxAmount = Math.round(amount * 0.18);
     const { data, error } = await supabase.from("invoices").insert({
       invoice_number: invoiceNumber,
-      traveler_id: booking.travelerId || user.id,
+      traveler_id: booking.traveler_id,
       host_id: user.id,
-      booking_id: null,
-      amount: booking.totalPrice,
+      booking_id: booking.id,
+      amount,
       tax_amount: taxAmount,
-      total_amount: booking.totalPrice + taxAmount,
+      total_amount: amount + taxAmount,
       currency: "INR",
       status: "unpaid",
     }).select().single();
