@@ -75,7 +75,8 @@ const HostDashboard = () => {
   }, [searchParams]);
   const { toast } = useToast();
   const { user } = useAuth();
-  const totalEarnings = hostBookings.reduce((sum, b) => sum + b.totalPrice, 0);
+  const [hostBookings, setHostBookings] = useState<any[]>([]);
+  const totalEarnings = hostBookings.reduce((sum: number, b: any) => sum + Number(b.total_price || 0), 0);
 
   const [hostProfile, setHostProfile] = useLocalStorage("host_profile", {
     name: host.name, tagline: host.tagline, bio: host.bio, city: host.city, pricePerDay: host.pricePerDay,
