@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import { useParams, useSearchParams, Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { format } from "date-fns";
@@ -113,7 +114,23 @@ const Booking = () => {
     return false;
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
+    if (!user || !startDate || !endDate) return;
+    const { error } = await supabase.from("bookings").insert({
+      traveler_id: user.id,
+      host_id: host.id,
+      start_date: startDate.toISOString().split("T")[0],
+      end_date: endDate.toISOString().split("T")[0],
+      guests,
+      services: selectedServices,
+      total_price: total,
+      message: message || null,
+      status: "pending",
+    });
+    if (error) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+      return;
+    }
     setSubmitted(true);
     toast({ title: "Booking Sent! 🎉", description: `Your booking has been sent to ${host.name}.` });
   };

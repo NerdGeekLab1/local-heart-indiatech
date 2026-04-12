@@ -17,7 +17,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 
 const host = hosts[0];
-const hostBookings = mockBookings.filter(b => b.hostId === host.id);
 const hostReviews = reviews.filter(r => r.hostId === host.id);
 const hostExperiences = experiences.filter(e => e.hostId === host.id);
 
