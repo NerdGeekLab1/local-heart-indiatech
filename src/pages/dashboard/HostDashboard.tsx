@@ -224,20 +224,18 @@ const HostDashboard = () => {
               <div className="lg:col-span-2">
                 <h2 className="text-xl font-bold text-foreground mb-4">Recent Booking Requests</h2>
                 <div className="space-y-3">
-                  {hostBookings.slice(0, 3).map(b => {
-                    const status = getBookingStatus(b.id, b.status);
-                    return (
+                  {hostBookings.slice(0, 3).map(b => (
                       <div key={b.id} className="rounded-lg bg-card p-4 shadow-card flex justify-between items-center">
                         <div>
                           <div className="flex items-center gap-2">
-                            <h3 className="font-semibold text-foreground">Booking #{b.id}</h3>
-                            <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${statusColors[status] || statusColors.pending}`}>{status}</span>
+                            <h3 className="font-semibold text-foreground">Booking #{b.id.slice(0,8)}</h3>
+                            <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${statusColors[b.status] || statusColors.pending}`}>{b.status}</span>
                           </div>
-                          <p className="text-sm text-muted-foreground mt-1"><Clock className="w-3 h-3 inline mr-1" />{b.startDate} → {b.endDate}</p>
+                          <p className="text-sm text-muted-foreground mt-1"><Clock className="w-3 h-3 inline mr-1" />{b.start_date} → {b.end_date}</p>
                         </div>
                         <div className="text-right">
-                          <p className="font-bold text-foreground">${b.totalPrice}</p>
-                          {status === "pending" && (
+                          <p className="font-bold text-foreground">₹{b.total_price}</p>
+                          {b.status === "pending" && (
                             <div className="flex gap-2 mt-1">
                               <Button size="sm" onClick={() => updateBookingStatus(b.id, "confirmed")} className="rounded-full text-xs px-3 bg-accent text-accent-foreground hover:bg-accent/90">Accept</Button>
                               <Button size="sm" variant="outline" onClick={() => updateBookingStatus(b.id, "cancelled")} className="rounded-full text-xs px-3">Decline</Button>
@@ -245,8 +243,7 @@ const HostDashboard = () => {
                           )}
                         </div>
                       </div>
-                    );
-                  })}
+                    ))}
                 </div>
               </div>
               <div className="space-y-4">
@@ -265,35 +262,37 @@ const HostDashboard = () => {
 
         {activeTab === "bookings" && (
           <div className="mt-6 space-y-3">
-            <h2 className="text-xl font-bold text-foreground mb-4">All Bookings</h2>
-            {hostBookings.map(b => {
-              const status = getBookingStatus(b.id, b.status);
-              return (
-                <div key={b.id} className="rounded-lg bg-card p-4 shadow-card flex justify-between items-center">
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <h3 className="font-semibold text-foreground">#{b.id}</h3>
-                      <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${statusColors[status] || statusColors.pending}`}>{status}</span>
-                    </div>
-                    <p className="text-sm text-muted-foreground mt-1">{b.startDate} → {b.endDate} · {b.services.join(", ")} · {b.guests} guest(s)</p>
+            <h2 className="text-xl font-bold text-foreground mb-4">All Bookings ({hostBookings.length})</h2>
+            {hostBookings.length === 0 ? (
+              <div className="text-center py-12">
+                <Calendar className="w-12 h-12 text-muted-foreground/30 mx-auto mb-3" />
+                <p className="text-muted-foreground">No bookings yet.</p>
+              </div>
+            ) : hostBookings.map(b => (
+              <div key={b.id} className="rounded-lg bg-card p-4 shadow-card flex justify-between items-center">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-semibold text-foreground">#{b.id.slice(0,8)}</h3>
+                    <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${statusColors[b.status] || statusColors.pending}`}>{b.status}</span>
                   </div>
-                  <div className="text-right">
-                    <p className="font-bold text-foreground">${b.totalPrice}</p>
-                    {status === "pending" && (
-                      <div className="flex gap-2 mt-2">
-                        <Button size="sm" onClick={() => updateBookingStatus(b.id, "confirmed")} className="rounded-full bg-accent text-accent-foreground text-xs px-3">Accept</Button>
-                        <Button size="sm" variant="outline" onClick={() => updateBookingStatus(b.id, "cancelled")} className="rounded-full text-xs px-3">Decline</Button>
-                      </div>
-                    )}
-                    {(status === "confirmed" || status === "completed") && (
-                      <Button size="sm" variant="outline" onClick={() => generateInvoice(b)} className="rounded-full text-xs px-3 gap-1 mt-1">
-                        <Receipt className="w-3 h-3" /> Invoice
-                      </Button>
-                    )}
-                  </div>
+                  <p className="text-sm text-muted-foreground mt-1">{b.start_date} → {b.end_date} · {(b.services || []).join(", ")} · {b.guests} guest(s)</p>
                 </div>
-              );
-            })}
+                <div className="text-right">
+                  <p className="font-bold text-foreground">₹{b.total_price}</p>
+                  {b.status === "pending" && (
+                    <div className="flex gap-2 mt-2">
+                      <Button size="sm" onClick={() => updateBookingStatus(b.id, "confirmed")} className="rounded-full bg-accent text-accent-foreground text-xs px-3">Accept</Button>
+                      <Button size="sm" variant="outline" onClick={() => updateBookingStatus(b.id, "cancelled")} className="rounded-full text-xs px-3">Decline</Button>
+                    </div>
+                  )}
+                  {(b.status === "confirmed" || b.status === "completed") && (
+                    <Button size="sm" variant="outline" onClick={() => generateInvoice(b)} className="rounded-full text-xs px-3 gap-1 mt-1">
+                      <Receipt className="w-3 h-3" /> Invoice
+                    </Button>
+                  )}
+                </div>
+              </div>
+            ))}
           </div>
         )}
 
