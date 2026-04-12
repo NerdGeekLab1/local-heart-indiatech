@@ -104,9 +104,11 @@ const HostDashboard = () => {
     Promise.all([
       supabase.from("experience_requests").select("*").eq("host_id", user.id).order("created_at", { ascending: false }),
       supabase.from("invoices").select("*").eq("host_id", user.id).order("created_at", { ascending: false }),
-    ]).then(([{ data: reqs }, { data: invs }]) => {
+      supabase.from("bookings").select("*").eq("host_id", user.id).order("created_at", { ascending: false }),
+    ]).then(([{ data: reqs }, { data: invs }, { data: bks }]) => {
       setExpRequests(reqs || []);
       setHostInvoices(invs || []);
+      setHostBookings(bks || []);
     });
   }, [user]);
 
