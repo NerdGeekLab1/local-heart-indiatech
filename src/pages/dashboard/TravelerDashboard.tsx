@@ -50,7 +50,7 @@ const TravelerDashboard = () => {
   const [reviewText, setReviewText] = useState("");
   const [reviewRating, setReviewRating] = useState(5);
   const [videoConsent, setVideoConsent] = useState<string | null>(null);
-  const [submittedReviews, setSubmittedReviews] = useLocalStorage<any[]>("traveler_reviews", []);
+  
 
   // DB data
   const [myTrips, setMyTrips] = useState<any[]>([]);
