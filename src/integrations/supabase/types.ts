@@ -517,6 +517,39 @@ export type Database = {
         }
         Relationships: []
       }
+      referrals: {
+        Row: {
+          created_at: string
+          id: string
+          redeemed_at: string | null
+          referral_code: string
+          referred_id: string | null
+          referrer_id: string
+          reward_points: number
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          redeemed_at?: string | null
+          referral_code: string
+          referred_id?: string | null
+          referrer_id: string
+          reward_points?: number
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          redeemed_at?: string | null
+          referral_code?: string
+          referred_id?: string | null
+          referrer_id?: string
+          reward_points?: number
+          status?: string
+        }
+        Relationships: []
+      }
       reviews: {
         Row: {
           created_at: string

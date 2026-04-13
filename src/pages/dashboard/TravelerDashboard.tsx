@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { mockBookings, hosts, experiences } from "@/lib/data";
+import { hosts, experiences } from "@/lib/data";
 import { useLocalStorage } from "@/hooks/use-local-storage";
 import { useToast } from "@/hooks/use-toast";
 import VideoRecorder from "@/components/VideoRecorder";
@@ -35,8 +35,9 @@ const TravelerDashboard = () => {
   }, [searchParams]);
   const { toast } = useToast();
   const { user } = useAuth();
-  const bookings = mockBookings;
+  const [bookings, setBookings] = useState<any[]>([]);
   const recommendedExp = experiences.slice(0, 4);
+  const [dbReviews, setDbReviews] = useState<any[]>([]);
 
   const [profile, setProfile] = useLocalStorage("traveler_profile", {
     name: "Alex Traveler", email: "alex@example.com", phone: "+1 555-0123", bio: "Love exploring!",
@@ -49,7 +50,7 @@ const TravelerDashboard = () => {
   const [reviewText, setReviewText] = useState("");
   const [reviewRating, setReviewRating] = useState(5);
   const [videoConsent, setVideoConsent] = useState<string | null>(null);
-  const [submittedReviews, setSubmittedReviews] = useLocalStorage<any[]>("traveler_reviews", []);
+  
 
   // DB data
   const [myTrips, setMyTrips] = useState<any[]>([]);
@@ -60,15 +61,19 @@ const TravelerDashboard = () => {
   useEffect(() => {
     if (!user) return;
     Promise.all([
+      supabase.from("bookings").select("*").eq("traveler_id", user.id).order("created_at", { ascending: false }),
       supabase.from("trip_listings").select("*").eq("creator_id", user.id).order("created_at", { ascending: false }),
       supabase.from("grievances").select("*").eq("filed_by", user.id).order("created_at", { ascending: false }),
       supabase.from("invoices").select("*").eq("traveler_id", user.id).order("created_at", { ascending: false }),
       supabase.from("travel_streaks").select("*").eq("user_id", user.id).order("month", { ascending: true }),
-    ]).then(([{ data: trips }, { data: grievances }, { data: invoices }, { data: streaks }]) => {
+      supabase.from("reviews").select("*").eq("traveler_id", user.id),
+    ]).then(([{ data: bk }, { data: trips }, { data: grievances }, { data: invoices }, { data: streaks }, { data: revs }]) => {
+      setBookings(bk || []);
       setMyTrips(trips || []);
       setMyGrievances(grievances || []);
       setMyInvoices(invoices || []);
       setMyStreaks(streaks || []);
+      setDbReviews(revs || []);
     });
   }, [user]);
 
@@ -77,10 +82,20 @@ const TravelerDashboard = () => {
     toast({ title: savedHostIds.includes(hostId) ? "Removed" : "Saved!" });
   };
 
-  const submitReview = () => {
-    if (!videoConsent) { toast({ title: "Video required", variant: "destructive" }); return; }
+  const submitReview = async () => {
+    if (!user) return;
     if (!reviewText.trim()) { toast({ title: "Please write a review", variant: "destructive" }); return; }
-    setSubmittedReviews(p => [...p, { bookingId: reviewingBooking, text: reviewText, rating: reviewRating, videoUrl: videoConsent, date: new Date().toISOString() }]);
+    const booking = bookings.find(b => b.id === reviewingBooking);
+    const { data, error } = await supabase.from("reviews").insert({
+      traveler_id: user.id,
+      host_id: booking?.host_id || null,
+      rating: reviewRating,
+      text: reviewText,
+      has_video: !!videoConsent,
+      video_url: videoConsent || null,
+    }).select().single();
+    if (error) { toast({ title: "Error submitting review", variant: "destructive" }); return; }
+    setDbReviews(p => [...p, data]);
     toast({ title: "Review submitted! 🎉" });
     setReviewingBooking(null); setReviewText(""); setReviewRating(5); setVideoConsent(null);
   };
@@ -143,19 +158,17 @@ const TravelerDashboard = () => {
               </div>
               <div className="space-y-3">
                 {bookings.filter(b => b.status === "confirmed" || b.status === "pending").slice(0, 2).map(b => {
-                  const host = hosts.find(h => h.id === b.hostId);
-                  if (!host) return null;
                   return (
                     <div key={b.id} className="rounded-lg bg-card p-4 shadow-card flex items-center gap-4">
-                      <img src={host.image} alt={host.name} className="w-14 h-14 rounded-full object-cover shrink-0" />
+                      <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center text-xl shrink-0">🏡</div>
                       <div className="flex-1">
                         <div className="flex items-center gap-2">
-                          <h3 className="font-semibold text-foreground">{host.name}, {host.city}</h3>
-                          <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${statusColors[b.status]}`}>{b.status}</span>
+                          <h3 className="font-semibold text-foreground">Booking #{b.id.slice(0, 8)}</h3>
+                          <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${statusColors[b.status] || "bg-secondary text-muted-foreground"}`}>{b.status}</span>
                         </div>
-                        <p className="text-sm text-muted-foreground"><Clock className="w-3 h-3 inline mr-1" />{b.startDate} → {b.endDate}</p>
+                        <p className="text-sm text-muted-foreground"><Clock className="w-3 h-3 inline mr-1" />{b.start_date} → {b.end_date}</p>
                       </div>
-                      <p className="font-bold text-foreground">${b.totalPrice}</p>
+                      <p className="font-bold text-foreground">₹{Number(b.total_price).toLocaleString()}</p>
                     </div>
                   );
                 })}
@@ -187,24 +200,24 @@ const TravelerDashboard = () => {
         {/* Bookings */}
         {activeTab === "bookings" && (
           <div className="mt-6 space-y-3">
-            <h2 className="text-xl font-bold text-foreground mb-4">All Bookings</h2>
-            {bookings.map(b => {
-              const host = hosts.find(h => h.id === b.hostId);
-              if (!host) return null;
-              const hasReview = submittedReviews.some(r => r.bookingId === b.id);
+            <h2 className="text-xl font-bold text-foreground mb-4">All Bookings ({bookings.length})</h2>
+            {bookings.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">No bookings yet. <Link to="/explore" className="text-primary hover:underline">Explore hosts</Link></div>
+            ) : bookings.map(b => {
+              const hasReview = dbReviews.some(r => r.host_id === b.host_id);
               return (
                 <div key={b.id} className="rounded-lg bg-card p-4 shadow-card">
                   <div className="flex items-center gap-4">
-                    <img src={host.image} alt={host.name} className="w-14 h-14 rounded-full object-cover shrink-0" />
+                    <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center text-xl shrink-0">🏡</div>
                     <div className="flex-1">
                       <div className="flex items-center gap-2">
-                        <h3 className="font-semibold text-foreground">{host.name}, {host.city}</h3>
-                        <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${statusColors[b.status]}`}>{b.status}</span>
+                        <h3 className="font-semibold text-foreground">Booking #{b.id.slice(0, 8)}</h3>
+                        <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${statusColors[b.status] || "bg-secondary text-muted-foreground"}`}>{b.status}</span>
                       </div>
-                      <p className="text-sm text-muted-foreground">{b.startDate} → {b.endDate} · {b.services.join(", ")}</p>
+                      <p className="text-sm text-muted-foreground">{b.start_date} → {b.end_date} · {(b.services || []).join(", ")}</p>
                     </div>
                     <div className="text-right shrink-0">
-                      <p className="font-bold text-foreground">${b.totalPrice}</p>
+                      <p className="font-bold text-foreground">₹{Number(b.total_price).toLocaleString()}</p>
                       {b.status === "completed" && !hasReview && (
                         <Button size="sm" className="rounded-full text-xs gap-1 mt-1" onClick={() => setReviewingBooking(b.id)}>
                           <Video className="w-3 h-3" /> Review
@@ -222,7 +235,7 @@ const TravelerDashboard = () => {
                       ))}</div>
                       <textarea className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm min-h-[80px]"
                         placeholder="Share your experience..." value={reviewText} onChange={e => setReviewText(e.target.value)} />
-                      <VideoRecorder label="Video Feedback (Required)" required onVideoReady={(url) => setVideoConsent(url)} />
+                      <VideoRecorder label="Video Feedback (Optional)" onVideoReady={(url) => setVideoConsent(url)} />
                       <div className="flex gap-2">
                         <Button onClick={submitReview} className="rounded-full gap-2"><Save className="w-4 h-4" /> Submit</Button>
                         <Button variant="outline" className="rounded-full" onClick={() => { setReviewingBooking(null); setVideoConsent(null); }}>Cancel</Button>
@@ -483,23 +496,19 @@ const TravelerDashboard = () => {
         {/* Reviews */}
         {activeTab === "reviews" && (
           <div className="mt-6 space-y-4">
-            <h2 className="text-xl font-bold text-foreground mb-4">My Reviews ({submittedReviews.length})</h2>
-            {submittedReviews.length === 0 ? (
-              <p className="text-muted-foreground text-center py-8">No reviews yet.</p>
-            ) : submittedReviews.map((r, i) => {
-              const booking = bookings.find(b => b.id === r.bookingId);
-              const h = booking ? hosts.find(x => x.id === booking.hostId) : null;
-              return (
-                <div key={i} className="rounded-lg bg-card p-4 shadow-card">
-                  <div className="flex items-center gap-2">
-                    <div className="flex gap-0.5">{Array.from({ length: r.rating }).map((_, j) => <Star key={j} className="w-3 h-3 fill-primary text-primary" />)}</div>
-                    <span className="text-sm text-muted-foreground">for {h?.name || "Unknown"}</span>
-                    {r.videoUrl && <span className="text-xs bg-accent/10 text-accent px-2 py-0.5 rounded-full ml-auto"><Video className="w-3 h-3 inline" /> Video</span>}
-                  </div>
-                  <p className="mt-2 text-sm text-muted-foreground">{r.text}</p>
+            <h2 className="text-xl font-bold text-foreground mb-4">My Reviews ({dbReviews.length})</h2>
+            {dbReviews.length === 0 ? (
+              <p className="text-muted-foreground text-center py-8">No reviews yet. Complete a booking and leave a review!</p>
+            ) : dbReviews.map((r) => (
+              <div key={r.id} className="rounded-lg bg-card p-4 shadow-card">
+                <div className="flex items-center gap-2">
+                  <div className="flex gap-0.5">{Array.from({ length: r.rating }).map((_, j) => <Star key={j} className="w-3 h-3 fill-primary text-primary" />)}</div>
+                  {r.has_video && <span className="text-xs bg-accent/10 text-accent px-2 py-0.5 rounded-full ml-auto"><Video className="w-3 h-3 inline" /> Video</span>}
                 </div>
-              );
-            })}
+                <p className="mt-2 text-sm text-muted-foreground">{r.text}</p>
+                <p className="text-xs text-muted-foreground mt-1">{new Date(r.created_at).toLocaleDateString()}</p>
+              </div>
+            ))}
           </div>
         )}
 

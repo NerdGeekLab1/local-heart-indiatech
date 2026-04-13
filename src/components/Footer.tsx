@@ -38,6 +38,7 @@ const Footer = () => (
             <Link to="/trips" className="block text-sm text-muted-foreground hover:text-foreground transition-colors">Published Trips</Link>
             <Link to="/beta-wanderers" className="block text-sm text-muted-foreground hover:text-foreground transition-colors">Beta Wanderers</Link>
             <Link to="/membership" className="block text-sm text-muted-foreground hover:text-foreground transition-colors">Membership Plans</Link>
+            <Link to="/referrals" className="block text-sm text-muted-foreground hover:text-foreground transition-colors">Referral Program</Link>
           </div>
         </div>
         <div>

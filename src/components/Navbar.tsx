@@ -1,5 +1,7 @@
-import { useState } from "react";
+import { useState, lazy, Suspense } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
+
+const GlobalSearch = lazy(() => import("@/components/GlobalSearch"));
 import { Search, Menu, X, Compass, User, LogOut, Settings, LayoutDashboard, HelpCircle, FileText, ChevronDown, Bell } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
@@ -28,6 +30,7 @@ const navLinks = [
 
 const Navbar = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
   const isHome = location.pathname === "/";
@@ -87,9 +90,14 @@ const Navbar = () => {
 
           {/* Desktop Right Section */}
           <div className="hidden lg:flex items-center gap-2">
-            <Button variant="ghost" size="icon" className="rounded-full">
+            <Button variant="ghost" size="icon" className="rounded-full" onClick={() => setSearchOpen(true)}>
               <Search className="h-4 w-4" />
             </Button>
+            {searchOpen && (
+              <Suspense fallback={null}>
+                <GlobalSearch onClose={() => setSearchOpen(false)} />
+              </Suspense>
+            )}
             <ThemeToggle />
             <CurrencySwitcher />
 

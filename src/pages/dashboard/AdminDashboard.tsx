@@ -1,4 +1,4 @@
-
+import { BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer } from "recharts";
 import { useState, useEffect, useMemo } from "react";
 import { useSearchParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
@@ -1294,16 +1294,98 @@ const AdminDashboard = () => {
             <h2 className="text-xl font-bold text-foreground mb-4">Platform Analytics</h2>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
               {[
-                { label: "Monthly Active Users", value: "2,450" },
-                { label: "Avg Booking Value", value: format(Math.round(totalRevenue / Math.max(mockBookings.length, 1))) },
-                { label: "Conversion Rate", value: "8.3%" },
-                { label: "Repeat Bookings", value: "34%" },
+                { label: "Total Users", value: dbUsers.length },
+                { label: "Active Subscriptions", value: dbSubscriptions.filter(s => s.is_active && s.tier !== "free").length },
+                { label: "Total Invoices", value: dbInvoices.length },
+                { label: "Total Revenue", value: format(dbInvoices.reduce((s, i) => s + Number(i.total_amount || 0), 0)) },
               ].map(s => (
                 <div key={s.label} className="rounded-lg bg-card p-4 shadow-card">
                   <p className="text-2xl font-bold text-foreground">{s.value}</p>
                   <p className="text-xs text-muted-foreground">{s.label}</p>
                 </div>
               ))}
+            </div>
+
+            {/* User Growth Chart */}
+            <div className="rounded-xl bg-card p-5 shadow-card">
+              <h3 className="font-bold text-foreground mb-4">User Signups Over Time</h3>
+              <ResponsiveContainer width="100%" height={250}>
+                <LineChart data={(() => {
+                  const months: Record<string, number> = {};
+                  dbUsers.forEach(u => {
+                    const m = new Date(u.created_at).toLocaleDateString("en", { month: "short", year: "2-digit" });
+                    months[m] = (months[m] || 0) + 1;
+                  });
+                  return Object.entries(months).map(([month, count]) => ({ month, users: count }));
+                })()}>
+                  <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
+                  <XAxis dataKey="month" className="text-xs fill-muted-foreground" />
+                  <YAxis className="text-xs fill-muted-foreground" />
+                  <RechartsTooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 8 }} />
+                  <Line type="monotone" dataKey="users" stroke="hsl(var(--primary))" strokeWidth={2} dot={{ fill: "hsl(var(--primary))" }} />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+
+            {/* Role Distribution */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div className="rounded-xl bg-card p-5 shadow-card">
+                <h3 className="font-bold text-foreground mb-4">User Roles</h3>
+                <ResponsiveContainer width="100%" height={200}>
+                  <PieChart>
+                    <Pie
+                      data={(() => {
+                        const roleCounts: Record<string, number> = {};
+                        userRoles.forEach(r => { roleCounts[r.role] = (roleCounts[r.role] || 0) + 1; });
+                        return Object.entries(roleCounts).map(([name, value]) => ({ name, value }));
+                      })()}
+                      cx="50%" cy="50%" outerRadius={70} dataKey="value" label={({ name, value }) => `${name}: ${value}`}
+                    >
+                      {["hsl(var(--primary))", "hsl(var(--accent))", "hsl(var(--destructive))"].map((color, i) => (
+                        <Cell key={i} fill={color} />
+                      ))}
+                    </Pie>
+                    <RechartsTooltip />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+
+              <div className="rounded-xl bg-card p-5 shadow-card">
+                <h3 className="font-bold text-foreground mb-4">Subscription Tiers</h3>
+                <ResponsiveContainer width="100%" height={200}>
+                  <BarChart data={SUBSCRIPTION_TIERS.map(t => ({
+                    tier: t.label,
+                    count: dbSubscriptions.filter(s => s.tier === t.id).length,
+                  }))}>
+                    <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
+                    <XAxis dataKey="tier" className="text-xs fill-muted-foreground" />
+                    <YAxis className="text-xs fill-muted-foreground" />
+                    <RechartsTooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 8 }} />
+                    <Bar dataKey="count" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+
+            {/* Invoice Revenue Chart */}
+            <div className="rounded-xl bg-card p-5 shadow-card">
+              <h3 className="font-bold text-foreground mb-4">Revenue by Month</h3>
+              <ResponsiveContainer width="100%" height={250}>
+                <BarChart data={(() => {
+                  const months: Record<string, number> = {};
+                  dbInvoices.forEach(inv => {
+                    const m = new Date(inv.created_at).toLocaleDateString("en", { month: "short", year: "2-digit" });
+                    months[m] = (months[m] || 0) + Number(inv.total_amount || 0);
+                  });
+                  return Object.entries(months).map(([month, revenue]) => ({ month, revenue }));
+                })()}>
+                  <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
+                  <XAxis dataKey="month" className="text-xs fill-muted-foreground" />
+                  <YAxis className="text-xs fill-muted-foreground" />
+                  <RechartsTooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 8 }} />
+                  <Bar dataKey="revenue" fill="hsl(var(--accent))" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
             </div>
           </div>
         )}
