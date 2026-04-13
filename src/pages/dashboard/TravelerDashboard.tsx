@@ -496,23 +496,19 @@ const TravelerDashboard = () => {
         {/* Reviews */}
         {activeTab === "reviews" && (
           <div className="mt-6 space-y-4">
-            <h2 className="text-xl font-bold text-foreground mb-4">My Reviews ({submittedReviews.length})</h2>
-            {submittedReviews.length === 0 ? (
-              <p className="text-muted-foreground text-center py-8">No reviews yet.</p>
-            ) : submittedReviews.map((r, i) => {
-              const booking = bookings.find(b => b.id === r.bookingId);
-              const h = booking ? hosts.find(x => x.id === booking.hostId) : null;
-              return (
-                <div key={i} className="rounded-lg bg-card p-4 shadow-card">
-                  <div className="flex items-center gap-2">
-                    <div className="flex gap-0.5">{Array.from({ length: r.rating }).map((_, j) => <Star key={j} className="w-3 h-3 fill-primary text-primary" />)}</div>
-                    <span className="text-sm text-muted-foreground">for {h?.name || "Unknown"}</span>
-                    {r.videoUrl && <span className="text-xs bg-accent/10 text-accent px-2 py-0.5 rounded-full ml-auto"><Video className="w-3 h-3 inline" /> Video</span>}
-                  </div>
-                  <p className="mt-2 text-sm text-muted-foreground">{r.text}</p>
+            <h2 className="text-xl font-bold text-foreground mb-4">My Reviews ({dbReviews.length})</h2>
+            {dbReviews.length === 0 ? (
+              <p className="text-muted-foreground text-center py-8">No reviews yet. Complete a booking and leave a review!</p>
+            ) : dbReviews.map((r) => (
+              <div key={r.id} className="rounded-lg bg-card p-4 shadow-card">
+                <div className="flex items-center gap-2">
+                  <div className="flex gap-0.5">{Array.from({ length: r.rating }).map((_, j) => <Star key={j} className="w-3 h-3 fill-primary text-primary" />)}</div>
+                  {r.has_video && <span className="text-xs bg-accent/10 text-accent px-2 py-0.5 rounded-full ml-auto"><Video className="w-3 h-3 inline" /> Video</span>}
                 </div>
-              );
-            })}
+                <p className="mt-2 text-sm text-muted-foreground">{r.text}</p>
+                <p className="text-xs text-muted-foreground mt-1">{new Date(r.created_at).toLocaleDateString()}</p>
+              </div>
+            ))}
           </div>
         )}
 
