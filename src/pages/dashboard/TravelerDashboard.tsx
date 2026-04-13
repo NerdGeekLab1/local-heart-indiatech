@@ -200,24 +200,24 @@ const TravelerDashboard = () => {
         {/* Bookings */}
         {activeTab === "bookings" && (
           <div className="mt-6 space-y-3">
-            <h2 className="text-xl font-bold text-foreground mb-4">All Bookings</h2>
-            {bookings.map(b => {
-              const host = hosts.find(h => h.id === b.hostId);
-              if (!host) return null;
-              const hasReview = submittedReviews.some(r => r.bookingId === b.id);
+            <h2 className="text-xl font-bold text-foreground mb-4">All Bookings ({bookings.length})</h2>
+            {bookings.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">No bookings yet. <Link to="/explore" className="text-primary hover:underline">Explore hosts</Link></div>
+            ) : bookings.map(b => {
+              const hasReview = dbReviews.some(r => r.host_id === b.host_id);
               return (
                 <div key={b.id} className="rounded-lg bg-card p-4 shadow-card">
                   <div className="flex items-center gap-4">
-                    <img src={host.image} alt={host.name} className="w-14 h-14 rounded-full object-cover shrink-0" />
+                    <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center text-xl shrink-0">🏡</div>
                     <div className="flex-1">
                       <div className="flex items-center gap-2">
-                        <h3 className="font-semibold text-foreground">{host.name}, {host.city}</h3>
-                        <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${statusColors[b.status]}`}>{b.status}</span>
+                        <h3 className="font-semibold text-foreground">Booking #{b.id.slice(0, 8)}</h3>
+                        <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${statusColors[b.status] || "bg-secondary text-muted-foreground"}`}>{b.status}</span>
                       </div>
-                      <p className="text-sm text-muted-foreground">{b.startDate} → {b.endDate} · {b.services.join(", ")}</p>
+                      <p className="text-sm text-muted-foreground">{b.start_date} → {b.end_date} · {(b.services || []).join(", ")}</p>
                     </div>
                     <div className="text-right shrink-0">
-                      <p className="font-bold text-foreground">${b.totalPrice}</p>
+                      <p className="font-bold text-foreground">₹{Number(b.total_price).toLocaleString()}</p>
                       {b.status === "completed" && !hasReview && (
                         <Button size="sm" className="rounded-full text-xs gap-1 mt-1" onClick={() => setReviewingBooking(b.id)}>
                           <Video className="w-3 h-3" /> Review
@@ -235,7 +235,7 @@ const TravelerDashboard = () => {
                       ))}</div>
                       <textarea className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm min-h-[80px]"
                         placeholder="Share your experience..." value={reviewText} onChange={e => setReviewText(e.target.value)} />
-                      <VideoRecorder label="Video Feedback (Required)" required onVideoReady={(url) => setVideoConsent(url)} />
+                      <VideoRecorder label="Video Feedback (Optional)" onVideoReady={(url) => setVideoConsent(url)} />
                       <div className="flex gap-2">
                         <Button onClick={submitReview} className="rounded-full gap-2"><Save className="w-4 h-4" /> Submit</Button>
                         <Button variant="outline" className="rounded-full" onClick={() => { setReviewingBooking(null); setVideoConsent(null); }}>Cancel</Button>
