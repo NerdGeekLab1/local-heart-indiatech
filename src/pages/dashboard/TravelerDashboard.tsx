@@ -82,10 +82,20 @@ const TravelerDashboard = () => {
     toast({ title: savedHostIds.includes(hostId) ? "Removed" : "Saved!" });
   };
 
-  const submitReview = () => {
-    if (!videoConsent) { toast({ title: "Video required", variant: "destructive" }); return; }
+  const submitReview = async () => {
+    if (!user) return;
     if (!reviewText.trim()) { toast({ title: "Please write a review", variant: "destructive" }); return; }
-    setSubmittedReviews(p => [...p, { bookingId: reviewingBooking, text: reviewText, rating: reviewRating, videoUrl: videoConsent, date: new Date().toISOString() }]);
+    const booking = bookings.find(b => b.id === reviewingBooking);
+    const { data, error } = await supabase.from("reviews").insert({
+      traveler_id: user.id,
+      host_id: booking?.host_id || null,
+      rating: reviewRating,
+      text: reviewText,
+      has_video: !!videoConsent,
+      video_url: videoConsent || null,
+    }).select().single();
+    if (error) { toast({ title: "Error submitting review", variant: "destructive" }); return; }
+    setDbReviews(p => [...p, data]);
     toast({ title: "Review submitted! 🎉" });
     setReviewingBooking(null); setReviewText(""); setReviewRating(5); setVideoConsent(null);
   };
