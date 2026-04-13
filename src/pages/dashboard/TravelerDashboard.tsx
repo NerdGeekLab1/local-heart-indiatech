@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { mockBookings, hosts, experiences } from "@/lib/data";
+import { hosts, experiences } from "@/lib/data";
 import { useLocalStorage } from "@/hooks/use-local-storage";
 import { useToast } from "@/hooks/use-toast";
 import VideoRecorder from "@/components/VideoRecorder";
