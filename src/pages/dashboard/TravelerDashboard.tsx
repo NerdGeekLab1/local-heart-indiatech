@@ -158,19 +158,17 @@ const TravelerDashboard = () => {
               </div>
               <div className="space-y-3">
                 {bookings.filter(b => b.status === "confirmed" || b.status === "pending").slice(0, 2).map(b => {
-                  const host = hosts.find(h => h.id === b.hostId);
-                  if (!host) return null;
                   return (
                     <div key={b.id} className="rounded-lg bg-card p-4 shadow-card flex items-center gap-4">
-                      <img src={host.image} alt={host.name} className="w-14 h-14 rounded-full object-cover shrink-0" />
+                      <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center text-xl shrink-0">🏡</div>
                       <div className="flex-1">
                         <div className="flex items-center gap-2">
-                          <h3 className="font-semibold text-foreground">{host.name}, {host.city}</h3>
-                          <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${statusColors[b.status]}`}>{b.status}</span>
+                          <h3 className="font-semibold text-foreground">Booking #{b.id.slice(0, 8)}</h3>
+                          <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${statusColors[b.status] || "bg-secondary text-muted-foreground"}`}>{b.status}</span>
                         </div>
-                        <p className="text-sm text-muted-foreground"><Clock className="w-3 h-3 inline mr-1" />{b.startDate} → {b.endDate}</p>
+                        <p className="text-sm text-muted-foreground"><Clock className="w-3 h-3 inline mr-1" />{b.start_date} → {b.end_date}</p>
                       </div>
-                      <p className="font-bold text-foreground">${b.totalPrice}</p>
+                      <p className="font-bold text-foreground">₹{Number(b.total_price).toLocaleString()}</p>
                     </div>
                   );
                 })}
