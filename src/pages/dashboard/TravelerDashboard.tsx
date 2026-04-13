@@ -35,8 +35,9 @@ const TravelerDashboard = () => {
   }, [searchParams]);
   const { toast } = useToast();
   const { user } = useAuth();
-  const bookings = mockBookings;
+  const [bookings, setBookings] = useState<any[]>([]);
   const recommendedExp = experiences.slice(0, 4);
+  const [dbReviews, setDbReviews] = useState<any[]>([]);
 
   const [profile, setProfile] = useLocalStorage("traveler_profile", {
     name: "Alex Traveler", email: "alex@example.com", phone: "+1 555-0123", bio: "Love exploring!",
@@ -60,15 +61,19 @@ const TravelerDashboard = () => {
   useEffect(() => {
     if (!user) return;
     Promise.all([
+      supabase.from("bookings").select("*").eq("traveler_id", user.id).order("created_at", { ascending: false }),
       supabase.from("trip_listings").select("*").eq("creator_id", user.id).order("created_at", { ascending: false }),
       supabase.from("grievances").select("*").eq("filed_by", user.id).order("created_at", { ascending: false }),
       supabase.from("invoices").select("*").eq("traveler_id", user.id).order("created_at", { ascending: false }),
       supabase.from("travel_streaks").select("*").eq("user_id", user.id).order("month", { ascending: true }),
-    ]).then(([{ data: trips }, { data: grievances }, { data: invoices }, { data: streaks }]) => {
+      supabase.from("reviews").select("*").eq("traveler_id", user.id),
+    ]).then(([{ data: bk }, { data: trips }, { data: grievances }, { data: invoices }, { data: streaks }, { data: revs }]) => {
+      setBookings(bk || []);
       setMyTrips(trips || []);
       setMyGrievances(grievances || []);
       setMyInvoices(invoices || []);
       setMyStreaks(streaks || []);
+      setDbReviews(revs || []);
     });
   }, [user]);
 
