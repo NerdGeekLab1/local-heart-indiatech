@@ -547,14 +547,28 @@ const HostDashboard = () => {
 
         {activeTab === "messages" && (
           <div className="mt-6">
-            <h2 className="text-xl font-bold text-foreground mb-4">Messages</h2>
-            {["Sarah M. (USA)", "Thomas K. (Germany)", "Yuki T. (Japan)"].map((name, i) => (
-              <div key={name} className="rounded-lg bg-card p-4 shadow-card flex items-center gap-4 mb-3">
-                <div className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center text-sm font-bold text-foreground">{name[0]}</div>
-                <div className="flex-1"><p className="font-semibold text-foreground text-sm">{name}</p><p className="text-xs text-muted-foreground">Inquiry about {["tour", "stay", "wedding"][i]}</p></div>
-                <span className="text-xs text-muted-foreground">{["1h", "3h", "1d"][i]} ago</span>
+            <h2 className="text-xl font-bold text-foreground mb-4">Messages ({hostMessages.length})</h2>
+            {hostMessages.length === 0 ? (
+              <div className="text-center py-12">
+                <MessageCircle className="w-12 h-12 text-muted-foreground/30 mx-auto mb-3" />
+                <p className="text-muted-foreground">No messages yet. Traveler inquiries will appear here.</p>
               </div>
-            ))}
+            ) : (
+              <div className="space-y-3">
+                {hostMessages.map(m => (
+                  <div key={m.id} className={`rounded-lg bg-card p-4 shadow-card flex items-center gap-4 ${!m.read && m.receiver_id === user?.id ? "border-l-4 border-primary" : ""}`}>
+                    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-sm font-bold text-primary">
+                      {m.sender_id === user?.id ? "You" : "📨"}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-foreground text-sm">{m.sender_id === user?.id ? "You" : "Traveler"}</p>
+                      <p className="text-xs text-muted-foreground truncate">{m.content}</p>
+                    </div>
+                    <span className="text-xs text-muted-foreground shrink-0">{new Date(m.created_at).toLocaleDateString()}</span>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
 
