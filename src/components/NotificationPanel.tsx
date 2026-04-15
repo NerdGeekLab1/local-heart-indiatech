@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Bell, Calendar, MessageCircle, Target, CheckCircle, X, Clock, FileText, Users, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -9,6 +9,7 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 
 type NotificationType = "booking" | "mission" | "message" | "reward" | "invoice" | "approval" | "system";
 
@@ -19,31 +20,7 @@ interface Notification {
   description: string;
   time: string;
   read: boolean;
-  roles: string[]; // which roles see this
 }
-
-const allNotifications: Notification[] = [
-  // Traveler notifications
-  { id: "1", type: "booking", title: "Booking Confirmed", description: "Your Jaipur Heritage Walk booking is confirmed for May 15.", time: "2 min ago", read: false, roles: ["traveler"] },
-  { id: "2", type: "message", title: "New message from Ravi", description: "Hey! Looking forward to hosting you next week.", time: "15 min ago", read: false, roles: ["traveler"] },
-  { id: "3", type: "reward", title: "Streak Milestone! 🔥", description: "You're on a 5-month travel streak! 6 more for a free trip.", time: "3 hrs ago", read: true, roles: ["traveler"] },
-  { id: "4", type: "invoice", title: "Invoice Generated", description: "Invoice #INV-2026-042 for your Kerala trip is ready.", time: "5 hrs ago", read: false, roles: ["traveler"] },
-  { id: "5", type: "booking", title: "Booking Reminder", description: "Your Kerala Backwaters trip starts in 3 days.", time: "1 day ago", read: true, roles: ["traveler"] },
-
-  // Host notifications
-  { id: "10", type: "booking", title: "New Booking Request", description: "Sarah M. requested a 3-day stay starting May 20.", time: "5 min ago", read: false, roles: ["host"] },
-  { id: "11", type: "message", title: "Traveler Inquiry", description: "Thomas K. asked about your cooking class availability.", time: "30 min ago", read: false, roles: ["host"] },
-  { id: "12", type: "invoice", title: "Invoice Payment Received", description: "Payment of ₹12,500 for booking #BK-045 received.", time: "2 hrs ago", read: false, roles: ["host"] },
-  { id: "13", type: "approval", title: "Experience Approved ✓", description: "Your 'Ladakh Bike Expedition' experience is now live.", time: "6 hrs ago", read: true, roles: ["host"] },
-  { id: "14", type: "message", title: "Review Posted", description: "Yuki T. left a 5-star review on your heritage tour.", time: "1 day ago", read: true, roles: ["host"] },
-
-  // Admin notifications
-  { id: "20", type: "approval", title: "New Trip Pending", description: "Manali-Leh Highway trip awaiting approval.", time: "10 min ago", read: false, roles: ["admin"] },
-  { id: "21", type: "system", title: "Grievance Filed", description: "High-priority grievance against Host #12 regarding refund.", time: "1 hr ago", read: false, roles: ["admin"] },
-  { id: "22", type: "approval", title: "Wanderer Application", description: "New Beta Wanderer application from Priya S., Mumbai.", time: "2 hrs ago", read: false, roles: ["admin"] },
-  { id: "23", type: "invoice", title: "Invoice Overdue", description: "Invoice #INV-2026-038 is 7 days overdue.", time: "4 hrs ago", read: false, roles: ["admin"] },
-  { id: "24", type: "system", title: "Platform Update", description: "Monthly revenue report is ready for review.", time: "1 day ago", read: true, roles: ["admin"] },
-];
 
 const typeConfig: Record<NotificationType, { icon: React.ElementType; color: string }> = {
   booking: { icon: Calendar, color: "text-primary bg-primary/10" },
@@ -55,24 +32,92 @@ const typeConfig: Record<NotificationType, { icon: React.ElementType; color: str
   system: { icon: Users, color: "text-muted-foreground bg-muted" },
 };
 
-const NotificationPanel = () => {
-  const { userRole } = useAuth();
-  const role = userRole || "traveler";
+function timeAgo(date: string) {
+  const diff = Date.now() - new Date(date).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return "just now";
+  if (mins < 60) return `${mins}m ago`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `${hrs}h ago`;
+  const days = Math.floor(hrs / 24);
+  return `${days}d ago`;
+}
 
-  const roleNotifications = allNotifications.filter(n => n.roles.includes(role));
-  const [notifications, setNotifications] = useState(roleNotifications);
+const NotificationPanel = () => {
+  const { user } = useAuth();
+  const [notifications, setNotifications] = useState<Notification[]>([]);
   const [filter, setFilter] = useState<"all" | NotificationType>("all");
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!user) return;
+    const fetchMessages = async () => {
+      setLoading(true);
+      const { data } = await supabase
+        .from("messages")
+        .select("*")
+        .or(`receiver_id.eq.${user.id},sender_id.eq.${user.id}`)
+        .order("created_at", { ascending: false })
+        .limit(30);
+
+      if (data) {
+        const mapped: Notification[] = data
+          .filter(m => m.receiver_id === user.id)
+          .map(m => ({
+            id: m.id,
+            type: "message" as NotificationType,
+            title: "New Message",
+            description: m.content.length > 80 ? m.content.slice(0, 80) + "…" : m.content,
+            time: timeAgo(m.created_at),
+            read: m.read ?? false,
+          }));
+        setNotifications(mapped);
+      }
+      setLoading(false);
+    };
+
+    fetchMessages();
+
+    // Subscribe to real-time messages
+    const channel = supabase
+      .channel("notifications-messages")
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "messages", filter: `receiver_id=eq.${user.id}` }, (payload) => {
+        const m = payload.new as any;
+        setNotifications(prev => [{
+          id: m.id,
+          type: "message",
+          title: "New Message",
+          description: m.content.length > 80 ? m.content.slice(0, 80) + "…" : m.content,
+          time: "just now",
+          read: false,
+        }, ...prev]);
+      })
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
+  }, [user]);
 
   const unreadCount = notifications.filter(n => !n.read).length;
 
-  const markAllRead = () => setNotifications(prev => prev.map(n => ({ ...n, read: true })));
-  const markRead = (id: string) => setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
+  const markAllRead = async () => {
+    if (!user) return;
+    setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+    await supabase
+      .from("messages")
+      .update({ read: true })
+      .eq("receiver_id", user.id)
+      .eq("read", false);
+  };
+
+  const markRead = async (id: string) => {
+    setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
+    await supabase.from("messages").update({ read: true }).eq("id", id);
+  };
+
   const dismiss = (id: string) => setNotifications(prev => prev.filter(n => n.id !== id));
 
   const filtered = filter === "all" ? notifications : notifications.filter(n => n.type === filter);
-
-  // Get unique types for this role
-  const availableTypes = Array.from(new Set(roleNotifications.map(n => n.type)));
+  const availableTypes = Array.from(new Set(notifications.map(n => n.type)));
 
   return (
     <Popover>
@@ -88,39 +133,40 @@ const NotificationPanel = () => {
       </PopoverTrigger>
       <PopoverContent align="end" className="w-[380px] p-0">
         <div className="p-3 border-b border-border flex items-center justify-between">
-          <h3 className="font-semibold text-sm">
-            Notifications
-            <span className="ml-1.5 text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded-full capitalize">{role}</span>
-          </h3>
+          <h3 className="font-semibold text-sm">Notifications</h3>
           {unreadCount > 0 && (
             <button onClick={markAllRead} className="text-xs text-primary hover:underline">Mark all read</button>
           )}
         </div>
 
-        <div className="flex gap-1 px-3 pt-2 pb-1 overflow-x-auto">
-          <button
-            onClick={() => setFilter("all")}
-            className={cn(
-              "text-[11px] px-2.5 py-1 rounded-full whitespace-nowrap capitalize transition-colors",
-              filter === "all" ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:bg-muted/80"
-            )}
-          >All</button>
-          {availableTypes.map(f => (
+        {availableTypes.length > 1 && (
+          <div className="flex gap-1 px-3 pt-2 pb-1 overflow-x-auto">
             <button
-              key={f}
-              onClick={() => setFilter(f)}
+              onClick={() => setFilter("all")}
               className={cn(
                 "text-[11px] px-2.5 py-1 rounded-full whitespace-nowrap capitalize transition-colors",
-                filter === f ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:bg-muted/80"
+                filter === "all" ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:bg-muted/80"
               )}
-            >
-              {f}
-            </button>
-          ))}
-        </div>
+            >All</button>
+            {availableTypes.map(f => (
+              <button
+                key={f}
+                onClick={() => setFilter(f)}
+                className={cn(
+                  "text-[11px] px-2.5 py-1 rounded-full whitespace-nowrap capitalize transition-colors",
+                  filter === f ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:bg-muted/80"
+                )}
+              >
+                {f}
+              </button>
+            ))}
+          </div>
+        )}
 
         <ScrollArea className="h-[340px]">
-          {filtered.length === 0 ? (
+          {loading ? (
+            <div className="p-8 text-center text-muted-foreground text-sm">Loading...</div>
+          ) : filtered.length === 0 ? (
             <div className="p-8 text-center text-muted-foreground text-sm">No notifications</div>
           ) : (
             <div className="p-2 space-y-0.5">
