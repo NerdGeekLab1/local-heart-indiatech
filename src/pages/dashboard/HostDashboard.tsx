@@ -483,16 +483,21 @@ const HostDashboard = () => {
 
         {activeTab === "reviews" && (
           <div className="mt-6 space-y-4">
-            <h2 className="text-xl font-bold text-foreground mb-4">Your Reviews ({hostReviews.length})</h2>
-            {hostReviews.map(r => (
+            <h2 className="text-xl font-bold text-foreground mb-4">Your Reviews ({hostDbReviews.length})</h2>
+            {hostDbReviews.length === 0 ? (
+              <p className="text-muted-foreground text-center py-8">No reviews yet. Reviews from travelers will appear here.</p>
+            ) : hostDbReviews.map(r => (
               <div key={r.id} className="rounded-lg bg-card p-4 shadow-card">
                 <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center text-xs font-bold text-foreground">{r.travelerName[0]}</div>
-                  <div><p className="text-sm font-medium text-foreground">{r.travelerName}</p>
+                  <div className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center text-xs font-bold text-foreground">✦</div>
+                  <div>
+                    <p className="text-sm font-medium text-foreground">Traveler Review</p>
                     <div className="flex gap-0.5">{Array.from({ length: r.rating }).map((_, j) => <Star key={j} className="w-3 h-3 fill-primary text-primary" />)}</div>
                   </div>
+                  {r.has_video && <span className="text-xs bg-accent/10 text-accent px-2 py-0.5 rounded-full ml-auto">📹 Video</span>}
                 </div>
                 <p className="mt-2 text-sm text-muted-foreground">{r.text}</p>
+                <p className="text-xs text-muted-foreground mt-1">{new Date(r.created_at).toLocaleDateString()}</p>
               </div>
             ))}
           </div>
