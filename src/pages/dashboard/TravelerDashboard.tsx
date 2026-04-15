@@ -544,6 +544,25 @@ const TravelerDashboard = () => {
             <h2 className="text-xl font-bold text-foreground mb-4">Account Settings</h2>
             <div className="rounded-lg bg-card p-5 shadow-card space-y-4">
               <h3 className="font-bold text-foreground flex items-center gap-2"><Settings className="w-4 h-4 text-primary" /> Profile</h3>
+              <div className="flex items-center gap-4 mb-2">
+                <ImageUpload
+                  bucket="avatars"
+                  folder={user?.id || "anon"}
+                  currentUrl={dbProfile?.avatar_url}
+                  onUpload={async (url) => {
+                    if (user) {
+                      await supabase.from("profiles").update({ avatar_url: url }).eq("id", user.id);
+                      setDbProfile((p: any) => ({ ...p, avatar_url: url }));
+                    }
+                  }}
+                  className="w-20 h-20"
+                  shape="circle"
+                />
+                <div>
+                  <p className="text-sm font-medium text-foreground">Profile Photo</p>
+                  <p className="text-xs text-muted-foreground">Click to upload (max 5MB)</p>
+                </div>
+              </div>
               <div className="space-y-3">
                 <div><label className="text-sm font-medium text-foreground">Name</label><Input value={profile.name} onChange={e => setProfile(p => ({ ...p, name: e.target.value }))} /></div>
                 <div><label className="text-sm font-medium text-foreground">Email</label><Input type="email" value={profile.email} onChange={e => setProfile(p => ({ ...p, email: e.target.value }))} /></div>
@@ -552,7 +571,18 @@ const TravelerDashboard = () => {
                   <textarea className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm min-h-[80px]"
                     value={profile.bio} onChange={e => setProfile(p => ({ ...p, bio: e.target.value }))} /></div>
               </div>
-              <Button size="sm" className="rounded-full gap-2" onClick={() => toast({ title: "Saved!" })}><Save className="w-4 h-4" /> Save</Button>
+              <Button size="sm" className="rounded-full gap-2" onClick={async () => {
+                if (!user) return;
+                const names = profile.name.split(" ");
+                await supabase.from("profiles").update({
+                  first_name: names[0] || "",
+                  last_name: names.slice(1).join(" ") || "",
+                  email: profile.email,
+                  phone: profile.phone,
+                  bio: profile.bio,
+                }).eq("id", user.id);
+                toast({ title: "Profile saved! ✅" });
+              }}><Save className="w-4 h-4" /> Save</Button>
             </div>
             <div className="rounded-lg bg-card p-5 shadow-card space-y-4">
               <h3 className="font-bold text-foreground flex items-center gap-2"><Globe className="w-4 h-4 text-primary" /> Social</h3>
