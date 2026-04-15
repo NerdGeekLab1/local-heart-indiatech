@@ -15,6 +15,7 @@ import EditDialog, { FieldConfig } from "@/components/EditDialog";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import ImageUpload from "@/components/ImageUpload";
 
 const host = hosts[0];
 const hostReviews = reviews.filter(r => r.hostId === host.id);
@@ -98,6 +99,9 @@ const HostDashboard = () => {
   const [expRequests, setExpRequests] = useState<any[]>([]);
   const [hostInvoices, setHostInvoices] = useState<any[]>([]);
   const [submittingExp, setSubmittingExp] = useState(false);
+  const [hostDbReviews, setHostDbReviews] = useState<any[]>([]);
+  const [hostMessages, setHostMessages] = useState<any[]>([]);
+  const [hostDbProfile, setHostDbProfile] = useState<any>(null);
 
   useEffect(() => {
     if (!user) return;
@@ -105,10 +109,19 @@ const HostDashboard = () => {
       supabase.from("experience_requests").select("*").eq("host_id", user.id).order("created_at", { ascending: false }),
       supabase.from("invoices").select("*").eq("host_id", user.id).order("created_at", { ascending: false }),
       supabase.from("bookings").select("*").eq("host_id", user.id).order("created_at", { ascending: false }),
-    ]).then(([{ data: reqs }, { data: invs }, { data: bks }]) => {
+      supabase.from("reviews").select("*").eq("host_id", user.id).order("created_at", { ascending: false }),
+      supabase.from("messages").select("*").or(`receiver_id.eq.${user.id},sender_id.eq.${user.id}`).order("created_at", { ascending: false }).limit(50),
+      supabase.from("profiles").select("*").eq("id", user.id).maybeSingle(),
+    ]).then(([{ data: reqs }, { data: invs }, { data: bks }, { data: revs }, { data: msgs }, { data: prof }]) => {
       setExpRequests(reqs || []);
       setHostInvoices(invs || []);
       setHostBookings(bks || []);
+      setHostDbReviews(revs || []);
+      setHostMessages(msgs || []);
+      if (prof) {
+        setHostDbProfile(prof);
+        setHostProfile(p => ({ ...p, name: `${prof.first_name} ${prof.last_name || ""}`.trim(), city: prof.nationality || p.city, bio: prof.bio || p.bio }));
+      }
     });
   }, [user]);
 
@@ -470,16 +483,21 @@ const HostDashboard = () => {
 
         {activeTab === "reviews" && (
           <div className="mt-6 space-y-4">
-            <h2 className="text-xl font-bold text-foreground mb-4">Your Reviews ({hostReviews.length})</h2>
-            {hostReviews.map(r => (
+            <h2 className="text-xl font-bold text-foreground mb-4">Your Reviews ({hostDbReviews.length})</h2>
+            {hostDbReviews.length === 0 ? (
+              <p className="text-muted-foreground text-center py-8">No reviews yet. Reviews from travelers will appear here.</p>
+            ) : hostDbReviews.map(r => (
               <div key={r.id} className="rounded-lg bg-card p-4 shadow-card">
                 <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center text-xs font-bold text-foreground">{r.travelerName[0]}</div>
-                  <div><p className="text-sm font-medium text-foreground">{r.travelerName}</p>
+                  <div className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center text-xs font-bold text-foreground">✦</div>
+                  <div>
+                    <p className="text-sm font-medium text-foreground">Traveler Review</p>
                     <div className="flex gap-0.5">{Array.from({ length: r.rating }).map((_, j) => <Star key={j} className="w-3 h-3 fill-primary text-primary" />)}</div>
                   </div>
+                  {r.has_video && <span className="text-xs bg-accent/10 text-accent px-2 py-0.5 rounded-full ml-auto">📹 Video</span>}
                 </div>
                 <p className="mt-2 text-sm text-muted-foreground">{r.text}</p>
+                <p className="text-xs text-muted-foreground mt-1">{new Date(r.created_at).toLocaleDateString()}</p>
               </div>
             ))}
           </div>
@@ -529,14 +547,28 @@ const HostDashboard = () => {
 
         {activeTab === "messages" && (
           <div className="mt-6">
-            <h2 className="text-xl font-bold text-foreground mb-4">Messages</h2>
-            {["Sarah M. (USA)", "Thomas K. (Germany)", "Yuki T. (Japan)"].map((name, i) => (
-              <div key={name} className="rounded-lg bg-card p-4 shadow-card flex items-center gap-4 mb-3">
-                <div className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center text-sm font-bold text-foreground">{name[0]}</div>
-                <div className="flex-1"><p className="font-semibold text-foreground text-sm">{name}</p><p className="text-xs text-muted-foreground">Inquiry about {["tour", "stay", "wedding"][i]}</p></div>
-                <span className="text-xs text-muted-foreground">{["1h", "3h", "1d"][i]} ago</span>
+            <h2 className="text-xl font-bold text-foreground mb-4">Messages ({hostMessages.length})</h2>
+            {hostMessages.length === 0 ? (
+              <div className="text-center py-12">
+                <MessageCircle className="w-12 h-12 text-muted-foreground/30 mx-auto mb-3" />
+                <p className="text-muted-foreground">No messages yet. Traveler inquiries will appear here.</p>
               </div>
-            ))}
+            ) : (
+              <div className="space-y-3">
+                {hostMessages.map(m => (
+                  <div key={m.id} className={`rounded-lg bg-card p-4 shadow-card flex items-center gap-4 ${!m.read && m.receiver_id === user?.id ? "border-l-4 border-primary" : ""}`}>
+                    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-sm font-bold text-primary">
+                      {m.sender_id === user?.id ? "You" : "📨"}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-foreground text-sm">{m.sender_id === user?.id ? "You" : "Traveler"}</p>
+                      <p className="text-xs text-muted-foreground truncate">{m.content}</p>
+                    </div>
+                    <span className="text-xs text-muted-foreground shrink-0">{new Date(m.created_at).toLocaleDateString()}</span>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
 
@@ -545,6 +577,25 @@ const HostDashboard = () => {
             <h2 className="text-xl font-bold text-foreground mb-4">Host Settings</h2>
             <div className="rounded-lg bg-card p-5 shadow-card space-y-4">
               <h3 className="font-bold text-foreground flex items-center gap-2"><Settings className="w-4 h-4 text-primary" /> Profile</h3>
+              <div className="flex items-center gap-4 mb-2">
+                <ImageUpload
+                  bucket="avatars"
+                  folder={user?.id || "anon"}
+                  currentUrl={hostDbProfile?.avatar_url}
+                  onUpload={async (url) => {
+                    if (user) {
+                      await supabase.from("profiles").update({ avatar_url: url }).eq("id", user.id);
+                      setHostDbProfile((p: any) => ({ ...p, avatar_url: url }));
+                    }
+                  }}
+                  className="w-20 h-20"
+                  shape="circle"
+                />
+                <div>
+                  <p className="text-sm font-medium text-foreground">Profile Photo</p>
+                  <p className="text-xs text-muted-foreground">Click to upload (max 5MB)</p>
+                </div>
+              </div>
               <div className="space-y-3">
                 <div><label className="text-sm font-medium text-foreground">Name</label><Input value={hostProfile.name} onChange={e => setHostProfile(p => ({ ...p, name: e.target.value }))} /></div>
                 <div><label className="text-sm font-medium text-foreground">City</label><Input value={hostProfile.city} onChange={e => setHostProfile(p => ({ ...p, city: e.target.value }))} /></div>
@@ -553,7 +604,16 @@ const HostDashboard = () => {
                     value={hostProfile.bio} onChange={e => setHostProfile(p => ({ ...p, bio: e.target.value }))} /></div>
                 <div><label className="text-sm font-medium text-foreground">Price/Day ($)</label><Input type="number" value={hostProfile.pricePerDay} onChange={e => setHostProfile(p => ({ ...p, pricePerDay: Number(e.target.value) }))} /></div>
               </div>
-              <Button size="sm" className="rounded-full gap-2" onClick={() => toast({ title: "Saved!" })}><Save className="w-4 h-4" /> Save</Button>
+              <Button size="sm" className="rounded-full gap-2" onClick={async () => {
+                if (!user) return;
+                const names = hostProfile.name.split(" ");
+                await supabase.from("profiles").update({
+                  first_name: names[0] || "",
+                  last_name: names.slice(1).join(" ") || "",
+                  bio: hostProfile.bio,
+                }).eq("id", user.id);
+                toast({ title: "Profile saved! ✅" });
+              }}><Save className="w-4 h-4" /> Save</Button>
             </div>
             <div className="rounded-lg bg-card p-5 shadow-card space-y-4">
               <h3 className="font-bold text-foreground flex items-center gap-2"><Globe className="w-4 h-4 text-primary" /> Social</h3>

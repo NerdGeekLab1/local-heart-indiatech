@@ -17,6 +17,7 @@ import VideoRecorder from "@/components/VideoRecorder";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import AIRecommendWidget from "@/components/AIRecommendWidget";
+import ImageUpload from "@/components/ImageUpload";
 
 const statusColors: Record<string, string> = {
   pending: "bg-primary/10 text-primary", confirmed: "bg-accent/10 text-accent",
@@ -38,6 +39,8 @@ const TravelerDashboard = () => {
   const [bookings, setBookings] = useState<any[]>([]);
   const recommendedExp = experiences.slice(0, 4);
   const [dbReviews, setDbReviews] = useState<any[]>([]);
+  const [dbMessages, setDbMessages] = useState<any[]>([]);
+  const [dbProfile, setDbProfile] = useState<any>(null);
 
   const [profile, setProfile] = useLocalStorage("traveler_profile", {
     name: "Alex Traveler", email: "alex@example.com", phone: "+1 555-0123", bio: "Love exploring!",
@@ -67,13 +70,20 @@ const TravelerDashboard = () => {
       supabase.from("invoices").select("*").eq("traveler_id", user.id).order("created_at", { ascending: false }),
       supabase.from("travel_streaks").select("*").eq("user_id", user.id).order("month", { ascending: true }),
       supabase.from("reviews").select("*").eq("traveler_id", user.id),
-    ]).then(([{ data: bk }, { data: trips }, { data: grievances }, { data: invoices }, { data: streaks }, { data: revs }]) => {
+      supabase.from("messages").select("*").or(`receiver_id.eq.${user.id},sender_id.eq.${user.id}`).order("created_at", { ascending: false }).limit(50),
+      supabase.from("profiles").select("*").eq("id", user.id).maybeSingle(),
+    ]).then(([{ data: bk }, { data: trips }, { data: grievances }, { data: invoices }, { data: streaks }, { data: revs }, { data: msgs }, { data: prof }]) => {
       setBookings(bk || []);
       setMyTrips(trips || []);
       setMyGrievances(grievances || []);
       setMyInvoices(invoices || []);
       setMyStreaks(streaks || []);
       setDbReviews(revs || []);
+      setDbMessages(msgs || []);
+      if (prof) {
+        setDbProfile(prof);
+        setProfile(p => ({ ...p, name: `${prof.first_name} ${prof.last_name || ""}`.trim(), email: prof.email || p.email, phone: prof.phone || p.phone, bio: prof.bio || p.bio }));
+      }
     });
   }, [user]);
 
@@ -482,14 +492,30 @@ const TravelerDashboard = () => {
         {/* Messages */}
         {activeTab === "messages" && (
           <div className="mt-6">
-            <h2 className="text-xl font-bold text-foreground mb-4">Messages</h2>
-            {hosts.slice(0, 3).map(h => (
-              <div key={h.id} className="rounded-lg bg-card p-4 shadow-card flex items-center gap-4 mb-3">
-                <img src={h.image} alt={h.name} className="w-12 h-12 rounded-full object-cover" />
-                <div className="flex-1"><p className="font-semibold text-foreground">{h.name}</p><p className="text-sm text-muted-foreground">Looking forward to your visit! 🙏</p></div>
-                <span className="text-xs text-muted-foreground">2h ago</span>
+            <h2 className="text-xl font-bold text-foreground mb-4">Messages ({dbMessages.length})</h2>
+            {dbMessages.length === 0 ? (
+              <div className="text-center py-12">
+                <MessageCircle className="w-12 h-12 text-muted-foreground/30 mx-auto mb-3" />
+                <p className="text-muted-foreground">No messages yet. Messages from hosts will appear here.</p>
               </div>
-            ))}
+            ) : (
+              <div className="space-y-3">
+                {dbMessages.map(m => (
+                  <div key={m.id} className={`rounded-lg bg-card p-4 shadow-card flex items-center gap-4 ${!m.read && m.receiver_id === user?.id ? "border-l-4 border-primary" : ""}`}>
+                    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-sm font-bold text-primary">
+                      {m.sender_id === user?.id ? "You" : "📨"}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-foreground text-sm">
+                        {m.sender_id === user?.id ? "You" : "Host"}
+                      </p>
+                      <p className="text-sm text-muted-foreground truncate">{m.content}</p>
+                    </div>
+                    <span className="text-xs text-muted-foreground shrink-0">{new Date(m.created_at).toLocaleDateString()}</span>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
 
@@ -518,6 +544,25 @@ const TravelerDashboard = () => {
             <h2 className="text-xl font-bold text-foreground mb-4">Account Settings</h2>
             <div className="rounded-lg bg-card p-5 shadow-card space-y-4">
               <h3 className="font-bold text-foreground flex items-center gap-2"><Settings className="w-4 h-4 text-primary" /> Profile</h3>
+              <div className="flex items-center gap-4 mb-2">
+                <ImageUpload
+                  bucket="avatars"
+                  folder={user?.id || "anon"}
+                  currentUrl={dbProfile?.avatar_url}
+                  onUpload={async (url) => {
+                    if (user) {
+                      await supabase.from("profiles").update({ avatar_url: url }).eq("id", user.id);
+                      setDbProfile((p: any) => ({ ...p, avatar_url: url }));
+                    }
+                  }}
+                  className="w-20 h-20"
+                  shape="circle"
+                />
+                <div>
+                  <p className="text-sm font-medium text-foreground">Profile Photo</p>
+                  <p className="text-xs text-muted-foreground">Click to upload (max 5MB)</p>
+                </div>
+              </div>
               <div className="space-y-3">
                 <div><label className="text-sm font-medium text-foreground">Name</label><Input value={profile.name} onChange={e => setProfile(p => ({ ...p, name: e.target.value }))} /></div>
                 <div><label className="text-sm font-medium text-foreground">Email</label><Input type="email" value={profile.email} onChange={e => setProfile(p => ({ ...p, email: e.target.value }))} /></div>
@@ -526,7 +571,18 @@ const TravelerDashboard = () => {
                   <textarea className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm min-h-[80px]"
                     value={profile.bio} onChange={e => setProfile(p => ({ ...p, bio: e.target.value }))} /></div>
               </div>
-              <Button size="sm" className="rounded-full gap-2" onClick={() => toast({ title: "Saved!" })}><Save className="w-4 h-4" /> Save</Button>
+              <Button size="sm" className="rounded-full gap-2" onClick={async () => {
+                if (!user) return;
+                const names = profile.name.split(" ");
+                await supabase.from("profiles").update({
+                  first_name: names[0] || "",
+                  last_name: names.slice(1).join(" ") || "",
+                  email: profile.email,
+                  phone: profile.phone,
+                  bio: profile.bio,
+                }).eq("id", user.id);
+                toast({ title: "Profile saved! ✅" });
+              }}><Save className="w-4 h-4" /> Save</Button>
             </div>
             <div className="rounded-lg bg-card p-5 shadow-card space-y-4">
               <h3 className="font-bold text-foreground flex items-center gap-2"><Globe className="w-4 h-4 text-primary" /> Social</h3>
