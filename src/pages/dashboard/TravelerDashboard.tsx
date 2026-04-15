@@ -39,6 +39,8 @@ const TravelerDashboard = () => {
   const [bookings, setBookings] = useState<any[]>([]);
   const recommendedExp = experiences.slice(0, 4);
   const [dbReviews, setDbReviews] = useState<any[]>([]);
+  const [dbMessages, setDbMessages] = useState<any[]>([]);
+  const [dbProfile, setDbProfile] = useState<any>(null);
 
   const [profile, setProfile] = useLocalStorage("traveler_profile", {
     name: "Alex Traveler", email: "alex@example.com", phone: "+1 555-0123", bio: "Love exploring!",
@@ -68,13 +70,20 @@ const TravelerDashboard = () => {
       supabase.from("invoices").select("*").eq("traveler_id", user.id).order("created_at", { ascending: false }),
       supabase.from("travel_streaks").select("*").eq("user_id", user.id).order("month", { ascending: true }),
       supabase.from("reviews").select("*").eq("traveler_id", user.id),
-    ]).then(([{ data: bk }, { data: trips }, { data: grievances }, { data: invoices }, { data: streaks }, { data: revs }]) => {
+      supabase.from("messages").select("*").or(`receiver_id.eq.${user.id},sender_id.eq.${user.id}`).order("created_at", { ascending: false }).limit(50),
+      supabase.from("profiles").select("*").eq("id", user.id).maybeSingle(),
+    ]).then(([{ data: bk }, { data: trips }, { data: grievances }, { data: invoices }, { data: streaks }, { data: revs }, { data: msgs }, { data: prof }]) => {
       setBookings(bk || []);
       setMyTrips(trips || []);
       setMyGrievances(grievances || []);
       setMyInvoices(invoices || []);
       setMyStreaks(streaks || []);
       setDbReviews(revs || []);
+      setDbMessages(msgs || []);
+      if (prof) {
+        setDbProfile(prof);
+        setProfile(p => ({ ...p, name: `${prof.first_name} ${prof.last_name || ""}`.trim(), email: prof.email || p.email, phone: prof.phone || p.phone, bio: prof.bio || p.bio }));
+      }
     });
   }, [user]);
 
