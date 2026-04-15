@@ -577,6 +577,25 @@ const HostDashboard = () => {
             <h2 className="text-xl font-bold text-foreground mb-4">Host Settings</h2>
             <div className="rounded-lg bg-card p-5 shadow-card space-y-4">
               <h3 className="font-bold text-foreground flex items-center gap-2"><Settings className="w-4 h-4 text-primary" /> Profile</h3>
+              <div className="flex items-center gap-4 mb-2">
+                <ImageUpload
+                  bucket="avatars"
+                  folder={user?.id || "anon"}
+                  currentUrl={hostDbProfile?.avatar_url}
+                  onUpload={async (url) => {
+                    if (user) {
+                      await supabase.from("profiles").update({ avatar_url: url }).eq("id", user.id);
+                      setHostDbProfile((p: any) => ({ ...p, avatar_url: url }));
+                    }
+                  }}
+                  className="w-20 h-20"
+                  shape="circle"
+                />
+                <div>
+                  <p className="text-sm font-medium text-foreground">Profile Photo</p>
+                  <p className="text-xs text-muted-foreground">Click to upload (max 5MB)</p>
+                </div>
+              </div>
               <div className="space-y-3">
                 <div><label className="text-sm font-medium text-foreground">Name</label><Input value={hostProfile.name} onChange={e => setHostProfile(p => ({ ...p, name: e.target.value }))} /></div>
                 <div><label className="text-sm font-medium text-foreground">City</label><Input value={hostProfile.city} onChange={e => setHostProfile(p => ({ ...p, city: e.target.value }))} /></div>
@@ -585,7 +604,16 @@ const HostDashboard = () => {
                     value={hostProfile.bio} onChange={e => setHostProfile(p => ({ ...p, bio: e.target.value }))} /></div>
                 <div><label className="text-sm font-medium text-foreground">Price/Day ($)</label><Input type="number" value={hostProfile.pricePerDay} onChange={e => setHostProfile(p => ({ ...p, pricePerDay: Number(e.target.value) }))} /></div>
               </div>
-              <Button size="sm" className="rounded-full gap-2" onClick={() => toast({ title: "Saved!" })}><Save className="w-4 h-4" /> Save</Button>
+              <Button size="sm" className="rounded-full gap-2" onClick={async () => {
+                if (!user) return;
+                const names = hostProfile.name.split(" ");
+                await supabase.from("profiles").update({
+                  first_name: names[0] || "",
+                  last_name: names.slice(1).join(" ") || "",
+                  bio: hostProfile.bio,
+                }).eq("id", user.id);
+                toast({ title: "Profile saved! ✅" });
+              }}><Save className="w-4 h-4" /> Save</Button>
             </div>
             <div className="rounded-lg bg-card p-5 shadow-card space-y-4">
               <h3 className="font-bold text-foreground flex items-center gap-2"><Globe className="w-4 h-4 text-primary" /> Social</h3>
