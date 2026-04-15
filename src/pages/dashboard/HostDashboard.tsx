@@ -15,6 +15,7 @@ import EditDialog, { FieldConfig } from "@/components/EditDialog";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import ImageUpload from "@/components/ImageUpload";
 
 const host = hosts[0];
 const hostReviews = reviews.filter(r => r.hostId === host.id);
@@ -98,6 +99,9 @@ const HostDashboard = () => {
   const [expRequests, setExpRequests] = useState<any[]>([]);
   const [hostInvoices, setHostInvoices] = useState<any[]>([]);
   const [submittingExp, setSubmittingExp] = useState(false);
+  const [hostDbReviews, setHostDbReviews] = useState<any[]>([]);
+  const [hostMessages, setHostMessages] = useState<any[]>([]);
+  const [hostDbProfile, setHostDbProfile] = useState<any>(null);
 
   useEffect(() => {
     if (!user) return;
@@ -105,10 +109,19 @@ const HostDashboard = () => {
       supabase.from("experience_requests").select("*").eq("host_id", user.id).order("created_at", { ascending: false }),
       supabase.from("invoices").select("*").eq("host_id", user.id).order("created_at", { ascending: false }),
       supabase.from("bookings").select("*").eq("host_id", user.id).order("created_at", { ascending: false }),
-    ]).then(([{ data: reqs }, { data: invs }, { data: bks }]) => {
+      supabase.from("reviews").select("*").eq("host_id", user.id).order("created_at", { ascending: false }),
+      supabase.from("messages").select("*").or(`receiver_id.eq.${user.id},sender_id.eq.${user.id}`).order("created_at", { ascending: false }).limit(50),
+      supabase.from("profiles").select("*").eq("id", user.id).maybeSingle(),
+    ]).then(([{ data: reqs }, { data: invs }, { data: bks }, { data: revs }, { data: msgs }, { data: prof }]) => {
       setExpRequests(reqs || []);
       setHostInvoices(invs || []);
       setHostBookings(bks || []);
+      setHostDbReviews(revs || []);
+      setHostMessages(msgs || []);
+      if (prof) {
+        setHostDbProfile(prof);
+        setHostProfile(p => ({ ...p, name: `${prof.first_name} ${prof.last_name || ""}`.trim(), city: prof.nationality || p.city, bio: prof.bio || p.bio }));
+      }
     });
   }, [user]);
 
