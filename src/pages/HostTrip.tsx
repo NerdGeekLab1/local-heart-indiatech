@@ -55,7 +55,7 @@ const HostTrip = () => {
     tripDirection: "round_trip",
     highlights: [""],
     inclusions: [""],
-    startDate: "", endDate: "",
+    startDate: "", endDate: "", imageUrl: "",
   });
 
   const [submitting, setSubmitting] = useState(false);
@@ -115,6 +115,7 @@ const HostTrip = () => {
       inclusions: form.inclusions.filter(Boolean),
       start_date: form.startDate || null,
       end_date: form.endDate || null,
+      image_url: form.imageUrl || null,
     } as any);
 
     setSubmitting(false);
