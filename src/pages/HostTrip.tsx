@@ -14,6 +14,7 @@ import Footer from "@/components/Footer";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import ImageUpload from "@/components/ImageUpload";
 
 const tripTypes = [
   { id: "bike_tour", label: "Bike Tour", icon: Bike, emoji: "🏍️" },
@@ -54,7 +55,7 @@ const HostTrip = () => {
     tripDirection: "round_trip",
     highlights: [""],
     inclusions: [""],
-    startDate: "", endDate: "",
+    startDate: "", endDate: "", imageUrl: "",
   });
 
   const [submitting, setSubmitting] = useState(false);
@@ -114,6 +115,7 @@ const HostTrip = () => {
       inclusions: form.inclusions.filter(Boolean),
       start_date: form.startDate || null,
       end_date: form.endDate || null,
+      image_url: form.imageUrl || null,
     } as any);
 
     setSubmitting(false);
@@ -154,6 +156,16 @@ const HostTrip = () => {
                 <div>
                   <label className="text-sm font-medium text-foreground mb-2 block">Trip Title *</label>
                   <Input value={form.title} onChange={e => updateForm("title", e.target.value)} placeholder="e.g., Ladakh Bike Expedition 2026" />
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-foreground mb-2 block">Cover Image</label>
+                  <ImageUpload
+                    bucket="trip-images"
+                    folder={user.id}
+                    currentUrl={form.imageUrl || null}
+                    onUpload={(url) => updateForm("imageUrl", url)}
+                    className="w-full h-40"
+                  />
                 </div>
                 <div>
                   <label className="text-sm font-medium text-foreground mb-2 block">Description</label>

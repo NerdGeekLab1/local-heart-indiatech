@@ -94,7 +94,7 @@ const HostDashboard = () => {
   const [expForm, setExpForm] = useState({
     title: "", description: "", category: "Cultural", location: "", price: 0, duration: "",
     difficulty: "Moderate", maxGuests: 10, isYearRound: true, validFrom: "", validTo: "", lastBookingDate: "",
-    vehicleType: "", highlights: "", includes: "", destination: "", subCategory: "",
+    vehicleType: "", highlights: "", includes: "", destination: "", subCategory: "", imageUrl: "",
   });
   const [expRequests, setExpRequests] = useState<any[]>([]);
   const [hostInvoices, setHostInvoices] = useState<any[]>([]);
@@ -139,11 +139,12 @@ const HostDashboard = () => {
       sub_category: expForm.subCategory || null,
       highlights: expForm.highlights ? expForm.highlights.split(",").map(s => s.trim()) : [],
       includes: expForm.includes ? expForm.includes.split(",").map(s => s.trim()) : [],
+      image_url: expForm.imageUrl || null,
     });
     setSubmittingExp(false);
     if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
     toast({ title: "Experience request submitted! 🎉", description: "Admin will review and approve." });
-    setExpForm({ title: "", description: "", category: "Cultural", location: "", price: 0, duration: "", difficulty: "Moderate", maxGuests: 10, isYearRound: true, validFrom: "", validTo: "", lastBookingDate: "", vehicleType: "", highlights: "", includes: "", destination: "", subCategory: "" });
+    setExpForm({ title: "", description: "", category: "Cultural", location: "", price: 0, duration: "", difficulty: "Moderate", maxGuests: 10, isYearRound: true, validFrom: "", validTo: "", lastBookingDate: "", vehicleType: "", highlights: "", includes: "", destination: "", subCategory: "", imageUrl: "" });
     const { data } = await supabase.from("experience_requests").select("*").eq("host_id", user.id).order("created_at", { ascending: false });
     setExpRequests(data || []);
   };
@@ -328,6 +329,17 @@ const HostDashboard = () => {
                 <Plus className="w-5 h-5 text-primary" /> Request New Experience
               </h2>
               <p className="text-sm text-muted-foreground mb-4">Submit a new experience for admin approval. Include all details for faster processing.</p>
+
+              <div className="mb-4">
+                <label className="text-sm font-medium text-foreground mb-2 block">Cover Image</label>
+                <ImageUpload
+                  bucket="experience-images"
+                  folder={user?.id || "anon"}
+                  currentUrl={expForm.imageUrl || null}
+                  onUpload={(url) => setExpForm(p => ({ ...p, imageUrl: url }))}
+                  className="w-full h-40"
+                />
+              </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div><label className="text-sm font-medium text-foreground">Title *</label><Input className="mt-1" value={expForm.title} onChange={e => setExpForm(p => ({ ...p, title: e.target.value }))} placeholder="e.g. Ladakh Bike Expedition" /></div>
