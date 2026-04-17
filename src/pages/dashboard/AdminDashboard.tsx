@@ -6,7 +6,7 @@ import {
   Users, DollarSign, TrendingUp, Shield, AlertTriangle, Star, MapPin, Calendar, Settings, FileText,
   BarChart3, Globe, Flag, Eye, Plus, Trash2, UtensilsCrossed, Video, ChevronDown, Ban, CheckCircle,
   Edit, Compass, MessageSquare, Target, Lock, Receipt, Trophy, Crosshair, Search, Bell, Mail,
-  Crown, Gem, Sparkles, UserX, UserCheck, Filter
+  Crown, Gem, Sparkles, UserX, UserCheck, Filter, Key
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,8 +19,9 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCurrency } from "@/contexts/CurrencyContext";
+import ConfigurationTab from "@/components/admin/ConfigurationTab";
 
-type Tab = "overview" | "hosts" | "bookings" | "experiences" | "destinations" | "trips" | "grievances" | "users" | "wanderers" | "missions" | "leaderboard" | "invoices" | "moderation" | "analytics" | "settings";
+type Tab = "overview" | "hosts" | "bookings" | "experiences" | "destinations" | "trips" | "grievances" | "users" | "wanderers" | "missions" | "leaderboard" | "invoices" | "moderation" | "analytics" | "settings" | "configuration";
 
 const destinationFields: FieldConfig[] = [
   { key: "name", label: "City Name", required: true },
@@ -345,6 +346,7 @@ const AdminDashboard = () => {
     { id: "destinations", label: "Destinations", icon: MapPin },
     { id: "moderation", label: "Moderation", icon: Shield },
     { id: "analytics", label: "Analytics", icon: TrendingUp },
+    { id: "configuration", label: "Configuration", icon: Key },
     { id: "settings", label: "Settings", icon: Settings },
   ];
 
@@ -1389,6 +1391,9 @@ const AdminDashboard = () => {
             </div>
           </div>
         )}
+
+        {/* Configuration */}
+        {activeTab === "configuration" && <ConfigurationTab />}
 
         {/* Settings */}
         {activeTab === "settings" && (
