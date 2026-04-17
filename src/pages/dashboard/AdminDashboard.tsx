@@ -1392,6 +1392,9 @@ const AdminDashboard = () => {
           </div>
         )}
 
+        {/* Configuration */}
+        {activeTab === "configuration" && <ConfigurationTab />}
+
         {/* Settings */}
         {activeTab === "settings" && (
           <div className="mt-6 space-y-6 max-w-xl">
