@@ -346,6 +346,7 @@ const AdminDashboard = () => {
     { id: "destinations", label: "Destinations", icon: MapPin },
     { id: "moderation", label: "Moderation", icon: Shield },
     { id: "analytics", label: "Analytics", icon: TrendingUp },
+    { id: "configuration", label: "Configuration", icon: Key },
     { id: "settings", label: "Settings", icon: Settings },
   ];
 
