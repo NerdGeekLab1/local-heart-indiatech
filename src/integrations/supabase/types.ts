@@ -411,6 +411,93 @@ export type Database = {
           },
         ]
       }
+      host_eligibility: {
+        Row: {
+          admin_notes: string | null
+          city: string
+          country_focus: string[] | null
+          created_at: string
+          cultural_training: boolean
+          eligibility_score: number
+          email: string
+          emergency_contact: string | null
+          english_proficiency: string
+          foreign_guests_hosted: number
+          full_name: string
+          has_kyc: boolean
+          has_passport: boolean
+          hosting_specialties: string[] | null
+          id: string
+          languages: string[] | null
+          phone: string | null
+          references_count: number
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          updated_at: string
+          user_id: string
+          waitlist_position: number | null
+          why_host: string | null
+          years_hosting: number
+        }
+        Insert: {
+          admin_notes?: string | null
+          city: string
+          country_focus?: string[] | null
+          created_at?: string
+          cultural_training?: boolean
+          eligibility_score?: number
+          email: string
+          emergency_contact?: string | null
+          english_proficiency?: string
+          foreign_guests_hosted?: number
+          full_name: string
+          has_kyc?: boolean
+          has_passport?: boolean
+          hosting_specialties?: string[] | null
+          id?: string
+          languages?: string[] | null
+          phone?: string | null
+          references_count?: number
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+          waitlist_position?: number | null
+          why_host?: string | null
+          years_hosting?: number
+        }
+        Update: {
+          admin_notes?: string | null
+          city?: string
+          country_focus?: string[] | null
+          created_at?: string
+          cultural_training?: boolean
+          eligibility_score?: number
+          email?: string
+          emergency_contact?: string | null
+          english_proficiency?: string
+          foreign_guests_hosted?: number
+          full_name?: string
+          has_kyc?: boolean
+          has_passport?: boolean
+          hosting_specialties?: string[] | null
+          id?: string
+          languages?: string[] | null
+          phone?: string | null
+          references_count?: number
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+          waitlist_position?: number | null
+          why_host?: string | null
+          years_hosting?: number
+        }
+        Relationships: []
+      }
       invoices: {
         Row: {
           amount: number
