@@ -164,6 +164,12 @@ const HostEligibility = () => {
   const [quizResult, setQuizResult] = useState<{ score: number; passed: boolean } | null>(null);
   const quizControls = useAnimation();
   const resultRef = useRef<HTMLDivElement>(null);
+  const quizRef = useRef<HTMLDivElement>(null);
+
+  const openQuiz = () => {
+    setShowQuiz(true);
+    setTimeout(() => quizRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 100);
+  };
 
   const [form, setForm] = useState({
     full_name: "", email: "", phone: "", city: "",
