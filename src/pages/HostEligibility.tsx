@@ -481,7 +481,8 @@ const HostEligibility = () => {
 
         {/* Gamified post-waitlist quiz */}
         {showQuiz && (
-          <motion.div ref={quizRef} animate={quizControls} initial={{ opacity: 0, y: 20 }} className="mt-10">
+          <motion.div ref={quizRef} animate={quizControls} className="mt-10">
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
             <Card className="border-accent/30">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2"><Sparkles className="w-5 h-5 text-accent" /> Credibility Quiz</CardTitle>
