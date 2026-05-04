@@ -91,6 +91,7 @@ const App = () => (
             <Route path="/membership" element={<Membership />} />
             <Route path="/auth/callback" element={<AuthCallback />} />
             <Route path="/referrals" element={<Referrals />} />
+            <Route path="/host-eligibility" element={<HostEligibility />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
           <MobileBottomNav />
