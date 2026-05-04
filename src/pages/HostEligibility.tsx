@@ -164,6 +164,12 @@ const HostEligibility = () => {
   const [quizResult, setQuizResult] = useState<{ score: number; passed: boolean } | null>(null);
   const quizControls = useAnimation();
   const resultRef = useRef<HTMLDivElement>(null);
+  const quizRef = useRef<HTMLDivElement>(null);
+
+  const openQuiz = () => {
+    setShowQuiz(true);
+    setTimeout(() => quizRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 100);
+  };
 
   const [form, setForm] = useState({
     full_name: "", email: "", phone: "", city: "",
@@ -229,7 +235,7 @@ const HostEligibility = () => {
     if (error) { toast({ title: "Submission failed", description: error.message, variant: "destructive" }); return; }
     setExisting({ id: data!.id, status, eligibility_score, waitlist_position, social_score, badge });
     toast({ title: status === "under_review" ? "🎉 You qualify for fast-track review!" : `You're #${waitlist_position} on the waitlist`, description: "Now take the credibility quiz to boost your score." });
-    setTimeout(() => setShowQuiz(true), 600);
+    setTimeout(() => openQuiz(), 600);
   };
 
   const submitQuiz = async () => {
@@ -301,7 +307,7 @@ const HostEligibility = () => {
                 )}
                 {existing.status === "approved" && <p className="mt-4 text-sm text-accent font-medium">✓ Approved — your "Globally Verified" badge is live.</p>}
                 {!existing.questionnaire_score && (
-                  <Button onClick={() => setShowQuiz(true)} className="mt-4 rounded-full gap-2" size="sm">
+                  <Button onClick={openQuiz} className="mt-4 rounded-full gap-2" size="sm">
                     <Sparkles className="w-4 h-4" /> Take the Credibility Quiz
                   </Button>
                 )}
@@ -340,14 +346,6 @@ const HostEligibility = () => {
               <CardDescription>Be honest — our team verifies every claim. Score 70+ for fast-track review.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-              <div className="rounded-lg border border-primary/20 bg-primary/5 p-4">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-medium text-foreground">Live Eligibility Score</span>
-                  <Badge className="bg-primary text-primary-foreground">{tier} · {score}/100</Badge>
-                </div>
-                <Progress value={score} className="h-2" />
-                <p className="text-xs text-muted-foreground mt-2">{score >= 70 ? "🚀 You'll be fast-tracked for review" : `${70 - score} more points to skip the waitlist`}</p>
-              </div>
 
               <div className="grid sm:grid-cols-2 gap-4">
                 <div>
@@ -473,7 +471,7 @@ const HostEligibility = () => {
               <div className="flex items-center justify-between flex-wrap gap-3 pt-2">
                 <p className="text-xs text-muted-foreground flex items-center gap-1.5"><Lock className="w-3 h-3" /> Verified by our trust team within 48 hours</p>
                 <Button onClick={submit} disabled={submitting || !user} size="lg" className="rounded-full gap-2">
-                  {submitting ? "Submitting..." : score >= 70 ? "Apply for Fast-Track" : "Join Waitlist"} <ArrowRight className="w-4 h-4" />
+                  {submitting ? "Submitting..." : "Submit Application"} <ArrowRight className="w-4 h-4" />
                 </Button>
               </div>
               {!user && <p className="text-xs text-destructive text-right">Sign in to submit your application.</p>}
@@ -483,7 +481,7 @@ const HostEligibility = () => {
 
         {/* Gamified post-waitlist quiz */}
         {showQuiz && (
-          <motion.div animate={quizControls} initial={{ opacity: 0, y: 20 }} className="mt-10">
+          <motion.div ref={quizRef} animate={quizControls} initial={{ opacity: 0, y: 20 }} className="mt-10">
             <Card className="border-accent/30">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2"><Sparkles className="w-5 h-5 text-accent" /> Credibility Quiz</CardTitle>
@@ -541,6 +539,13 @@ const HostEligibility = () => {
                         </Button>
                       </>
                     )}
+                    <div className="mt-6 pt-6 border-t border-border/50 text-left max-w-md mx-auto">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-sm font-medium text-foreground">Final Eligibility Score</span>
+                        <Badge className="bg-primary text-primary-foreground">{badgeFor(existing?.eligibility_score ?? score)} · {existing?.eligibility_score ?? score}/100</Badge>
+                      </div>
+                      <Progress value={existing?.eligibility_score ?? score} className="h-2" />
+                    </div>
                   </motion.div>
                 )}
               </CardContent>
