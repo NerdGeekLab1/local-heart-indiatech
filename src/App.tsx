@@ -40,6 +40,7 @@ import BlogDetail from "./pages/BlogDetail.tsx";
 import Membership from "./pages/Membership.tsx";
 import AuthCallback from "./pages/AuthCallback.tsx";
 import Referrals from "./pages/Referrals.tsx";
+import HostEligibility from "./pages/HostEligibility.tsx";
 import MobileBottomNav from "./components/MobileBottomNav.tsx";
 import AIChatRecommender from "./components/AIChatRecommender.tsx";
 import NotFound from "./pages/NotFound.tsx";
