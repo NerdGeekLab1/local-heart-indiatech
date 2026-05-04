@@ -346,14 +346,6 @@ const HostEligibility = () => {
               <CardDescription>Be honest — our team verifies every claim. Score 70+ for fast-track review.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-              <div className="rounded-lg border border-primary/20 bg-primary/5 p-4">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-medium text-foreground">Live Eligibility Score</span>
-                  <Badge className="bg-primary text-primary-foreground">{tier} · {score}/100</Badge>
-                </div>
-                <Progress value={score} className="h-2" />
-                <p className="text-xs text-muted-foreground mt-2">{score >= 70 ? "🚀 You'll be fast-tracked for review" : `${70 - score} more points to skip the waitlist`}</p>
-              </div>
 
               <div className="grid sm:grid-cols-2 gap-4">
                 <div>
