@@ -235,7 +235,7 @@ const HostEligibility = () => {
     if (error) { toast({ title: "Submission failed", description: error.message, variant: "destructive" }); return; }
     setExisting({ id: data!.id, status, eligibility_score, waitlist_position, social_score, badge });
     toast({ title: status === "under_review" ? "🎉 You qualify for fast-track review!" : `You're #${waitlist_position} on the waitlist`, description: "Now take the credibility quiz to boost your score." });
-    setTimeout(() => setShowQuiz(true), 600);
+    setTimeout(() => openQuiz(), 600);
   };
 
   const submitQuiz = async () => {
