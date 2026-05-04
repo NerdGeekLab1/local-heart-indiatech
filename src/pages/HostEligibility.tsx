@@ -539,6 +539,13 @@ const HostEligibility = () => {
                         </Button>
                       </>
                     )}
+                    <div className="mt-6 pt-6 border-t border-border/50 text-left max-w-md mx-auto">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-sm font-medium text-foreground">Final Eligibility Score</span>
+                        <Badge className="bg-primary text-primary-foreground">{badgeFor(existing?.eligibility_score ?? score)} · {existing?.eligibility_score ?? score}/100</Badge>
+                      </div>
+                      <Progress value={existing?.eligibility_score ?? score} className="h-2" />
+                    </div>
                   </motion.div>
                 )}
               </CardContent>
