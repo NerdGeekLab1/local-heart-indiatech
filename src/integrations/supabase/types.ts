@@ -414,6 +414,7 @@ export type Database = {
       host_eligibility: {
         Row: {
           admin_notes: string | null
+          badge: string
           city: string
           country_focus: string[] | null
           created_at: string
@@ -430,9 +431,13 @@ export type Database = {
           id: string
           languages: string[] | null
           phone: string | null
+          questionnaire_answers: Json
+          questionnaire_score: number
           references_count: number
           reviewed_at: string | null
           reviewed_by: string | null
+          social_links: Json
+          social_score: number
           status: string
           updated_at: string
           user_id: string
@@ -442,6 +447,7 @@ export type Database = {
         }
         Insert: {
           admin_notes?: string | null
+          badge?: string
           city: string
           country_focus?: string[] | null
           created_at?: string
@@ -458,9 +464,13 @@ export type Database = {
           id?: string
           languages?: string[] | null
           phone?: string | null
+          questionnaire_answers?: Json
+          questionnaire_score?: number
           references_count?: number
           reviewed_at?: string | null
           reviewed_by?: string | null
+          social_links?: Json
+          social_score?: number
           status?: string
           updated_at?: string
           user_id: string
@@ -470,6 +480,7 @@ export type Database = {
         }
         Update: {
           admin_notes?: string | null
+          badge?: string
           city?: string
           country_focus?: string[] | null
           created_at?: string
@@ -486,9 +497,13 @@ export type Database = {
           id?: string
           languages?: string[] | null
           phone?: string | null
+          questionnaire_answers?: Json
+          questionnaire_score?: number
           references_count?: number
           reviewed_at?: string | null
           reviewed_by?: string | null
+          social_links?: Json
+          social_score?: number
           status?: string
           updated_at?: string
           user_id?: string

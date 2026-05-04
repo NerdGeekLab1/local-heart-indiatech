@@ -1,7 +1,8 @@
-import { useEffect, useMemo, useState } from "react";
-import { motion } from "framer-motion";
-import { Globe, Shield, Sparkles, Trophy, Users, Clock, Check, Lock, Flame, ArrowRight } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { motion, useAnimation } from "framer-motion";
+import { Globe, Shield, Sparkles, Trophy, Users, Clock, Check, Lock, Flame, ArrowRight, Instagram, Linkedin, Youtube, Facebook, Twitter, Link2, AlertTriangle, PartyPopper } from "lucide-react";
 import { z } from "zod";
+import confetti from "canvas-confetti";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -21,6 +22,75 @@ const LANGS = ["English", "Hindi", "French", "German", "Spanish", "Japanese", "M
 const SPECIALTIES = ["Cultural", "Spiritual", "Adventure", "Culinary", "Wellness", "Wildlife", "Heritage", "Festival"];
 const COUNTRIES = ["USA", "UK", "Germany", "France", "Japan", "Australia", "Canada", "Israel", "Spain", "Italy", "Netherlands", "Brazil"];
 
+const SOCIAL_FIELDS = [
+  { key: "instagram", label: "Instagram", icon: Instagram, placeholder: "https://instagram.com/yourhandle" },
+  { key: "linkedin", label: "LinkedIn", icon: Linkedin, placeholder: "https://linkedin.com/in/yourname" },
+  { key: "youtube", label: "YouTube", icon: Youtube, placeholder: "https://youtube.com/@yourchannel" },
+  { key: "facebook", label: "Facebook", icon: Facebook, placeholder: "https://facebook.com/yourpage" },
+  { key: "twitter", label: "X / Twitter", icon: Twitter, placeholder: "https://x.com/yourhandle" },
+  { key: "website", label: "Website / Blog", icon: Link2, placeholder: "https://yoursite.com" },
+] as const;
+
+// Gamified questionnaire — measures cultural fit, hospitality, judgement
+const QUESTIONS = [
+  {
+    q: "A foreign guest is uncomfortable eating spicy food. You:",
+    options: [
+      { t: "Insist they try authentic flavors", p: 0 },
+      { t: "Offer a milder version and explain ingredients", p: 10 },
+      { t: "Take them to a Western chain instead", p: 3 },
+    ],
+  },
+  {
+    q: "Your guest wants to photograph a local temple ceremony. You:",
+    options: [
+      { t: "Let them — it's a free country", p: 0 },
+      { t: "Politely ask the priest first and explain etiquette", p: 10 },
+      { t: "Refuse outright", p: 2 },
+    ],
+  },
+  {
+    q: "A guest falls sick at 2 AM. Your first action:",
+    options: [
+      { t: "Wait until morning — clinics are closed", p: 0 },
+      { t: "Call my partner-doctor and arrange transport", p: 10 },
+      { t: "Give them home remedies and hope", p: 3 },
+    ],
+  },
+  {
+    q: "Guest requests vegan food in a non-vegan household. You:",
+    options: [
+      { t: "Tell them to eat what's served", p: 0 },
+      { t: "Pre-plan a vegan menu with local produce", p: 10 },
+      { t: "Order delivery every meal", p: 4 },
+    ],
+  },
+  {
+    q: "Your female solo traveler feels unsafe walking alone. You:",
+    options: [
+      { t: "Tell her India is safe, don't worry", p: 0 },
+      { t: "Walk with her or arrange a vetted driver", p: 10 },
+      { t: "Cancel her outing", p: 4 },
+    ],
+  },
+  {
+    q: "Best response to a negative review:",
+    options: [
+      { t: "Argue publicly", p: 0 },
+      { t: "Apologize, learn, offer to make it right", p: 10 },
+      { t: "Ignore it", p: 3 },
+    ],
+  },
+  {
+    q: "A guest offers a generous tip in cash. You:",
+    options: [
+      { t: "Accept silently and pocket it", p: 5 },
+      { t: "Thank them and declare it for transparency", p: 10 },
+      { t: "Refuse and feel insulted", p: 4 },
+    ],
+  },
+];
+
 const schema = z.object({
   full_name: z.string().trim().min(2).max(100),
   email: z.string().trim().email().max(255),
@@ -34,6 +104,8 @@ const schema = z.object({
   why_host: z.string().trim().min(20).max(800),
 });
 
+const urlOk = (s: string) => !s || /^https?:\/\/.+\..+/i.test(s.trim());
+
 type Status = "pending" | "under_review" | "approved" | "waitlisted" | "rejected";
 
 interface Existing {
@@ -41,7 +113,15 @@ interface Existing {
   status: Status;
   eligibility_score: number;
   waitlist_position: number | null;
+  questionnaire_score?: number;
+  social_score?: number;
+  badge?: string;
 }
+
+const calcSocialScore = (links: Record<string, string>) => {
+  const filled = SOCIAL_FIELDS.filter(f => urlOk(links[f.key] || "") && (links[f.key] || "").trim().length > 0).length;
+  return Math.min(15, filled * 3);
+};
 
 const calcScore = (f: any) => {
   let s = 0;
@@ -54,7 +134,21 @@ const calcScore = (f: any) => {
   s += Math.min(10, Number(f.references_count || 0) * 2);
   const prof: Record<string, number> = { basic: 0, conversational: 5, fluent: 10, native: 15 };
   s += prof[f.english_proficiency] ?? 0;
+  s += calcSocialScore(f.social_links || {});
   return Math.min(100, s);
+};
+
+const badgeFor = (total: number) =>
+  total >= 80 ? "elite" : total >= 60 ? "verified" : total >= 40 ? "aspiring" : "newcomer";
+
+const fireConfetti = () => {
+  const end = Date.now() + 1200;
+  const colors = ["#F59E0B", "#EF4444", "#10B981", "#FCD34D"];
+  (function frame() {
+    confetti({ particleCount: 4, angle: 60, spread: 70, origin: { x: 0 }, colors });
+    confetti({ particleCount: 4, angle: 120, spread: 70, origin: { x: 1 }, colors });
+    if (Date.now() < end) requestAnimationFrame(frame);
+  })();
 };
 
 const HostEligibility = () => {
@@ -65,6 +159,11 @@ const HostEligibility = () => {
   const [submitting, setSubmitting] = useState(false);
   const [waitlistCount, setWaitlistCount] = useState<number>(0);
   const [approvedCount, setApprovedCount] = useState<number>(0);
+  const [showQuiz, setShowQuiz] = useState(false);
+  const [quizAnswers, setQuizAnswers] = useState<Record<number, number>>({});
+  const [quizResult, setQuizResult] = useState<{ score: number; passed: boolean } | null>(null);
+  const quizControls = useAnimation();
+  const resultRef = useRef<HTMLDivElement>(null);
 
   const [form, setForm] = useState({
     full_name: "", email: "", phone: "", city: "",
@@ -74,15 +173,17 @@ const HostEligibility = () => {
     has_passport: false, has_kyc: false, cultural_training: false,
     emergency_contact: "", references_count: 0,
     hosting_specialties: [] as string[], why_host: "",
+    social_links: {} as Record<string, string>,
   });
 
   const score = useMemo(() => calcScore(form), [form]);
   const tier = score >= 80 ? "Elite" : score >= 60 ? "Verified" : score >= 40 ? "Aspiring" : "Newcomer";
+  const socialScore = useMemo(() => calcSocialScore(form.social_links), [form.social_links]);
 
   useEffect(() => {
     (async () => {
       const [{ data: mine }, { count: wl }, { count: ap }] = await Promise.all([
-        user ? supabase.from("host_eligibility").select("id, status, eligibility_score, waitlist_position").eq("user_id", user.id).maybeSingle() : Promise.resolve({ data: null } as any),
+        user ? supabase.from("host_eligibility").select("id, status, eligibility_score, waitlist_position, questionnaire_score, social_score, badge").eq("user_id", user.id).maybeSingle() : Promise.resolve({ data: null } as any),
         supabase.from("host_eligibility").select("*", { count: "exact", head: true }).in("status", ["pending", "under_review", "waitlisted"]),
         supabase.from("host_eligibility").select("*", { count: "exact", head: true }).eq("status", "approved"),
       ]);
@@ -98,6 +199,9 @@ const HostEligibility = () => {
     setForm({ ...form, [key]: arr.includes(val) ? arr.filter(x => x !== val) : [...arr, val] });
   };
 
+  const updateSocial = (k: string, v: string) =>
+    setForm({ ...form, social_links: { ...form.social_links, [k]: v } });
+
   const submit = async () => {
     if (!user) { toast({ title: "Please sign in first", variant: "destructive" }); return; }
     const parsed = schema.safeParse(form);
@@ -105,17 +209,60 @@ const HostEligibility = () => {
       toast({ title: "Check your inputs", description: parsed.error.issues[0]?.message, variant: "destructive" });
       return;
     }
+    for (const f of SOCIAL_FIELDS) {
+      const v = form.social_links[f.key];
+      if (v && !urlOk(v)) {
+        toast({ title: `Invalid ${f.label} URL`, description: "Use a full https:// link", variant: "destructive" });
+        return;
+      }
+    }
     setSubmitting(true);
     const eligibility_score = calcScore(form);
+    const social_score = calcSocialScore(form.social_links);
     const status: Status = eligibility_score >= 70 ? "under_review" : "waitlisted";
     const waitlist_position = status === "waitlisted" ? waitlistCount + 1 : null;
-    const { error } = await supabase.from("host_eligibility").insert({
-      user_id: user.id, ...form, eligibility_score, status, waitlist_position,
-    });
+    const badge = badgeFor(eligibility_score);
+    const { data, error } = await supabase.from("host_eligibility").insert({
+      user_id: user.id, ...form, eligibility_score, social_score, badge, status, waitlist_position,
+    }).select("id").single();
     setSubmitting(false);
     if (error) { toast({ title: "Submission failed", description: error.message, variant: "destructive" }); return; }
-    setExisting({ id: "new", status, eligibility_score, waitlist_position });
-    toast({ title: status === "under_review" ? "🎉 You qualify for fast-track review!" : `You're #${waitlist_position} on the waitlist`, description: "We'll notify you as spots open." });
+    setExisting({ id: data!.id, status, eligibility_score, waitlist_position, social_score, badge });
+    toast({ title: status === "under_review" ? "🎉 You qualify for fast-track review!" : `You're #${waitlist_position} on the waitlist`, description: "Now take the credibility quiz to boost your score." });
+    setTimeout(() => setShowQuiz(true), 600);
+  };
+
+  const submitQuiz = async () => {
+    if (Object.keys(quizAnswers).length < QUESTIONS.length) {
+      toast({ title: "Answer every question", variant: "destructive" });
+      quizControls.start({ x: [0, -10, 10, -8, 8, -4, 4, 0], transition: { duration: 0.5 } });
+      return;
+    }
+    const total = QUESTIONS.reduce((acc, q, i) => acc + (q.options[quizAnswers[i]]?.p ?? 0), 0);
+    const max = QUESTIONS.length * 10;
+    const pct = Math.round((total / max) * 100);
+    const passed = pct >= 70;
+
+    if (existing?.id && existing.id !== "new") {
+      const newTotal = Math.min(100, (existing.eligibility_score || 0) + Math.floor(pct / 10));
+      const newBadge = badgeFor(newTotal);
+      await supabase.from("host_eligibility").update({
+        questionnaire_score: pct,
+        questionnaire_answers: quizAnswers,
+        eligibility_score: newTotal,
+        badge: newBadge,
+      }).eq("id", existing.id);
+      setExisting({ ...existing, eligibility_score: newTotal, questionnaire_score: pct, badge: newBadge });
+    }
+
+    setQuizResult({ score: pct, passed });
+    if (passed) {
+      fireConfetti();
+      setTimeout(() => fireConfetti(), 600);
+    } else {
+      quizControls.start({ x: [0, -16, 16, -12, 12, -6, 6, 0], transition: { duration: 0.6 } });
+    }
+    setTimeout(() => resultRef.current?.scrollIntoView({ behavior: "smooth", block: "center" }), 100);
   };
 
   if (loading) return <div className="min-h-screen bg-background"><Navbar /><div className="pt-32 text-center text-muted-foreground">Loading...</div></div>;
@@ -142,7 +289,7 @@ const HostEligibility = () => {
                 <div className="flex items-center justify-between flex-wrap gap-2">
                   <div>
                     <CardTitle className="flex items-center gap-2"><Shield className="w-5 h-5 text-primary" /> Your Application</CardTitle>
-                    <CardDescription>Status: <span className="font-semibold uppercase tracking-wide">{existing.status.replace("_", " ")}</span></CardDescription>
+                    <CardDescription>Status: <span className="font-semibold uppercase tracking-wide">{existing.status.replace("_", " ")}</span> · Badge: <span className="font-semibold capitalize">{existing.badge ?? badgeFor(existing.eligibility_score)}</span></CardDescription>
                   </div>
                   <Badge variant="outline" className="text-base px-3 py-1.5">Score: {existing.eligibility_score}/100</Badge>
                 </div>
@@ -153,6 +300,14 @@ const HostEligibility = () => {
                   <p className="mt-4 text-sm text-foreground">You're <span className="font-bold text-primary">#{existing.waitlist_position}</span> in line. Refer 3 hosts to jump 10 spots → <Link to="/referrals" className="underline">Referrals</Link></p>
                 )}
                 {existing.status === "approved" && <p className="mt-4 text-sm text-accent font-medium">✓ Approved — your "Globally Verified" badge is live.</p>}
+                {!existing.questionnaire_score && (
+                  <Button onClick={() => setShowQuiz(true)} className="mt-4 rounded-full gap-2" size="sm">
+                    <Sparkles className="w-4 h-4" /> Take the Credibility Quiz
+                  </Button>
+                )}
+                {!!existing.questionnaire_score && (
+                  <p className="mt-4 text-sm text-muted-foreground">Quiz score: <span className="font-semibold text-foreground">{existing.questionnaire_score}%</span></p>
+                )}
               </CardContent>
             </Card>
           </motion.div>
@@ -264,6 +419,31 @@ const HostEligibility = () => {
                 </div>
               </div>
 
+              {/* Social proof */}
+              <div className="rounded-lg border border-border p-4 bg-secondary/30">
+                <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
+                  <div>
+                    <p className="text-sm font-medium text-foreground">Social proof (optional)</p>
+                    <p className="text-xs text-muted-foreground">3 pts per verified link · max 15 pts. Helps us trust you faster.</p>
+                  </div>
+                  <Badge variant="outline" className="text-xs">Social score: {socialScore}/15</Badge>
+                </div>
+                <div className="grid sm:grid-cols-2 gap-3">
+                  {SOCIAL_FIELDS.map(f => (
+                    <div key={f.key} className="flex items-center gap-2">
+                      <f.icon className="w-4 h-4 text-muted-foreground shrink-0" />
+                      <Input
+                        value={form.social_links[f.key] || ""}
+                        onChange={e => updateSocial(f.key, e.target.value)}
+                        placeholder={f.placeholder}
+                        maxLength={300}
+                        className={form.social_links[f.key] && !urlOk(form.social_links[f.key]) ? "border-destructive" : ""}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+
               <div className="space-y-3 rounded-lg border border-border p-4 bg-secondary/30">
                 <p className="text-sm font-medium text-foreground">Credibility checks</p>
                 {[
@@ -299,6 +479,73 @@ const HostEligibility = () => {
               {!user && <p className="text-xs text-destructive text-right">Sign in to submit your application.</p>}
             </CardContent>
           </Card>
+        )}
+
+        {/* Gamified post-waitlist quiz */}
+        {showQuiz && (
+          <motion.div animate={quizControls} initial={{ opacity: 0, y: 20 }} className="mt-10">
+            <Card className="border-accent/30">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2"><Sparkles className="w-5 h-5 text-accent" /> Credibility Quiz</CardTitle>
+                <CardDescription>7 quick scenarios. Score 70%+ to unlock the <strong>Globally Verified</strong> badge and jump the waitlist.</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {QUESTIONS.map((q, i) => (
+                  <div key={i} className="space-y-2">
+                    <p className="text-sm font-medium text-foreground"><span className="text-primary">Q{i + 1}.</span> {q.q}</p>
+                    <div className="grid gap-2">
+                      {q.options.map((opt, j) => {
+                        const selected = quizAnswers[i] === j;
+                        return (
+                          <button
+                            key={j}
+                            onClick={() => !quizResult && setQuizAnswers({ ...quizAnswers, [i]: j })}
+                            disabled={!!quizResult}
+                            className={`text-left text-sm rounded-lg border px-3 py-2 transition-all ${selected ? "border-primary bg-primary/10" : "border-border hover:border-primary/40"}`}
+                          >
+                            {opt.t}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ))}
+
+                {!quizResult && (
+                  <Button onClick={submitQuiz} size="lg" className="rounded-full w-full gap-2">
+                    <Trophy className="w-4 h-4" /> Submit Quiz
+                  </Button>
+                )}
+
+                {quizResult && (
+                  <motion.div
+                    ref={resultRef}
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className={`rounded-xl p-6 text-center ${quizResult.passed ? "bg-gradient-to-br from-accent/15 to-primary/15 border border-accent/30" : "bg-destructive/10 border border-destructive/30"}`}
+                  >
+                    {quizResult.passed ? (
+                      <>
+                        <PartyPopper className="w-12 h-12 text-accent mx-auto mb-2" />
+                        <h3 className="text-2xl font-bold text-foreground">Congratulations! 🎉</h3>
+                        <p className="text-muted-foreground mt-1">You scored <strong>{quizResult.score}%</strong>. Your credibility has been boosted.</p>
+                        <Badge className="mt-4 bg-accent text-accent-foreground text-sm px-4 py-1.5">Globally Verified</Badge>
+                      </>
+                    ) : (
+                      <>
+                        <AlertTriangle className="w-12 h-12 text-destructive mx-auto mb-2" />
+                        <h3 className="text-2xl font-bold text-foreground">Not eligible yet</h3>
+                        <p className="text-muted-foreground mt-1">You scored <strong>{quizResult.score}%</strong>. Improve your social score, complete cultural training, then retake.</p>
+                        <Button asChild variant="outline" className="mt-4 rounded-full">
+                          <Link to="/resources">Improve Your Score</Link>
+                        </Button>
+                      </>
+                    )}
+                  </motion.div>
+                )}
+              </CardContent>
+            </Card>
+          </motion.div>
         )}
       </div>
       <Footer />
