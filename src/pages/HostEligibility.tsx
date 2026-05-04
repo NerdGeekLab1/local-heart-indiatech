@@ -471,7 +471,7 @@ const HostEligibility = () => {
               <div className="flex items-center justify-between flex-wrap gap-3 pt-2">
                 <p className="text-xs text-muted-foreground flex items-center gap-1.5"><Lock className="w-3 h-3" /> Verified by our trust team within 48 hours</p>
                 <Button onClick={submit} disabled={submitting || !user} size="lg" className="rounded-full gap-2">
-                  {submitting ? "Submitting..." : score >= 70 ? "Apply for Fast-Track" : "Join Waitlist"} <ArrowRight className="w-4 h-4" />
+                  {submitting ? "Submitting..." : "Submit Application"} <ArrowRight className="w-4 h-4" />
                 </Button>
               </div>
               {!user && <p className="text-xs text-destructive text-right">Sign in to submit your application.</p>}
