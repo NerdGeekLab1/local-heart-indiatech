@@ -307,7 +307,7 @@ const HostEligibility = () => {
                 )}
                 {existing.status === "approved" && <p className="mt-4 text-sm text-accent font-medium">✓ Approved — your "Globally Verified" badge is live.</p>}
                 {!existing.questionnaire_score && (
-                  <Button onClick={() => setShowQuiz(true)} className="mt-4 rounded-full gap-2" size="sm">
+                  <Button onClick={openQuiz} className="mt-4 rounded-full gap-2" size="sm">
                     <Sparkles className="w-4 h-4" /> Take the Credibility Quiz
                   </Button>
                 )}
