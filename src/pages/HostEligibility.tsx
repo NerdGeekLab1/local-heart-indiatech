@@ -31,65 +31,78 @@ const SOCIAL_FIELDS = [
   { key: "website", label: "Website / Blog", icon: Link2, placeholder: "https://yoursite.com" },
 ] as const;
 
-// Gamified questionnaire — measures cultural fit, hospitality, judgement
+// Gamified questionnaire — 12 scenarios measuring cultural fit, hospitality, judgement
 const QUESTIONS = [
-  {
-    q: "A foreign guest is uncomfortable eating spicy food. You:",
-    options: [
-      { t: "Insist they try authentic flavors", p: 0 },
-      { t: "Offer a milder version and explain ingredients", p: 10 },
-      { t: "Take them to a Western chain instead", p: 3 },
-    ],
-  },
-  {
-    q: "Your guest wants to photograph a local temple ceremony. You:",
-    options: [
-      { t: "Let them — it's a free country", p: 0 },
-      { t: "Politely ask the priest first and explain etiquette", p: 10 },
-      { t: "Refuse outright", p: 2 },
-    ],
-  },
-  {
-    q: "A guest falls sick at 2 AM. Your first action:",
-    options: [
-      { t: "Wait until morning — clinics are closed", p: 0 },
-      { t: "Call my partner-doctor and arrange transport", p: 10 },
-      { t: "Give them home remedies and hope", p: 3 },
-    ],
-  },
-  {
-    q: "Guest requests vegan food in a non-vegan household. You:",
-    options: [
-      { t: "Tell them to eat what's served", p: 0 },
-      { t: "Pre-plan a vegan menu with local produce", p: 10 },
-      { t: "Order delivery every meal", p: 4 },
-    ],
-  },
-  {
-    q: "Your female solo traveler feels unsafe walking alone. You:",
-    options: [
-      { t: "Tell her India is safe, don't worry", p: 0 },
-      { t: "Walk with her or arrange a vetted driver", p: 10 },
-      { t: "Cancel her outing", p: 4 },
-    ],
-  },
-  {
-    q: "Best response to a negative review:",
-    options: [
-      { t: "Argue publicly", p: 0 },
-      { t: "Apologize, learn, offer to make it right", p: 10 },
-      { t: "Ignore it", p: 3 },
-    ],
-  },
-  {
-    q: "A guest offers a generous tip in cash. You:",
-    options: [
-      { t: "Accept silently and pocket it", p: 5 },
-      { t: "Thank them and declare it for transparency", p: 10 },
-      { t: "Refuse and feel insulted", p: 4 },
-    ],
-  },
+  { q: "A foreign guest is uncomfortable eating spicy food. You:", options: [
+    { t: "Insist they try authentic flavors", p: 0 },
+    { t: "Offer a milder version and explain ingredients", p: 10 },
+    { t: "Take them to a Western chain instead", p: 3 },
+  ]},
+  { q: "Your guest wants to photograph a local temple ceremony. You:", options: [
+    { t: "Let them — it's a free country", p: 0 },
+    { t: "Politely ask the priest first and explain etiquette", p: 10 },
+    { t: "Refuse outright", p: 2 },
+  ]},
+  { q: "A guest falls sick at 2 AM. Your first action:", options: [
+    { t: "Wait until morning — clinics are closed", p: 0 },
+    { t: "Call my partner-doctor and arrange transport", p: 10 },
+    { t: "Give them home remedies and hope", p: 3 },
+  ]},
+  { q: "Guest requests vegan food in a non-vegan household. You:", options: [
+    { t: "Tell them to eat what's served", p: 0 },
+    { t: "Pre-plan a vegan menu with local produce", p: 10 },
+    { t: "Order delivery every meal", p: 4 },
+  ]},
+  { q: "Your female solo traveler feels unsafe walking alone. You:", options: [
+    { t: "Tell her India is safe, don't worry", p: 0 },
+    { t: "Walk with her or arrange a vetted driver", p: 10 },
+    { t: "Cancel her outing", p: 4 },
+  ]},
+  { q: "Best response to a negative review:", options: [
+    { t: "Argue publicly", p: 0 },
+    { t: "Apologize, learn, offer to make it right", p: 10 },
+    { t: "Ignore it", p: 3 },
+  ]},
+  { q: "A guest offers a generous tip in cash. You:", options: [
+    { t: "Accept silently and pocket it", p: 5 },
+    { t: "Thank them and declare it for transparency", p: 10 },
+    { t: "Refuse and feel insulted", p: 4 },
+  ]},
+  { q: "A guest accidentally offends a local custom. You:", options: [
+    { t: "Embarrass them publicly so they learn", p: 0 },
+    { t: "Quietly explain later and smooth it over", p: 10 },
+    { t: "Pretend nothing happened", p: 4 },
+  ]},
+  { q: "Heavy monsoon ruins your planned itinerary. You:", options: [
+    { t: "Refund partially and send them home", p: 3 },
+    { t: "Pivot to indoor cultural experiences instantly", p: 10 },
+    { t: "Stick to the plan anyway", p: 0 },
+  ]},
+  { q: "A guest asks about your country's politics. You:", options: [
+    { t: "Push my personal opinions strongly", p: 2 },
+    { t: "Share balanced context and listen", p: 10 },
+    { t: "Refuse to discuss anything", p: 5 },
+  ]},
+  { q: "An LGBTQ+ couple books your homestay. You:", options: [
+    { t: "Decline politely citing family", p: 0 },
+    { t: "Welcome them like any other guests", p: 10 },
+    { t: "Accept but assign separate rooms", p: 2 },
+  ]},
+  { q: "A guest leaves valuables in your home. You:", options: [
+    { t: "Keep quiet — finders keepers", p: 0 },
+    { t: "Photograph, secure, and return immediately", p: 10 },
+    { t: "Ship later when convenient", p: 5 },
+  ]},
 ];
+
+const shuffle = <T,>(arr: T[]): T[] => {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+};
 
 const schema = z.object({
   full_name: z.string().trim().min(2).max(100),
