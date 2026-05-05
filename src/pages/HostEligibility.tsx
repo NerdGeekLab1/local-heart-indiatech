@@ -175,11 +175,22 @@ const HostEligibility = () => {
   const [showQuiz, setShowQuiz] = useState(false);
   const [quizAnswers, setQuizAnswers] = useState<Record<number, number>>({});
   const [quizResult, setQuizResult] = useState<{ score: number; passed: boolean } | null>(null);
+  const [quizOrder, setQuizOrder] = useState<number[]>([]);
+  const [optionOrders, setOptionOrders] = useState<Record<number, number[]>>({});
+  const [step, setStep] = useState(0);
   const quizControls = useAnimation();
   const resultRef = useRef<HTMLDivElement>(null);
   const quizRef = useRef<HTMLDivElement>(null);
 
   const openQuiz = () => {
+    const order = shuffle(QUESTIONS.map((_, i) => i));
+    const opts: Record<number, number[]> = {};
+    order.forEach(qi => { opts[qi] = shuffle(QUESTIONS[qi].options.map((_, i) => i)); });
+    setQuizOrder(order);
+    setOptionOrders(opts);
+    setStep(0);
+    setQuizAnswers({});
+    setQuizResult(null);
     setShowQuiz(true);
     setTimeout(() => quizRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 100);
   };
