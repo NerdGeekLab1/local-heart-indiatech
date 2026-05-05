@@ -262,14 +262,22 @@ const HostEligibility = () => {
     setTimeout(() => openQuiz(), 600);
   };
 
+  const handleAnswer = (qi: number, oi: number) => {
+    if (quizResult) return;
+    setQuizAnswers(prev => ({ ...prev, [qi]: oi }));
+    if (step < quizOrder.length - 1) {
+      setTimeout(() => setStep(s => s + 1), 350);
+    }
+  };
+
   const submitQuiz = async () => {
-    if (Object.keys(quizAnswers).length < QUESTIONS.length) {
+    if (Object.keys(quizAnswers).length < quizOrder.length) {
       toast({ title: "Answer every question", variant: "destructive" });
       quizControls.start({ x: [0, -10, 10, -8, 8, -4, 4, 0], transition: { duration: 0.5 } });
       return;
     }
-    const total = QUESTIONS.reduce((acc, q, i) => acc + (q.options[quizAnswers[i]]?.p ?? 0), 0);
-    const max = QUESTIONS.length * 10;
+    const total = quizOrder.reduce((acc, qi) => acc + (QUESTIONS[qi].options[quizAnswers[qi]]?.p ?? 0), 0);
+    const max = quizOrder.length * 10;
     const pct = Math.round((total / max) * 100);
     const passed = pct >= 70;
 
@@ -288,7 +296,8 @@ const HostEligibility = () => {
     setQuizResult({ score: pct, passed });
     if (passed) {
       fireConfetti();
-      setTimeout(() => fireConfetti(), 600);
+      setTimeout(() => fireConfetti(), 500);
+      setTimeout(() => fireConfetti(), 1100);
     } else {
       quizControls.start({ x: [0, -16, 16, -12, 12, -6, 6, 0], transition: { duration: 0.6 } });
     }
