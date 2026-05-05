@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { motion, useAnimation } from "framer-motion";
+import { motion, useAnimation, AnimatePresence } from "framer-motion";
 import { Globe, Shield, Sparkles, Trophy, Users, Clock, Check, Lock, Flame, ArrowRight, Instagram, Linkedin, Youtube, Facebook, Twitter, Link2, AlertTriangle, PartyPopper } from "lucide-react";
 import { z } from "zod";
 import confetti from "canvas-confetti";
@@ -31,65 +31,78 @@ const SOCIAL_FIELDS = [
   { key: "website", label: "Website / Blog", icon: Link2, placeholder: "https://yoursite.com" },
 ] as const;
 
-// Gamified questionnaire — measures cultural fit, hospitality, judgement
+// Gamified questionnaire — 12 scenarios measuring cultural fit, hospitality, judgement
 const QUESTIONS = [
-  {
-    q: "A foreign guest is uncomfortable eating spicy food. You:",
-    options: [
-      { t: "Insist they try authentic flavors", p: 0 },
-      { t: "Offer a milder version and explain ingredients", p: 10 },
-      { t: "Take them to a Western chain instead", p: 3 },
-    ],
-  },
-  {
-    q: "Your guest wants to photograph a local temple ceremony. You:",
-    options: [
-      { t: "Let them — it's a free country", p: 0 },
-      { t: "Politely ask the priest first and explain etiquette", p: 10 },
-      { t: "Refuse outright", p: 2 },
-    ],
-  },
-  {
-    q: "A guest falls sick at 2 AM. Your first action:",
-    options: [
-      { t: "Wait until morning — clinics are closed", p: 0 },
-      { t: "Call my partner-doctor and arrange transport", p: 10 },
-      { t: "Give them home remedies and hope", p: 3 },
-    ],
-  },
-  {
-    q: "Guest requests vegan food in a non-vegan household. You:",
-    options: [
-      { t: "Tell them to eat what's served", p: 0 },
-      { t: "Pre-plan a vegan menu with local produce", p: 10 },
-      { t: "Order delivery every meal", p: 4 },
-    ],
-  },
-  {
-    q: "Your female solo traveler feels unsafe walking alone. You:",
-    options: [
-      { t: "Tell her India is safe, don't worry", p: 0 },
-      { t: "Walk with her or arrange a vetted driver", p: 10 },
-      { t: "Cancel her outing", p: 4 },
-    ],
-  },
-  {
-    q: "Best response to a negative review:",
-    options: [
-      { t: "Argue publicly", p: 0 },
-      { t: "Apologize, learn, offer to make it right", p: 10 },
-      { t: "Ignore it", p: 3 },
-    ],
-  },
-  {
-    q: "A guest offers a generous tip in cash. You:",
-    options: [
-      { t: "Accept silently and pocket it", p: 5 },
-      { t: "Thank them and declare it for transparency", p: 10 },
-      { t: "Refuse and feel insulted", p: 4 },
-    ],
-  },
+  { q: "A foreign guest is uncomfortable eating spicy food. You:", options: [
+    { t: "Insist they try authentic flavors", p: 0 },
+    { t: "Offer a milder version and explain ingredients", p: 10 },
+    { t: "Take them to a Western chain instead", p: 3 },
+  ]},
+  { q: "Your guest wants to photograph a local temple ceremony. You:", options: [
+    { t: "Let them — it's a free country", p: 0 },
+    { t: "Politely ask the priest first and explain etiquette", p: 10 },
+    { t: "Refuse outright", p: 2 },
+  ]},
+  { q: "A guest falls sick at 2 AM. Your first action:", options: [
+    { t: "Wait until morning — clinics are closed", p: 0 },
+    { t: "Call my partner-doctor and arrange transport", p: 10 },
+    { t: "Give them home remedies and hope", p: 3 },
+  ]},
+  { q: "Guest requests vegan food in a non-vegan household. You:", options: [
+    { t: "Tell them to eat what's served", p: 0 },
+    { t: "Pre-plan a vegan menu with local produce", p: 10 },
+    { t: "Order delivery every meal", p: 4 },
+  ]},
+  { q: "Your female solo traveler feels unsafe walking alone. You:", options: [
+    { t: "Tell her India is safe, don't worry", p: 0 },
+    { t: "Walk with her or arrange a vetted driver", p: 10 },
+    { t: "Cancel her outing", p: 4 },
+  ]},
+  { q: "Best response to a negative review:", options: [
+    { t: "Argue publicly", p: 0 },
+    { t: "Apologize, learn, offer to make it right", p: 10 },
+    { t: "Ignore it", p: 3 },
+  ]},
+  { q: "A guest offers a generous tip in cash. You:", options: [
+    { t: "Accept silently and pocket it", p: 5 },
+    { t: "Thank them and declare it for transparency", p: 10 },
+    { t: "Refuse and feel insulted", p: 4 },
+  ]},
+  { q: "A guest accidentally offends a local custom. You:", options: [
+    { t: "Embarrass them publicly so they learn", p: 0 },
+    { t: "Quietly explain later and smooth it over", p: 10 },
+    { t: "Pretend nothing happened", p: 4 },
+  ]},
+  { q: "Heavy monsoon ruins your planned itinerary. You:", options: [
+    { t: "Refund partially and send them home", p: 3 },
+    { t: "Pivot to indoor cultural experiences instantly", p: 10 },
+    { t: "Stick to the plan anyway", p: 0 },
+  ]},
+  { q: "A guest asks about your country's politics. You:", options: [
+    { t: "Push my personal opinions strongly", p: 2 },
+    { t: "Share balanced context and listen", p: 10 },
+    { t: "Refuse to discuss anything", p: 5 },
+  ]},
+  { q: "An LGBTQ+ couple books your homestay. You:", options: [
+    { t: "Decline politely citing family", p: 0 },
+    { t: "Welcome them like any other guests", p: 10 },
+    { t: "Accept but assign separate rooms", p: 2 },
+  ]},
+  { q: "A guest leaves valuables in your home. You:", options: [
+    { t: "Keep quiet — finders keepers", p: 0 },
+    { t: "Photograph, secure, and return immediately", p: 10 },
+    { t: "Ship later when convenient", p: 5 },
+  ]},
 ];
+
+const shuffle = <T,>(arr: T[]): T[] => {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+};
 
 const schema = z.object({
   full_name: z.string().trim().min(2).max(100),
@@ -162,11 +175,22 @@ const HostEligibility = () => {
   const [showQuiz, setShowQuiz] = useState(false);
   const [quizAnswers, setQuizAnswers] = useState<Record<number, number>>({});
   const [quizResult, setQuizResult] = useState<{ score: number; passed: boolean } | null>(null);
+  const [quizOrder, setQuizOrder] = useState<number[]>([]);
+  const [optionOrders, setOptionOrders] = useState<Record<number, number[]>>({});
+  const [step, setStep] = useState(0);
   const quizControls = useAnimation();
   const resultRef = useRef<HTMLDivElement>(null);
   const quizRef = useRef<HTMLDivElement>(null);
 
   const openQuiz = () => {
+    const order = shuffle(QUESTIONS.map((_, i) => i));
+    const opts: Record<number, number[]> = {};
+    order.forEach(qi => { opts[qi] = shuffle(QUESTIONS[qi].options.map((_, i) => i)); });
+    setQuizOrder(order);
+    setOptionOrders(opts);
+    setStep(0);
+    setQuizAnswers({});
+    setQuizResult(null);
     setShowQuiz(true);
     setTimeout(() => quizRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 100);
   };
@@ -238,14 +262,22 @@ const HostEligibility = () => {
     setTimeout(() => openQuiz(), 600);
   };
 
+  const handleAnswer = (qi: number, oi: number) => {
+    if (quizResult) return;
+    setQuizAnswers(prev => ({ ...prev, [qi]: oi }));
+    if (step < quizOrder.length - 1) {
+      setTimeout(() => setStep(s => s + 1), 350);
+    }
+  };
+
   const submitQuiz = async () => {
-    if (Object.keys(quizAnswers).length < QUESTIONS.length) {
+    if (Object.keys(quizAnswers).length < quizOrder.length) {
       toast({ title: "Answer every question", variant: "destructive" });
       quizControls.start({ x: [0, -10, 10, -8, 8, -4, 4, 0], transition: { duration: 0.5 } });
       return;
     }
-    const total = QUESTIONS.reduce((acc, q, i) => acc + (q.options[quizAnswers[i]]?.p ?? 0), 0);
-    const max = QUESTIONS.length * 10;
+    const total = quizOrder.reduce((acc, qi) => acc + (QUESTIONS[qi].options[quizAnswers[qi]]?.p ?? 0), 0);
+    const max = quizOrder.length * 10;
     const pct = Math.round((total / max) * 100);
     const passed = pct >= 70;
 
@@ -264,7 +296,8 @@ const HostEligibility = () => {
     setQuizResult({ score: pct, passed });
     if (passed) {
       fireConfetti();
-      setTimeout(() => fireConfetti(), 600);
+      setTimeout(() => fireConfetti(), 500);
+      setTimeout(() => fireConfetti(), 1100);
     } else {
       quizControls.start({ x: [0, -16, 16, -12, 12, -6, 6, 0], transition: { duration: 0.6 } });
     }
@@ -483,69 +516,149 @@ const HostEligibility = () => {
         {showQuiz && (
           <motion.div ref={quizRef} animate={quizControls} className="mt-10">
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
-            <Card className="border-accent/30">
+            <Card className="border-accent/30 overflow-hidden">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2"><Sparkles className="w-5 h-5 text-accent" /> Credibility Quiz</CardTitle>
-                <CardDescription>7 quick scenarios. Score 70%+ to unlock the <strong>Globally Verified</strong> badge and jump the waitlist.</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                {QUESTIONS.map((q, i) => (
-                  <div key={i} className="space-y-2">
-                    <p className="text-sm font-medium text-foreground"><span className="text-primary">Q{i + 1}.</span> {q.q}</p>
-                    <div className="grid gap-2">
-                      {q.options.map((opt, j) => {
-                        const selected = quizAnswers[i] === j;
-                        return (
-                          <button
-                            key={j}
-                            onClick={() => !quizResult && setQuizAnswers({ ...quizAnswers, [i]: j })}
-                            disabled={!!quizResult}
-                            className={`text-left text-sm rounded-lg border px-3 py-2 transition-all ${selected ? "border-primary bg-primary/10" : "border-border hover:border-primary/40"}`}
-                          >
-                            {opt.t}
-                          </button>
-                        );
-                      })}
-                    </div>
+                <div className="flex items-center justify-between gap-3 flex-wrap">
+                  <div>
+                    <CardTitle className="flex items-center gap-2"><Sparkles className="w-5 h-5 text-accent" /> Credibility Quiz</CardTitle>
+                    <CardDescription>12 quick scenarios. Score 70%+ to unlock the <strong>Globally Verified</strong> badge.</CardDescription>
                   </div>
-                ))}
-
+                  {!quizResult && (
+                    <Badge variant="outline" className="text-xs">Question {Math.min(step + 1, quizOrder.length)} of {quizOrder.length}</Badge>
+                  )}
+                </div>
                 {!quizResult && (
-                  <Button onClick={submitQuiz} size="lg" className="rounded-full w-full gap-2">
-                    <Trophy className="w-4 h-4" /> Submit Quiz
-                  </Button>
+                  <div className="mt-3">
+                    <Progress value={((step + (quizAnswers[quizOrder[step]] !== undefined ? 1 : 0)) / quizOrder.length) * 100} className="h-2" />
+                  </div>
+                )}
+              </CardHeader>
+              <CardContent className="space-y-6 min-h-[280px]">
+                {!quizResult && quizOrder.length > 0 && (
+                  <AnimatePresence mode="wait">
+                    {(() => {
+                      const qi = quizOrder[step];
+                      const q = QUESTIONS[qi];
+                      const order = optionOrders[qi] || [];
+                      return (
+                        <motion.div
+                          key={step}
+                          initial={{ opacity: 0, x: 60, rotateY: 8 }}
+                          animate={{ opacity: 1, x: 0, rotateY: 0 }}
+                          exit={{ opacity: 0, x: -60, rotateY: -8 }}
+                          transition={{ duration: 0.35, ease: "easeOut" }}
+                          className="space-y-4"
+                        >
+                          <p className="text-lg font-semibold text-foreground"><span className="text-primary">Q{step + 1}.</span> {q.q}</p>
+                          <div className="grid gap-3">
+                            {order.map((j, idx) => {
+                              const opt = q.options[j];
+                              const selected = quizAnswers[qi] === j;
+                              return (
+                                <motion.button
+                                  key={j}
+                                  initial={{ opacity: 0, y: 12 }}
+                                  animate={{ opacity: 1, y: 0 }}
+                                  transition={{ delay: 0.1 + idx * 0.08 }}
+                                  whileHover={{ scale: 1.02, x: 4 }}
+                                  whileTap={{ scale: 0.98 }}
+                                  onClick={() => handleAnswer(qi, j)}
+                                  className={`text-left text-sm rounded-xl border-2 px-4 py-3 transition-colors ${selected ? "border-primary bg-primary/10 shadow-lg shadow-primary/20" : "border-border hover:border-primary/40 bg-card"}`}
+                                >
+                                  <span className="inline-flex w-6 h-6 mr-3 rounded-full bg-muted text-muted-foreground items-center justify-center text-xs font-bold">{String.fromCharCode(65 + idx)}</span>
+                                  {opt.t}
+                                </motion.button>
+                              );
+                            })}
+                          </div>
+                          <div className="flex items-center justify-between pt-2">
+                            <Button variant="ghost" size="sm" disabled={step === 0} onClick={() => setStep(s => Math.max(0, s - 1))}>← Back</Button>
+                            {step === quizOrder.length - 1 ? (
+                              <Button onClick={submitQuiz} className="rounded-full gap-2"><Trophy className="w-4 h-4" /> Submit Quiz</Button>
+                            ) : (
+                              <Button variant="outline" size="sm" disabled={quizAnswers[qi] === undefined} onClick={() => setStep(s => s + 1)}>Next →</Button>
+                            )}
+                          </div>
+                        </motion.div>
+                      );
+                    })()}
+                  </AnimatePresence>
                 )}
 
                 {quizResult && (
                   <motion.div
                     ref={resultRef}
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    className={`rounded-xl p-6 text-center ${quizResult.passed ? "bg-gradient-to-br from-accent/15 to-primary/15 border border-accent/30" : "bg-destructive/10 border border-destructive/30"}`}
+                    initial={{ opacity: 0, scale: 0.85, y: 20 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    transition={{ type: "spring", stiffness: 200, damping: 18 }}
+                    className={`relative rounded-2xl p-8 text-center overflow-hidden ${quizResult.passed ? "bg-gradient-to-br from-accent/20 via-primary/10 to-accent/5 border-2 border-accent/40" : "bg-gradient-to-br from-destructive/15 to-destructive/5 border-2 border-destructive/30"}`}
                   >
-                    {quizResult.passed ? (
-                      <>
-                        <PartyPopper className="w-12 h-12 text-accent mx-auto mb-2" />
-                        <h3 className="text-2xl font-bold text-foreground">Congratulations! 🎉</h3>
-                        <p className="text-muted-foreground mt-1">You scored <strong>{quizResult.score}%</strong>. Your credibility has been boosted.</p>
-                        <Badge className="mt-4 bg-accent text-accent-foreground text-sm px-4 py-1.5">Globally Verified</Badge>
-                      </>
-                    ) : (
-                      <>
-                        <AlertTriangle className="w-12 h-12 text-destructive mx-auto mb-2" />
-                        <h3 className="text-2xl font-bold text-foreground">Not eligible yet</h3>
-                        <p className="text-muted-foreground mt-1">You scored <strong>{quizResult.score}%</strong>. Improve your social score, complete cultural training, then retake.</p>
-                        <Button asChild variant="outline" className="mt-4 rounded-full">
+                    {quizResult.passed && (
+                      <motion.div
+                        className="absolute inset-0 pointer-events-none"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: [0, 0.6, 0] }}
+                        transition={{ duration: 2, repeat: Infinity }}
+                        style={{ background: "radial-gradient(circle at 50% 50%, hsl(var(--primary) / 0.15), transparent 60%)" }}
+                      />
+                    )}
+                    <div className="relative">
+                      {quizResult.passed ? (
+                        <>
+                          <motion.div initial={{ scale: 0, rotate: -180 }} animate={{ scale: 1, rotate: 0 }} transition={{ delay: 0.2, type: "spring" }}>
+                            <PartyPopper className="w-16 h-16 text-accent mx-auto mb-3" />
+                          </motion.div>
+                          <h3 className="text-3xl font-bold text-foreground">Congratulations! 🎉</h3>
+                          <p className="text-muted-foreground mt-2">You aced the credibility test.</p>
+                        </>
+                      ) : (
+                        <>
+                          <AlertTriangle className="w-16 h-16 text-destructive mx-auto mb-3" />
+                          <h3 className="text-3xl font-bold text-foreground">Not quite there yet</h3>
+                          <p className="text-muted-foreground mt-2">Improve your social score, complete cultural training, then retake.</p>
+                        </>
+                      )}
+
+                      {/* Flashy score reveal */}
+                      <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.5 }}
+                        className="mt-6 mx-auto max-w-sm"
+                      >
+                        <div className={`rounded-2xl p-6 ${quizResult.passed ? "bg-gradient-to-br from-primary to-accent" : "bg-gradient-to-br from-muted to-secondary"} shadow-2xl`}>
+                          <p className="text-xs uppercase tracking-widest text-primary-foreground/80 font-semibold">Quiz Score</p>
+                          <motion.div
+                            initial={{ scale: 0 }}
+                            animate={{ scale: 1 }}
+                            transition={{ delay: 0.7, type: "spring", stiffness: 180 }}
+                            className="text-6xl font-black text-primary-foreground my-2"
+                          >
+                            {quizResult.score}<span className="text-3xl opacity-70">%</span>
+                          </motion.div>
+                          {quizResult.passed && <Badge className="bg-background text-foreground text-sm px-4 py-1.5 mt-2">Globally Verified</Badge>}
+                        </div>
+                      </motion.div>
+
+                      {!quizResult.passed && (
+                        <Button asChild variant="outline" className="mt-5 rounded-full">
                           <Link to="/resources">Improve Your Score</Link>
                         </Button>
-                      </>
-                    )}
-                    <div className="mt-6 pt-6 border-t border-border/50 text-left max-w-md mx-auto">
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-sm font-medium text-foreground">Final Eligibility Score</span>
-                        <Badge className="bg-primary text-primary-foreground">{badgeFor(existing?.eligibility_score ?? score)} · {existing?.eligibility_score ?? score}/100</Badge>
-                      </div>
-                      <Progress value={existing?.eligibility_score ?? score} className="h-2" />
+                      )}
+
+                      {/* Final eligibility */}
+                      <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: 1 }}
+                        className="mt-8 pt-6 border-t border-border/50 text-left max-w-md mx-auto"
+                      >
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-sm font-medium text-foreground">Final Eligibility Score</span>
+                          <Badge className="bg-primary text-primary-foreground capitalize">{badgeFor(existing?.eligibility_score ?? score)} · {existing?.eligibility_score ?? score}/100</Badge>
+                        </div>
+                        <Progress value={existing?.eligibility_score ?? score} className="h-3" />
+                      </motion.div>
                     </div>
                   </motion.div>
                 )}
