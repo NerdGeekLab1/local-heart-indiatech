@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { motion, useAnimation } from "framer-motion";
+import { motion, useAnimation, AnimatePresence } from "framer-motion";
 import { Globe, Shield, Sparkles, Trophy, Users, Clock, Check, Lock, Flame, ArrowRight, Instagram, Linkedin, Youtube, Facebook, Twitter, Link2, AlertTriangle, PartyPopper } from "lucide-react";
 import { z } from "zod";
 import confetti from "canvas-confetti";
