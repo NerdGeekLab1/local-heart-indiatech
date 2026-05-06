@@ -81,6 +81,25 @@ const Signup = () => {
     }
   };
 
+  const handleGoogle = async () => {
+    setLoading(true);
+    try {
+      const result = await lovable.auth.signInWithOAuth("google", { redirect_uri: `${window.location.origin}/auth/callback` });
+      if (result.error) {
+        toast({ title: "Google sign-in failed", description: (result.error as any)?.message ?? String(result.error), variant: "destructive" });
+        setLoading(false);
+        return;
+      }
+      if (result.redirected) return;
+      toast({ title: "Welcome! 🎉" });
+      navigate("/dashboard/traveler");
+    } catch (e: any) {
+      toast({ title: "Google sign-in error", description: e?.message ?? String(e), variant: "destructive" });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background flex">
       <div className="flex-1 flex items-center justify-center px-4 py-12">
