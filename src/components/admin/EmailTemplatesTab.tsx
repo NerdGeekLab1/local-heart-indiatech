@@ -135,6 +135,17 @@ const EmailTemplatesTab = () => {
   const [previewing, setPreviewing] = useState<EmailTemplate | null>(null);
   const [sending, setSending] = useState<EmailTemplate | null>(null);
   const [sendForm, setSendForm] = useState({ recipient: "", values: {} as Record<string, string> });
+  const [showVarRef, setShowVarRef] = useState(false);
+  const [varRefCategory, setVarRefCategory] = useState<string>("global");
+  const [copied, setCopied] = useState<string | null>(null);
+
+  const copyVar = async (v: string) => {
+    try {
+      await navigator.clipboard.writeText(`{{${v}}}`);
+      setCopied(v);
+      setTimeout(() => setCopied(null), 1200);
+    } catch {/* ignore */}
+  };
 
   const load = async () => {
     setLoading(true);
