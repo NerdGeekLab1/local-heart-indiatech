@@ -65,7 +65,7 @@ const DestinationDetail = () => {
     bestTime: destination.bestSeason || "Anytime",
     duration: "1-2 hrs",
   }));
-  const sitesToShow: any[] = (destination.sites && sitesToShow.length > 0) ? destination.sites : fallbackSites;
+  const sitesToShow: any[] = (destination.sites && destination.sites.length > 0) ? destination.sites : fallbackSites;
 
   // Build a 3-day sample itinerary from the available sites
   const itinerary = sitesToShow.length > 0 ? [
@@ -171,7 +171,7 @@ const DestinationDetail = () => {
         </motion.div>
 
         {/* === 3D-Style Interactive Site Explorer === */}
-        {destination.sites && sitesToShow.length > 0 && (
+        {sitesToShow.length > 0 && (
           <motion.section initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }}
             className="mb-14">
             <div className="flex items-center justify-between mb-6">
