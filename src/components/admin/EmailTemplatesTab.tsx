@@ -304,6 +304,7 @@ const EmailTemplatesTab = () => {
         )}
       </div>
 
+      {loading ? (
         <div className="text-center py-12 text-muted-foreground">Loading…</div>
       ) : view === "templates" ? (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
