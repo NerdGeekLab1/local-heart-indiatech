@@ -406,12 +406,12 @@ const DestinationDetail = () => {
         </motion.section>
 
         {/* Local Hosts */}
-        {cityHosts.length > 0 && (
-          <motion.section initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
-            className="mb-14">
-            <h2 className="text-2xl font-bold text-foreground mb-6 flex items-center gap-2">
-              <Users className="w-6 h-6 text-primary" /> Meet Your Local Hosts
-            </h2>
+        <motion.section initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
+          className="mb-14">
+          <h2 className="text-2xl font-bold text-foreground mb-6 flex items-center gap-2">
+            <Users className="w-6 h-6 text-primary" /> Meet Your Local Hosts
+          </h2>
+          {cityHosts.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {cityHosts.map(host => (
                 <Link to={`/host/${host.id}`} key={host.id}>
@@ -442,8 +442,68 @@ const DestinationDetail = () => {
                 </Link>
               ))}
             </div>
-          </motion.section>
-        )}
+          ) : (
+            <div className="rounded-2xl bg-card shadow-card p-8 text-center border-2 border-dashed border-border">
+              <Users className="w-10 h-10 text-muted-foreground/40 mx-auto mb-3" />
+              <p className="text-foreground font-semibold">{destination.hostCount}+ verified local hosts available in {destination.name}</p>
+              <p className="text-sm text-muted-foreground mt-1">Browse all hosts in our directory or apply to become one yourself.</p>
+              <div className="flex justify-center gap-2 mt-4">
+                <Link to="/explore"><Button size="sm" className="rounded-full">Browse Hosts</Button></Link>
+                <Link to="/become-host"><Button size="sm" variant="outline" className="rounded-full">Become a Host</Button></Link>
+              </div>
+            </div>
+          )}
+        </motion.section>
+
+        {/* Experiences */}
+        <motion.section initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
+          className="mb-14">
+          <h2 className="text-2xl font-bold text-foreground mb-6">
+            Experiences in {destination.name}
+          </h2>
+          {cityExperiences.length > 0 ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {cityExperiences.map(exp => (
+                <Link to={`/experience/${exp.id}`} key={exp.id}>
+                  <motion.div whileHover={{ y: -4 }}
+                    className="rounded-2xl overflow-hidden bg-card shadow-card hover:shadow-elevated transition-all group">
+                    <div className="relative aspect-video overflow-hidden">
+                      <img src={exp.image} alt={exp.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-foreground/60 to-transparent" />
+                      <span className="absolute top-3 left-3 bg-primary text-primary-foreground text-xs font-bold px-2.5 py-1 rounded-full">
+                        {exp.category}
+                      </span>
+                      <div className="absolute bottom-3 left-3">
+                        <p className="text-primary-foreground font-bold text-sm">{exp.title}</p>
+                      </div>
+                    </div>
+                    <div className="p-4">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-muted-foreground">{exp.duration}</span>
+                        <span className="text-lg font-bold text-foreground">${exp.price}</span>
+                      </div>
+                    </div>
+                  </motion.div>
+                </Link>
+              ))}
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              {(destination.experienceTags || ["Cultural", "Food", "Adventure"]).slice(0, 6).map(tag => (
+                <Link key={tag} to={`/experiences?category=${encodeURIComponent(tag)}`}
+                  className="rounded-2xl bg-card shadow-card hover:shadow-elevated transition-all p-5 group flex items-center justify-between">
+                  <div>
+                    <p className="text-xs uppercase tracking-wider text-primary font-bold">Suggested</p>
+                    <h3 className="font-bold text-foreground group-hover:text-primary transition-colors mt-1">{tag} in {destination.name}</h3>
+                    <p className="text-xs text-muted-foreground mt-1">Browse curated {tag.toLowerCase()} experiences</p>
+                  </div>
+                  <ChevronRight className="w-5 h-5 text-primary group-hover:translate-x-1 transition-transform" />
+                </Link>
+              ))}
+            </div>
+          )}
+        </motion.section>
+
 
         {/* Experiences */}
         {cityExperiences.length > 0 && (
