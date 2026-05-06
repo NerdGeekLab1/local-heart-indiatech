@@ -57,6 +57,30 @@ const DestinationDetail = () => {
   const cityExperiences = experiences.filter(e => e.hostCity === destination.name);
   const cityReviews = reviews.filter(r => cityHosts.some(h => h.id === r.hostId));
 
+  // Build a fallback "sites" list from highlights when the dataset doesn't include detailed sites
+  const fallbackSites = (destination.highlights || []).map((h, idx) => ({
+    name: h,
+    type: idx % 4 === 0 ? "monument" : idx % 4 === 1 ? "temple" : idx % 4 === 2 ? "nature" : "market",
+    description: `A signature ${destination.name} attraction — must-see while in the region.`,
+    bestTime: destination.bestSeason || "Anytime",
+    duration: "1-2 hrs",
+  }));
+  const sitesToShow: any[] = (destination.sites && destination.sites.length > 0) ? destination.sites : fallbackSites;
+
+  // Build a 3-day sample itinerary from the available sites
+  const itinerary = sitesToShow.length > 0 ? [
+    { day: "Day 1 — Arrival & Iconic Sights", places: sitesToShow.slice(0, 2).map(s => s.name) },
+    { day: "Day 2 — Culture & Cuisine", places: sitesToShow.slice(2, 4).map(s => s.name).concat([`Local food trail in ${destination.name}`]) },
+    { day: "Day 3 — Hidden Gems", places: sitesToShow.slice(4, 6).map(s => s.name).concat([`Sunset point & local market`]) },
+  ].filter(d => d.places.length > 0) : [];
+
+  // Map embed (OpenStreetMap — no API key)
+  const firstSite = sitesToShow.find((s: any) => s.lat && s.lng);
+  const mapCenter = firstSite ? `${firstSite.lat},${firstSite.lng}` : null;
+  const mapBbox = firstSite
+    ? `${firstSite.lng - 0.15},${firstSite.lat - 0.15},${firstSite.lng + 0.15},${firstSite.lat + 0.15}`
+    : null;
+
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
