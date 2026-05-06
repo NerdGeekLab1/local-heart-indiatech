@@ -157,11 +157,9 @@ const ConfigurationTab = () => {
             <p className="text-sm text-muted-foreground mt-1">
               Google OAuth is fully managed by Lovable Cloud — no extra credentials required. To use your own Google client ID/secret for branding, manage it in the backend Authentication settings.
             </p>
-            <div className="mt-3">
-              <presentation-actions>
-                <presentation-open-backend>Open Authentication Settings</presentation-open-backend>
-              </presentation-actions>
-            </div>
+            <p className="text-xs text-muted-foreground mt-2">
+              Add <code className="px-1 rounded bg-secondary">GOOGLE_CLIENT_ID</code> and <code className="px-1 rounded bg-secondary">GOOGLE_CLIENT_SECRET</code> below to override the managed credentials.
+            </p>
           </div>
         </div>
       </div>
