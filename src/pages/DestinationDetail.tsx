@@ -315,7 +315,64 @@ const DestinationDetail = () => {
           </motion.section>
         )}
 
-        {/* Video Reviews Section */}
+        {/* === Map === */}
+        {mapBbox && (
+          <motion.section initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
+            className="mb-14">
+            <h2 className="text-2xl font-bold text-foreground mb-6 flex items-center gap-2">
+              <MapPin className="w-6 h-6 text-primary" /> {destination.name} on the Map
+            </h2>
+            <div className="rounded-2xl overflow-hidden shadow-card aspect-[16/9] bg-secondary">
+              <iframe
+                title={`Map of ${destination.name}`}
+                width="100%"
+                height="100%"
+                loading="lazy"
+                src={`https://www.openstreetmap.org/export/embed.html?bbox=${mapBbox}&layer=mapnik&marker=${mapCenter}`}
+                style={{ border: 0 }}
+              />
+            </div>
+            <p className="text-xs text-muted-foreground mt-2">
+              Pinned location:{" "}
+              <a href={`https://www.openstreetmap.org/?mlat=${firstSite?.lat}&mlon=${firstSite?.lng}#map=12/${firstSite?.lat}/${firstSite?.lng}`}
+                target="_blank" rel="noreferrer" className="text-primary hover:underline">View larger map</a>
+            </p>
+          </motion.section>
+        )}
+
+        {/* === Sample Itinerary === */}
+        {itinerary.length > 0 && (
+          <motion.section initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
+            className="mb-14">
+            <h2 className="text-2xl font-bold text-foreground mb-6 flex items-center gap-2">
+              <Calendar className="w-6 h-6 text-primary" /> Sample 3-Day Itinerary
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {itinerary.map((day, i) => (
+                <motion.div key={day.day}
+                  initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }}
+                  transition={{ delay: i * 0.1 }} viewport={{ once: true }}
+                  className="rounded-2xl bg-card shadow-card p-5 border-t-4 border-primary">
+                  <p className="text-xs uppercase tracking-wider text-primary font-bold">Day {i + 1}</p>
+                  <h3 className="font-bold text-foreground mt-1 mb-3">{day.day.split(" — ")[1] || day.day}</h3>
+                  <ul className="space-y-2">
+                    {day.places.map(p => (
+                      <li key={p} className="flex items-start gap-2 text-sm text-muted-foreground">
+                        <ChevronRight className="w-3.5 h-3.5 text-primary mt-0.5 shrink-0" />
+                        <span>{p}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </motion.div>
+              ))}
+            </div>
+            <p className="text-xs text-muted-foreground mt-3 italic">
+              Tip: Book a verified local host below for a fully customized itinerary tailored to your interests and pace.
+            </p>
+          </motion.section>
+        )}
+
+
         <motion.section initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
           className="mb-14">
           <h2 className="text-2xl font-bold text-foreground mb-6 flex items-center gap-2">
