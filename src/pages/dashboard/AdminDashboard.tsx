@@ -1396,6 +1396,7 @@ const AdminDashboard = () => {
 
         {/* Configuration */}
         {activeTab === "configuration" && <ConfigurationTab />}
+        {activeTab === "emails" && <EmailTemplatesTab />}
 
         {/* Settings */}
         {activeTab === "settings" && (
