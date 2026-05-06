@@ -65,7 +65,7 @@ const DestinationDetail = () => {
     bestTime: destination.bestSeason || "Anytime",
     duration: "1-2 hrs",
   }));
-  const sitesToShow: any[] = (destination.sites && destination.sites.length > 0) ? destination.sites : fallbackSites;
+  const sitesToShow: any[] = (destination.sites && sitesToShow.length > 0) ? destination.sites : fallbackSites;
 
   // Build a 3-day sample itinerary from the available sites
   const itinerary = sitesToShow.length > 0 ? [
@@ -126,7 +126,7 @@ const DestinationDetail = () => {
                   </span>
                   {destination.sites && (
                     <span className="flex items-center gap-1.5 text-sm text-primary-foreground/80 bg-primary-foreground/10 backdrop-blur-md px-3 py-1.5 rounded-full">
-                      <Camera className="w-3.5 h-3.5" /> {destination.sites.length} Sites
+                      <Camera className="w-3.5 h-3.5" /> {sitesToShow.length} Sites
                     </span>
                   )}
                 </div>
@@ -171,20 +171,20 @@ const DestinationDetail = () => {
         </motion.div>
 
         {/* === 3D-Style Interactive Site Explorer === */}
-        {destination.sites && destination.sites.length > 0 && (
+        {destination.sites && sitesToShow.length > 0 && (
           <motion.section initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }}
             className="mb-14">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-2xl font-bold text-foreground flex items-center gap-2">
                 <Landmark className="w-6 h-6 text-primary" /> Sites & Monuments
               </h2>
-              <span className="text-sm text-muted-foreground">{destination.sites.length} places to explore</span>
+              <span className="text-sm text-muted-foreground">{sitesToShow.length} places to explore</span>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
               {/* Site List */}
               <div className="lg:col-span-2 space-y-2 max-h-[600px] overflow-y-auto pr-2">
-                {destination.sites.map((site, i) => {
+                {sitesToShow.map((site, i) => {
                   const Icon = siteIcons[site.type] || Landmark;
                   const isActive = selectedSite === i;
                   return (
@@ -214,7 +214,7 @@ const DestinationDetail = () => {
               {/* Site Detail Panel */}
               <div className="lg:col-span-3">
                 <AnimatePresence mode="wait">
-                  {selectedSite !== null && destination.sites[selectedSite] ? (
+                  {selectedSite !== null && sitesToShow[selectedSite] ? (
                     <motion.div
                       key={selectedSite}
                       initial={{ opacity: 0, y: 20, scale: 0.98 }}
@@ -224,45 +224,45 @@ const DestinationDetail = () => {
                       className="rounded-2xl overflow-hidden bg-card shadow-elevated"
                     >
                       {/* Site Hero Image */}
-                      <div className={`relative h-56 bg-gradient-to-br ${siteGradients[destination.sites[selectedSite].type] || "from-secondary to-muted"}`}>
+                      <div className={`relative h-56 bg-gradient-to-br ${siteGradients[sitesToShow[selectedSite].type] || "from-secondary to-muted"}`}>
                         <div className="absolute inset-0 flex items-center justify-center">
                           {(() => {
-                            const Icon = siteIcons[destination.sites[selectedSite].type] || Landmark;
+                            const Icon = siteIcons[sitesToShow[selectedSite].type] || Landmark;
                             return <Icon className="w-24 h-24 text-primary/20" />;
                           })()}
                         </div>
                         <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-card to-transparent h-20" />
                         <div className="absolute top-4 right-4 flex gap-2">
                           <span className="bg-primary text-primary-foreground text-xs font-bold px-3 py-1 rounded-full uppercase">
-                            {destination.sites[selectedSite].type}
+                            {sitesToShow[selectedSite].type}
                           </span>
                         </div>
                       </div>
 
                       <div className="p-6 -mt-8 relative">
-                        <h3 className="text-2xl font-bold text-foreground">{destination.sites[selectedSite].name}</h3>
-                        <p className="mt-2 text-muted-foreground leading-relaxed">{destination.sites[selectedSite].description}</p>
+                        <h3 className="text-2xl font-bold text-foreground">{sitesToShow[selectedSite].name}</h3>
+                        <p className="mt-2 text-muted-foreground leading-relaxed">{sitesToShow[selectedSite].description}</p>
 
                         <div className="mt-5 grid grid-cols-3 gap-3">
-                          {destination.sites[selectedSite].entryFee && (
+                          {sitesToShow[selectedSite].entryFee && (
                             <div className="rounded-xl bg-secondary p-3 text-center">
                               <IndianRupee className="w-4 h-4 text-primary mx-auto mb-1" />
                               <p className="text-xs text-muted-foreground">Entry Fee</p>
-                              <p className="text-sm font-bold text-foreground">{destination.sites[selectedSite].entryFee}</p>
+                              <p className="text-sm font-bold text-foreground">{sitesToShow[selectedSite].entryFee}</p>
                             </div>
                           )}
-                          {destination.sites[selectedSite].bestTime && (
+                          {sitesToShow[selectedSite].bestTime && (
                             <div className="rounded-xl bg-secondary p-3 text-center">
                               <Sun className="w-4 h-4 text-primary mx-auto mb-1" />
                               <p className="text-xs text-muted-foreground">Best Time</p>
-                              <p className="text-sm font-bold text-foreground">{destination.sites[selectedSite].bestTime}</p>
+                              <p className="text-sm font-bold text-foreground">{sitesToShow[selectedSite].bestTime}</p>
                             </div>
                           )}
-                          {destination.sites[selectedSite].duration && (
+                          {sitesToShow[selectedSite].duration && (
                             <div className="rounded-xl bg-secondary p-3 text-center">
                               <Clock className="w-4 h-4 text-primary mx-auto mb-1" />
                               <p className="text-xs text-muted-foreground">Duration</p>
-                              <p className="text-sm font-bold text-foreground">{destination.sites[selectedSite].duration}</p>
+                              <p className="text-sm font-bold text-foreground">{sitesToShow[selectedSite].duration}</p>
                             </div>
                           )}
                         </div>
@@ -292,7 +292,7 @@ const DestinationDetail = () => {
                           <Button className="rounded-full gap-2 flex-1">
                             <Navigation className="w-4 h-4" /> Get Directions
                           </Button>
-                          <VirtualTour siteName={destination.sites[selectedSite].name} siteType={destination.sites[selectedSite].type} />
+                          <VirtualTour siteName={sitesToShow[selectedSite].name} siteType={sitesToShow[selectedSite].type} />
                         </div>
                       </div>
                     </motion.div>
