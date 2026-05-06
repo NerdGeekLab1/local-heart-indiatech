@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { Mail, Plus, Save, Send, Trash2, Edit3, Eye, FileText, Bell, Power } from "lucide-react";
+import { Mail, Plus, Save, Send, Trash2, Edit3, Eye, FileText, Bell, Power, Code2, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -47,6 +47,83 @@ const CATEGORIES = [
   { id: "custom", label: "Custom", color: "bg-secondary text-muted-foreground" },
 ];
 
+// Documented variables available per template category. Use {{name}} placeholders in subject and body.
+const VARIABLE_REFERENCE: Record<string, { name: string; description: string }[]> = {
+  global: [
+    { name: "first_name", description: "Recipient's first name" },
+    { name: "last_name", description: "Recipient's last name" },
+    { name: "email", description: "Recipient email address" },
+    { name: "site_name", description: "Platform name (e.g. Travelista)" },
+    { name: "site_url", description: "Public site URL" },
+    { name: "current_year", description: "Current year for footer" },
+  ],
+  welcome: [
+    { name: "first_name", description: "Recipient's first name" },
+    { name: "verify_url", description: "Email verification link" },
+  ],
+  verify_email: [
+    { name: "first_name", description: "Recipient's first name" },
+    { name: "verify_url", description: "Verification link (expires in 24h)" },
+    { name: "otp_code", description: "One-time numeric code" },
+  ],
+  booking_confirmed: [
+    { name: "first_name", description: "Traveler's first name" },
+    { name: "host_name", description: "Host's name" },
+    { name: "destination", description: "Trip destination" },
+    { name: "start_date", description: "Check-in / start date" },
+    { name: "end_date", description: "Check-out / end date" },
+    { name: "guests", description: "Number of guests" },
+    { name: "total_price", description: "Total booking amount (₹)" },
+    { name: "booking_url", description: "Link to booking detail page" },
+  ],
+  booking_pending: [
+    { name: "first_name", description: "Traveler's first name" },
+    { name: "host_name", description: "Host being notified" },
+    { name: "destination", description: "Trip destination" },
+    { name: "start_date", description: "Requested start date" },
+    { name: "review_url", description: "Link for the host to review the request" },
+  ],
+  invoice: [
+    { name: "first_name", description: "Recipient's first name" },
+    { name: "invoice_number", description: "Unique invoice number" },
+    { name: "amount", description: "Subtotal before tax" },
+    { name: "tax_amount", description: "Tax (18% GST)" },
+    { name: "total_amount", description: "Grand total" },
+    { name: "due_date", description: "Payment due date" },
+    { name: "invoice_url", description: "Hosted invoice / PDF link" },
+  ],
+  password_reset: [
+    { name: "first_name", description: "Recipient's first name" },
+    { name: "reset_url", description: "Password reset link (expires in 1h)" },
+  ],
+  trip_reminder: [
+    { name: "first_name", description: "Traveler's first name" },
+    { name: "destination", description: "Trip destination" },
+    { name: "start_date", description: "Start date" },
+    { name: "days_until", description: "Days remaining until trip" },
+    { name: "host_name", description: "Trip host" },
+  ],
+  review_request: [
+    { name: "first_name", description: "Traveler's first name" },
+    { name: "host_name", description: "Host to review" },
+    { name: "experience_title", description: "Experience name" },
+    { name: "review_url", description: "Link to leave a video review" },
+  ],
+  host_approved: [
+    { name: "first_name", description: "Host's first name" },
+    { name: "badge", description: "Awarded badge tier" },
+    { name: "dashboard_url", description: "Host dashboard link" },
+  ],
+  subscription: [
+    { name: "first_name", description: "Subscriber's first name" },
+    { name: "tier", description: "Plan name (Explorer, Adventurer, Nomad)" },
+    { name: "amount", description: "Plan price (₹)" },
+    { name: "renewal_date", description: "Next billing date" },
+    { name: "manage_url", description: "Link to manage subscription" },
+  ],
+  custom: [],
+};
+
 const EmailTemplatesTab = () => {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -58,6 +135,17 @@ const EmailTemplatesTab = () => {
   const [previewing, setPreviewing] = useState<EmailTemplate | null>(null);
   const [sending, setSending] = useState<EmailTemplate | null>(null);
   const [sendForm, setSendForm] = useState({ recipient: "", values: {} as Record<string, string> });
+  const [showVarRef, setShowVarRef] = useState(false);
+  const [varRefCategory, setVarRefCategory] = useState<string>("global");
+  const [copied, setCopied] = useState<string | null>(null);
+
+  const copyVar = async (v: string) => {
+    try {
+      await navigator.clipboard.writeText(`{{${v}}}`);
+      setCopied(v);
+      setTimeout(() => setCopied(null), 1200);
+    } catch {/* ignore */}
+  };
 
   const load = async () => {
     setLoading(true);
@@ -170,6 +258,50 @@ const EmailTemplatesTab = () => {
             </Button>
           )}
         </div>
+      </div>
+
+      {/* Variable Reference */}
+      <div className="rounded-lg bg-card shadow-card overflow-hidden">
+        <button onClick={() => setShowVarRef(s => !s)}
+          className="w-full flex items-center justify-between p-4 hover:bg-secondary/30 transition-colors">
+          <div className="flex items-center gap-2">
+            <Code2 className="w-4 h-4 text-primary" />
+            <span className="font-bold text-foreground text-sm">Variable Reference</span>
+            <span className="text-xs text-muted-foreground">— click any chip to copy</span>
+          </div>
+          <ChevronDown className={`w-4 h-4 text-muted-foreground transition-transform ${showVarRef ? "rotate-180" : ""}`} />
+        </button>
+        {showVarRef && (
+          <div className="px-4 pb-4 border-t border-border">
+            <div className="flex flex-wrap gap-1.5 my-3">
+              {Object.keys(VARIABLE_REFERENCE).map(cat => (
+                <button key={cat} onClick={() => setVarRefCategory(cat)}
+                  className={`text-[11px] px-2.5 py-1 rounded-full transition-colors ${varRefCategory === cat ? "bg-primary text-primary-foreground" : "bg-secondary text-muted-foreground hover:text-foreground"}`}>
+                  {cat.replace("_", " ")}
+                </button>
+              ))}
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              {VARIABLE_REFERENCE[varRefCategory].length === 0 && (
+                <p className="text-xs text-muted-foreground italic col-span-2">Custom templates can use any variable name you define.</p>
+              )}
+              {VARIABLE_REFERENCE[varRefCategory].map(v => (
+                <button key={v.name} onClick={() => copyVar(v.name)}
+                  className="flex items-start gap-2 text-left p-2 rounded-md hover:bg-secondary/50 transition-colors">
+                  <code className={`text-[11px] font-mono px-1.5 py-0.5 rounded shrink-0 ${copied === v.name ? "bg-accent text-accent-foreground" : "bg-secondary text-primary"}`}>
+                    {copied === v.name ? "copied!" : `{{${v.name}}}`}
+                  </code>
+                  <span className="text-xs text-muted-foreground pt-0.5">{v.description}</span>
+                </button>
+              ))}
+            </div>
+            {varRefCategory !== "global" && varRefCategory !== "custom" && (
+              <p className="text-[11px] text-muted-foreground mt-3 italic">
+                Global variables are also available in every template.
+              </p>
+            )}
+          </div>
+        )}
       </div>
 
       {loading ? (

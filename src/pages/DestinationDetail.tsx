@@ -57,6 +57,30 @@ const DestinationDetail = () => {
   const cityExperiences = experiences.filter(e => e.hostCity === destination.name);
   const cityReviews = reviews.filter(r => cityHosts.some(h => h.id === r.hostId));
 
+  // Build a fallback "sites" list from highlights when the dataset doesn't include detailed sites
+  const fallbackSites = (destination.highlights || []).map((h, idx) => ({
+    name: h,
+    type: idx % 4 === 0 ? "monument" : idx % 4 === 1 ? "temple" : idx % 4 === 2 ? "nature" : "market",
+    description: `A signature ${destination.name} attraction — must-see while in the region.`,
+    bestTime: destination.bestSeason || "Anytime",
+    duration: "1-2 hrs",
+  }));
+  const sitesToShow: any[] = (destination.sites && destination.sites.length > 0) ? destination.sites : fallbackSites;
+
+  // Build a 3-day sample itinerary from the available sites
+  const itinerary = sitesToShow.length > 0 ? [
+    { day: "Day 1 — Arrival & Iconic Sights", places: sitesToShow.slice(0, 2).map(s => s.name) },
+    { day: "Day 2 — Culture & Cuisine", places: sitesToShow.slice(2, 4).map(s => s.name).concat([`Local food trail in ${destination.name}`]) },
+    { day: "Day 3 — Hidden Gems", places: sitesToShow.slice(4, 6).map(s => s.name).concat([`Sunset point & local market`]) },
+  ].filter(d => d.places.length > 0) : [];
+
+  // Map embed (OpenStreetMap — no API key)
+  const firstSite = sitesToShow.find((s: any) => s.lat && s.lng);
+  const mapCenter = firstSite ? `${firstSite.lat},${firstSite.lng}` : null;
+  const mapBbox = firstSite
+    ? `${firstSite.lng - 0.15},${firstSite.lat - 0.15},${firstSite.lng + 0.15},${firstSite.lat + 0.15}`
+    : null;
+
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
@@ -100,9 +124,9 @@ const DestinationDetail = () => {
                   <span className="flex items-center gap-1.5 text-sm text-primary-foreground/80 bg-primary-foreground/10 backdrop-blur-md px-3 py-1.5 rounded-full">
                     <Users className="w-3.5 h-3.5" /> {destination.hostCount} Local Hosts
                   </span>
-                  {destination.sites && (
+                  {sitesToShow.length > 0 && (
                     <span className="flex items-center gap-1.5 text-sm text-primary-foreground/80 bg-primary-foreground/10 backdrop-blur-md px-3 py-1.5 rounded-full">
-                      <Camera className="w-3.5 h-3.5" /> {destination.sites.length} Sites
+                      <Camera className="w-3.5 h-3.5" /> {sitesToShow.length} Sites
                     </span>
                   )}
                 </div>
@@ -147,20 +171,20 @@ const DestinationDetail = () => {
         </motion.div>
 
         {/* === 3D-Style Interactive Site Explorer === */}
-        {destination.sites && destination.sites.length > 0 && (
+        {sitesToShow.length > 0 && (
           <motion.section initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }}
             className="mb-14">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-2xl font-bold text-foreground flex items-center gap-2">
                 <Landmark className="w-6 h-6 text-primary" /> Sites & Monuments
               </h2>
-              <span className="text-sm text-muted-foreground">{destination.sites.length} places to explore</span>
+              <span className="text-sm text-muted-foreground">{sitesToShow.length} places to explore</span>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
               {/* Site List */}
               <div className="lg:col-span-2 space-y-2 max-h-[600px] overflow-y-auto pr-2">
-                {destination.sites.map((site, i) => {
+                {sitesToShow.map((site, i) => {
                   const Icon = siteIcons[site.type] || Landmark;
                   const isActive = selectedSite === i;
                   return (
@@ -190,7 +214,7 @@ const DestinationDetail = () => {
               {/* Site Detail Panel */}
               <div className="lg:col-span-3">
                 <AnimatePresence mode="wait">
-                  {selectedSite !== null && destination.sites[selectedSite] ? (
+                  {selectedSite !== null && sitesToShow[selectedSite] ? (
                     <motion.div
                       key={selectedSite}
                       initial={{ opacity: 0, y: 20, scale: 0.98 }}
@@ -200,45 +224,45 @@ const DestinationDetail = () => {
                       className="rounded-2xl overflow-hidden bg-card shadow-elevated"
                     >
                       {/* Site Hero Image */}
-                      <div className={`relative h-56 bg-gradient-to-br ${siteGradients[destination.sites[selectedSite].type] || "from-secondary to-muted"}`}>
+                      <div className={`relative h-56 bg-gradient-to-br ${siteGradients[sitesToShow[selectedSite].type] || "from-secondary to-muted"}`}>
                         <div className="absolute inset-0 flex items-center justify-center">
                           {(() => {
-                            const Icon = siteIcons[destination.sites[selectedSite].type] || Landmark;
+                            const Icon = siteIcons[sitesToShow[selectedSite].type] || Landmark;
                             return <Icon className="w-24 h-24 text-primary/20" />;
                           })()}
                         </div>
                         <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-card to-transparent h-20" />
                         <div className="absolute top-4 right-4 flex gap-2">
                           <span className="bg-primary text-primary-foreground text-xs font-bold px-3 py-1 rounded-full uppercase">
-                            {destination.sites[selectedSite].type}
+                            {sitesToShow[selectedSite].type}
                           </span>
                         </div>
                       </div>
 
                       <div className="p-6 -mt-8 relative">
-                        <h3 className="text-2xl font-bold text-foreground">{destination.sites[selectedSite].name}</h3>
-                        <p className="mt-2 text-muted-foreground leading-relaxed">{destination.sites[selectedSite].description}</p>
+                        <h3 className="text-2xl font-bold text-foreground">{sitesToShow[selectedSite].name}</h3>
+                        <p className="mt-2 text-muted-foreground leading-relaxed">{sitesToShow[selectedSite].description}</p>
 
                         <div className="mt-5 grid grid-cols-3 gap-3">
-                          {destination.sites[selectedSite].entryFee && (
+                          {sitesToShow[selectedSite].entryFee && (
                             <div className="rounded-xl bg-secondary p-3 text-center">
                               <IndianRupee className="w-4 h-4 text-primary mx-auto mb-1" />
                               <p className="text-xs text-muted-foreground">Entry Fee</p>
-                              <p className="text-sm font-bold text-foreground">{destination.sites[selectedSite].entryFee}</p>
+                              <p className="text-sm font-bold text-foreground">{sitesToShow[selectedSite].entryFee}</p>
                             </div>
                           )}
-                          {destination.sites[selectedSite].bestTime && (
+                          {sitesToShow[selectedSite].bestTime && (
                             <div className="rounded-xl bg-secondary p-3 text-center">
                               <Sun className="w-4 h-4 text-primary mx-auto mb-1" />
                               <p className="text-xs text-muted-foreground">Best Time</p>
-                              <p className="text-sm font-bold text-foreground">{destination.sites[selectedSite].bestTime}</p>
+                              <p className="text-sm font-bold text-foreground">{sitesToShow[selectedSite].bestTime}</p>
                             </div>
                           )}
-                          {destination.sites[selectedSite].duration && (
+                          {sitesToShow[selectedSite].duration && (
                             <div className="rounded-xl bg-secondary p-3 text-center">
                               <Clock className="w-4 h-4 text-primary mx-auto mb-1" />
                               <p className="text-xs text-muted-foreground">Duration</p>
-                              <p className="text-sm font-bold text-foreground">{destination.sites[selectedSite].duration}</p>
+                              <p className="text-sm font-bold text-foreground">{sitesToShow[selectedSite].duration}</p>
                             </div>
                           )}
                         </div>
@@ -268,7 +292,7 @@ const DestinationDetail = () => {
                           <Button className="rounded-full gap-2 flex-1">
                             <Navigation className="w-4 h-4" /> Get Directions
                           </Button>
-                          <VirtualTour siteName={destination.sites[selectedSite].name} siteType={destination.sites[selectedSite].type} />
+                          <VirtualTour siteName={sitesToShow[selectedSite].name} siteType={sitesToShow[selectedSite].type} />
                         </div>
                       </div>
                     </motion.div>
@@ -291,7 +315,64 @@ const DestinationDetail = () => {
           </motion.section>
         )}
 
-        {/* Video Reviews Section */}
+        {/* === Map === */}
+        {mapBbox && (
+          <motion.section initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
+            className="mb-14">
+            <h2 className="text-2xl font-bold text-foreground mb-6 flex items-center gap-2">
+              <MapPin className="w-6 h-6 text-primary" /> {destination.name} on the Map
+            </h2>
+            <div className="rounded-2xl overflow-hidden shadow-card aspect-[16/9] bg-secondary">
+              <iframe
+                title={`Map of ${destination.name}`}
+                width="100%"
+                height="100%"
+                loading="lazy"
+                src={`https://www.openstreetmap.org/export/embed.html?bbox=${mapBbox}&layer=mapnik&marker=${mapCenter}`}
+                style={{ border: 0 }}
+              />
+            </div>
+            <p className="text-xs text-muted-foreground mt-2">
+              Pinned location:{" "}
+              <a href={`https://www.openstreetmap.org/?mlat=${firstSite?.lat}&mlon=${firstSite?.lng}#map=12/${firstSite?.lat}/${firstSite?.lng}`}
+                target="_blank" rel="noreferrer" className="text-primary hover:underline">View larger map</a>
+            </p>
+          </motion.section>
+        )}
+
+        {/* === Sample Itinerary === */}
+        {itinerary.length > 0 && (
+          <motion.section initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
+            className="mb-14">
+            <h2 className="text-2xl font-bold text-foreground mb-6 flex items-center gap-2">
+              <Calendar className="w-6 h-6 text-primary" /> Sample 3-Day Itinerary
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {itinerary.map((day, i) => (
+                <motion.div key={day.day}
+                  initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }}
+                  transition={{ delay: i * 0.1 }} viewport={{ once: true }}
+                  className="rounded-2xl bg-card shadow-card p-5 border-t-4 border-primary">
+                  <p className="text-xs uppercase tracking-wider text-primary font-bold">Day {i + 1}</p>
+                  <h3 className="font-bold text-foreground mt-1 mb-3">{day.day.split(" — ")[1] || day.day}</h3>
+                  <ul className="space-y-2">
+                    {day.places.map(p => (
+                      <li key={p} className="flex items-start gap-2 text-sm text-muted-foreground">
+                        <ChevronRight className="w-3.5 h-3.5 text-primary mt-0.5 shrink-0" />
+                        <span>{p}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </motion.div>
+              ))}
+            </div>
+            <p className="text-xs text-muted-foreground mt-3 italic">
+              Tip: Book a verified local host below for a fully customized itinerary tailored to your interests and pace.
+            </p>
+          </motion.section>
+        )}
+
+
         <motion.section initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
           className="mb-14">
           <h2 className="text-2xl font-bold text-foreground mb-6 flex items-center gap-2">
@@ -325,12 +406,12 @@ const DestinationDetail = () => {
         </motion.section>
 
         {/* Local Hosts */}
-        {cityHosts.length > 0 && (
-          <motion.section initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
-            className="mb-14">
-            <h2 className="text-2xl font-bold text-foreground mb-6 flex items-center gap-2">
-              <Users className="w-6 h-6 text-primary" /> Meet Your Local Hosts
-            </h2>
+        <motion.section initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
+          className="mb-14">
+          <h2 className="text-2xl font-bold text-foreground mb-6 flex items-center gap-2">
+            <Users className="w-6 h-6 text-primary" /> Meet Your Local Hosts
+          </h2>
+          {cityHosts.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {cityHosts.map(host => (
                 <Link to={`/host/${host.id}`} key={host.id}>
@@ -361,16 +442,26 @@ const DestinationDetail = () => {
                 </Link>
               ))}
             </div>
-          </motion.section>
-        )}
+          ) : (
+            <div className="rounded-2xl bg-card shadow-card p-8 text-center border-2 border-dashed border-border">
+              <Users className="w-10 h-10 text-muted-foreground/40 mx-auto mb-3" />
+              <p className="text-foreground font-semibold">{destination.hostCount}+ verified local hosts available in {destination.name}</p>
+              <p className="text-sm text-muted-foreground mt-1">Browse all hosts in our directory or apply to become one yourself.</p>
+              <div className="flex justify-center gap-2 mt-4">
+                <Link to="/explore"><Button size="sm" className="rounded-full">Browse Hosts</Button></Link>
+                <Link to="/become-host"><Button size="sm" variant="outline" className="rounded-full">Become a Host</Button></Link>
+              </div>
+            </div>
+          )}
+        </motion.section>
 
         {/* Experiences */}
-        {cityExperiences.length > 0 && (
-          <motion.section initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
-            className="mb-14">
-            <h2 className="text-2xl font-bold text-foreground mb-6">
-              Experiences in {destination.name}
-            </h2>
+        <motion.section initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
+          className="mb-14">
+          <h2 className="text-2xl font-bold text-foreground mb-6">
+            Experiences in {destination.name}
+          </h2>
+          {cityExperiences.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {cityExperiences.map(exp => (
                 <Link to={`/experience/${exp.id}`} key={exp.id}>
@@ -396,11 +487,26 @@ const DestinationDetail = () => {
                 </Link>
               ))}
             </div>
-          </motion.section>
-        )}
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              {(destination.experienceTags || ["Cultural", "Food", "Adventure"]).slice(0, 6).map(tag => (
+                <Link key={tag} to={`/experiences?category=${encodeURIComponent(tag)}`}
+                  className="rounded-2xl bg-card shadow-card hover:shadow-elevated transition-all p-5 group flex items-center justify-between">
+                  <div>
+                    <p className="text-xs uppercase tracking-wider text-primary font-bold">Suggested</p>
+                    <h3 className="font-bold text-foreground group-hover:text-primary transition-colors mt-1">{tag} in {destination.name}</h3>
+                    <p className="text-xs text-muted-foreground mt-1">Browse curated {tag.toLowerCase()} experiences</p>
+                  </div>
+                  <ChevronRight className="w-5 h-5 text-primary group-hover:translate-x-1 transition-transform" />
+                </Link>
+              ))}
+            </div>
+          )}
+        </motion.section>
+
 
         {/* Traveler Reviews */}
-        {cityReviews.length > 0 && (
+        {cityReviews.length > 0 ? (
           <motion.section initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
             className="mb-14">
             <h2 className="text-2xl font-bold text-foreground mb-6">
@@ -426,6 +532,16 @@ const DestinationDetail = () => {
                   <p className="text-sm text-muted-foreground leading-relaxed">{review.text}</p>
                 </div>
               ))}
+            </div>
+          </motion.section>
+        ) : (
+          <motion.section initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
+            className="mb-14">
+            <h2 className="text-2xl font-bold text-foreground mb-6">What Travelers Say</h2>
+            <div className="rounded-2xl bg-card shadow-card p-8 text-center border-2 border-dashed border-border">
+              <Star className="w-10 h-10 text-muted-foreground/40 mx-auto mb-3" />
+              <p className="text-foreground font-semibold">Be the first to review {destination.name}</p>
+              <p className="text-sm text-muted-foreground mt-1">Book a trip with a local host and share your story.</p>
             </div>
           </motion.section>
         )}
