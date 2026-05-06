@@ -506,7 +506,7 @@ const DestinationDetail = () => {
 
 
         {/* Traveler Reviews */}
-        {cityReviews.length > 0 && (
+        {cityReviews.length > 0 ? (
           <motion.section initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
             className="mb-14">
             <h2 className="text-2xl font-bold text-foreground mb-6">
