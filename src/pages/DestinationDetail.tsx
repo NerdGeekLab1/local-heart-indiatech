@@ -505,41 +505,6 @@ const DestinationDetail = () => {
         </motion.section>
 
 
-        {/* Experiences */}
-        {cityExperiences.length > 0 && (
-          <motion.section initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
-            className="mb-14">
-            <h2 className="text-2xl font-bold text-foreground mb-6">
-              Experiences in {destination.name}
-            </h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {cityExperiences.map(exp => (
-                <Link to={`/experience/${exp.id}`} key={exp.id}>
-                  <motion.div whileHover={{ y: -4 }}
-                    className="rounded-2xl overflow-hidden bg-card shadow-card hover:shadow-elevated transition-all group">
-                    <div className="relative aspect-video overflow-hidden">
-                      <img src={exp.image} alt={exp.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                      <div className="absolute inset-0 bg-gradient-to-t from-foreground/60 to-transparent" />
-                      <span className="absolute top-3 left-3 bg-primary text-primary-foreground text-xs font-bold px-2.5 py-1 rounded-full">
-                        {exp.category}
-                      </span>
-                      <div className="absolute bottom-3 left-3">
-                        <p className="text-primary-foreground font-bold text-sm">{exp.title}</p>
-                      </div>
-                    </div>
-                    <div className="p-4">
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm text-muted-foreground">{exp.duration}</span>
-                        <span className="text-lg font-bold text-foreground">${exp.price}</span>
-                      </div>
-                    </div>
-                  </motion.div>
-                </Link>
-              ))}
-            </div>
-          </motion.section>
-        )}
-
         {/* Traveler Reviews */}
         {cityReviews.length > 0 && (
           <motion.section initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
