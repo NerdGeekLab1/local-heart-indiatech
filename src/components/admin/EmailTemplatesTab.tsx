@@ -47,6 +47,83 @@ const CATEGORIES = [
   { id: "custom", label: "Custom", color: "bg-secondary text-muted-foreground" },
 ];
 
+// Documented variables available per template category. Use {{name}} placeholders in subject and body.
+const VARIABLE_REFERENCE: Record<string, { name: string; description: string }[]> = {
+  global: [
+    { name: "first_name", description: "Recipient's first name" },
+    { name: "last_name", description: "Recipient's last name" },
+    { name: "email", description: "Recipient email address" },
+    { name: "site_name", description: "Platform name (e.g. Travelista)" },
+    { name: "site_url", description: "Public site URL" },
+    { name: "current_year", description: "Current year for footer" },
+  ],
+  welcome: [
+    { name: "first_name", description: "Recipient's first name" },
+    { name: "verify_url", description: "Email verification link" },
+  ],
+  verify_email: [
+    { name: "first_name", description: "Recipient's first name" },
+    { name: "verify_url", description: "Verification link (expires in 24h)" },
+    { name: "otp_code", description: "One-time numeric code" },
+  ],
+  booking_confirmed: [
+    { name: "first_name", description: "Traveler's first name" },
+    { name: "host_name", description: "Host's name" },
+    { name: "destination", description: "Trip destination" },
+    { name: "start_date", description: "Check-in / start date" },
+    { name: "end_date", description: "Check-out / end date" },
+    { name: "guests", description: "Number of guests" },
+    { name: "total_price", description: "Total booking amount (₹)" },
+    { name: "booking_url", description: "Link to booking detail page" },
+  ],
+  booking_pending: [
+    { name: "first_name", description: "Traveler's first name" },
+    { name: "host_name", description: "Host being notified" },
+    { name: "destination", description: "Trip destination" },
+    { name: "start_date", description: "Requested start date" },
+    { name: "review_url", description: "Link for the host to review the request" },
+  ],
+  invoice: [
+    { name: "first_name", description: "Recipient's first name" },
+    { name: "invoice_number", description: "Unique invoice number" },
+    { name: "amount", description: "Subtotal before tax" },
+    { name: "tax_amount", description: "Tax (18% GST)" },
+    { name: "total_amount", description: "Grand total" },
+    { name: "due_date", description: "Payment due date" },
+    { name: "invoice_url", description: "Hosted invoice / PDF link" },
+  ],
+  password_reset: [
+    { name: "first_name", description: "Recipient's first name" },
+    { name: "reset_url", description: "Password reset link (expires in 1h)" },
+  ],
+  trip_reminder: [
+    { name: "first_name", description: "Traveler's first name" },
+    { name: "destination", description: "Trip destination" },
+    { name: "start_date", description: "Start date" },
+    { name: "days_until", description: "Days remaining until trip" },
+    { name: "host_name", description: "Trip host" },
+  ],
+  review_request: [
+    { name: "first_name", description: "Traveler's first name" },
+    { name: "host_name", description: "Host to review" },
+    { name: "experience_title", description: "Experience name" },
+    { name: "review_url", description: "Link to leave a video review" },
+  ],
+  host_approved: [
+    { name: "first_name", description: "Host's first name" },
+    { name: "badge", description: "Awarded badge tier" },
+    { name: "dashboard_url", description: "Host dashboard link" },
+  ],
+  subscription: [
+    { name: "first_name", description: "Subscriber's first name" },
+    { name: "tier", description: "Plan name (Explorer, Adventurer, Nomad)" },
+    { name: "amount", description: "Plan price (₹)" },
+    { name: "renewal_date", description: "Next billing date" },
+    { name: "manage_url", description: "Link to manage subscription" },
+  ],
+  custom: [],
+};
+
 const EmailTemplatesTab = () => {
   const { user } = useAuth();
   const { toast } = useToast();
