@@ -260,7 +260,50 @@ const EmailTemplatesTab = () => {
         </div>
       </div>
 
-      {loading ? (
+      {/* Variable Reference */}
+      <div className="rounded-lg bg-card shadow-card overflow-hidden">
+        <button onClick={() => setShowVarRef(s => !s)}
+          className="w-full flex items-center justify-between p-4 hover:bg-secondary/30 transition-colors">
+          <div className="flex items-center gap-2">
+            <Code2 className="w-4 h-4 text-primary" />
+            <span className="font-bold text-foreground text-sm">Variable Reference</span>
+            <span className="text-xs text-muted-foreground">— click any chip to copy</span>
+          </div>
+          <ChevronDown className={`w-4 h-4 text-muted-foreground transition-transform ${showVarRef ? "rotate-180" : ""}`} />
+        </button>
+        {showVarRef && (
+          <div className="px-4 pb-4 border-t border-border">
+            <div className="flex flex-wrap gap-1.5 my-3">
+              {Object.keys(VARIABLE_REFERENCE).map(cat => (
+                <button key={cat} onClick={() => setVarRefCategory(cat)}
+                  className={`text-[11px] px-2.5 py-1 rounded-full transition-colors ${varRefCategory === cat ? "bg-primary text-primary-foreground" : "bg-secondary text-muted-foreground hover:text-foreground"}`}>
+                  {cat.replace("_", " ")}
+                </button>
+              ))}
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              {VARIABLE_REFERENCE[varRefCategory].length === 0 && (
+                <p className="text-xs text-muted-foreground italic col-span-2">Custom templates can use any variable name you define.</p>
+              )}
+              {VARIABLE_REFERENCE[varRefCategory].map(v => (
+                <button key={v.name} onClick={() => copyVar(v.name)}
+                  className="flex items-start gap-2 text-left p-2 rounded-md hover:bg-secondary/50 transition-colors">
+                  <code className={`text-[11px] font-mono px-1.5 py-0.5 rounded shrink-0 ${copied === v.name ? "bg-accent text-accent-foreground" : "bg-secondary text-primary"}`}>
+                    {copied === v.name ? "copied!" : `{{${v.name}}}`}
+                  </code>
+                  <span className="text-xs text-muted-foreground pt-0.5">{v.description}</span>
+                </button>
+              ))}
+            </div>
+            {varRefCategory !== "global" && varRefCategory !== "custom" && (
+              <p className="text-[11px] text-muted-foreground mt-3 italic">
+                Global variables are also available in every template.
+              </p>
+            )}
+          </div>
+        )}
+      </div>
+
         <div className="text-center py-12 text-muted-foreground">Loading…</div>
       ) : view === "templates" ? (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
