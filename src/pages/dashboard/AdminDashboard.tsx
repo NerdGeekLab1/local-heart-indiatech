@@ -20,8 +20,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import ConfigurationTab from "@/components/admin/ConfigurationTab";
+import EmailTemplatesTab from "@/components/admin/EmailTemplatesTab";
 
-type Tab = "overview" | "hosts" | "bookings" | "experiences" | "destinations" | "trips" | "grievances" | "users" | "wanderers" | "missions" | "leaderboard" | "invoices" | "moderation" | "analytics" | "settings" | "configuration";
+type Tab = "overview" | "hosts" | "bookings" | "experiences" | "destinations" | "trips" | "grievances" | "users" | "wanderers" | "missions" | "leaderboard" | "invoices" | "moderation" | "analytics" | "settings" | "configuration" | "emails";
 
 const destinationFields: FieldConfig[] = [
   { key: "name", label: "City Name", required: true },
@@ -347,6 +348,7 @@ const AdminDashboard = () => {
     { id: "moderation", label: "Moderation", icon: Shield },
     { id: "analytics", label: "Analytics", icon: TrendingUp },
     { id: "configuration", label: "Configuration", icon: Key },
+    { id: "emails", label: "Emails", icon: Mail },
     { id: "settings", label: "Settings", icon: Settings },
   ];
 
@@ -1394,6 +1396,7 @@ const AdminDashboard = () => {
 
         {/* Configuration */}
         {activeTab === "configuration" && <ConfigurationTab />}
+        {activeTab === "emails" && <EmailTemplatesTab />}
 
         {/* Settings */}
         {activeTab === "settings" && (

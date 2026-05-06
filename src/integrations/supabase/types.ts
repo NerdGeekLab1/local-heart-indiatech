@@ -169,6 +169,113 @@ export type Database = {
           },
         ]
       }
+      email_notifications: {
+        Row: {
+          body_html: string | null
+          created_at: string
+          error: string | null
+          id: string
+          payload: Json | null
+          recipient_email: string
+          recipient_user_id: string | null
+          sent_at: string | null
+          sent_by: string | null
+          status: string
+          subject: string
+          template_id: string | null
+          template_name: string | null
+          trigger_event: string | null
+        }
+        Insert: {
+          body_html?: string | null
+          created_at?: string
+          error?: string | null
+          id?: string
+          payload?: Json | null
+          recipient_email: string
+          recipient_user_id?: string | null
+          sent_at?: string | null
+          sent_by?: string | null
+          status?: string
+          subject: string
+          template_id?: string | null
+          template_name?: string | null
+          trigger_event?: string | null
+        }
+        Update: {
+          body_html?: string | null
+          created_at?: string
+          error?: string | null
+          id?: string
+          payload?: Json | null
+          recipient_email?: string
+          recipient_user_id?: string | null
+          sent_at?: string | null
+          sent_by?: string | null
+          status?: string
+          subject?: string
+          template_id?: string | null
+          template_name?: string | null
+          trigger_event?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "email_notifications_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "email_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      email_templates: {
+        Row: {
+          body_html: string
+          body_text: string | null
+          category: string
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          is_active: boolean
+          name: string
+          subject: string
+          updated_at: string
+          updated_by: string | null
+          variables: string[] | null
+        }
+        Insert: {
+          body_html: string
+          body_text?: string | null
+          category?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          subject: string
+          updated_at?: string
+          updated_by?: string | null
+          variables?: string[] | null
+        }
+        Update: {
+          body_html?: string
+          body_text?: string | null
+          category?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          subject?: string
+          updated_at?: string
+          updated_by?: string | null
+          variables?: string[] | null
+        }
+        Relationships: []
+      }
       experience_requests: {
         Row: {
           admin_notes: string | null
