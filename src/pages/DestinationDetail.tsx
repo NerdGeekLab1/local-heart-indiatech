@@ -534,6 +534,16 @@ const DestinationDetail = () => {
               ))}
             </div>
           </motion.section>
+        ) : (
+          <motion.section initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
+            className="mb-14">
+            <h2 className="text-2xl font-bold text-foreground mb-6">What Travelers Say</h2>
+            <div className="rounded-2xl bg-card shadow-card p-8 text-center border-2 border-dashed border-border">
+              <Star className="w-10 h-10 text-muted-foreground/40 mx-auto mb-3" />
+              <p className="text-foreground font-semibold">Be the first to review {destination.name}</p>
+              <p className="text-sm text-muted-foreground mt-1">Book a trip with a local host and share your story.</p>
+            </div>
+          </motion.section>
         )}
 
         {/* CTA */}
