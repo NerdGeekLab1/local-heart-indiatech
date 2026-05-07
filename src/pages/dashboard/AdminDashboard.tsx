@@ -21,8 +21,11 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import ConfigurationTab from "@/components/admin/ConfigurationTab";
 import EmailTemplatesTab from "@/components/admin/EmailTemplatesTab";
+import SubscriptionPlansTab from "@/components/admin/SubscriptionPlansTab";
+import WeddingsTab from "@/components/admin/WeddingsTab";
+import { Heart, Menu } from "lucide-react";
 
-type Tab = "overview" | "hosts" | "bookings" | "experiences" | "destinations" | "trips" | "grievances" | "users" | "wanderers" | "missions" | "leaderboard" | "invoices" | "moderation" | "analytics" | "settings" | "configuration" | "emails";
+type Tab = "overview" | "hosts" | "bookings" | "experiences" | "destinations" | "trips" | "grievances" | "users" | "wanderers" | "missions" | "leaderboard" | "invoices" | "moderation" | "analytics" | "settings" | "configuration" | "emails" | "plans" | "weddings";
 
 const destinationFields: FieldConfig[] = [
   { key: "name", label: "City Name", required: true },
@@ -332,46 +335,84 @@ const AdminDashboard = () => {
     return colors[status] || "bg-secondary text-muted-foreground";
   };
 
-  const tabs: { id: Tab; label: string; icon: React.ElementType; badge?: number }[] = [
-    { id: "overview", label: "Overview", icon: BarChart3 },
-    { id: "users", label: "Users & ACL", icon: Users },
-    { id: "hosts", label: "Hosts", icon: Users },
-    { id: "bookings", label: "Bookings", icon: Calendar },
-    { id: "invoices", label: "Invoices", icon: Receipt },
-    { id: "experiences", label: "Experiences", icon: Globe },
-    { id: "trips", label: "Trips", icon: Compass, badge: dbTrips.filter(t => t.status === "pending").length },
-    { id: "grievances", label: "Grievances", icon: MessageSquare, badge: dbGrievances.filter(g => g.status === "open").length },
-    { id: "wanderers", label: "Wanderers", icon: Target },
-    { id: "missions", label: "Missions", icon: Crosshair },
-    { id: "leaderboard", label: "Leaderboard", icon: Trophy },
-    { id: "destinations", label: "Destinations", icon: MapPin },
-    { id: "moderation", label: "Moderation", icon: Shield },
-    { id: "analytics", label: "Analytics", icon: TrendingUp },
-    { id: "configuration", label: "Configuration", icon: Key },
-    { id: "emails", label: "Emails", icon: Mail },
-    { id: "settings", label: "Settings", icon: Settings },
+  const tabs: { id: Tab; label: string; icon: React.ElementType; badge?: number; group: string }[] = [
+    { id: "overview", label: "Overview", icon: BarChart3, group: "Insights" },
+    { id: "analytics", label: "Analytics", icon: TrendingUp, group: "Insights" },
+
+    { id: "users", label: "Users & ACL", icon: Users, group: "People" },
+    { id: "hosts", label: "Hosts", icon: Users, group: "People" },
+    { id: "wanderers", label: "Wanderers", icon: Target, group: "People" },
+    { id: "leaderboard", label: "Leaderboard", icon: Trophy, group: "People" },
+
+    { id: "experiences", label: "Experiences", icon: Globe, group: "Catalog" },
+    { id: "destinations", label: "Destinations", icon: MapPin, group: "Catalog" },
+    { id: "trips", label: "Trips", icon: Compass, badge: dbTrips.filter(t => t.status === "pending").length, group: "Catalog" },
+    { id: "weddings", label: "Weddings", icon: Heart, group: "Catalog" },
+
+    { id: "bookings", label: "Bookings", icon: Calendar, group: "Operations" },
+    { id: "invoices", label: "Invoices", icon: Receipt, group: "Operations" },
+    { id: "missions", label: "Missions", icon: Crosshair, group: "Operations" },
+    { id: "grievances", label: "Grievances", icon: MessageSquare, badge: dbGrievances.filter(g => g.status === "open").length, group: "Operations" },
+    { id: "moderation", label: "Moderation", icon: Shield, group: "Operations" },
+
+    { id: "plans", label: "Subscription Plans", icon: Crown, group: "Settings" },
+    { id: "emails", label: "Emails", icon: Mail, group: "Settings" },
+    { id: "configuration", label: "Configuration", icon: Key, group: "Settings" },
+    { id: "settings", label: "General", icon: Settings, group: "Settings" },
   ];
+
+  const groupedTabs = tabs.reduce<Record<string, typeof tabs>>((acc, t) => {
+    (acc[t.group] ||= []).push(t); return acc;
+  }, {});
+  const activeTabMeta = tabs.find(t => t.id === activeTab);
 
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
-      <div className="pt-24 pb-16 px-4 sm:px-6 lg:px-8 mx-auto max-w-7xl">
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-          <h1 className="text-3xl font-bold text-foreground">Admin Dashboard</h1>
-          <p className="mt-1 text-muted-foreground">Platform overview and management · Commission: {platformSettings.commissionRate}%</p>
-        </motion.div>
+      <div className="pt-20 pb-16 px-4 sm:px-6 lg:px-8 mx-auto max-w-[1500px]">
+        <div className="flex flex-col lg:flex-row gap-6">
+          {/* Sidebar */}
+          <aside className="lg:w-64 lg:shrink-0">
+            <div className="lg:sticky lg:top-24 rounded-2xl bg-card shadow-card p-3 max-h-[80vh] overflow-y-auto">
+              <div className="px-2 py-2 mb-2 border-b border-border">
+                <h1 className="text-lg font-bold text-foreground">Admin Console</h1>
+                <p className="text-[11px] text-muted-foreground">Commission: {platformSettings.commissionRate}%</p>
+              </div>
+              <nav className="space-y-3">
+                {Object.entries(groupedTabs).map(([group, items]) => (
+                  <div key={group}>
+                    <p className="px-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-1">{group}</p>
+                    <div className="space-y-0.5">
+                      {items.map(t => (
+                        <button key={t.id} onClick={() => setActiveTab(t.id)}
+                          className={`w-full flex items-center justify-between gap-2 px-2.5 py-2 text-sm rounded-lg transition-colors ${activeTab === t.id ? "bg-primary text-primary-foreground font-medium" : "text-foreground hover:bg-secondary"}`}>
+                          <span className="flex items-center gap-2 min-w-0">
+                            <t.icon className="w-4 h-4 shrink-0" />
+                            <span className="truncate">{t.label}</span>
+                          </span>
+                          {(t.badge || 0) > 0 && (
+                            <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${activeTab === t.id ? "bg-primary-foreground text-primary" : "bg-destructive text-destructive-foreground"}`}>
+                              {t.badge}
+                            </span>
+                          )}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </nav>
+            </div>
+          </aside>
 
-        <div className="mt-6 flex gap-1 overflow-x-auto border-b border-border pb-px">
-          {tabs.map(t => (
-            <button key={t.id} onClick={() => setActiveTab(t.id)}
-              className={`flex items-center gap-1.5 px-3 py-2.5 text-xs font-medium whitespace-nowrap transition-colors rounded-t-lg ${activeTab === t.id ? "bg-card text-primary border-b-2 border-primary" : "text-muted-foreground hover:text-foreground"}`}>
-              <t.icon className="w-3.5 h-3.5" /> {t.label}
-              {(t.badge || 0) > 0 && (
-                <span className="w-4 h-4 rounded-full bg-destructive text-destructive-foreground text-[9px] font-bold flex items-center justify-center">{t.badge}</span>
-              )}
-            </button>
-          ))}
-        </div>
+          {/* Content */}
+          <div className="flex-1 min-w-0">
+            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} key={activeTab}
+              className="mb-4 flex items-center gap-2 text-sm text-muted-foreground">
+              <Menu className="w-4 h-4" />
+              <span>Admin</span>
+              <span>/</span>
+              <span className="text-foreground font-medium">{activeTabMeta?.label}</span>
+            </motion.div>
 
         {/* Overview */}
         {activeTab === "overview" && (
@@ -1441,6 +1482,11 @@ const AdminDashboard = () => {
             </div>
           </div>
         )}
+
+        {activeTab === "plans" && <SubscriptionPlansTab />}
+        {activeTab === "weddings" && <WeddingsTab admin />}
+          </div>
+        </div>
       </div>
 
       <EditDialog open={editDialog.open} title={editDialog.title} fields={editDialog.fields}

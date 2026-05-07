@@ -839,6 +839,57 @@ export type Database = {
           },
         ]
       }
+      subscription_plans: {
+        Row: {
+          badge: string | null
+          billing_cycle: string
+          created_at: string
+          currency: string
+          description: string | null
+          features: string[] | null
+          id: string
+          is_active: boolean
+          name: string
+          perks: Json | null
+          price: number
+          slug: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          badge?: string | null
+          billing_cycle?: string
+          created_at?: string
+          currency?: string
+          description?: string | null
+          features?: string[] | null
+          id?: string
+          is_active?: boolean
+          name: string
+          perks?: Json | null
+          price?: number
+          slug: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          badge?: string | null
+          billing_cycle?: string
+          created_at?: string
+          currency?: string
+          description?: string | null
+          features?: string[] | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          perks?: Json | null
+          price?: number
+          slug?: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       subscriptions: {
         Row: {
           amount: number
@@ -1132,6 +1183,63 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      wedding_events: {
+        Row: {
+          city: string
+          contact_phone: string | null
+          couple_names: string
+          cover_image_url: string | null
+          created_at: string
+          cuisines: string[] | null
+          description: string | null
+          guest_count: number | null
+          highlights: string[] | null
+          host_id: string
+          id: string
+          is_public: boolean
+          status: string
+          updated_at: string
+          venue: string | null
+          wedding_date: string
+        }
+        Insert: {
+          city: string
+          contact_phone?: string | null
+          couple_names: string
+          cover_image_url?: string | null
+          created_at?: string
+          cuisines?: string[] | null
+          description?: string | null
+          guest_count?: number | null
+          highlights?: string[] | null
+          host_id: string
+          id?: string
+          is_public?: boolean
+          status?: string
+          updated_at?: string
+          venue?: string | null
+          wedding_date: string
+        }
+        Update: {
+          city?: string
+          contact_phone?: string | null
+          couple_names?: string
+          cover_image_url?: string | null
+          created_at?: string
+          cuisines?: string[] | null
+          description?: string | null
+          guest_count?: number | null
+          highlights?: string[] | null
+          host_id?: string
+          id?: string
+          is_public?: boolean
+          status?: string
+          updated_at?: string
+          venue?: string | null
+          wedding_date?: string
+        }
+        Relationships: []
       }
     }
     Views: {

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -84,10 +84,32 @@ const tiers = [
   },
 ];
 
+const iconMap: Record<string, any> = { free: Star, explorer: Zap, adventurer: Crown, nomad: Sparkles };
+const colorMap: Record<string, string> = { free: "border-border", explorer: "border-primary", adventurer: "border-accent", nomad: "border-chart-1" };
+
 const Membership = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [loading, setLoading] = useState<string | null>(null);
+  const [dbTiers, setDbTiers] = useState<typeof tiers | null>(null);
+
+  useEffect(() => {
+    supabase.from("subscription_plans").select("*").eq("is_active", true).order("sort_order").then(({ data }) => {
+      if (!data || data.length === 0) return;
+      setDbTiers(data.map((p: any) => ({
+        id: p.slug as any,
+        name: p.name,
+        price: Number(p.price),
+        icon: iconMap[p.slug] || Star,
+        description: p.description || "",
+        color: colorMap[p.slug] || "border-border",
+        badge: p.badge,
+        features: p.features || [],
+      })));
+    });
+  }, []);
+
+  const activeTiers = dbTiers || tiers;
 
   const handleSubscribe = async (tierId: "free" | "explorer" | "adventurer" | "nomad", price: number) => {
     if (!user) {
@@ -148,7 +170,7 @@ const Membership = () => {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {tiers.map((tier) => {
+          {activeTiers.map((tier) => {
             const Icon = tier.icon;
             return (
               <Card

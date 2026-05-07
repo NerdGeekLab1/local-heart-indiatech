@@ -3,8 +3,9 @@ import { Link, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   DollarSign, Users, Star, Calendar, Clock, TrendingUp, MessageCircle, Settings, Home, Car, BarChart3,
-  Bell, UtensilsCrossed, Plus, Save, Instagram, Facebook, Twitter, Globe, Tag, Bike, MapPin, FileText, Receipt
+  Bell, UtensilsCrossed, Plus, Save, Instagram, Facebook, Twitter, Globe, Tag, Bike, MapPin, FileText, Receipt, Heart
 } from "lucide-react";
+import WeddingsTab from "@/components/admin/WeddingsTab";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import Navbar from "@/components/Navbar";
@@ -26,7 +27,7 @@ const statusColors: Record<string, string> = {
   completed: "bg-secondary text-muted-foreground", cancelled: "bg-destructive/10 text-destructive",
 };
 
-type Tab = "overview" | "bookings" | "listings" | "experiences" | "food" | "reviews" | "earnings" | "invoices" | "messages" | "settings";
+type Tab = "overview" | "bookings" | "listings" | "experiences" | "food" | "reviews" | "earnings" | "invoices" | "messages" | "settings" | "weddings";
 
 const profileFields: FieldConfig[] = [
   { key: "name", label: "Name", required: true },
@@ -102,6 +103,7 @@ const HostDashboard = () => {
   const [hostDbReviews, setHostDbReviews] = useState<any[]>([]);
   const [hostMessages, setHostMessages] = useState<any[]>([]);
   const [hostDbProfile, setHostDbProfile] = useState<any>(null);
+  const [hostDbExperiences, setHostDbExperiences] = useState<any[]>([]);
 
   useEffect(() => {
     if (!user) return;
@@ -112,18 +114,46 @@ const HostDashboard = () => {
       supabase.from("reviews").select("*").eq("host_id", user.id).order("created_at", { ascending: false }),
       supabase.from("messages").select("*").or(`receiver_id.eq.${user.id},sender_id.eq.${user.id}`).order("created_at", { ascending: false }).limit(50),
       supabase.from("profiles").select("*").eq("id", user.id).maybeSingle(),
-    ]).then(([{ data: reqs }, { data: invs }, { data: bks }, { data: revs }, { data: msgs }, { data: prof }]) => {
+      supabase.from("experiences").select("*").eq("host_id", user.id).order("created_at", { ascending: false }),
+    ]).then(([{ data: reqs }, { data: invs }, { data: bks }, { data: revs }, { data: msgs }, { data: prof }, { data: exps }]) => {
       setExpRequests(reqs || []);
       setHostInvoices(invs || []);
       setHostBookings(bks || []);
       setHostDbReviews(revs || []);
       setHostMessages(msgs || []);
+      setHostDbExperiences(exps || []);
       if (prof) {
         setHostDbProfile(prof);
         setHostProfile(p => ({ ...p, name: `${prof.first_name} ${prof.last_name || ""}`.trim(), city: prof.nationality || p.city, bio: prof.bio || p.bio }));
       }
     });
   }, [user]);
+
+  const experienceEditFields: FieldConfig[] = [
+    { key: "title", label: "Title", required: true },
+    { key: "description", label: "Description", type: "textarea" },
+    { key: "category", label: "Category", type: "select", options: ["Cultural", "Food", "Spiritual", "Wellness", "Adventure", "Wedding", "Village", "Festival", "Medical Care", "Bike Tour"] },
+    { key: "price", label: "Price (₹)", type: "number" },
+    { key: "duration", label: "Duration" },
+    { key: "location", label: "Location" },
+    { key: "destination", label: "Destination" },
+    { key: "max_guests", label: "Max Guests", type: "number" },
+    { key: "difficulty", label: "Difficulty", type: "select", options: ["Easy", "Moderate", "Challenging"] },
+    { key: "image_url", label: "Image URL" },
+  ];
+
+  const updateOwnExperience = async (id: string, data: any) => {
+    const { error } = await supabase.from("experiences").update({
+      title: data.title, description: data.description, category: data.category,
+      price: Number(data.price) || 0, duration: data.duration, location: data.location,
+      destination: data.destination, max_guests: data.max_guests ? Number(data.max_guests) : null,
+      difficulty: data.difficulty, image_url: data.image_url || null,
+      updated_at: new Date().toISOString(),
+    }).eq("id", id);
+    if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
+    setHostDbExperiences(p => p.map(e => e.id === id ? { ...e, ...data, price: Number(data.price) || 0 } : e));
+    toast({ title: "Experience updated ✓" });
+  };
 
   const submitExperienceRequest = async () => {
     if (!user || !expForm.title || !expForm.location) { toast({ title: "Title and location required", variant: "destructive" }); return; }
@@ -193,6 +223,7 @@ const HostDashboard = () => {
     { id: "reviews", label: "Reviews", icon: Star },
     { id: "earnings", label: "Earnings", icon: DollarSign },
     { id: "invoices", label: "Invoices", icon: Receipt },
+    { id: "weddings", label: "Upcoming Weddings", icon: Heart },
     { id: "messages", label: "Messages", icon: MessageCircle },
     { id: "settings", label: "Settings", icon: Settings },
   ];
@@ -312,17 +343,47 @@ const HostDashboard = () => {
 
         {activeTab === "experiences" && (
           <div className="mt-6 space-y-8">
-            <div>
-              <h2 className="text-xl font-bold text-foreground mb-4">Your Experiences ({allExperiences.length})</h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {allExperiences.map(exp => (
-                  <div key={exp.id} className="rounded-lg bg-card p-4 shadow-card">
-                    <h4 className="font-semibold text-foreground">{exp.title}</h4>
-                    <p className="text-sm text-muted-foreground">${exp.price} · {exp.duration} · {exp.category}</p>
-                  </div>
-                ))}
+            {hostDbExperiences.length > 0 && (
+              <div>
+                <h2 className="text-xl font-bold text-foreground mb-4">Your Live Experiences ({hostDbExperiences.length})</h2>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {hostDbExperiences.map(exp => (
+                    <div key={exp.id} className="rounded-lg bg-card p-4 shadow-card">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0 flex-1">
+                          <h4 className="font-semibold text-foreground truncate">{exp.title}</h4>
+                          <p className="text-sm text-muted-foreground">₹{exp.price} · {exp.duration} · {exp.category}</p>
+                          <span className={`inline-block mt-1 text-[10px] px-2 py-0.5 rounded-full ${exp.status === "approved" ? "bg-accent/10 text-accent" : "bg-primary/10 text-primary"}`}>
+                            {exp.status}
+                          </span>
+                        </div>
+                        <Button size="sm" variant="outline" className="rounded-full text-xs"
+                          onClick={() => setEditDialog({
+                            open: true, title: "Edit Experience", fields: experienceEditFields, data: exp,
+                            onSave: (d) => updateOwnExperience(exp.id, d),
+                          })}>
+                          Edit
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
+
+            {allExperiences.length > 0 && (
+              <div>
+                <h2 className="text-xl font-bold text-foreground mb-4">Sample Experiences ({allExperiences.length})</h2>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {allExperiences.map(exp => (
+                    <div key={exp.id} className="rounded-lg bg-card p-4 shadow-card">
+                      <h4 className="font-semibold text-foreground">{exp.title}</h4>
+                      <p className="text-sm text-muted-foreground">${exp.price} · {exp.duration} · {exp.category}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
             <div className="rounded-2xl bg-card p-6 shadow-card">
               <h2 className="text-xl font-bold text-foreground mb-4 flex items-center gap-2">
@@ -555,6 +616,10 @@ const HostDashboard = () => {
               </div>
             )}
           </div>
+        )}
+
+        {activeTab === "weddings" && (
+          <div className="mt-6"><WeddingsTab /></div>
         )}
 
         {activeTab === "messages" && (
