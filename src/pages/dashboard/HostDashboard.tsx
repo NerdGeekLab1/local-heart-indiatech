@@ -559,6 +559,10 @@ const HostDashboard = () => {
           </div>
         )}
 
+        {activeTab === "weddings" && (
+          <div className="mt-6"><WeddingsTab /></div>
+        )}
+
         {activeTab === "messages" && (
           <div className="mt-6">
             <h2 className="text-xl font-bold text-foreground mb-4">Messages ({hostMessages.length})</h2>
