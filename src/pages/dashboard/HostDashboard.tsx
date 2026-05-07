@@ -103,6 +103,7 @@ const HostDashboard = () => {
   const [hostDbReviews, setHostDbReviews] = useState<any[]>([]);
   const [hostMessages, setHostMessages] = useState<any[]>([]);
   const [hostDbProfile, setHostDbProfile] = useState<any>(null);
+  const [hostDbExperiences, setHostDbExperiences] = useState<any[]>([]);
 
   useEffect(() => {
     if (!user) return;
