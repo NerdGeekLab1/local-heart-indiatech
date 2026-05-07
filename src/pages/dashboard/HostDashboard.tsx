@@ -343,17 +343,47 @@ const HostDashboard = () => {
 
         {activeTab === "experiences" && (
           <div className="mt-6 space-y-8">
-            <div>
-              <h2 className="text-xl font-bold text-foreground mb-4">Your Experiences ({allExperiences.length})</h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {allExperiences.map(exp => (
-                  <div key={exp.id} className="rounded-lg bg-card p-4 shadow-card">
-                    <h4 className="font-semibold text-foreground">{exp.title}</h4>
-                    <p className="text-sm text-muted-foreground">${exp.price} · {exp.duration} · {exp.category}</p>
-                  </div>
-                ))}
+            {hostDbExperiences.length > 0 && (
+              <div>
+                <h2 className="text-xl font-bold text-foreground mb-4">Your Live Experiences ({hostDbExperiences.length})</h2>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {hostDbExperiences.map(exp => (
+                    <div key={exp.id} className="rounded-lg bg-card p-4 shadow-card">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0 flex-1">
+                          <h4 className="font-semibold text-foreground truncate">{exp.title}</h4>
+                          <p className="text-sm text-muted-foreground">₹{exp.price} · {exp.duration} · {exp.category}</p>
+                          <span className={`inline-block mt-1 text-[10px] px-2 py-0.5 rounded-full ${exp.status === "approved" ? "bg-accent/10 text-accent" : "bg-primary/10 text-primary"}`}>
+                            {exp.status}
+                          </span>
+                        </div>
+                        <Button size="sm" variant="outline" className="rounded-full text-xs"
+                          onClick={() => setEditDialog({
+                            open: true, title: "Edit Experience", fields: experienceEditFields, data: exp,
+                            onSave: (d) => updateOwnExperience(exp.id, d),
+                          })}>
+                          Edit
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
+
+            {allExperiences.length > 0 && (
+              <div>
+                <h2 className="text-xl font-bold text-foreground mb-4">Sample Experiences ({allExperiences.length})</h2>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {allExperiences.map(exp => (
+                    <div key={exp.id} className="rounded-lg bg-card p-4 shadow-card">
+                      <h4 className="font-semibold text-foreground">{exp.title}</h4>
+                      <p className="text-sm text-muted-foreground">${exp.price} · {exp.duration} · {exp.category}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
             <div className="rounded-2xl bg-card p-6 shadow-card">
               <h2 className="text-xl font-bold text-foreground mb-4 flex items-center gap-2">
