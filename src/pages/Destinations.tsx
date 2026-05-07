@@ -274,4 +274,61 @@ const Destinations = () => {
   );
 };
 
+interface CarouselProps {
+  items: typeof destinations;
+  activeName: string | null;
+  onSelect: (name: string) => void;
+}
+
+const DestinationsCarousel = ({ items, activeName, onSelect }: CarouselProps) => {
+  const autoplay = useRef(Autoplay({ delay: 2200, stopOnInteraction: false, stopOnMouseEnter: true }));
+  const [emblaRef] = useEmblaCarousel(
+    { loop: true, dragFree: true, align: "start", containScroll: "trimSnaps" },
+    [autoplay.current]
+  );
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ delay: 0.2 }}
+      className="mb-12 rounded-2xl bg-gradient-to-br from-primary/5 via-card to-accent/5 shadow-elevated p-6 sm:p-8 relative overflow-hidden"
+    >
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
+          <MapPin className="w-5 h-5 text-primary" /> Quick Jump
+        </h2>
+        <span className="text-xs text-muted-foreground">{items.length} destinations · auto-scrolling</span>
+      </div>
+      <div className="overflow-hidden -mx-2" ref={emblaRef}>
+        <div className="flex">
+          {items.map((d) => {
+            const cityHosts = hosts.filter((h) => h.city === d.name);
+            const isActive = activeName === d.name;
+            return (
+              <div key={d.name} className="shrink-0 px-2 basis-1/2 sm:basis-1/3 md:basis-1/5 lg:basis-[14.2857%]">
+                <button
+                  onClick={() => onSelect(d.name)}
+                  className={`w-full relative rounded-xl p-4 text-center transition-all duration-300 hover:shadow-card-hover cursor-pointer ${
+                    isActive ? "bg-primary text-primary-foreground shadow-elevated scale-[1.03]" : "bg-card hover:bg-secondary/60"
+                  }`}
+                >
+                  <div className={`w-10 h-10 rounded-full mx-auto mb-2 flex items-center justify-center text-lg ${isActive ? "bg-primary-foreground/20" : "bg-primary/10"}`}>📍</div>
+                  <p className={`font-bold text-sm truncate ${isActive ? "text-primary-foreground" : "text-foreground"}`}>{d.name}</p>
+                  <p className={`text-xs mt-0.5 truncate ${isActive ? "text-primary-foreground/80" : "text-muted-foreground"}`}>{d.state}</p>
+                  {cityHosts.length > 0 && (
+                    <span className={`absolute -top-1 -right-1 w-5 h-5 rounded-full text-[10px] font-bold flex items-center justify-center ${isActive ? "bg-primary-foreground text-primary" : "bg-primary text-primary-foreground"}`}>
+                      {cityHosts.length}
+                    </span>
+                  )}
+                </button>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </motion.div>
+  );
+};
+
 export default Destinations;
