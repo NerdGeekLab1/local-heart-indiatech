@@ -194,6 +194,7 @@ const HostDashboard = () => {
     { id: "reviews", label: "Reviews", icon: Star },
     { id: "earnings", label: "Earnings", icon: DollarSign },
     { id: "invoices", label: "Invoices", icon: Receipt },
+    { id: "weddings", label: "Upcoming Weddings", icon: Heart },
     { id: "messages", label: "Messages", icon: MessageCircle },
     { id: "settings", label: "Settings", icon: Settings },
   ];
