@@ -114,18 +114,46 @@ const HostDashboard = () => {
       supabase.from("reviews").select("*").eq("host_id", user.id).order("created_at", { ascending: false }),
       supabase.from("messages").select("*").or(`receiver_id.eq.${user.id},sender_id.eq.${user.id}`).order("created_at", { ascending: false }).limit(50),
       supabase.from("profiles").select("*").eq("id", user.id).maybeSingle(),
-    ]).then(([{ data: reqs }, { data: invs }, { data: bks }, { data: revs }, { data: msgs }, { data: prof }]) => {
+      supabase.from("experiences").select("*").eq("host_id", user.id).order("created_at", { ascending: false }),
+    ]).then(([{ data: reqs }, { data: invs }, { data: bks }, { data: revs }, { data: msgs }, { data: prof }, { data: exps }]) => {
       setExpRequests(reqs || []);
       setHostInvoices(invs || []);
       setHostBookings(bks || []);
       setHostDbReviews(revs || []);
       setHostMessages(msgs || []);
+      setHostDbExperiences(exps || []);
       if (prof) {
         setHostDbProfile(prof);
         setHostProfile(p => ({ ...p, name: `${prof.first_name} ${prof.last_name || ""}`.trim(), city: prof.nationality || p.city, bio: prof.bio || p.bio }));
       }
     });
   }, [user]);
+
+  const experienceEditFields: FieldConfig[] = [
+    { key: "title", label: "Title", required: true },
+    { key: "description", label: "Description", type: "textarea" },
+    { key: "category", label: "Category", type: "select", options: ["Cultural", "Food", "Spiritual", "Wellness", "Adventure", "Wedding", "Village", "Festival", "Medical Care", "Bike Tour"] },
+    { key: "price", label: "Price (₹)", type: "number" },
+    { key: "duration", label: "Duration" },
+    { key: "location", label: "Location" },
+    { key: "destination", label: "Destination" },
+    { key: "max_guests", label: "Max Guests", type: "number" },
+    { key: "difficulty", label: "Difficulty", type: "select", options: ["Easy", "Moderate", "Challenging"] },
+    { key: "image_url", label: "Image URL" },
+  ];
+
+  const updateOwnExperience = async (id: string, data: any) => {
+    const { error } = await supabase.from("experiences").update({
+      title: data.title, description: data.description, category: data.category,
+      price: Number(data.price) || 0, duration: data.duration, location: data.location,
+      destination: data.destination, max_guests: data.max_guests ? Number(data.max_guests) : null,
+      difficulty: data.difficulty, image_url: data.image_url || null,
+      updated_at: new Date().toISOString(),
+    }).eq("id", id);
+    if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
+    setHostDbExperiences(p => p.map(e => e.id === id ? { ...e, ...data, price: Number(data.price) || 0 } : e));
+    toast({ title: "Experience updated ✓" });
+  };
 
   const submitExperienceRequest = async () => {
     if (!user || !expForm.title || !expForm.location) { toast({ title: "Title and location required", variant: "destructive" }); return; }
