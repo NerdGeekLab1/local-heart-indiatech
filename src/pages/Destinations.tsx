@@ -1,6 +1,8 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
+import useEmblaCarousel from "embla-carousel-react";
+import Autoplay from "embla-carousel-autoplay";
 import { MapPin, Users, ArrowRight, Clock, IndianRupee, Camera, ChevronDown, ChevronUp, Landmark, TreePine, ShoppingBag, Sun, Thermometer, Star, Search, Filter } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Navbar from "@/components/Navbar";
