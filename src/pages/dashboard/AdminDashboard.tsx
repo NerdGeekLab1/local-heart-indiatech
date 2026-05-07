@@ -1482,6 +1482,11 @@ const AdminDashboard = () => {
             </div>
           </div>
         )}
+
+        {activeTab === "plans" && <SubscriptionPlansTab />}
+        {activeTab === "weddings" && <WeddingsTab admin />}
+          </div>
+        </div>
       </div>
 
       <EditDialog open={editDialog.open} title={editDialog.title} fields={editDialog.fields}
