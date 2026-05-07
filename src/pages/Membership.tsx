@@ -170,7 +170,7 @@ const Membership = () => {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {tiers.map((tier) => {
+          {activeTiers.map((tier) => {
             const Icon = tier.icon;
             return (
               <Card
