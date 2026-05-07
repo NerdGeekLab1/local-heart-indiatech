@@ -21,8 +21,11 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import ConfigurationTab from "@/components/admin/ConfigurationTab";
 import EmailTemplatesTab from "@/components/admin/EmailTemplatesTab";
+import SubscriptionPlansTab from "@/components/admin/SubscriptionPlansTab";
+import WeddingsTab from "@/components/admin/WeddingsTab";
+import { Heart, Menu } from "lucide-react";
 
-type Tab = "overview" | "hosts" | "bookings" | "experiences" | "destinations" | "trips" | "grievances" | "users" | "wanderers" | "missions" | "leaderboard" | "invoices" | "moderation" | "analytics" | "settings" | "configuration" | "emails";
+type Tab = "overview" | "hosts" | "bookings" | "experiences" | "destinations" | "trips" | "grievances" | "users" | "wanderers" | "missions" | "leaderboard" | "invoices" | "moderation" | "analytics" | "settings" | "configuration" | "emails" | "plans" | "weddings";
 
 const destinationFields: FieldConfig[] = [
   { key: "name", label: "City Name", required: true },
