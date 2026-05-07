@@ -79,34 +79,12 @@ const Destinations = () => {
           </div>
         </div>
 
-        {/* Destination Map Grid */}
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2 }}
-          className="mb-12 rounded-2xl bg-card shadow-elevated p-6 sm:p-8 relative overflow-hidden">
-          <h2 className="text-xl font-bold text-foreground mb-6 flex items-center gap-2">
-            <MapPin className="w-5 h-5 text-primary" /> Quick Jump — {filteredDestinations.length} destinations
-          </h2>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
-            {filteredDestinations.map((d, i) => {
-              const cityHosts = hosts.filter(h => h.city === d.name);
-              return (
-                <motion.button key={d.name}
-                  initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: i * 0.03 }}
-                  onClick={() => setExpandedCity(expandedCity === d.name ? null : d.name)}
-                  className={`relative group rounded-xl p-4 text-center transition-all duration-300 hover:shadow-card-hover cursor-pointer ${expandedCity === d.name ? "bg-primary text-primary-foreground shadow-elevated scale-105" : "bg-secondary hover:bg-secondary/80"}`}
-                >
-                  <div className={`w-10 h-10 rounded-full mx-auto mb-2 flex items-center justify-center text-lg ${expandedCity === d.name ? "bg-primary-foreground/20" : "bg-primary/10"}`}>📍</div>
-                  <p className={`font-bold text-sm ${expandedCity === d.name ? "text-primary-foreground" : "text-foreground"}`}>{d.name}</p>
-                  <p className={`text-xs mt-0.5 ${expandedCity === d.name ? "text-primary-foreground/80" : "text-muted-foreground"}`}>{d.state}</p>
-                  {cityHosts.length > 0 && (
-                    <span className={`absolute -top-1 -right-1 w-5 h-5 rounded-full text-[10px] font-bold flex items-center justify-center ${expandedCity === d.name ? "bg-primary-foreground text-primary" : "bg-primary text-primary-foreground"}`}>
-                      {cityHosts.length}
-                    </span>
-                  )}
-                </motion.button>
-              );
-            })}
-          </div>
-        </motion.div>
+        {/* Destination Carousel — moving Quick Jump */}
+        <DestinationsCarousel
+          items={filteredDestinations}
+          activeName={expandedCity}
+          onSelect={(name) => setExpandedCity(expandedCity === name ? null : name)}
+        />
 
         {/* Destination Cards */}
         <div className="space-y-6">
