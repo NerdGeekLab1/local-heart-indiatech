@@ -260,6 +260,8 @@ const HostDashboard = () => {
     const { data } = await supabase.from("experience_requests").select("*").eq("host_id", user.id).order("created_at", { ascending: false });
     setExpRequests(data || []);
   };
+
+  const [editDialog, setEditDialog] = useState<{ open: boolean; title: string; fields: FieldConfig[]; data?: any; onSave: (d: any) => void; onDelete?: () => void }>({
     open: false, title: "", fields: [], onSave: () => {},
   });
 
