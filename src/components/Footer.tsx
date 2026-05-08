@@ -1,6 +1,6 @@
 
 import { Link } from "react-router-dom";
-import { Instagram, Facebook, Twitter, Youtube, Linkedin } from "lucide-react";
+import { Instagram, Facebook, Twitter, Youtube, Linkedin, Github, BookOpen } from "lucide-react";
 
 const Footer = () => (
   <footer className="bg-secondary border-t border-border">
