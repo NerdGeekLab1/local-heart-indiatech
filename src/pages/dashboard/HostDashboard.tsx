@@ -422,10 +422,32 @@ const HostDashboard = () => {
             )}
 
             <div className="rounded-2xl bg-card p-6 shadow-card">
-              <h2 className="text-xl font-bold text-foreground mb-4 flex items-center gap-2">
-                <Plus className="w-5 h-5 text-primary" /> Request New Experience
-              </h2>
-              <p className="text-sm text-muted-foreground mb-4">Submit a new experience for admin approval. Include all details for faster processing.</p>
+              <div className="flex items-center justify-between gap-4 flex-wrap">
+                <div>
+                  <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
+                    <Plus className="w-5 h-5 text-primary" /> Request New Experience
+                  </h2>
+                  <p className="text-sm text-muted-foreground mt-1">Pick a template (Wedding, Village, Festival, Bike Tour) or start from scratch — fully customizable.</p>
+                </div>
+                <Button onClick={() => setShowExpForm(s => !s)} className="rounded-full gap-2">
+                  <Plus className="w-4 h-4" /> {showExpForm ? "Hide Form" : "New Experience"}
+                </Button>
+              </div>
+
+              {showExpForm && <>
+              <div className="mt-5 mb-4">
+                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">Quick-start templates</p>
+                <div className="flex flex-wrap gap-2">
+                  {Object.keys(expTemplates).map(k => (
+                    <Button key={k} type="button" size="sm" variant="outline" className="rounded-full text-xs" onClick={() => applyTemplate(k)}>
+                      {k === "BikeTour" ? "🏍️ Bike Tour" : k === "Wedding" ? "💍 Wedding" : k === "Village" ? "🏡 Village" : "🪔 Festival"}
+                    </Button>
+                  ))}
+                  <Button type="button" size="sm" variant="ghost" className="rounded-full text-xs" onClick={() => setExpForm({ title: "", description: "", category: "Cultural", location: "", price: 0, duration: "", difficulty: "Moderate", maxGuests: 10, isYearRound: true, validFrom: "", validTo: "", lastBookingDate: "", vehicleType: "", highlights: "", includes: "", destination: "", subCategory: "", imageUrl: "" })}>
+                    Clear
+                  </Button>
+                </div>
+              </div>
 
               <div className="mb-4">
                 <label className="text-sm font-medium text-foreground mb-2 block">Cover Image</label>
