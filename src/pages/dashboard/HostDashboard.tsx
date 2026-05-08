@@ -218,7 +218,48 @@ const HostDashboard = () => {
     setExpRequests(data || []);
   };
 
-  const [editDialog, setEditDialog] = useState<{ open: boolean; title: string; fields: FieldConfig[]; data?: any; onSave: (d: any) => void; onDelete?: () => void }>({
+  const addExperience = async () => {
+    if (!user || !expForm.title || !expForm.location) { toast({ title: "Title and location required", variant: "destructive" }); return; }
+    setSubmittingExp(true);
+    const { data, error } = await supabase.from("experiences").insert({
+      host_id: user.id, host_name: hostProfile.name, host_city: hostProfile.city,
+      title: expForm.title, description: expForm.description, category: expForm.category,
+      location: expForm.location, price: expForm.price, duration: expForm.duration, difficulty: expForm.difficulty,
+      max_guests: expForm.maxGuests, is_year_round: expForm.isYearRound,
+      valid_from: expForm.isYearRound ? null : expForm.validFrom || null,
+      valid_to: expForm.isYearRound ? null : expForm.validTo || null,
+      last_booking_date: expForm.lastBookingDate || null,
+      vehicle_type: expForm.vehicleType || null, destination: expForm.destination || null,
+      sub_category: expForm.subCategory || null,
+      highlights: expForm.highlights ? expForm.highlights.split(",").map(s => s.trim()) : [],
+      includes: expForm.includes ? expForm.includes.split(",").map(s => s.trim()) : [],
+      image_url: expForm.imageUrl || null,
+      status: "pending",
+    }).select().single();
+    setSubmittingExp(false);
+    if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
+    toast({ title: "Experience added! 🎉", description: "Pending admin approval — will go live shortly." });
+    if (data) setHostDbExperiences(p => [data, ...p]);
+    setExpForm({ title: "", description: "", category: "Cultural", location: "", price: 0, duration: "", difficulty: "Moderate", maxGuests: 10, isYearRound: true, validFrom: "", validTo: "", lastBookingDate: "", vehicleType: "", highlights: "", includes: "", destination: "", subCategory: "", imageUrl: "" });
+    setShowExpForm(false);
+  };
+
+  const submitNewTypeRequest = async () => {
+    if (!user || !reqForm.title || !reqForm.category) { toast({ title: "Title and category required", variant: "destructive" }); return; }
+    setSubmittingReq(true);
+    const { error } = await supabase.from("experience_requests").insert({
+      host_id: user.id, title: reqForm.title, category: reqForm.category,
+      description: `${reqForm.description}\n\nWhy this experience: ${reqForm.reason}`,
+      location: hostProfile.city || "TBD", price: 0,
+    });
+    setSubmittingReq(false);
+    if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
+    toast({ title: "Request sent to admin! ✨", description: "We'll review your idea for a new experience type." });
+    setReqForm({ title: "", category: "", description: "", reason: "" });
+    setShowReqForm(false);
+    const { data } = await supabase.from("experience_requests").select("*").eq("host_id", user.id).order("created_at", { ascending: false });
+    setExpRequests(data || []);
+  };
     open: false, title: "", fields: [], onSave: () => {},
   });
 
