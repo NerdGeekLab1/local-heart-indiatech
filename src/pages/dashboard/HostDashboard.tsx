@@ -97,6 +97,42 @@ const HostDashboard = () => {
     difficulty: "Moderate", maxGuests: 10, isYearRound: true, validFrom: "", validTo: "", lastBookingDate: "",
     vehicleType: "", highlights: "", includes: "", destination: "", subCategory: "", imageUrl: "",
   });
+  const [showExpForm, setShowExpForm] = useState(false);
+  const expTemplates: Record<string, Partial<typeof expForm>> = {
+    Wedding: {
+      title: "Traditional Indian Wedding Experience", category: "Wedding", subCategory: "Cultural Celebration",
+      duration: "3 Days", difficulty: "Easy", maxGuests: 20, price: 15000,
+      highlights: "Mehendi ceremony, Sangeet night, Baraat procession, Saat Phere ritual, Traditional cuisine",
+      includes: "Traditional attire, All meals, Photography, Cultural guide, Transport",
+      description: "Immerse in a real Indian wedding — rituals, music, dance, food. Customize dates, venue, and add-ons as per the couple's schedule.",
+    },
+    Village: {
+      title: "Authentic Village Life Stay", category: "Village", subCategory: "Rural Immersion",
+      duration: "2 Days", difficulty: "Easy", maxGuests: 8, price: 4500,
+      highlights: "Bullock cart ride, Farm visit, Pottery workshop, Folk dance, Home-cooked meals",
+      includes: "Mud-house stay, All meals, Local guide, Workshops",
+      description: "Live with a village family. Wake to roosters, milk cows, learn pottery, and dine under the stars.",
+    },
+    Festival: {
+      title: "Festival Celebration Tour", category: "Festival", subCategory: "Cultural Event",
+      duration: "1 Day", difficulty: "Easy", maxGuests: 15, price: 3500,
+      highlights: "Temple visits, Traditional music, Festival food, Rituals participation",
+      includes: "Festival pass, Local guide, Traditional snacks, Transport",
+      description: "Join locals in celebrating Diwali, Holi, Pongal or other regional festivals with full cultural context.",
+    },
+    BikeTour: {
+      title: "Himalayan Motorcycle Expedition", category: "Bike Tour", subCategory: "Adventure",
+      duration: "7 Days", difficulty: "Hard", maxGuests: 6, price: 45000,
+      vehicleType: "Royal Enfield Himalayan",
+      highlights: "Khardung La pass, Pangong Lake, Nubra Valley, High-altitude camping",
+      includes: "Bike rental, Fuel, Permits, Accommodation, Meals, Backup vehicle",
+      description: "Ride through the world's highest motorable roads with experienced lead riders.",
+    },
+  };
+  const applyTemplate = (key: string) => {
+    const t = expTemplates[key];
+    if (t) setExpForm(p => ({ ...p, ...t } as any));
+  };
   const [expRequests, setExpRequests] = useState<any[]>([]);
   const [hostInvoices, setHostInvoices] = useState<any[]>([]);
   const [submittingExp, setSubmittingExp] = useState(false);
