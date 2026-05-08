@@ -98,6 +98,9 @@ const HostDashboard = () => {
     vehicleType: "", highlights: "", includes: "", destination: "", subCategory: "", imageUrl: "",
   });
   const [showExpForm, setShowExpForm] = useState(false);
+  const [showReqForm, setShowReqForm] = useState(false);
+  const [reqForm, setReqForm] = useState({ title: "", category: "", description: "", reason: "" });
+  const [submittingReq, setSubmittingReq] = useState(false);
   const expTemplates: Record<string, Partial<typeof expForm>> = {
     Wedding: {
       title: "Traditional Indian Wedding Experience", category: "Wedding", subCategory: "Cultural Celebration",
@@ -211,6 +214,49 @@ const HostDashboard = () => {
     if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
     toast({ title: "Experience request submitted! 🎉", description: "Admin will review and approve." });
     setExpForm({ title: "", description: "", category: "Cultural", location: "", price: 0, duration: "", difficulty: "Moderate", maxGuests: 10, isYearRound: true, validFrom: "", validTo: "", lastBookingDate: "", vehicleType: "", highlights: "", includes: "", destination: "", subCategory: "", imageUrl: "" });
+    const { data } = await supabase.from("experience_requests").select("*").eq("host_id", user.id).order("created_at", { ascending: false });
+    setExpRequests(data || []);
+  };
+
+  const addExperience = async () => {
+    if (!user || !expForm.title || !expForm.location) { toast({ title: "Title and location required", variant: "destructive" }); return; }
+    setSubmittingExp(true);
+    const { data, error } = await supabase.from("experiences").insert({
+      host_id: user.id, host_name: hostProfile.name, host_city: hostProfile.city,
+      title: expForm.title, description: expForm.description, category: expForm.category,
+      location: expForm.location, price: expForm.price, duration: expForm.duration, difficulty: expForm.difficulty,
+      max_guests: expForm.maxGuests, is_year_round: expForm.isYearRound,
+      valid_from: expForm.isYearRound ? null : expForm.validFrom || null,
+      valid_to: expForm.isYearRound ? null : expForm.validTo || null,
+      last_booking_date: expForm.lastBookingDate || null,
+      vehicle_type: expForm.vehicleType || null, destination: expForm.destination || null,
+      sub_category: expForm.subCategory || null,
+      highlights: expForm.highlights ? expForm.highlights.split(",").map(s => s.trim()) : [],
+      includes: expForm.includes ? expForm.includes.split(",").map(s => s.trim()) : [],
+      image_url: expForm.imageUrl || null,
+      status: "pending",
+    }).select().single();
+    setSubmittingExp(false);
+    if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
+    toast({ title: "Experience added! 🎉", description: "Pending admin approval — will go live shortly." });
+    if (data) setHostDbExperiences(p => [data, ...p]);
+    setExpForm({ title: "", description: "", category: "Cultural", location: "", price: 0, duration: "", difficulty: "Moderate", maxGuests: 10, isYearRound: true, validFrom: "", validTo: "", lastBookingDate: "", vehicleType: "", highlights: "", includes: "", destination: "", subCategory: "", imageUrl: "" });
+    setShowExpForm(false);
+  };
+
+  const submitNewTypeRequest = async () => {
+    if (!user || !reqForm.title || !reqForm.category) { toast({ title: "Title and category required", variant: "destructive" }); return; }
+    setSubmittingReq(true);
+    const { error } = await supabase.from("experience_requests").insert({
+      host_id: user.id, title: reqForm.title, category: reqForm.category,
+      description: `${reqForm.description}\n\nWhy this experience: ${reqForm.reason}`,
+      location: hostProfile.city || "TBD", price: 0,
+    });
+    setSubmittingReq(false);
+    if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
+    toast({ title: "Request sent to admin! ✨", description: "We'll review your idea for a new experience type." });
+    setReqForm({ title: "", category: "", description: "", reason: "" });
+    setShowReqForm(false);
     const { data } = await supabase.from("experience_requests").select("*").eq("host_id", user.id).order("created_at", { ascending: false });
     setExpRequests(data || []);
   };
@@ -425,12 +471,12 @@ const HostDashboard = () => {
               <div className="flex items-center justify-between gap-4 flex-wrap">
                 <div>
                   <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
-                    <Plus className="w-5 h-5 text-primary" /> Request New Experience
+                    <Plus className="w-5 h-5 text-primary" /> Add Experience
                   </h2>
-                  <p className="text-sm text-muted-foreground mt-1">Pick a template (Wedding, Village, Festival, Bike Tour) or start from scratch — fully customizable.</p>
+                  <p className="text-sm text-muted-foreground mt-1">Pick a template (Wedding, Village, Festival, Bike Tour) or start from scratch — fully customizable. Goes live for travelers after admin approval.</p>
                 </div>
-                <Button onClick={() => setShowExpForm(s => !s)} className="rounded-full gap-2">
-                  <Plus className="w-4 h-4" /> {showExpForm ? "Hide Form" : "New Experience"}
+                <Button onClick={() => { setShowExpForm(s => !s); if (!showExpForm) setShowReqForm(false); }} className="rounded-full gap-2">
+                  <Plus className="w-4 h-4" /> {showExpForm ? "Hide Form" : "Add Experience"}
                 </Button>
               </div>
 
@@ -469,7 +515,7 @@ const HostDashboard = () => {
                     {["Cultural", "Food", "Spiritual", "Wellness", "Adventure", "Wedding", "Village", "Festival", "Medical Care", "Bike Tour"].map(c => <option key={c} value={c}>{c}</option>)}
                   </select></div>
                 <div><label className="text-sm font-medium text-foreground">Sub-Category</label><Input className="mt-1" value={expForm.subCategory} onChange={e => setExpForm(p => ({ ...p, subCategory: e.target.value }))} placeholder="e.g. Motorcycle Tour" /></div>
-                <div><label className="text-sm font-medium text-foreground">Price ($)</label><Input type="number" className="mt-1" value={expForm.price} onChange={e => setExpForm(p => ({ ...p, price: Number(e.target.value) }))} /></div>
+                <div><label className="text-sm font-medium text-foreground">Price (₹)</label><Input type="number" className="mt-1" value={expForm.price} onChange={e => setExpForm(p => ({ ...p, price: Number(e.target.value) }))} /></div>
                 <div><label className="text-sm font-medium text-foreground">Duration</label><Input className="mt-1" value={expForm.duration} onChange={e => setExpForm(p => ({ ...p, duration: e.target.value }))} placeholder="e.g. 7 Days" /></div>
                 <div><label className="text-sm font-medium text-foreground">Difficulty</label>
                   <select className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm mt-1" value={expForm.difficulty}
@@ -505,10 +551,44 @@ const HostDashboard = () => {
                 )}
               </div>
 
-              <Button className="mt-4 rounded-full gap-2" onClick={submitExperienceRequest} disabled={submittingExp}>
-                {submittingExp ? "Submitting..." : <><FileText className="w-4 h-4" /> Submit for Approval</>}
+              <Button className="mt-4 rounded-full gap-2" onClick={addExperience} disabled={submittingExp}>
+                {submittingExp ? "Saving..." : <><Save className="w-4 h-4" /> Publish Experience</>}
               </Button>
               </>}
+            </div>
+
+            <div className="rounded-2xl border-2 border-dashed border-primary/30 bg-primary/5 p-6">
+              <div className="flex items-center justify-between gap-4 flex-wrap">
+                <div>
+                  <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
+                    <FileText className="w-5 h-5 text-primary" /> Request New Experience Type
+                  </h2>
+                  <p className="text-sm text-muted-foreground mt-1">Got an idea for a new offering — like Spiritual Tour, Heritage Walk, or Tribal Art Workshop? Pitch it to admin to add as a platform-wide category.</p>
+                </div>
+                <Button variant="outline" onClick={() => { setShowReqForm(s => !s); if (!showReqForm) setShowExpForm(false); }} className="rounded-full gap-2">
+                  <Plus className="w-4 h-4" /> {showReqForm ? "Hide Form" : "Request Type"}
+                </Button>
+              </div>
+
+              {showReqForm && (
+                <div className="mt-5 space-y-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div><label className="text-sm font-medium text-foreground">Proposed Name *</label><Input className="mt-1" value={reqForm.title} onChange={e => setReqForm(p => ({ ...p, title: e.target.value }))} placeholder="e.g. Spiritual Retreat Tour" /></div>
+                    <div><label className="text-sm font-medium text-foreground">Suggested Category *</label><Input className="mt-1" value={reqForm.category} onChange={e => setReqForm(p => ({ ...p, category: e.target.value }))} placeholder="e.g. Spiritual" /></div>
+                  </div>
+                  <div><label className="text-sm font-medium text-foreground">Describe the experience</label>
+                    <textarea className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm min-h-[70px] mt-1"
+                      value={reqForm.description} onChange={e => setReqForm(p => ({ ...p, description: e.target.value }))} placeholder="What does it involve? Who is it for?" />
+                  </div>
+                  <div><label className="text-sm font-medium text-foreground">Why should we add this?</label>
+                    <textarea className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm min-h-[60px] mt-1"
+                      value={reqForm.reason} onChange={e => setReqForm(p => ({ ...p, reason: e.target.value }))} placeholder="Demand, uniqueness, your expertise..." />
+                  </div>
+                  <Button onClick={submitNewTypeRequest} disabled={submittingReq} className="rounded-full gap-2">
+                    {submittingReq ? "Sending..." : <><FileText className="w-4 h-4" /> Send to Admin</>}
+                  </Button>
+                </div>
+              )}
             </div>
 
             {expRequests.length > 0 && (
