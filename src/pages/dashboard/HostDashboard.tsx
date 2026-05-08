@@ -508,6 +508,7 @@ const HostDashboard = () => {
               <Button className="mt-4 rounded-full gap-2" onClick={submitExperienceRequest} disabled={submittingExp}>
                 {submittingExp ? "Submitting..." : <><FileText className="w-4 h-4" /> Submit for Approval</>}
               </Button>
+              </>}
             </div>
 
             {expRequests.length > 0 && (
