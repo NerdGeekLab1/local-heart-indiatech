@@ -618,9 +618,6 @@ const HostDashboard = () => {
           </div>
         )}
 
-        {activeTab === "weddings" && (
-          <div className="mt-6"><WeddingsTab /></div>
-        )}
 
         {activeTab === "messages" && (
           <div className="mt-6">
