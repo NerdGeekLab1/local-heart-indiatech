@@ -5,7 +5,7 @@ import {
   DollarSign, Users, Star, Calendar, Clock, TrendingUp, MessageCircle, Settings, Home, Car, BarChart3,
   Bell, UtensilsCrossed, Plus, Save, Instagram, Facebook, Twitter, Globe, Tag, Bike, MapPin, FileText, Receipt, Heart
 } from "lucide-react";
-import WeddingsTab from "@/components/admin/WeddingsTab";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import Navbar from "@/components/Navbar";
@@ -27,7 +27,7 @@ const statusColors: Record<string, string> = {
   completed: "bg-secondary text-muted-foreground", cancelled: "bg-destructive/10 text-destructive",
 };
 
-type Tab = "overview" | "bookings" | "listings" | "experiences" | "food" | "reviews" | "earnings" | "invoices" | "messages" | "settings" | "weddings";
+type Tab = "overview" | "bookings" | "listings" | "experiences" | "food" | "reviews" | "earnings" | "invoices" | "messages" | "settings";
 
 const profileFields: FieldConfig[] = [
   { key: "name", label: "Name", required: true },
@@ -97,6 +97,42 @@ const HostDashboard = () => {
     difficulty: "Moderate", maxGuests: 10, isYearRound: true, validFrom: "", validTo: "", lastBookingDate: "",
     vehicleType: "", highlights: "", includes: "", destination: "", subCategory: "", imageUrl: "",
   });
+  const [showExpForm, setShowExpForm] = useState(false);
+  const expTemplates: Record<string, Partial<typeof expForm>> = {
+    Wedding: {
+      title: "Traditional Indian Wedding Experience", category: "Wedding", subCategory: "Cultural Celebration",
+      duration: "3 Days", difficulty: "Easy", maxGuests: 20, price: 15000,
+      highlights: "Mehendi ceremony, Sangeet night, Baraat procession, Saat Phere ritual, Traditional cuisine",
+      includes: "Traditional attire, All meals, Photography, Cultural guide, Transport",
+      description: "Immerse in a real Indian wedding — rituals, music, dance, food. Customize dates, venue, and add-ons as per the couple's schedule.",
+    },
+    Village: {
+      title: "Authentic Village Life Stay", category: "Village", subCategory: "Rural Immersion",
+      duration: "2 Days", difficulty: "Easy", maxGuests: 8, price: 4500,
+      highlights: "Bullock cart ride, Farm visit, Pottery workshop, Folk dance, Home-cooked meals",
+      includes: "Mud-house stay, All meals, Local guide, Workshops",
+      description: "Live with a village family. Wake to roosters, milk cows, learn pottery, and dine under the stars.",
+    },
+    Festival: {
+      title: "Festival Celebration Tour", category: "Festival", subCategory: "Cultural Event",
+      duration: "1 Day", difficulty: "Easy", maxGuests: 15, price: 3500,
+      highlights: "Temple visits, Traditional music, Festival food, Rituals participation",
+      includes: "Festival pass, Local guide, Traditional snacks, Transport",
+      description: "Join locals in celebrating Diwali, Holi, Pongal or other regional festivals with full cultural context.",
+    },
+    BikeTour: {
+      title: "Himalayan Motorcycle Expedition", category: "Bike Tour", subCategory: "Adventure",
+      duration: "7 Days", difficulty: "Hard", maxGuests: 6, price: 45000,
+      vehicleType: "Royal Enfield Himalayan",
+      highlights: "Khardung La pass, Pangong Lake, Nubra Valley, High-altitude camping",
+      includes: "Bike rental, Fuel, Permits, Accommodation, Meals, Backup vehicle",
+      description: "Ride through the world's highest motorable roads with experienced lead riders.",
+    },
+  };
+  const applyTemplate = (key: string) => {
+    const t = expTemplates[key];
+    if (t) setExpForm(p => ({ ...p, ...t } as any));
+  };
   const [expRequests, setExpRequests] = useState<any[]>([]);
   const [hostInvoices, setHostInvoices] = useState<any[]>([]);
   const [submittingExp, setSubmittingExp] = useState(false);
@@ -223,7 +259,7 @@ const HostDashboard = () => {
     { id: "reviews", label: "Reviews", icon: Star },
     { id: "earnings", label: "Earnings", icon: DollarSign },
     { id: "invoices", label: "Invoices", icon: Receipt },
-    { id: "weddings", label: "Upcoming Weddings", icon: Heart },
+    
     { id: "messages", label: "Messages", icon: MessageCircle },
     { id: "settings", label: "Settings", icon: Settings },
   ];
@@ -386,10 +422,32 @@ const HostDashboard = () => {
             )}
 
             <div className="rounded-2xl bg-card p-6 shadow-card">
-              <h2 className="text-xl font-bold text-foreground mb-4 flex items-center gap-2">
-                <Plus className="w-5 h-5 text-primary" /> Request New Experience
-              </h2>
-              <p className="text-sm text-muted-foreground mb-4">Submit a new experience for admin approval. Include all details for faster processing.</p>
+              <div className="flex items-center justify-between gap-4 flex-wrap">
+                <div>
+                  <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
+                    <Plus className="w-5 h-5 text-primary" /> Request New Experience
+                  </h2>
+                  <p className="text-sm text-muted-foreground mt-1">Pick a template (Wedding, Village, Festival, Bike Tour) or start from scratch — fully customizable.</p>
+                </div>
+                <Button onClick={() => setShowExpForm(s => !s)} className="rounded-full gap-2">
+                  <Plus className="w-4 h-4" /> {showExpForm ? "Hide Form" : "New Experience"}
+                </Button>
+              </div>
+
+              {showExpForm && <>
+              <div className="mt-5 mb-4">
+                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">Quick-start templates</p>
+                <div className="flex flex-wrap gap-2">
+                  {Object.keys(expTemplates).map(k => (
+                    <Button key={k} type="button" size="sm" variant="outline" className="rounded-full text-xs" onClick={() => applyTemplate(k)}>
+                      {k === "BikeTour" ? "🏍️ Bike Tour" : k === "Wedding" ? "💍 Wedding" : k === "Village" ? "🏡 Village" : "🪔 Festival"}
+                    </Button>
+                  ))}
+                  <Button type="button" size="sm" variant="ghost" className="rounded-full text-xs" onClick={() => setExpForm({ title: "", description: "", category: "Cultural", location: "", price: 0, duration: "", difficulty: "Moderate", maxGuests: 10, isYearRound: true, validFrom: "", validTo: "", lastBookingDate: "", vehicleType: "", highlights: "", includes: "", destination: "", subCategory: "", imageUrl: "" })}>
+                    Clear
+                  </Button>
+                </div>
+              </div>
 
               <div className="mb-4">
                 <label className="text-sm font-medium text-foreground mb-2 block">Cover Image</label>
@@ -450,6 +508,7 @@ const HostDashboard = () => {
               <Button className="mt-4 rounded-full gap-2" onClick={submitExperienceRequest} disabled={submittingExp}>
                 {submittingExp ? "Submitting..." : <><FileText className="w-4 h-4" /> Submit for Approval</>}
               </Button>
+              </>}
             </div>
 
             {expRequests.length > 0 && (
@@ -618,9 +677,6 @@ const HostDashboard = () => {
           </div>
         )}
 
-        {activeTab === "weddings" && (
-          <div className="mt-6"><WeddingsTab /></div>
-        )}
 
         {activeTab === "messages" && (
           <div className="mt-6">
