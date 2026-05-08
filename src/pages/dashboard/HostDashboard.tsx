@@ -98,6 +98,9 @@ const HostDashboard = () => {
     vehicleType: "", highlights: "", includes: "", destination: "", subCategory: "", imageUrl: "",
   });
   const [showExpForm, setShowExpForm] = useState(false);
+  const [showReqForm, setShowReqForm] = useState(false);
+  const [reqForm, setReqForm] = useState({ title: "", category: "", description: "", reason: "" });
+  const [submittingReq, setSubmittingReq] = useState(false);
   const expTemplates: Record<string, Partial<typeof expForm>> = {
     Wedding: {
       title: "Traditional Indian Wedding Experience", category: "Wedding", subCategory: "Cultural Celebration",
