@@ -219,6 +219,12 @@ const HostDashboard = () => {
       highlights: expForm.highlights ? expForm.highlights.split(",").map(s => s.trim()) : [],
       includes: expForm.includes ? expForm.includes.split(",").map(s => s.trim()) : [],
       image_url: expForm.imageUrl || null,
+      template_data: expForm.category === "Wedding" ? {
+        couple_names: expForm.coupleNames || null,
+        wedding_date: expForm.weddingDate || null,
+        venue: expForm.venue || null,
+        wedding_highlights: expForm.weddingHighlights ? expForm.weddingHighlights.split(",").map(s => s.trim()) : [],
+      } : {},
     });
     setSubmittingExp(false);
     if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
@@ -244,6 +250,12 @@ const HostDashboard = () => {
       highlights: expForm.highlights ? expForm.highlights.split(",").map(s => s.trim()) : [],
       includes: expForm.includes ? expForm.includes.split(",").map(s => s.trim()) : [],
       image_url: expForm.imageUrl || null,
+      template_data: expForm.category === "Wedding" ? {
+        couple_names: expForm.coupleNames || null,
+        wedding_date: expForm.weddingDate || null,
+        venue: expForm.venue || null,
+        wedding_highlights: expForm.weddingHighlights ? expForm.weddingHighlights.split(",").map(s => s.trim()) : [],
+      } : {},
       status: "pending",
     }).select().single();
     setSubmittingExp(false);
