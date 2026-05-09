@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { Eye, EyeOff, Save, Key, CreditCard, Mail, MessageCircle, Sparkles, Settings as SettingsIcon, Plus } from "lucide-react";
+import { Eye, EyeOff, Save, Key, CreditCard, Mail, MessageCircle, Sparkles, Settings as SettingsIcon, Plus, BarChart3 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -22,6 +23,7 @@ const CATEGORY_META: Record<string, { label: string; icon: any; tone: string }> 
   email: { label: "Email", icon: Mail, tone: "text-accent" },
   messaging: { label: "Messaging", icon: MessageCircle, tone: "text-primary" },
   ai: { label: "AI Models", icon: Sparkles, tone: "text-accent" },
+  tracking: { label: "Analytics & Tracking", icon: BarChart3, tone: "text-primary" },
   general: { label: "General", icon: SettingsIcon, tone: "text-muted-foreground" },
 };
 
@@ -203,14 +205,23 @@ const ConfigurationTab = () => {
                       </div>
                       <div className="flex items-center gap-2 w-full sm:w-auto">
                         <div className="relative flex-1 sm:w-72">
-                          <Input
-                            type={entry.is_secret && !isRevealed ? "password" : "text"}
-                            value={display}
-                            placeholder={entry.is_secret ? "••••••••" : "Not set"}
-                            onChange={e => setDrafts(p => ({ ...p, [entry.id]: e.target.value }))}
-                            className={entry.is_secret ? "pr-9 font-mono text-xs" : "font-mono text-xs"}
-                          />
-                          {entry.is_secret && (
+                          {entry.key === "CUSTOM_HEAD_SCRIPTS" ? (
+                            <Textarea
+                              value={display}
+                              placeholder={'<!-- e.g. <script>...</script> or <meta name="..." content="..."> -->'}
+                              onChange={e => setDrafts(p => ({ ...p, [entry.id]: e.target.value }))}
+                              className="font-mono text-xs min-h-[110px] sm:w-96"
+                            />
+                          ) : (
+                            <Input
+                              type={entry.is_secret && !isRevealed ? "password" : "text"}
+                              value={display}
+                              placeholder={entry.is_secret ? "••••••••" : "Not set"}
+                              onChange={e => setDrafts(p => ({ ...p, [entry.id]: e.target.value }))}
+                              className={entry.is_secret ? "pr-9 font-mono text-xs" : "font-mono text-xs"}
+                            />
+                          )}
+                          {entry.is_secret && entry.key !== "CUSTOM_HEAD_SCRIPTS" && (
                             <button type="button"
                               onClick={() => setRevealed(p => ({ ...p, [entry.id]: !p[entry.id] }))}
                               className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">

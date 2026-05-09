@@ -116,6 +116,7 @@ const AdminDashboard = () => {
   const [userRoleFilter, setUserRoleFilter] = useState<string>("all");
   const [expandedUser, setExpandedUser] = useState<string | null>(null);
   const [experienceSearch, setExperienceSearch] = useState("");
+  const [experienceStatusFilter, setExperienceStatusFilter] = useState<"all" | "pending" | "approved" | "rejected">("all");
 
   // Mission form
   const [missionForm, setMissionForm] = useState({ wandererId: "", title: "", description: "", destination: "", rewardPoints: 100, deadline: "" });
@@ -304,14 +305,21 @@ const AdminDashboard = () => {
   // Filtered experiences
   const allExperiences = dbExperiences.length > 0 ? dbExperiences : experiences.map(e => ({ ...e, host_id: null, host_name: e.hostName, host_city: e.hostCity }));
   const filteredExperiences = useMemo(() => {
-    if (!experienceSearch) return allExperiences;
+    let list = allExperiences;
+    if (experienceStatusFilter !== "all") {
+      list = list.filter((e: any) => {
+        if (experienceStatusFilter === "rejected") return e.status === "rejected" || e.status === "suspended";
+        return e.status === experienceStatusFilter;
+      });
+    }
+    if (!experienceSearch) return list;
     const q = experienceSearch.toLowerCase();
-    return allExperiences.filter((e: any) =>
+    return list.filter((e: any) =>
       (e.title || "").toLowerCase().includes(q) ||
       (e.category || "").toLowerCase().includes(q) ||
       (e.location || e.hostCity || "").toLowerCase().includes(q)
     );
-  }, [allExperiences, experienceSearch]);
+  }, [allExperiences, experienceSearch, experienceStatusFilter]);
 
   const allDestinations = [...destinations, ...customDestinations];
   const getHostStatus = (id: string) => hostStatuses[id] || "verified";
@@ -800,6 +808,19 @@ const AdminDashboard = () => {
                 </div>
               ))}
             </div>
+            <div className="flex gap-1 bg-secondary/40 rounded-full p-1 mb-4 w-fit">
+              {(["all", "pending", "approved", "rejected"] as const).map(s => {
+                const count = s === "all" ? allExperiences.length :
+                  s === "rejected" ? allExperiences.filter((e: any) => e.status === "rejected" || e.status === "suspended").length :
+                  allExperiences.filter((e: any) => e.status === s).length;
+                return (
+                  <button key={s} onClick={() => setExperienceStatusFilter(s)}
+                    className={`text-xs px-3 py-1.5 rounded-full font-medium capitalize transition-colors ${experienceStatusFilter === s ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}>
+                    {s} ({count})
+                  </button>
+                );
+              })}
+            </div>
             <div className="space-y-3">
               {filteredExperiences.map((e: any) => (
                 <div key={e.id} className={`rounded-xl bg-card p-4 shadow-card ${e.status === "pending" ? "ring-2 ring-primary/20" : ""}`}>
@@ -832,13 +853,23 @@ const AdminDashboard = () => {
                         <Edit className="w-3 h-3" /> Edit
                       </Button>
                       {e.status === "pending" && (
-                        <Button size="sm" className="rounded-full text-xs bg-accent text-accent-foreground" onClick={() => updateExperienceStatus(e.id, "approved")}>
-                          <CheckCircle className="w-3 h-3 mr-1" /> Approve
-                        </Button>
+                        <>
+                          <Button size="sm" className="rounded-full text-xs bg-accent text-accent-foreground" onClick={() => updateExperienceStatus(e.id, "approved")}>
+                            <CheckCircle className="w-3 h-3 mr-1" /> Approve
+                          </Button>
+                          <Button size="sm" variant="outline" className="rounded-full text-xs text-destructive" onClick={() => updateExperienceStatus(e.id, "rejected")}>
+                            <Ban className="w-3 h-3 mr-1" /> Reject
+                          </Button>
+                        </>
                       )}
                       {e.status === "approved" && (
                         <Button size="sm" variant="outline" className="rounded-full text-xs text-destructive" onClick={() => updateExperienceStatus(e.id, "suspended")}>
                           <Ban className="w-3 h-3 mr-1" /> Suspend
+                        </Button>
+                      )}
+                      {(e.status === "rejected" || e.status === "suspended") && (
+                        <Button size="sm" className="rounded-full text-xs bg-accent text-accent-foreground" onClick={() => updateExperienceStatus(e.id, "approved")}>
+                          <CheckCircle className="w-3 h-3 mr-1" /> Re-approve
                         </Button>
                       )}
                     </div>

@@ -43,6 +43,7 @@ import Referrals from "./pages/Referrals.tsx";
 import HostEligibility from "./pages/HostEligibility.tsx";
 import MobileBottomNav from "./components/MobileBottomNav.tsx";
 import AIChatRecommender from "./components/AIChatRecommender.tsx";
+import HeaderScripts from "./components/HeaderScripts.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
@@ -55,6 +56,7 @@ const App = () => (
         <Toaster />
         <Sonner />
         <BrowserRouter>
+          <HeaderScripts />
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/explore" element={<Explore />} />

@@ -96,7 +96,15 @@ const HostDashboard = () => {
     title: "", description: "", category: "Cultural", location: "", price: 0, duration: "",
     difficulty: "Moderate", maxGuests: 10, isYearRound: true, validFrom: "", validTo: "", lastBookingDate: "",
     vehicleType: "", highlights: "", includes: "", destination: "", subCategory: "", imageUrl: "",
+    weddingDate: "", coupleNames: "", weddingHighlights: "", venue: "",
   });
+  const blankExpForm = {
+    title: "", description: "", category: "Cultural", location: "", price: 0, duration: "",
+    difficulty: "Moderate", maxGuests: 10, isYearRound: true, validFrom: "", validTo: "", lastBookingDate: "",
+    vehicleType: "", highlights: "", includes: "", destination: "", subCategory: "", imageUrl: "",
+    weddingDate: "", coupleNames: "", weddingHighlights: "", venue: "",
+  };
+  const [statusFilter, setStatusFilter] = useState<"all" | "pending" | "approved" | "rejected">("all");
   const [showExpForm, setShowExpForm] = useState(false);
   const [showReqForm, setShowReqForm] = useState(false);
   const [reqForm, setReqForm] = useState({ title: "", category: "", description: "", reason: "" });
@@ -108,6 +116,8 @@ const HostDashboard = () => {
       highlights: "Mehendi ceremony, Sangeet night, Baraat procession, Saat Phere ritual, Traditional cuisine",
       includes: "Traditional attire, All meals, Photography, Cultural guide, Transport",
       description: "Immerse in a real Indian wedding — rituals, music, dance, food. Customize dates, venue, and add-ons as per the couple's schedule.",
+      coupleNames: "", weddingDate: "", venue: "",
+      weddingHighlights: "Mehendi, Sangeet, Baraat, Saat Phere, Reception",
     },
     Village: {
       title: "Authentic Village Life Stay", category: "Village", subCategory: "Rural Immersion",
@@ -209,11 +219,17 @@ const HostDashboard = () => {
       highlights: expForm.highlights ? expForm.highlights.split(",").map(s => s.trim()) : [],
       includes: expForm.includes ? expForm.includes.split(",").map(s => s.trim()) : [],
       image_url: expForm.imageUrl || null,
+      template_data: expForm.category === "Wedding" ? {
+        couple_names: expForm.coupleNames || null,
+        wedding_date: expForm.weddingDate || null,
+        venue: expForm.venue || null,
+        wedding_highlights: expForm.weddingHighlights ? expForm.weddingHighlights.split(",").map(s => s.trim()) : [],
+      } : {},
     });
     setSubmittingExp(false);
     if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
     toast({ title: "Experience request submitted! 🎉", description: "Admin will review and approve." });
-    setExpForm({ title: "", description: "", category: "Cultural", location: "", price: 0, duration: "", difficulty: "Moderate", maxGuests: 10, isYearRound: true, validFrom: "", validTo: "", lastBookingDate: "", vehicleType: "", highlights: "", includes: "", destination: "", subCategory: "", imageUrl: "" });
+    setExpForm(blankExpForm);
     const { data } = await supabase.from("experience_requests").select("*").eq("host_id", user.id).order("created_at", { ascending: false });
     setExpRequests(data || []);
   };
@@ -234,13 +250,19 @@ const HostDashboard = () => {
       highlights: expForm.highlights ? expForm.highlights.split(",").map(s => s.trim()) : [],
       includes: expForm.includes ? expForm.includes.split(",").map(s => s.trim()) : [],
       image_url: expForm.imageUrl || null,
+      template_data: expForm.category === "Wedding" ? {
+        couple_names: expForm.coupleNames || null,
+        wedding_date: expForm.weddingDate || null,
+        venue: expForm.venue || null,
+        wedding_highlights: expForm.weddingHighlights ? expForm.weddingHighlights.split(",").map(s => s.trim()) : [],
+      } : {},
       status: "pending",
     }).select().single();
     setSubmittingExp(false);
     if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
     toast({ title: "Experience added! 🎉", description: "Pending admin approval — will go live shortly." });
     if (data) setHostDbExperiences(p => [data, ...p]);
-    setExpForm({ title: "", description: "", category: "Cultural", location: "", price: 0, duration: "", difficulty: "Moderate", maxGuests: 10, isYearRound: true, validFrom: "", validTo: "", lastBookingDate: "", vehicleType: "", highlights: "", includes: "", destination: "", subCategory: "", imageUrl: "" });
+    setExpForm(blankExpForm);
     setShowExpForm(false);
   };
 
@@ -425,19 +447,48 @@ const HostDashboard = () => {
 
         {activeTab === "experiences" && (
           <div className="mt-6 space-y-8">
-            {hostDbExperiences.length > 0 && (
+            {hostDbExperiences.length > 0 && (() => {
+              const counts = {
+                all: hostDbExperiences.length,
+                pending: hostDbExperiences.filter(e => e.status === "pending").length,
+                approved: hostDbExperiences.filter(e => e.status === "approved").length,
+                rejected: hostDbExperiences.filter(e => e.status === "rejected" || e.status === "suspended").length,
+              };
+              const visible = hostDbExperiences.filter(e =>
+                statusFilter === "all" ? true :
+                statusFilter === "rejected" ? (e.status === "rejected" || e.status === "suspended") :
+                e.status === statusFilter
+              );
+              return (
               <div>
-                <h2 className="text-xl font-bold text-foreground mb-4">Your Live Experiences ({hostDbExperiences.length})</h2>
+                <div className="flex items-center justify-between flex-wrap gap-3 mb-4">
+                  <h2 className="text-xl font-bold text-foreground">Your Experiences ({counts.all})</h2>
+                  <div className="flex gap-1 bg-secondary/50 rounded-full p-1">
+                    {(["all", "pending", "approved", "rejected"] as const).map(s => (
+                      <button key={s} onClick={() => setStatusFilter(s)}
+                        className={`text-xs px-3 py-1.5 rounded-full font-medium capitalize transition-colors ${statusFilter === s ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}>
+                        {s} ({counts[s]})
+                      </button>
+                    ))}
+                  </div>
+                </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {hostDbExperiences.map(exp => (
+                  {visible.map(exp => (
                     <div key={exp.id} className="rounded-lg bg-card p-4 shadow-card">
                       <div className="flex items-start justify-between gap-2">
                         <div className="min-w-0 flex-1">
                           <h4 className="font-semibold text-foreground truncate">{exp.title}</h4>
                           <p className="text-sm text-muted-foreground">₹{exp.price} · {exp.duration} · {exp.category}</p>
-                          <span className={`inline-block mt-1 text-[10px] px-2 py-0.5 rounded-full ${exp.status === "approved" ? "bg-accent/10 text-accent" : "bg-primary/10 text-primary"}`}>
+                          <span className={`inline-block mt-1 text-[10px] px-2 py-0.5 rounded-full ${
+                            exp.status === "approved" ? "bg-accent/10 text-accent" :
+                            exp.status === "rejected" || exp.status === "suspended" ? "bg-destructive/10 text-destructive" :
+                            "bg-primary/10 text-primary"
+                          }`}>
                             {exp.status}
                           </span>
+                          {exp.template_data?.couple_names && (
+                            <p className="text-[11px] text-muted-foreground mt-1">💍 {exp.template_data.couple_names} · {exp.template_data.wedding_date}</p>
+                          )}
                         </div>
                         <Button size="sm" variant="outline" className="rounded-full text-xs"
                           onClick={() => setEditDialog({
@@ -449,9 +500,10 @@ const HostDashboard = () => {
                       </div>
                     </div>
                   ))}
+                  {visible.length === 0 && <p className="text-sm text-muted-foreground py-6 text-center sm:col-span-2">No experiences in this status.</p>}
                 </div>
-              </div>
-            )}
+              </div>);
+            })()}
 
             {allExperiences.length > 0 && (
               <div>
@@ -489,7 +541,7 @@ const HostDashboard = () => {
                       {k === "BikeTour" ? "🏍️ Bike Tour" : k === "Wedding" ? "💍 Wedding" : k === "Village" ? "🏡 Village" : "🪔 Festival"}
                     </Button>
                   ))}
-                  <Button type="button" size="sm" variant="ghost" className="rounded-full text-xs" onClick={() => setExpForm({ title: "", description: "", category: "Cultural", location: "", price: 0, duration: "", difficulty: "Moderate", maxGuests: 10, isYearRound: true, validFrom: "", validTo: "", lastBookingDate: "", vehicleType: "", highlights: "", includes: "", destination: "", subCategory: "", imageUrl: "" })}>
+                  <Button type="button" size="sm" variant="ghost" className="rounded-full text-xs" onClick={() => setExpForm(blankExpForm)}>
                     Clear
                   </Button>
                 </div>
@@ -536,6 +588,18 @@ const HostDashboard = () => {
                 <div><label className="text-sm font-medium text-foreground">Highlights (comma-separated)</label><Input className="mt-1" value={expForm.highlights} onChange={e => setExpForm(p => ({ ...p, highlights: e.target.value }))} placeholder="Khardung La, Pangong Lake" /></div>
                 <div><label className="text-sm font-medium text-foreground">Includes (comma-separated)</label><Input className="mt-1" value={expForm.includes} onChange={e => setExpForm(p => ({ ...p, includes: e.target.value }))} placeholder="Bike rental, Meals, Permits" /></div>
               </div>
+
+              {expForm.category === "Wedding" && (
+                <div className="mt-4 rounded-lg border border-primary/30 bg-primary/5 p-4 space-y-3">
+                  <p className="text-sm font-bold text-foreground">💍 Wedding details</p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div><label className="text-xs font-medium text-muted-foreground">Couple Names</label><Input className="mt-1" value={expForm.coupleNames} onChange={e => setExpForm(p => ({ ...p, coupleNames: e.target.value }))} placeholder="Aarav & Diya" /></div>
+                    <div><label className="text-xs font-medium text-muted-foreground">Wedding Date</label><Input type="date" className="mt-1" value={expForm.weddingDate} onChange={e => setExpForm(p => ({ ...p, weddingDate: e.target.value }))} /></div>
+                    <div className="sm:col-span-2"><label className="text-xs font-medium text-muted-foreground">Venue</label><Input className="mt-1" value={expForm.venue} onChange={e => setExpForm(p => ({ ...p, venue: e.target.value }))} placeholder="e.g. Umaid Bhawan Palace, Jodhpur" /></div>
+                    <div className="sm:col-span-2"><label className="text-xs font-medium text-muted-foreground">Wedding Highlights (comma-separated)</label><Input className="mt-1" value={expForm.weddingHighlights} onChange={e => setExpForm(p => ({ ...p, weddingHighlights: e.target.value }))} placeholder="Mehendi, Sangeet, Baraat, Reception" /></div>
+                  </div>
+                </div>
+              )}
 
               <div className="mt-4 rounded-lg bg-secondary/50 p-4">
                 <label className="flex items-center gap-2 cursor-pointer">

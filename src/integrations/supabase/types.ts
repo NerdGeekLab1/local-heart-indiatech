@@ -298,6 +298,7 @@ export type Database = {
           reviewed_by: string | null
           status: string | null
           sub_category: string | null
+          template_data: Json | null
           title: string
           valid_from: string | null
           valid_to: string | null
@@ -325,6 +326,7 @@ export type Database = {
           reviewed_by?: string | null
           status?: string | null
           sub_category?: string | null
+          template_data?: Json | null
           title: string
           valid_from?: string | null
           valid_to?: string | null
@@ -352,6 +354,7 @@ export type Database = {
           reviewed_by?: string | null
           status?: string | null
           sub_category?: string | null
+          template_data?: Json | null
           title?: string
           valid_from?: string | null
           valid_to?: string | null
@@ -386,6 +389,7 @@ export type Database = {
           review_count: number | null
           status: string | null
           sub_category: string | null
+          template_data: Json | null
           title: string
           updated_at: string
           valid_from: string | null
@@ -418,6 +422,7 @@ export type Database = {
           review_count?: number | null
           status?: string | null
           sub_category?: string | null
+          template_data?: Json | null
           title: string
           updated_at?: string
           valid_from?: string | null
@@ -450,6 +455,7 @@ export type Database = {
           review_count?: number | null
           status?: string | null
           sub_category?: string | null
+          template_data?: Json | null
           title?: string
           updated_at?: string
           valid_from?: string | null
