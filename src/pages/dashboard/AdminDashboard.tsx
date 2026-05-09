@@ -808,6 +808,19 @@ const AdminDashboard = () => {
                 </div>
               ))}
             </div>
+            <div className="flex gap-1 bg-secondary/40 rounded-full p-1 mb-4 w-fit">
+              {(["all", "pending", "approved", "rejected"] as const).map(s => {
+                const count = s === "all" ? allExperiences.length :
+                  s === "rejected" ? allExperiences.filter((e: any) => e.status === "rejected" || e.status === "suspended").length :
+                  allExperiences.filter((e: any) => e.status === s).length;
+                return (
+                  <button key={s} onClick={() => setExperienceStatusFilter(s)}
+                    className={`text-xs px-3 py-1.5 rounded-full font-medium capitalize transition-colors ${experienceStatusFilter === s ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}>
+                    {s} ({count})
+                  </button>
+                );
+              })}
+            </div>
             <div className="space-y-3">
               {filteredExperiences.map((e: any) => (
                 <div key={e.id} className={`rounded-xl bg-card p-4 shadow-card ${e.status === "pending" ? "ring-2 ring-primary/20" : ""}`}>
