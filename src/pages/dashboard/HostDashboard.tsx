@@ -589,6 +589,18 @@ const HostDashboard = () => {
                 <div><label className="text-sm font-medium text-foreground">Includes (comma-separated)</label><Input className="mt-1" value={expForm.includes} onChange={e => setExpForm(p => ({ ...p, includes: e.target.value }))} placeholder="Bike rental, Meals, Permits" /></div>
               </div>
 
+              {expForm.category === "Wedding" && (
+                <div className="mt-4 rounded-lg border border-primary/30 bg-primary/5 p-4 space-y-3">
+                  <p className="text-sm font-bold text-foreground">💍 Wedding details</p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div><label className="text-xs font-medium text-muted-foreground">Couple Names</label><Input className="mt-1" value={expForm.coupleNames} onChange={e => setExpForm(p => ({ ...p, coupleNames: e.target.value }))} placeholder="Aarav & Diya" /></div>
+                    <div><label className="text-xs font-medium text-muted-foreground">Wedding Date</label><Input type="date" className="mt-1" value={expForm.weddingDate} onChange={e => setExpForm(p => ({ ...p, weddingDate: e.target.value }))} /></div>
+                    <div className="sm:col-span-2"><label className="text-xs font-medium text-muted-foreground">Venue</label><Input className="mt-1" value={expForm.venue} onChange={e => setExpForm(p => ({ ...p, venue: e.target.value }))} placeholder="e.g. Umaid Bhawan Palace, Jodhpur" /></div>
+                    <div className="sm:col-span-2"><label className="text-xs font-medium text-muted-foreground">Wedding Highlights (comma-separated)</label><Input className="mt-1" value={expForm.weddingHighlights} onChange={e => setExpForm(p => ({ ...p, weddingHighlights: e.target.value }))} placeholder="Mehendi, Sangeet, Baraat, Reception" /></div>
+                  </div>
+                </div>
+              )}
+
               <div className="mt-4 rounded-lg bg-secondary/50 p-4">
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input type="checkbox" className="w-4 h-4 accent-primary" checked={expForm.isYearRound} onChange={e => setExpForm(p => ({ ...p, isYearRound: e.target.checked }))} />
