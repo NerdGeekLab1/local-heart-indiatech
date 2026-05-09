@@ -221,7 +221,7 @@ const HostDashboard = () => {
     setSubmittingExp(false);
     if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
     toast({ title: "Experience request submitted! 🎉", description: "Admin will review and approve." });
-    setExpForm({ title: "", description: "", category: "Cultural", location: "", price: 0, duration: "", difficulty: "Moderate", maxGuests: 10, isYearRound: true, validFrom: "", validTo: "", lastBookingDate: "", vehicleType: "", highlights: "", includes: "", destination: "", subCategory: "", imageUrl: "" });
+    setExpForm(blankExpForm);
     const { data } = await supabase.from("experience_requests").select("*").eq("host_id", user.id).order("created_at", { ascending: false });
     setExpRequests(data || []);
   };
@@ -248,7 +248,7 @@ const HostDashboard = () => {
     if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
     toast({ title: "Experience added! 🎉", description: "Pending admin approval — will go live shortly." });
     if (data) setHostDbExperiences(p => [data, ...p]);
-    setExpForm({ title: "", description: "", category: "Cultural", location: "", price: 0, duration: "", difficulty: "Moderate", maxGuests: 10, isYearRound: true, validFrom: "", validTo: "", lastBookingDate: "", vehicleType: "", highlights: "", includes: "", destination: "", subCategory: "", imageUrl: "" });
+    setExpForm(blankExpForm);
     setShowExpForm(false);
   };
 
@@ -497,7 +497,7 @@ const HostDashboard = () => {
                       {k === "BikeTour" ? "🏍️ Bike Tour" : k === "Wedding" ? "💍 Wedding" : k === "Village" ? "🏡 Village" : "🪔 Festival"}
                     </Button>
                   ))}
-                  <Button type="button" size="sm" variant="ghost" className="rounded-full text-xs" onClick={() => setExpForm({ title: "", description: "", category: "Cultural", location: "", price: 0, duration: "", difficulty: "Moderate", maxGuests: 10, isYearRound: true, validFrom: "", validTo: "", lastBookingDate: "", vehicleType: "", highlights: "", includes: "", destination: "", subCategory: "", imageUrl: "" })}>
+                  <Button type="button" size="sm" variant="ghost" className="rounded-full text-xs" onClick={() => setExpForm(blankExpForm)}>
                     Clear
                   </Button>
                 </div>
