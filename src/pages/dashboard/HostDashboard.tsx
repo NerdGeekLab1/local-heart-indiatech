@@ -447,19 +447,48 @@ const HostDashboard = () => {
 
         {activeTab === "experiences" && (
           <div className="mt-6 space-y-8">
-            {hostDbExperiences.length > 0 && (
+            {hostDbExperiences.length > 0 && (() => {
+              const counts = {
+                all: hostDbExperiences.length,
+                pending: hostDbExperiences.filter(e => e.status === "pending").length,
+                approved: hostDbExperiences.filter(e => e.status === "approved").length,
+                rejected: hostDbExperiences.filter(e => e.status === "rejected" || e.status === "suspended").length,
+              };
+              const visible = hostDbExperiences.filter(e =>
+                statusFilter === "all" ? true :
+                statusFilter === "rejected" ? (e.status === "rejected" || e.status === "suspended") :
+                e.status === statusFilter
+              );
+              return (
               <div>
-                <h2 className="text-xl font-bold text-foreground mb-4">Your Live Experiences ({hostDbExperiences.length})</h2>
+                <div className="flex items-center justify-between flex-wrap gap-3 mb-4">
+                  <h2 className="text-xl font-bold text-foreground">Your Experiences ({counts.all})</h2>
+                  <div className="flex gap-1 bg-secondary/50 rounded-full p-1">
+                    {(["all", "pending", "approved", "rejected"] as const).map(s => (
+                      <button key={s} onClick={() => setStatusFilter(s)}
+                        className={`text-xs px-3 py-1.5 rounded-full font-medium capitalize transition-colors ${statusFilter === s ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}>
+                        {s} ({counts[s]})
+                      </button>
+                    ))}
+                  </div>
+                </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {hostDbExperiences.map(exp => (
+                  {visible.map(exp => (
                     <div key={exp.id} className="rounded-lg bg-card p-4 shadow-card">
                       <div className="flex items-start justify-between gap-2">
                         <div className="min-w-0 flex-1">
                           <h4 className="font-semibold text-foreground truncate">{exp.title}</h4>
                           <p className="text-sm text-muted-foreground">₹{exp.price} · {exp.duration} · {exp.category}</p>
-                          <span className={`inline-block mt-1 text-[10px] px-2 py-0.5 rounded-full ${exp.status === "approved" ? "bg-accent/10 text-accent" : "bg-primary/10 text-primary"}`}>
+                          <span className={`inline-block mt-1 text-[10px] px-2 py-0.5 rounded-full ${
+                            exp.status === "approved" ? "bg-accent/10 text-accent" :
+                            exp.status === "rejected" || exp.status === "suspended" ? "bg-destructive/10 text-destructive" :
+                            "bg-primary/10 text-primary"
+                          }`}>
                             {exp.status}
                           </span>
+                          {exp.template_data?.couple_names && (
+                            <p className="text-[11px] text-muted-foreground mt-1">💍 {exp.template_data.couple_names} · {exp.template_data.wedding_date}</p>
+                          )}
                         </div>
                         <Button size="sm" variant="outline" className="rounded-full text-xs"
                           onClick={() => setEditDialog({
@@ -471,9 +500,10 @@ const HostDashboard = () => {
                       </div>
                     </div>
                   ))}
+                  {visible.length === 0 && <p className="text-sm text-muted-foreground py-6 text-center sm:col-span-2">No experiences in this status.</p>}
                 </div>
-              </div>
-            )}
+              </div>);
+            })()}
 
             {allExperiences.length > 0 && (
               <div>
