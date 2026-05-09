@@ -304,14 +304,21 @@ const AdminDashboard = () => {
   // Filtered experiences
   const allExperiences = dbExperiences.length > 0 ? dbExperiences : experiences.map(e => ({ ...e, host_id: null, host_name: e.hostName, host_city: e.hostCity }));
   const filteredExperiences = useMemo(() => {
-    if (!experienceSearch) return allExperiences;
+    let list = allExperiences;
+    if (experienceStatusFilter !== "all") {
+      list = list.filter((e: any) => {
+        if (experienceStatusFilter === "rejected") return e.status === "rejected" || e.status === "suspended";
+        return e.status === experienceStatusFilter;
+      });
+    }
+    if (!experienceSearch) return list;
     const q = experienceSearch.toLowerCase();
-    return allExperiences.filter((e: any) =>
+    return list.filter((e: any) =>
       (e.title || "").toLowerCase().includes(q) ||
       (e.category || "").toLowerCase().includes(q) ||
       (e.location || e.hostCity || "").toLowerCase().includes(q)
     );
-  }, [allExperiences, experienceSearch]);
+  }, [allExperiences, experienceSearch, experienceStatusFilter]);
 
   const allDestinations = [...destinations, ...customDestinations];
   const getHostStatus = (id: string) => hostStatuses[id] || "verified";
