@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { Eye, EyeOff, Save, Key, CreditCard, Mail, MessageCircle, Sparkles, Settings as SettingsIcon, Plus } from "lucide-react";
+import { Eye, EyeOff, Save, Key, CreditCard, Mail, MessageCircle, Sparkles, Settings as SettingsIcon, Plus, BarChart3 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -22,6 +23,7 @@ const CATEGORY_META: Record<string, { label: string; icon: any; tone: string }> 
   email: { label: "Email", icon: Mail, tone: "text-accent" },
   messaging: { label: "Messaging", icon: MessageCircle, tone: "text-primary" },
   ai: { label: "AI Models", icon: Sparkles, tone: "text-accent" },
+  tracking: { label: "Analytics & Tracking", icon: BarChart3, tone: "text-primary" },
   general: { label: "General", icon: SettingsIcon, tone: "text-muted-foreground" },
 };
 
