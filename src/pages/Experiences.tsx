@@ -124,7 +124,7 @@ const Experiences = () => {
     });
 
     return result;
-  }, [searchQuery, activeCategory, selectedLocation, selectedDifficulty, selectedPrice, sortBy]);
+  }, [allExperiences, searchQuery, activeCategory, selectedLocation, selectedDifficulty, selectedPrice, sortBy]);
 
   const activeFilterCount = [selectedLocation, selectedDifficulty, selectedPrice].filter(Boolean).length;
 
