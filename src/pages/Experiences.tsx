@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -11,6 +11,7 @@ import Navbar from "@/components/Navbar";
 import ExperienceCard from "@/components/ExperienceCard";
 import Footer from "@/components/Footer";
 import { experiences, vibeCategories, destinations, hosts } from "@/lib/data";
+import { supabase } from "@/integrations/supabase/client";
 
 const locationOptions = [...new Set(experiences.map(e => e.hostCity))].sort();
 const difficultyOptions = ["Easy", "Moderate", "Hard", "Extreme"];
