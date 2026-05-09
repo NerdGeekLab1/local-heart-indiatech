@@ -96,7 +96,15 @@ const HostDashboard = () => {
     title: "", description: "", category: "Cultural", location: "", price: 0, duration: "",
     difficulty: "Moderate", maxGuests: 10, isYearRound: true, validFrom: "", validTo: "", lastBookingDate: "",
     vehicleType: "", highlights: "", includes: "", destination: "", subCategory: "", imageUrl: "",
+    weddingDate: "", coupleNames: "", weddingHighlights: "", venue: "",
   });
+  const blankExpForm = {
+    title: "", description: "", category: "Cultural", location: "", price: 0, duration: "",
+    difficulty: "Moderate", maxGuests: 10, isYearRound: true, validFrom: "", validTo: "", lastBookingDate: "",
+    vehicleType: "", highlights: "", includes: "", destination: "", subCategory: "", imageUrl: "",
+    weddingDate: "", coupleNames: "", weddingHighlights: "", venue: "",
+  };
+  const [statusFilter, setStatusFilter] = useState<"all" | "pending" | "approved" | "rejected">("all");
   const [showExpForm, setShowExpForm] = useState(false);
   const [showReqForm, setShowReqForm] = useState(false);
   const [reqForm, setReqForm] = useState({ title: "", category: "", description: "", reason: "" });
