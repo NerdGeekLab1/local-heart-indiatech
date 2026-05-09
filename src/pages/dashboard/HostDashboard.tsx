@@ -116,6 +116,8 @@ const HostDashboard = () => {
       highlights: "Mehendi ceremony, Sangeet night, Baraat procession, Saat Phere ritual, Traditional cuisine",
       includes: "Traditional attire, All meals, Photography, Cultural guide, Transport",
       description: "Immerse in a real Indian wedding — rituals, music, dance, food. Customize dates, venue, and add-ons as per the couple's schedule.",
+      coupleNames: "", weddingDate: "", venue: "",
+      weddingHighlights: "Mehendi, Sangeet, Baraat, Saat Phere, Reception",
     },
     Village: {
       title: "Authentic Village Life Stay", category: "Village", subCategory: "Rural Immersion",
