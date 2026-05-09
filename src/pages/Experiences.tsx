@@ -65,11 +65,14 @@ const bikeExperiences = [
   },
 ];
 
-const allExperiences = [...experiences, ...bikeExperiences];
+const staticExperiences = [...experiences, ...bikeExperiences];
 
 const allCategories = [
   ...vibeCategories,
   { label: "Bike Tour", emoji: "🏍️" },
+  { label: "Wedding", emoji: "💍" },
+  { label: "Village", emoji: "🏡" },
+  { label: "Festival", emoji: "🪔" },
 ];
 
 const Experiences = () => {
@@ -80,6 +83,27 @@ const Experiences = () => {
   const [selectedPrice, setSelectedPrice] = useState<typeof priceRanges[0] | null>(null);
   const [showFilters, setShowFilters] = useState(false);
   const [sortBy, setSortBy] = useState<"rating" | "price_low" | "price_high" | "newest">("rating");
+  const [dbExperiences, setDbExperiences] = useState<any[]>([]);
+
+  useEffect(() => {
+    supabase.from("experiences").select("*").eq("status", "approved").order("created_at", { ascending: false })
+      .then(({ data }) => {
+        if (!data) return;
+        setDbExperiences(data.map(e => ({
+          id: e.id, title: e.title, description: e.description || "",
+          image: e.image_url || "https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=600&q=80",
+          price: Number(e.price), duration: e.duration || "", category: e.category,
+          hostId: e.host_id, hostName: e.host_name || "Host", hostCity: e.host_city || e.location || "",
+          rating: Number(e.rating) || 4.7, reviewCount: e.review_count || 0,
+          difficulty: e.difficulty || "Easy", groupSize: `1-${e.max_guests || 10}`, maxGuests: e.max_guests || 10,
+          includes: e.includes || [], highlights: e.highlights || [],
+          isYearRound: e.is_year_round, validFrom: e.valid_from, validTo: e.valid_to,
+          templateData: e.template_data,
+        })));
+      });
+  }, []);
+
+  const allExperiences = useMemo(() => [...dbExperiences, ...staticExperiences], [dbExperiences]);
 
   const filtered = useMemo(() => {
     let result = allExperiences.filter(e => {
