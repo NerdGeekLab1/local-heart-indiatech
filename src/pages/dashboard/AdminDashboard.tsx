@@ -853,13 +853,23 @@ const AdminDashboard = () => {
                         <Edit className="w-3 h-3" /> Edit
                       </Button>
                       {e.status === "pending" && (
-                        <Button size="sm" className="rounded-full text-xs bg-accent text-accent-foreground" onClick={() => updateExperienceStatus(e.id, "approved")}>
-                          <CheckCircle className="w-3 h-3 mr-1" /> Approve
-                        </Button>
+                        <>
+                          <Button size="sm" className="rounded-full text-xs bg-accent text-accent-foreground" onClick={() => updateExperienceStatus(e.id, "approved")}>
+                            <CheckCircle className="w-3 h-3 mr-1" /> Approve
+                          </Button>
+                          <Button size="sm" variant="outline" className="rounded-full text-xs text-destructive" onClick={() => updateExperienceStatus(e.id, "rejected")}>
+                            <Ban className="w-3 h-3 mr-1" /> Reject
+                          </Button>
+                        </>
                       )}
                       {e.status === "approved" && (
                         <Button size="sm" variant="outline" className="rounded-full text-xs text-destructive" onClick={() => updateExperienceStatus(e.id, "suspended")}>
                           <Ban className="w-3 h-3 mr-1" /> Suspend
+                        </Button>
+                      )}
+                      {(e.status === "rejected" || e.status === "suspended") && (
+                        <Button size="sm" className="rounded-full text-xs bg-accent text-accent-foreground" onClick={() => updateExperienceStatus(e.id, "approved")}>
+                          <CheckCircle className="w-3 h-3 mr-1" /> Re-approve
                         </Button>
                       )}
                     </div>
