@@ -387,7 +387,20 @@ const ExperienceDetail = () => {
                     )}
                   </div>
 
-                  {user ? (
+                  {dbStatus && dbStatus !== "approved" ? (
+                    <div className="mt-4 rounded-xl border border-amber-500/40 bg-amber-500/10 p-3 text-center">
+                      <Clock3 className="w-5 h-5 text-amber-600 mx-auto mb-1" />
+                      <p className="text-sm font-bold text-foreground">
+                        {dbStatus === "rejected" || dbStatus === "suspended" ? "Currently Unavailable" : "Pending Approval"}
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {dbStatus === "rejected" || dbStatus === "suspended"
+                          ? "This experience is not accepting bookings at the moment."
+                          : "This experience is awaiting admin review and isn't bookable yet. Check back soon!"}
+                      </p>
+                      <Button disabled className="w-full mt-3 rounded-full" size="lg">Booking Disabled</Button>
+                    </div>
+                  ) : user ? (
                     <Link to={host ? `/book/${host.id}` : "/explore"}>
                       <Button className="w-full mt-4 rounded-full bg-primary text-primary-foreground hover:bg-primary/90" size="lg">
                         Book This Experience
