@@ -207,12 +207,15 @@ const ConfigurationTab = () => {
                       <div className="flex items-center gap-2 w-full sm:w-auto">
                         <div className="relative flex-1 sm:w-72">
                           {entry.key === "CUSTOM_HEAD_SCRIPTS" ? (
-                            <Textarea
-                              value={display}
-                              placeholder={'<!-- e.g. <script>...</script> or <meta name="..." content="..."> -->'}
-                              onChange={e => setDrafts(p => ({ ...p, [entry.id]: e.target.value }))}
-                              className="font-mono text-xs min-h-[110px] sm:w-96"
-                            />
+                            <div className="space-y-2">
+                              <Textarea
+                                value={display}
+                                placeholder={'<!-- e.g. <script src="https://..."></script> or <meta name="..." content="..."> -->'}
+                                onChange={e => setDrafts(p => ({ ...p, [entry.id]: e.target.value }))}
+                                className="font-mono text-xs min-h-[110px] sm:w-96"
+                              />
+                              <HeadScriptValidator value={display} />
+                            </div>
                           ) : (
                             <Input
                               type={entry.is_secret && !isRevealed ? "password" : "text"}
