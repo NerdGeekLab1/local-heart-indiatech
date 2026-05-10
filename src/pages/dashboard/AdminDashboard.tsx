@@ -25,7 +25,7 @@ import SubscriptionPlansTab from "@/components/admin/SubscriptionPlansTab";
 import WeddingsTab from "@/components/admin/WeddingsTab";
 import { Heart, Menu } from "lucide-react";
 
-type Tab = "overview" | "hosts" | "bookings" | "experiences" | "destinations" | "trips" | "grievances" | "users" | "wanderers" | "missions" | "leaderboard" | "invoices" | "moderation" | "analytics" | "settings" | "configuration" | "emails" | "plans" | "weddings";
+type Tab = "overview" | "hosts" | "bookings" | "experiences" | "destinations" | "trips" | "grievances" | "users" | "wanderers" | "missions" | "leaderboard" | "invoices" | "moderation" | "analytics" | "settings" | "configuration" | "emails" | "plans" | "weddings" | "audit";
 
 const destinationFields: FieldConfig[] = [
   { key: "name", label: "City Name", required: true },
