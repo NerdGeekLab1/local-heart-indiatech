@@ -164,6 +164,18 @@ const AdminDashboard = () => {
     fetchData();
   }, []);
 
+  // Audit log loader — refreshes when an admin action bumps the reload key
+  useEffect(() => {
+    (async () => {
+      const { data } = await supabase
+        .from("admin_audit_log")
+        .select("*")
+        .order("created_at", { ascending: false })
+        .limit(200);
+      setAuditLog(data || []);
+    })();
+  }, [auditLogReloadKey]);
+
   // Helpers
   const getUserName = (userId: string) => {
     const u = dbUsers.find(u => u.id === userId);
