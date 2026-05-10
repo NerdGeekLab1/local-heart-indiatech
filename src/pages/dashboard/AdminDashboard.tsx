@@ -212,8 +212,25 @@ const AdminDashboard = () => {
   };
 
   const updateExperienceStatus = async (id: string, status: string) => {
+    if (!user) return;
+    const previous = dbExperiences.find(e => e.id === id)?.status ?? null;
     await supabase.from("experiences").update({ status, updated_at: new Date().toISOString() }).eq("id", id);
+    const actionMap: Record<string, string> = {
+      approved: previous === "approved" ? "re_approve" : (previous && previous !== "pending" ? "re_approve" : "approve"),
+      rejected: "reject",
+      suspended: "suspend",
+      pending: "reset",
+    };
+    await supabase.from("admin_audit_log").insert({
+      admin_id: user.id,
+      entity_type: "experience",
+      entity_id: id,
+      action: actionMap[status] ?? status,
+      previous_status: previous,
+      new_status: status,
+    });
     setDbExperiences(p => p.map(e => e.id === id ? { ...e, status } : e));
+    setAuditLogReloadKey(k => k + 1);
     toast({ title: `Experience ${status}` });
   };
 
