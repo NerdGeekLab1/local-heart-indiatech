@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { sanitizeHeadScripts } from "@/lib/sanitizeHeadScripts";
 
 /**
  * Reads tracking-category app_configuration entries and injects the
