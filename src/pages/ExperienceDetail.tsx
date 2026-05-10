@@ -1,13 +1,14 @@
 import { useParams, Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Star, Clock, MapPin, Users, Play, ArrowLeft, CheckCircle, Calendar, Shield, Bike, Mountain, Globe, Heart, Share2 } from "lucide-react";
+import { Star, Clock, MapPin, Users, Play, ArrowLeft, CheckCircle, Calendar, Shield, Bike, Mountain, Globe, Heart, Share2, Clock3 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { experiences, hosts, reviews } from "@/lib/data";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 
 // Bike experiences from Experiences page
 const bikeExperiences = [
