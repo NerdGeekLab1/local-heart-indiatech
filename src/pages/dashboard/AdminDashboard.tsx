@@ -25,7 +25,7 @@ import SubscriptionPlansTab from "@/components/admin/SubscriptionPlansTab";
 import WeddingsTab from "@/components/admin/WeddingsTab";
 import { Heart, Menu } from "lucide-react";
 
-type Tab = "overview" | "hosts" | "bookings" | "experiences" | "destinations" | "trips" | "grievances" | "users" | "wanderers" | "missions" | "leaderboard" | "invoices" | "moderation" | "analytics" | "settings" | "configuration" | "emails" | "plans" | "weddings";
+type Tab = "overview" | "hosts" | "bookings" | "experiences" | "destinations" | "trips" | "grievances" | "users" | "wanderers" | "missions" | "leaderboard" | "invoices" | "moderation" | "analytics" | "settings" | "configuration" | "emails" | "plans" | "weddings" | "audit";
 
 const destinationFields: FieldConfig[] = [
   { key: "name", label: "City Name", required: true },
@@ -117,6 +117,9 @@ const AdminDashboard = () => {
   const [expandedUser, setExpandedUser] = useState<string | null>(null);
   const [experienceSearch, setExperienceSearch] = useState("");
   const [experienceStatusFilter, setExperienceStatusFilter] = useState<"all" | "pending" | "approved" | "rejected">("all");
+  const [auditLog, setAuditLog] = useState<any[]>([]);
+  const [auditLogReloadKey, setAuditLogReloadKey] = useState(0);
+  const [auditEntityFilter, setAuditEntityFilter] = useState<string>("all");
 
   // Mission form
   const [missionForm, setMissionForm] = useState({ wandererId: "", title: "", description: "", destination: "", rewardPoints: 100, deadline: "" });
@@ -160,6 +163,18 @@ const AdminDashboard = () => {
     };
     fetchData();
   }, []);
+
+  // Audit log loader — refreshes when an admin action bumps the reload key
+  useEffect(() => {
+    (async () => {
+      const { data } = await supabase
+        .from("admin_audit_log")
+        .select("*")
+        .order("created_at", { ascending: false })
+        .limit(200);
+      setAuditLog(data || []);
+    })();
+  }, [auditLogReloadKey]);
 
   // Helpers
   const getUserName = (userId: string) => {
@@ -212,8 +227,25 @@ const AdminDashboard = () => {
   };
 
   const updateExperienceStatus = async (id: string, status: string) => {
+    if (!user) return;
+    const previous = dbExperiences.find(e => e.id === id)?.status ?? null;
     await supabase.from("experiences").update({ status, updated_at: new Date().toISOString() }).eq("id", id);
+    const actionMap: Record<string, string> = {
+      approved: previous === "approved" ? "re_approve" : (previous && previous !== "pending" ? "re_approve" : "approve"),
+      rejected: "reject",
+      suspended: "suspend",
+      pending: "reset",
+    };
+    await supabase.from("admin_audit_log").insert({
+      admin_id: user.id,
+      entity_type: "experience",
+      entity_id: id,
+      action: actionMap[status] ?? status,
+      previous_status: previous,
+      new_status: status,
+    });
     setDbExperiences(p => p.map(e => e.id === id ? { ...e, status } : e));
+    setAuditLogReloadKey(k => k + 1);
     toast({ title: `Experience ${status}` });
   };
 
@@ -362,6 +394,7 @@ const AdminDashboard = () => {
     { id: "missions", label: "Missions", icon: Crosshair, group: "Operations" },
     { id: "grievances", label: "Grievances", icon: MessageSquare, badge: dbGrievances.filter(g => g.status === "open").length, group: "Operations" },
     { id: "moderation", label: "Moderation", icon: Shield, group: "Operations" },
+    { id: "audit", label: "Audit Log", icon: FileText, group: "Operations" },
 
     { id: "plans", label: "Subscription Plans", icon: Crown, group: "Settings" },
     { id: "emails", label: "Emails", icon: Mail, group: "Settings" },
@@ -1516,6 +1549,91 @@ const AdminDashboard = () => {
 
         {activeTab === "plans" && <SubscriptionPlansTab />}
         {activeTab === "weddings" && <WeddingsTab admin />}
+
+        {activeTab === "audit" && (
+          <div className="space-y-4 mt-2">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
+                  <FileText className="w-5 h-5 text-primary" /> Admin Audit Log
+                </h2>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Every approve, reject, suspend, and re-approve action recorded with timestamp and admin ID.
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                <Filter className="w-4 h-4 text-muted-foreground" />
+                <select
+                  value={auditEntityFilter}
+                  onChange={e => setAuditEntityFilter(e.target.value)}
+                  className="h-9 rounded-md border border-input bg-background px-3 text-sm"
+                >
+                  <option value="all">All entities</option>
+                  <option value="experience">Experiences</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="rounded-lg bg-card shadow-card overflow-hidden">
+              {auditLog.length === 0 ? (
+                <p className="p-8 text-sm text-center text-muted-foreground">No audit entries yet — moderation actions will show up here.</p>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead className="bg-secondary/40 text-xs uppercase tracking-wider text-muted-foreground">
+                      <tr>
+                        <th className="text-left font-semibold px-4 py-2.5">When</th>
+                        <th className="text-left font-semibold px-4 py-2.5">Admin</th>
+                        <th className="text-left font-semibold px-4 py-2.5">Entity</th>
+                        <th className="text-left font-semibold px-4 py-2.5">Action</th>
+                        <th className="text-left font-semibold px-4 py-2.5">Status change</th>
+                        <th className="text-left font-semibold px-4 py-2.5">Reference ID</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-border">
+                      {auditLog
+                        .filter(a => auditEntityFilter === "all" || a.entity_type === auditEntityFilter)
+                        .map(a => {
+                          const adminName = getUserName(a.admin_id) || "Admin";
+                          const adminEmail = getUserEmail(a.admin_id);
+                          return (
+                            <tr key={a.id} className="hover:bg-secondary/20">
+                              <td className="px-4 py-2.5 whitespace-nowrap text-muted-foreground text-xs">
+                                {new Date(a.created_at).toLocaleString()}
+                              </td>
+                              <td className="px-4 py-2.5">
+                                <div className="font-medium text-foreground">{adminName}</div>
+                                {adminEmail && <div className="text-[11px] text-muted-foreground">{adminEmail}</div>}
+                                <code className="text-[10px] text-muted-foreground">{a.admin_id.slice(0, 8)}…</code>
+                              </td>
+                              <td className="px-4 py-2.5 capitalize text-foreground">{a.entity_type}</td>
+                              <td className="px-4 py-2.5">
+                                <span className={`text-xs font-bold px-2 py-0.5 rounded-full uppercase tracking-wider ${
+                                  a.action === "approve" || a.action === "re_approve"
+                                    ? "bg-accent/10 text-accent"
+                                    : a.action === "reject" || a.action === "suspend"
+                                      ? "bg-destructive/10 text-destructive"
+                                      : "bg-secondary text-foreground"
+                                }`}>
+                                  {a.action.replace("_", " ")}
+                                </span>
+                              </td>
+                              <td className="px-4 py-2.5 text-xs text-muted-foreground">
+                                {a.previous_status || "—"} → <strong className="text-foreground">{a.new_status || "—"}</strong>
+                              </td>
+                              <td className="px-4 py-2.5">
+                                <code className="text-[11px] text-muted-foreground">{a.entity_id.slice(0, 8)}…</code>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
           </div>
         </div>
       </div>

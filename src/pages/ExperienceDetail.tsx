@@ -1,13 +1,14 @@
 import { useParams, Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Star, Clock, MapPin, Users, Play, ArrowLeft, CheckCircle, Calendar, Shield, Bike, Mountain, Globe, Heart, Share2 } from "lucide-react";
+import { Star, Clock, MapPin, Users, Play, ArrowLeft, CheckCircle, Calendar, Shield, Bike, Mountain, Globe, Heart, Share2, Clock3 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { experiences, hosts, reviews } from "@/lib/data";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 
 // Bike experiences from Experiences page
 const bikeExperiences = [
@@ -92,7 +93,22 @@ const ExperienceDetail = () => {
   const { toast } = useToast();
   const { user } = useAuth();
   const [liked, setLiked] = useState(false);
+  const [dbStatus, setDbStatus] = useState<string | null>(null);
   const exp = allExperiences.find(e => e.id === id);
+
+  // If this id isn't in the static catalog (or even if it is), check DB for moderation status.
+  useEffect(() => {
+    let cancelled = false;
+    if (!id) return;
+    // UUIDs only — static IDs are slugs, skip the lookup.
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+    if (!isUuid) return;
+    supabase.from("experiences").select("status").eq("id", id).maybeSingle().then(({ data }) => {
+      if (!cancelled) setDbStatus(data?.status ?? null);
+    });
+    return () => { cancelled = true; };
+  }, [id]);
+
 
   if (!exp) {
     return (
@@ -371,7 +387,20 @@ const ExperienceDetail = () => {
                     )}
                   </div>
 
-                  {user ? (
+                  {dbStatus && dbStatus !== "approved" ? (
+                    <div className="mt-4 rounded-xl border border-amber-500/40 bg-amber-500/10 p-3 text-center">
+                      <Clock3 className="w-5 h-5 text-amber-600 mx-auto mb-1" />
+                      <p className="text-sm font-bold text-foreground">
+                        {dbStatus === "rejected" || dbStatus === "suspended" ? "Currently Unavailable" : "Pending Approval"}
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {dbStatus === "rejected" || dbStatus === "suspended"
+                          ? "This experience is not accepting bookings at the moment."
+                          : "This experience is awaiting admin review and isn't bookable yet. Check back soon!"}
+                      </p>
+                      <Button disabled className="w-full mt-3 rounded-full" size="lg">Booking Disabled</Button>
+                    </div>
+                  ) : user ? (
                     <Link to={host ? `/book/${host.id}` : "/explore"}>
                       <Button className="w-full mt-4 rounded-full bg-primary text-primary-foreground hover:bg-primary/90" size="lg">
                         Book This Experience

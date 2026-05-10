@@ -1,12 +1,13 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { motion } from "framer-motion";
-import { Eye, EyeOff, Save, Key, CreditCard, Mail, MessageCircle, Sparkles, Settings as SettingsIcon, Plus, BarChart3 } from "lucide-react";
+import { Eye, EyeOff, Save, Key, CreditCard, Mail, MessageCircle, Sparkles, Settings as SettingsIcon, Plus, BarChart3, ShieldAlert, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { sanitizeHeadScripts } from "@/lib/sanitizeHeadScripts";
 
 interface ConfigEntry {
   id: string;
@@ -206,12 +207,15 @@ const ConfigurationTab = () => {
                       <div className="flex items-center gap-2 w-full sm:w-auto">
                         <div className="relative flex-1 sm:w-72">
                           {entry.key === "CUSTOM_HEAD_SCRIPTS" ? (
-                            <Textarea
-                              value={display}
-                              placeholder={'<!-- e.g. <script>...</script> or <meta name="..." content="..."> -->'}
-                              onChange={e => setDrafts(p => ({ ...p, [entry.id]: e.target.value }))}
-                              className="font-mono text-xs min-h-[110px] sm:w-96"
-                            />
+                            <div className="space-y-2">
+                              <Textarea
+                                value={display}
+                                placeholder={'<!-- e.g. <script src="https://..."></script> or <meta name="..." content="..."> -->'}
+                                onChange={e => setDrafts(p => ({ ...p, [entry.id]: e.target.value }))}
+                                className="font-mono text-xs min-h-[110px] sm:w-96"
+                              />
+                              <HeadScriptValidator value={display} />
+                            </div>
                           ) : (
                             <Input
                               type={entry.is_secret && !isRevealed ? "password" : "text"}
@@ -249,6 +253,31 @@ const ConfigurationTab = () => {
         <code className="mx-1 px-1 rounded bg-secondary">app_configuration</code> table. For production secrets used at
         runtime by Lovable Cloud (e.g. Stripe webhooks), continue to use the platform's secret manager.
       </div>
+    </div>
+  );
+};
+
+const HeadScriptValidator = ({ value }: { value: string }) => {
+  const result = useMemo(() => sanitizeHeadScripts(value || ""), [value]);
+  if (!value || !value.trim()) return null;
+  const safe = result.warnings.length === 0;
+  return (
+    <div className={`rounded-md border text-xs p-2 ${safe ? "border-accent/30 bg-accent/5" : "border-destructive/30 bg-destructive/5"}`}>
+      <div className="flex items-center gap-1.5 font-semibold">
+        {safe
+          ? <><CheckCircle2 className="w-3.5 h-3.5 text-accent" /><span className="text-accent">Looks safe — will inject as-is.</span></>
+          : <><ShieldAlert className="w-3.5 h-3.5 text-destructive" /><span className="text-destructive">{result.warnings.length} item(s) will be stripped:</span></>}
+      </div>
+      {!safe && (
+        <ul className="mt-1 list-disc pl-4 text-destructive/90 space-y-0.5 max-h-24 overflow-auto">
+          {result.warnings.slice(0, 8).map((w, i) => <li key={i}>{w}</li>)}
+          {result.warnings.length > 8 && <li>…and {result.warnings.length - 8} more</li>}
+        </ul>
+      )}
+      <p className="mt-1 text-muted-foreground">
+        Allowed tags: <code>script, meta, link, style, noscript</code>. Event handlers (<code>on*</code>) and
+        <code> javascript:</code>/<code>data:</code> URLs are blocked.
+      </p>
     </div>
   );
 };

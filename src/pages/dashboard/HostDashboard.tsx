@@ -590,13 +590,58 @@ const HostDashboard = () => {
               </div>
 
               {expForm.category === "Wedding" && (
-                <div className="mt-4 rounded-lg border border-primary/30 bg-primary/5 p-4 space-y-3">
-                  <p className="text-sm font-bold text-foreground">💍 Wedding details</p>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div><label className="text-xs font-medium text-muted-foreground">Couple Names</label><Input className="mt-1" value={expForm.coupleNames} onChange={e => setExpForm(p => ({ ...p, coupleNames: e.target.value }))} placeholder="Aarav & Diya" /></div>
-                    <div><label className="text-xs font-medium text-muted-foreground">Wedding Date</label><Input type="date" className="mt-1" value={expForm.weddingDate} onChange={e => setExpForm(p => ({ ...p, weddingDate: e.target.value }))} /></div>
-                    <div className="sm:col-span-2"><label className="text-xs font-medium text-muted-foreground">Venue</label><Input className="mt-1" value={expForm.venue} onChange={e => setExpForm(p => ({ ...p, venue: e.target.value }))} placeholder="e.g. Umaid Bhawan Palace, Jodhpur" /></div>
-                    <div className="sm:col-span-2"><label className="text-xs font-medium text-muted-foreground">Wedding Highlights (comma-separated)</label><Input className="mt-1" value={expForm.weddingHighlights} onChange={e => setExpForm(p => ({ ...p, weddingHighlights: e.target.value }))} placeholder="Mehendi, Sangeet, Baraat, Reception" /></div>
+                <div className="mt-4 grid grid-cols-1 lg:grid-cols-2 gap-4">
+                  <div className="rounded-lg border border-primary/30 bg-primary/5 p-4 space-y-3">
+                    <p className="text-sm font-bold text-foreground">💍 Wedding details</p>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div><label className="text-xs font-medium text-muted-foreground">Couple Names</label><Input className="mt-1" value={expForm.coupleNames} onChange={e => setExpForm(p => ({ ...p, coupleNames: e.target.value }))} placeholder="Aarav & Diya" /></div>
+                      <div><label className="text-xs font-medium text-muted-foreground">Wedding Date</label><Input type="date" className="mt-1" value={expForm.weddingDate} onChange={e => setExpForm(p => ({ ...p, weddingDate: e.target.value }))} /></div>
+                      <div className="sm:col-span-2"><label className="text-xs font-medium text-muted-foreground">Venue</label><Input className="mt-1" value={expForm.venue} onChange={e => setExpForm(p => ({ ...p, venue: e.target.value }))} placeholder="e.g. Umaid Bhawan Palace, Jodhpur" /></div>
+                      <div className="sm:col-span-2"><label className="text-xs font-medium text-muted-foreground">Wedding Highlights (comma-separated)</label><Input className="mt-1" value={expForm.weddingHighlights} onChange={e => setExpForm(p => ({ ...p, weddingHighlights: e.target.value }))} placeholder="Mehendi, Sangeet, Baraat, Reception" /></div>
+                    </div>
+                  </div>
+
+                  {/* Live preview card — mirrors traveler-facing ExperienceCard */}
+                  <div className="rounded-lg border border-dashed border-primary/40 bg-card p-4">
+                    <p className="text-xs uppercase tracking-wider font-bold text-muted-foreground mb-2">👁 Traveler preview</p>
+                    <div className="relative overflow-hidden rounded-lg shadow-card">
+                      <div className="aspect-[4/3] overflow-hidden bg-secondary">
+                        {expForm.imageUrl
+                          ? <img src={expForm.imageUrl} alt="preview" className="h-full w-full object-cover" />
+                          : <div className="h-full w-full flex items-center justify-center text-muted-foreground text-xs">Add an image to preview</div>}
+                      </div>
+                      <div className="absolute inset-0 bg-gradient-to-t from-foreground/80 via-foreground/20 to-transparent" />
+                      <div className="absolute bottom-0 left-0 right-0 p-3">
+                        <span className="inline-block text-[10px] uppercase tracking-wider font-bold text-primary-foreground bg-primary/80 px-2 py-0.5 rounded-sm mb-1">
+                          💍 Wedding
+                        </span>
+                        <h3 className="text-base font-semibold text-primary-foreground line-clamp-1">
+                          {expForm.title || "Wedding Experience Title"}
+                        </h3>
+                        {expForm.coupleNames && (
+                          <p className="text-xs text-primary-foreground/90 mt-0.5">{expForm.coupleNames}</p>
+                        )}
+                        <div className="flex items-center justify-between text-[11px] text-primary-foreground/80 mt-1 gap-2">
+                          {expForm.weddingDate && (
+                            <span>📅 {new Date(expForm.weddingDate).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}</span>
+                          )}
+                          {expForm.venue && <span className="truncate">📍 {expForm.venue}</span>}
+                        </div>
+                      </div>
+                    </div>
+                    {expForm.weddingHighlights && (
+                      <div className="mt-3">
+                        <p className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground">Highlights</p>
+                        <div className="flex flex-wrap gap-1 mt-1">
+                          {expForm.weddingHighlights.split(",").map(s => s.trim()).filter(Boolean).map(h => (
+                            <span key={h} className="text-[10px] bg-primary/10 text-primary px-2 py-0.5 rounded-full">{h}</span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    <p className="mt-3 text-[11px] text-muted-foreground">
+                      Updates live as you edit — this is exactly how travelers will see your wedding card.
+                    </p>
                   </div>
                 </div>
               )}
