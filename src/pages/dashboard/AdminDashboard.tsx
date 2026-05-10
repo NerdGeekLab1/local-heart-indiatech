@@ -382,6 +382,7 @@ const AdminDashboard = () => {
     { id: "missions", label: "Missions", icon: Crosshair, group: "Operations" },
     { id: "grievances", label: "Grievances", icon: MessageSquare, badge: dbGrievances.filter(g => g.status === "open").length, group: "Operations" },
     { id: "moderation", label: "Moderation", icon: Shield, group: "Operations" },
+    { id: "audit", label: "Audit Log", icon: FileText, group: "Operations" },
 
     { id: "plans", label: "Subscription Plans", icon: Crown, group: "Settings" },
     { id: "emails", label: "Emails", icon: Mail, group: "Settings" },
