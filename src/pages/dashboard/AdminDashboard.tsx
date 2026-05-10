@@ -117,6 +117,9 @@ const AdminDashboard = () => {
   const [expandedUser, setExpandedUser] = useState<string | null>(null);
   const [experienceSearch, setExperienceSearch] = useState("");
   const [experienceStatusFilter, setExperienceStatusFilter] = useState<"all" | "pending" | "approved" | "rejected">("all");
+  const [auditLog, setAuditLog] = useState<any[]>([]);
+  const [auditLogReloadKey, setAuditLogReloadKey] = useState(0);
+  const [auditEntityFilter, setAuditEntityFilter] = useState<string>("all");
 
   // Mission form
   const [missionForm, setMissionForm] = useState({ wandererId: "", title: "", description: "", destination: "", rewardPoints: 100, deadline: "" });
