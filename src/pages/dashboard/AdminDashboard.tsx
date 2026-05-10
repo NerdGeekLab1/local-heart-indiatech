@@ -1549,6 +1549,91 @@ const AdminDashboard = () => {
 
         {activeTab === "plans" && <SubscriptionPlansTab />}
         {activeTab === "weddings" && <WeddingsTab admin />}
+
+        {activeTab === "audit" && (
+          <div className="space-y-4 mt-2">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
+                  <FileText className="w-5 h-5 text-primary" /> Admin Audit Log
+                </h2>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Every approve, reject, suspend, and re-approve action recorded with timestamp and admin ID.
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                <Filter className="w-4 h-4 text-muted-foreground" />
+                <select
+                  value={auditEntityFilter}
+                  onChange={e => setAuditEntityFilter(e.target.value)}
+                  className="h-9 rounded-md border border-input bg-background px-3 text-sm"
+                >
+                  <option value="all">All entities</option>
+                  <option value="experience">Experiences</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="rounded-lg bg-card shadow-card overflow-hidden">
+              {auditLog.length === 0 ? (
+                <p className="p-8 text-sm text-center text-muted-foreground">No audit entries yet — moderation actions will show up here.</p>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead className="bg-secondary/40 text-xs uppercase tracking-wider text-muted-foreground">
+                      <tr>
+                        <th className="text-left font-semibold px-4 py-2.5">When</th>
+                        <th className="text-left font-semibold px-4 py-2.5">Admin</th>
+                        <th className="text-left font-semibold px-4 py-2.5">Entity</th>
+                        <th className="text-left font-semibold px-4 py-2.5">Action</th>
+                        <th className="text-left font-semibold px-4 py-2.5">Status change</th>
+                        <th className="text-left font-semibold px-4 py-2.5">Reference ID</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-border">
+                      {auditLog
+                        .filter(a => auditEntityFilter === "all" || a.entity_type === auditEntityFilter)
+                        .map(a => {
+                          const adminName = getUserName(a.admin_id) || "Admin";
+                          const adminEmail = getUserEmail(a.admin_id);
+                          return (
+                            <tr key={a.id} className="hover:bg-secondary/20">
+                              <td className="px-4 py-2.5 whitespace-nowrap text-muted-foreground text-xs">
+                                {new Date(a.created_at).toLocaleString()}
+                              </td>
+                              <td className="px-4 py-2.5">
+                                <div className="font-medium text-foreground">{adminName}</div>
+                                {adminEmail && <div className="text-[11px] text-muted-foreground">{adminEmail}</div>}
+                                <code className="text-[10px] text-muted-foreground">{a.admin_id.slice(0, 8)}…</code>
+                              </td>
+                              <td className="px-4 py-2.5 capitalize text-foreground">{a.entity_type}</td>
+                              <td className="px-4 py-2.5">
+                                <span className={`text-xs font-bold px-2 py-0.5 rounded-full uppercase tracking-wider ${
+                                  a.action === "approve" || a.action === "re_approve"
+                                    ? "bg-accent/10 text-accent"
+                                    : a.action === "reject" || a.action === "suspend"
+                                      ? "bg-destructive/10 text-destructive"
+                                      : "bg-secondary text-foreground"
+                                }`}>
+                                  {a.action.replace("_", " ")}
+                                </span>
+                              </td>
+                              <td className="px-4 py-2.5 text-xs text-muted-foreground">
+                                {a.previous_status || "—"} → <strong className="text-foreground">{a.new_status || "—"}</strong>
+                              </td>
+                              <td className="px-4 py-2.5">
+                                <code className="text-[11px] text-muted-foreground">{a.entity_id.slice(0, 8)}…</code>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
           </div>
         </div>
       </div>
