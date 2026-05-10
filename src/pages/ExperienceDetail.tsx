@@ -93,7 +93,22 @@ const ExperienceDetail = () => {
   const { toast } = useToast();
   const { user } = useAuth();
   const [liked, setLiked] = useState(false);
+  const [dbStatus, setDbStatus] = useState<string | null>(null);
   const exp = allExperiences.find(e => e.id === id);
+
+  // If this id isn't in the static catalog (or even if it is), check DB for moderation status.
+  useEffect(() => {
+    let cancelled = false;
+    if (!id) return;
+    // UUIDs only — static IDs are slugs, skip the lookup.
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+    if (!isUuid) return;
+    supabase.from("experiences").select("status").eq("id", id).maybeSingle().then(({ data }) => {
+      if (!cancelled) setDbStatus(data?.status ?? null);
+    });
+    return () => { cancelled = true; };
+  }, [id]);
+
 
   if (!exp) {
     return (
