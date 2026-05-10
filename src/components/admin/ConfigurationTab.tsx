@@ -257,4 +257,29 @@ const ConfigurationTab = () => {
   );
 };
 
+const HeadScriptValidator = ({ value }: { value: string }) => {
+  const result = useMemo(() => sanitizeHeadScripts(value || ""), [value]);
+  if (!value || !value.trim()) return null;
+  const safe = result.warnings.length === 0;
+  return (
+    <div className={`rounded-md border text-xs p-2 ${safe ? "border-accent/30 bg-accent/5" : "border-destructive/30 bg-destructive/5"}`}>
+      <div className="flex items-center gap-1.5 font-semibold">
+        {safe
+          ? <><CheckCircle2 className="w-3.5 h-3.5 text-accent" /><span className="text-accent">Looks safe — will inject as-is.</span></>
+          : <><ShieldAlert className="w-3.5 h-3.5 text-destructive" /><span className="text-destructive">{result.warnings.length} item(s) will be stripped:</span></>}
+      </div>
+      {!safe && (
+        <ul className="mt-1 list-disc pl-4 text-destructive/90 space-y-0.5 max-h-24 overflow-auto">
+          {result.warnings.slice(0, 8).map((w, i) => <li key={i}>{w}</li>)}
+          {result.warnings.length > 8 && <li>…and {result.warnings.length - 8} more</li>}
+        </ul>
+      )}
+      <p className="mt-1 text-muted-foreground">
+        Allowed tags: <code>script, meta, link, style, noscript</code>. Event handlers (<code>on*</code>) and
+        <code> javascript:</code>/<code>data:</code> URLs are blocked.
+      </p>
+    </div>
+  );
+};
+
 export default ConfigurationTab;
