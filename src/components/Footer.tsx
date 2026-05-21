@@ -48,6 +48,7 @@ const Footer = () => (
             <Link to="/host-trip" className="block text-sm text-muted-foreground hover:text-foreground transition-colors">Host a Trip</Link>
             <Link to="/dashboard/host" className="block text-sm text-muted-foreground hover:text-foreground transition-colors">Host Dashboard</Link>
             <Link to="/host-eligibility" className="block text-sm text-muted-foreground hover:text-foreground transition-colors">Host Foreign Travelers</Link>
+            <Link to="/host-eligibility" className="block text-sm text-muted-foreground hover:text-foreground transition-colors">Host Eligibility</Link>
             <Link to="/resources" className="block text-sm text-muted-foreground hover:text-foreground transition-colors">Host Resources</Link>
           </div>
         </div>
