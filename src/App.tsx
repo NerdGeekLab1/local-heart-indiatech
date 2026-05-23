@@ -41,9 +41,12 @@ import Membership from "./pages/Membership.tsx";
 import AuthCallback from "./pages/AuthCallback.tsx";
 import Referrals from "./pages/Referrals.tsx";
 import HostEligibility from "./pages/HostEligibility.tsx";
+import BetaWaitlist from "./pages/BetaWaitlist.tsx";
+import FeatureFlagsAdmin from "./pages/admin/FeatureFlagsAdmin.tsx";
 import MobileBottomNav from "./components/MobileBottomNav.tsx";
 import AIChatRecommender from "./components/AIChatRecommender.tsx";
 import HeaderScripts from "./components/HeaderScripts.tsx";
+import OnboardingChecklist from "./components/OnboardingChecklist.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
@@ -94,10 +97,13 @@ const App = () => (
             <Route path="/auth/callback" element={<AuthCallback />} />
             <Route path="/referrals" element={<Referrals />} />
             <Route path="/host-eligibility" element={<HostEligibility />} />
+            <Route path="/beta-waitlist" element={<BetaWaitlist />} />
+            <Route path="/admin/feature-flags" element={<FeatureFlagsAdmin />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
           <MobileBottomNav />
           <AIChatRecommender />
+          <OnboardingChecklist />
         </BrowserRouter>
       </TooltipProvider>
       </CurrencyProvider>
