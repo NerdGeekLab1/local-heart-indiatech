@@ -37,7 +37,7 @@ export default function BetaWaitlist() {
       subject: "Confirm your Travelista beta spot",
       template_name: "beta_waitlist_confirm",
       trigger_event: "beta_waitlist_signup",
-      body_html: `<p>Hi ${form.full_name || "traveler"},</p><p>Thanks for joining the Travelista beta waitlist! We'll be in touch as spots open up for the <strong>${form.plan_interest}</strong> tier.</p><p>— The Travelista Team</p>`,
+      body_html: `<p>Hi ${form.full_name || "traveler"},</p><p>Thanks for joining the Travelista beta waitlist! Please confirm your email to lock in your <strong>${form.plan_interest}</strong> tier spot:</p><p><a href="${window.location.origin}/beta-waitlist/confirm?token=${data?.confirmation_token}">Confirm my spot</a></p><p>— The Travelista Team</p>`,
       payload: { waitlist_id: data?.id, confirmation_token: data?.confirmation_token, plan: form.plan_interest },
     });
     setDone(true);

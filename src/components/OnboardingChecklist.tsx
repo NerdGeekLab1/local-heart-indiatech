@@ -1,10 +1,10 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { CheckCircle2, Circle, X, Sparkles } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
-import { useLocalStorage } from "@/hooks/use-local-storage";
+import { supabase } from "@/integrations/supabase/client";
 
 interface Step { label: string; href: string; phase: string; }
 
@@ -14,6 +14,7 @@ const STEPS: Record<string, Step[]> = {
     { phase: "Phase 1", label: "Review host eligibility queue", href: "/dashboard/admin?tab=hosts" },
     { phase: "Phase 2", label: "Approve pending experiences", href: "/dashboard/admin?tab=experiences" },
     { phase: "Phase 2", label: "Set up feature flags for beta users", href: "/admin/feature-flags" },
+    { phase: "Phase 2", label: "Review beta waitlist signups", href: "/admin/waitlist" },
     { phase: "Phase 3", label: "Publish subscription plans", href: "/dashboard/admin?tab=plans" },
   ],
   host: [
@@ -34,18 +35,55 @@ const STEPS: Record<string, Step[]> = {
 
 export default function OnboardingChecklist() {
   const { user, userRole, loading } = useAuth();
-  const [dismissed, setDismissed] = useLocalStorage<boolean>(`onboarding_dismissed_${user?.id ?? "x"}`, false);
-  const [completed, setCompleted] = useLocalStorage<string[]>(`onboarding_completed_${user?.id ?? "x"}`, []);
+  const [dismissed, setDismissed] = useState(false);
+  const [completed, setCompleted] = useState<string[]>([]);
   const [open, setOpen] = useState(true);
+  const [hydrated, setHydrated] = useState(false);
 
-  if (loading || !user || dismissed) return null;
+  // Load progress from DB
+  useEffect(() => {
+    if (!user) return;
+    let active = true;
+    (async () => {
+      const { data } = await supabase
+        .from("user_onboarding_progress")
+        .select("completed_steps,dismissed")
+        .eq("user_id", user.id)
+        .maybeSingle();
+      if (!active) return;
+      if (data) {
+        setCompleted(data.completed_steps ?? []);
+        setDismissed(!!data.dismissed);
+      }
+      setHydrated(true);
+    })();
+    return () => { active = false; };
+  }, [user]);
+
+  const persist = async (next: { completed_steps?: string[]; dismissed?: boolean }) => {
+    if (!user || !userRole) return;
+    await supabase.from("user_onboarding_progress").upsert({
+      user_id: user.id,
+      role: userRole,
+      ...next,
+    }, { onConflict: "user_id" });
+  };
+
+  if (loading || !user || !hydrated || dismissed) return null;
   const role = (userRole ?? "traveler") as keyof typeof STEPS;
   const steps = STEPS[role] ?? STEPS.traveler;
   const done = steps.filter(s => completed.includes(s.href)).length;
   if (done === steps.length) return null;
 
   const toggle = (href: string) => {
-    setCompleted(completed.includes(href) ? completed.filter(h => h !== href) : [...completed, href]);
+    const next = completed.includes(href) ? completed.filter(h => h !== href) : [...completed, href];
+    setCompleted(next);
+    persist({ completed_steps: next });
+  };
+
+  const dismiss = () => {
+    setDismissed(true);
+    persist({ dismissed: true });
   };
 
   return (
@@ -59,7 +97,7 @@ export default function OnboardingChecklist() {
             <div className="flex items-center gap-2"><Sparkles className="w-4 h-4 text-primary" /><h3 className="font-semibold text-sm">Getting started · {done}/{steps.length}</h3></div>
             <div className="flex gap-1">
               <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => setOpen(false)}>−</Button>
-              <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => setDismissed(true)}><X className="w-3.5 h-3.5" /></Button>
+              <Button size="icon" variant="ghost" className="h-7 w-7" onClick={dismiss}><X className="w-3.5 h-3.5" /></Button>
             </div>
           </div>
           <div className="p-3 max-h-80 overflow-auto space-y-1">
