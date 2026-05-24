@@ -1417,6 +1417,16 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      confirm_beta_waitlist: {
+        Args: { _token: string }
+        Returns: {
+          confirmed_at: string
+          email: string
+          full_name: string
+          plan_interest: string
+          status: string
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
