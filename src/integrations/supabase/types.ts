@@ -1227,6 +1227,36 @@ export type Database = {
         }
         Relationships: []
       }
+      user_onboarding_progress: {
+        Row: {
+          completed_steps: string[]
+          created_at: string
+          dismissed: boolean
+          id: string
+          role: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          completed_steps?: string[]
+          created_at?: string
+          dismissed?: boolean
+          id?: string
+          role?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          completed_steps?: string[]
+          created_at?: string
+          dismissed?: boolean
+          id?: string
+          role?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_permissions: {
         Row: {
           expires_at: string | null
@@ -1387,6 +1417,16 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      confirm_beta_waitlist: {
+        Args: { _token: string }
+        Returns: {
+          confirmed_at: string
+          email: string
+          full_name: string
+          plan_interest: string
+          status: string
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

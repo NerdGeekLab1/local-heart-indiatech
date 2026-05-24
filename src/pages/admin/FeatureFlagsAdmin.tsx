@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Navigate } from "react-router-dom";
+import { Link, Navigate } from "react-router-dom";
 import { Plus, Trash2, UserPlus } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -64,8 +64,13 @@ export default function FeatureFlagsAdmin() {
     <div className="min-h-screen bg-background">
       <Navbar />
       <main className="container mx-auto px-4 py-10 max-w-4xl">
-        <h1 className="text-3xl font-bold mb-2">Feature Flags</h1>
-        <p className="text-muted-foreground mb-8">Control beta features per user or globally.</p>
+        <div className="flex items-start justify-between mb-8 gap-4 flex-wrap">
+          <div>
+            <h1 className="text-3xl font-bold mb-2">Feature Flags</h1>
+            <p className="text-muted-foreground">Control beta features per user or globally.</p>
+          </div>
+          <Button asChild variant="outline"><Link to="/admin/waitlist">Beta Waitlist →</Link></Button>
+        </div>
 
         <section className="rounded-xl border bg-card p-5 mb-8">
           <h2 className="font-semibold mb-3">Create flag</h2>
