@@ -336,6 +336,7 @@ const HostDashboard = () => {
     <div className="min-h-screen bg-background">
       <Navbar />
       <div className="pt-24 pb-16 px-4 sm:px-6 lg:px-8 mx-auto max-w-6xl">
+        <BetaModerationTools scope="host" />
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="flex items-center gap-4">
           <img src={host.image} alt={hostProfile.name} className="w-16 h-16 rounded-full object-cover shadow-card" />
           <div>
