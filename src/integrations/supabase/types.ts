@@ -1090,6 +1090,45 @@ export type Database = {
           },
         ]
       }
+      traveler_stamps: {
+        Row: {
+          category: string
+          created_at: string
+          earned_at: string
+          id: string
+          metadata: Json
+          progress: number
+          stamp_key: string
+          tier: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          earned_at?: string
+          id?: string
+          metadata?: Json
+          progress?: number
+          stamp_key: string
+          tier?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          earned_at?: string
+          id?: string
+          metadata?: Json
+          progress?: number
+          stamp_key?: string
+          tier?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       trip_listings: {
         Row: {
           created_at: string
