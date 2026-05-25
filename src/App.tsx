@@ -105,6 +105,7 @@ const App = () => (
             <Route path="/beta-waitlist/confirm" element={<BetaWaitlistConfirm />} />
             <Route path="/admin/feature-flags" element={<FeatureFlagsAdmin />} />
             <Route path="/admin/waitlist" element={<WaitlistAdmin />} />
+            <Route path="/admin/audit-log" element={<AuditLogAdmin />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
           <MobileBottomNav />
