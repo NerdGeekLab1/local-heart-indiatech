@@ -17,6 +17,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import ImageUpload from "@/components/ImageUpload";
+import BetaModerationTools from "@/components/admin/BetaModerationTools";
 
 const host = hosts[0];
 const hostReviews = reviews.filter(r => r.hostId === host.id);
