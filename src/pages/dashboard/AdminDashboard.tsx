@@ -411,6 +411,7 @@ const AdminDashboard = () => {
     <div className="min-h-screen bg-background">
       <Navbar />
       <div className="pt-20 pb-16 px-4 sm:px-6 lg:px-8 mx-auto max-w-[1500px]">
+        <BetaModerationTools scope="admin" />
         <div className="flex flex-col lg:flex-row gap-6">
           {/* Sidebar */}
           <aside className="lg:w-64 lg:shrink-0">
