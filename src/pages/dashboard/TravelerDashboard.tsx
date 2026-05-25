@@ -492,6 +492,13 @@ const TravelerDashboard = () => {
           </div>
         )}
 
+        {/* Stamps */}
+        {activeTab === "stamps" && (
+          <div className="mt-6">
+            <StampCollection />
+          </div>
+        )}
+
         {/* Messages */}
         {activeTab === "messages" && (
           <div className="mt-6">
