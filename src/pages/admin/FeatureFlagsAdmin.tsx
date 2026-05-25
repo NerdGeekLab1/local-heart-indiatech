@@ -69,7 +69,10 @@ export default function FeatureFlagsAdmin() {
             <h1 className="text-3xl font-bold mb-2">Feature Flags</h1>
             <p className="text-muted-foreground">Control beta features per user or globally.</p>
           </div>
-          <Button asChild variant="outline"><Link to="/admin/waitlist">Beta Waitlist →</Link></Button>
+          <div className="flex gap-2">
+            <Button asChild variant="outline"><Link to="/admin/waitlist">Beta Waitlist →</Link></Button>
+            <Button asChild variant="outline"><Link to="/admin/audit-log">Audit Log →</Link></Button>
+          </div>
         </div>
 
         <section className="rounded-xl border bg-card p-5 mb-8">
