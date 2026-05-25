@@ -45,6 +45,7 @@ import BetaWaitlist from "./pages/BetaWaitlist.tsx";
 import BetaWaitlistConfirm from "./pages/BetaWaitlistConfirm.tsx";
 import FeatureFlagsAdmin from "./pages/admin/FeatureFlagsAdmin.tsx";
 import WaitlistAdmin from "./pages/admin/WaitlistAdmin.tsx";
+import AuditLogAdmin from "./pages/admin/AuditLogAdmin.tsx";
 import MobileBottomNav from "./components/MobileBottomNav.tsx";
 import AIChatRecommender from "./components/AIChatRecommender.tsx";
 import FeatureGate from "./components/FeatureGate.tsx";
