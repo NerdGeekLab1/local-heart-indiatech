@@ -46,6 +46,7 @@ import BetaWaitlistConfirm from "./pages/BetaWaitlistConfirm.tsx";
 import FeatureFlagsAdmin from "./pages/admin/FeatureFlagsAdmin.tsx";
 import WaitlistAdmin from "./pages/admin/WaitlistAdmin.tsx";
 import AuditLogAdmin from "./pages/admin/AuditLogAdmin.tsx";
+import FeaturesHub from "./pages/FeaturesHub.tsx";
 import MobileBottomNav from "./components/MobileBottomNav.tsx";
 import AIChatRecommender from "./components/AIChatRecommender.tsx";
 import FeatureGate from "./components/FeatureGate.tsx";
@@ -106,6 +107,7 @@ const App = () => (
             <Route path="/admin/feature-flags" element={<FeatureFlagsAdmin />} />
             <Route path="/admin/waitlist" element={<WaitlistAdmin />} />
             <Route path="/admin/audit-log" element={<AuditLogAdmin />} />
+            <Route path="/features" element={<FeaturesHub />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
           <MobileBottomNav />
