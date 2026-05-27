@@ -573,10 +573,17 @@ const AdminDashboard = () => {
             <div className="mt-8 grid grid-cols-1 lg:grid-cols-2 gap-6">
               <div className="lg:col-span-2 rounded-lg bg-card p-4 shadow-card">
                 <h2 className="text-lg font-bold text-foreground mb-2">Beta Operations</h2>
-                <p className="text-sm text-muted-foreground mb-3">Jump to the standalone admin URLs for beta rollout control and waitlist review.</p>
+                <p className="text-sm text-muted-foreground mb-3">Use these controls for rollout flags, public beta signups, host review queues, and audit history.</p>
+                <div className="grid sm:grid-cols-4 gap-3 mb-3">
+                  <div className="rounded-lg bg-secondary/40 p-3"><p className="text-lg font-bold text-foreground">{dbBetaWaitlist.length}</p><p className="text-[10px] text-muted-foreground">Beta signups</p></div>
+                  <div className="rounded-lg bg-secondary/40 p-3"><p className="text-lg font-bold text-foreground">{dbBetaWaitlist.filter(w => w.status === "confirmed").length}</p><p className="text-[10px] text-muted-foreground">Confirmed</p></div>
+                  <div className="rounded-lg bg-secondary/40 p-3"><p className="text-lg font-bold text-foreground">{hostQueue.length}</p><p className="text-[10px] text-muted-foreground">Host queue</p></div>
+                  <div className="rounded-lg bg-secondary/40 p-3"><p className="text-lg font-bold text-foreground">{approvedHostApplications.length}</p><p className="text-[10px] text-muted-foreground">Approved hosts</p></div>
+                </div>
                 <div className="flex flex-wrap gap-2">
                   <Button asChild variant="outline" size="sm"><Link to="/admin/feature-flags"><Flag className="w-4 h-4 mr-1" /> Feature Flags</Link></Button>
                   <Button asChild variant="outline" size="sm"><Link to="/admin/waitlist"><Mail className="w-4 h-4 mr-1" /> Beta Waitlist</Link></Button>
+                  <Button variant="outline" size="sm" onClick={() => setActiveTab("hostWaitlist")}><UserCheck className="w-4 h-4 mr-1" /> Host Waitlist</Button>
                   <Button asChild variant="outline" size="sm"><Link to="/admin/audit-log"><FileText className="w-4 h-4 mr-1" /> Audit Log</Link></Button>
                 </div>
               </div>
