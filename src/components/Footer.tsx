@@ -48,6 +48,7 @@ const Footer = () => (
             <Link to="/host-trip" className="block text-sm text-muted-foreground hover:text-foreground transition-colors">Host a Trip</Link>
             <Link to="/dashboard/host" className="block text-sm text-muted-foreground hover:text-foreground transition-colors">Host Dashboard</Link>
             <Link to="/host-eligibility" className="block text-sm text-muted-foreground hover:text-foreground transition-colors">Host Foreign Travelers</Link>
+            <Link to="/host-eligibility" className="block text-sm text-muted-foreground hover:text-foreground transition-colors">Host Eligibility</Link>
             <Link to="/resources" className="block text-sm text-muted-foreground hover:text-foreground transition-colors">Host Resources</Link>
           </div>
         </div>
@@ -57,7 +58,9 @@ const Footer = () => (
             <Link to="/community" className="block text-sm text-muted-foreground hover:text-foreground transition-colors">Traveler Stories</Link>
             <Link to="/community" className="block text-sm text-muted-foreground hover:text-foreground transition-colors">Host Spotlights</Link>
             <Link to="/community?tab=tips" className="block text-sm text-muted-foreground hover:text-foreground transition-colors">Travel Tips</Link>
+            <Link to="/beta-waitlist" className="block text-sm text-muted-foreground hover:text-foreground transition-colors">Beta Waitlist</Link>
             <Link to="/community?tab=blog" className="block text-sm text-muted-foreground hover:text-foreground transition-colors">Blog</Link>
+            <Link to="/features" className="block text-sm text-muted-foreground hover:text-foreground transition-colors">What's New</Link>
             <Link to="/docs" className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"><BookOpen className="w-3.5 h-3.5" /> In-app Docs</Link>
             <a href="https://github.com/lovable-dev/travelista" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"><Github className="w-3.5 h-3.5" /> GitHub Docs</a>
           </div>

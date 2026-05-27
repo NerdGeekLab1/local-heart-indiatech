@@ -89,6 +89,48 @@ export type Database = {
         }
         Relationships: []
       }
+      beta_waitlist: {
+        Row: {
+          city: string | null
+          confirmation_token: string
+          confirmed_at: string | null
+          created_at: string
+          email: string
+          full_name: string | null
+          id: string
+          interest: string | null
+          plan_interest: string | null
+          referral_source: string | null
+          status: string
+        }
+        Insert: {
+          city?: string | null
+          confirmation_token?: string
+          confirmed_at?: string | null
+          created_at?: string
+          email: string
+          full_name?: string | null
+          id?: string
+          interest?: string | null
+          plan_interest?: string | null
+          referral_source?: string | null
+          status?: string
+        }
+        Update: {
+          city?: string | null
+          confirmation_token?: string
+          confirmed_at?: string | null
+          created_at?: string
+          email?: string
+          full_name?: string | null
+          id?: string
+          interest?: string | null
+          plan_interest?: string | null
+          referral_source?: string | null
+          status?: string
+        }
+        Relationships: []
+      }
       beta_wanderers: {
         Row: {
           admin_notes: string | null
@@ -501,6 +543,36 @@ export type Database = {
           valid_to?: string | null
           vehicle_details?: Json | null
           vehicle_type?: string | null
+        }
+        Relationships: []
+      }
+      feature_flags: {
+        Row: {
+          created_at: string
+          description: string | null
+          enabled_globally: boolean
+          flag_key: string
+          id: string
+          label: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          enabled_globally?: boolean
+          flag_key: string
+          id?: string
+          label: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          enabled_globally?: boolean
+          flag_key?: string
+          id?: string
+          label?: string
+          updated_at?: string
         }
         Relationships: []
       }
@@ -1018,6 +1090,45 @@ export type Database = {
           },
         ]
       }
+      traveler_stamps: {
+        Row: {
+          category: string
+          created_at: string
+          earned_at: string
+          id: string
+          metadata: Json
+          progress: number
+          stamp_key: string
+          tier: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          earned_at?: string
+          id?: string
+          metadata?: Json
+          progress?: number
+          stamp_key: string
+          tier?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          earned_at?: string
+          id?: string
+          metadata?: Json
+          progress?: number
+          stamp_key?: string
+          tier?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       trip_listings: {
         Row: {
           created_at: string
@@ -1130,6 +1241,60 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      user_feature_flags: {
+        Row: {
+          flag_key: string
+          granted_at: string
+          granted_by: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          flag_key: string
+          granted_at?: string
+          granted_by: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          flag_key?: string
+          granted_at?: string
+          granted_by?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_onboarding_progress: {
+        Row: {
+          completed_steps: string[]
+          created_at: string
+          dismissed: boolean
+          id: string
+          role: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          completed_steps?: string[]
+          created_at?: string
+          dismissed?: boolean
+          id?: string
+          role?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          completed_steps?: string[]
+          created_at?: string
+          dismissed?: boolean
+          id?: string
+          role?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       user_permissions: {
         Row: {
@@ -1291,6 +1456,16 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      confirm_beta_waitlist: {
+        Args: { _token: string }
+        Returns: {
+          confirmed_at: string
+          email: string
+          full_name: string
+          plan_interest: string
+          status: string
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
