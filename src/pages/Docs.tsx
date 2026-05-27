@@ -207,27 +207,31 @@ supabase/functions/
 - [x] Trip listings with creator info and participant tracking
 - [x] Grievance management with admin mediation
 - [x] Granular ACL (Access Control List) for feature permissions
-- [x] AI-powered destination recommendations (widget + chat)
+- [x] **AI Travel Recommender** — prompt input + multi-turn refinement via Lovable AI Gateway
+- [x] **AI Travel Guide** — floating chat companion with streaming responses
 - [x] Role-based notifications (traveler/host/admin specific)
 - [x] Mobile sticky bottom nav
 - [x] Dark/light theme with system preference detection
 - [x] Multi-currency support (INR, USD, EUR, GBP)
 - [x] Video review recording with camera integration
 - [x] Trip hosting and listing management
-- [x] Real-time data from Lovable Cloud (bookings, invoices, streaks, trips, grievances)
+- [x] **Onboarding Checklist** — per-role guided steps mapped to roadmap phases, persisted in DB
+- [x] **Beta Waitlist** — public landing + plan tiers + email-confirmation flow
+- [x] **Feature Flags** — global or per-user flag rollout with admin UI
+- [x] **Admin Audit Log** — automated tracking of flag changes & waitlist confirmations
+- [x] **Beta Moderation Tools** — flag-gated fast-track & shadow-hide
+- [x] **Traveler Stamp Collection** — 27 tiered badges across cities, activities, terrain, seasons
+- [x] **Features Hub** at \`/features\` — discoverability + route hierarchy
 
 **🔄 In Progress**:
 - [ ] Real-time chat via WebSockets
-- [ ] File storage for host images/videos
-- [ ] Email notifications for booking updates
+- [ ] Email notifications for booking updates (queue infra ready)
 - [ ] Payment gateway integration (Razorpay/Stripe)
 
 **📋 Planned**:
 - [ ] Push notifications
 - [ ] Mobile app (React Native)
-- [ ] Multi-language support
-- [ ] Advanced analytics dashboard
-- [ ] Host subscription tiers`
+- [ ] Multi-language support`
   },
   {
     id: "setup", icon: Terminal, title: "Setup Guide",
