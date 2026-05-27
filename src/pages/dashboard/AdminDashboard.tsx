@@ -1085,10 +1085,84 @@ const AdminDashboard = () => {
           </div>
         )}
 
+        {/* Host Waitlist Tab */}
+        {activeTab === "hostWaitlist" && (
+          <div className="mt-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+              <div>
+                <h2 className="text-xl font-bold text-foreground">Host Waitlist ({hostQueue.length})</h2>
+                <p className="text-sm text-muted-foreground">Review host applications before approval. Approved hosts are assigned the host role and appear under People → User Management.</p>
+              </div>
+              <Button asChild variant="outline" size="sm"><Link to="/host-eligibility">Public host application</Link></Button>
+            </div>
+
+            {hostQueue.length === 0 ? (
+              <div className="rounded-lg bg-card p-8 text-center shadow-card">
+                <UserCheck className="w-10 h-10 text-muted-foreground/40 mx-auto mb-3" />
+                <p className="font-medium text-foreground">No pending host applications</p>
+                <p className="text-sm text-muted-foreground">New applications from /host-eligibility will appear here until approved.</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {hostQueue.map(app => (
+                  <div key={app.id} className="rounded-xl bg-card p-5 shadow-card">
+                    <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-4">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <h3 className="font-bold text-foreground">{app.full_name}</h3>
+                          <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${statusBadge(app.status)}`}>{app.status.replace("_", " ")}</span>
+                          <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full">Score {app.eligibility_score}/100</span>
+                          <span className="text-xs bg-secondary text-muted-foreground px-2 py-0.5 rounded-full capitalize">{app.badge}</span>
+                        </div>
+                        <p className="text-sm text-muted-foreground mt-1">{app.email} · {app.city} · {app.english_proficiency} English</p>
+                        <p className="text-xs text-muted-foreground mt-2 line-clamp-2">{app.why_host || "No host story provided."}</p>
+                        <div className="grid sm:grid-cols-4 gap-2 mt-3 text-xs">
+                          <div className="rounded-lg bg-secondary/40 p-2"><p className="text-muted-foreground">Languages</p><p className="font-medium text-foreground">{app.languages?.join(", ") || "—"}</p></div>
+                          <div className="rounded-lg bg-secondary/40 p-2"><p className="text-muted-foreground">Specialties</p><p className="font-medium text-foreground">{app.hosting_specialties?.join(", ") || "—"}</p></div>
+                          <div className="rounded-lg bg-secondary/40 p-2"><p className="text-muted-foreground">Quiz</p><p className="font-medium text-foreground">{app.questionnaire_score || 0}/100</p></div>
+                          <div className="rounded-lg bg-secondary/40 p-2"><p className="text-muted-foreground">KYC</p><p className="font-medium text-foreground">{app.has_kyc ? "Provided" : "Missing"}</p></div>
+                        </div>
+                      </div>
+                      <div className="flex lg:flex-col gap-2 shrink-0 flex-wrap">
+                        <Button size="sm" className="rounded-full text-xs bg-accent text-accent-foreground hover:bg-accent/90" onClick={() => updateHostApplicationStatus(app, "approved")}>
+                          <CheckCircle className="w-3 h-3 mr-1" /> Approve
+                        </Button>
+                        <Button size="sm" variant="outline" className="rounded-full text-xs" onClick={() => updateHostApplicationStatus(app, "under_review")}>
+                          <Eye className="w-3 h-3 mr-1" /> Review
+                        </Button>
+                        <Button size="sm" variant="outline" className="rounded-full text-xs" onClick={() => updateHostApplicationStatus(app, "waitlisted")}>
+                          <Clock className="w-3 h-3 mr-1" /> Waitlist
+                        </Button>
+                        <Button size="sm" variant="outline" className="rounded-full text-xs text-destructive" onClick={() => updateHostApplicationStatus(app, "rejected")}>
+                          <Ban className="w-3 h-3 mr-1" /> Reject
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Hosts Tab */}
         {activeTab === "hosts" && (
           <div className="mt-6">
-            <h2 className="text-xl font-bold text-foreground mb-4">All Hosts ({hosts.length})</h2>
+            <h2 className="text-xl font-bold text-foreground mb-4">All Hosts ({hosts.length + approvedHostApplications.length})</h2>
+            {approvedHostApplications.length > 0 && (
+              <div className="mb-5 rounded-lg bg-card p-4 shadow-card">
+                <h3 className="font-bold text-foreground mb-2">Approved host applications</h3>
+                <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                  {approvedHostApplications.map(app => (
+                    <div key={app.id} className="rounded-lg border border-border p-3 text-sm">
+                      <p className="font-semibold text-foreground">{app.full_name}</p>
+                      <p className="text-xs text-muted-foreground">{app.city} · {app.email}</p>
+                      <span className="mt-2 inline-flex text-[10px] bg-accent/10 text-accent px-2 py-0.5 rounded-full">In People as host</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
             <div className="space-y-3">
               {hosts.map(h => {
                 const status = getHostStatus(h.id);
