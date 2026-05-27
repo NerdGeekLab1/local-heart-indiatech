@@ -2,7 +2,7 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import {
   BookOpen, Code, Database, Users, Shield, Globe, Zap, Layers, ChevronRight,
-  Server, Key, FileText, GitBranch, Terminal, Cpu, Clock, Activity
+  Server, Key, FileText, GitBranch, Terminal, Cpu, Clock, Activity, Map, Package
 } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
