@@ -1,6 +1,6 @@
 import { BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer } from "recharts";
 import { useState, useEffect, useMemo } from "react";
-import { useSearchParams } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Users, DollarSign, TrendingUp, Shield, AlertTriangle, Star, MapPin, Calendar, Settings, FileText,
@@ -479,6 +479,15 @@ const AdminDashboard = () => {
               ))}
             </div>
             <div className="mt-8 grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div className="lg:col-span-2 rounded-lg bg-card p-4 shadow-card">
+                <h2 className="text-lg font-bold text-foreground mb-2">Beta Operations</h2>
+                <p className="text-sm text-muted-foreground mb-3">Jump to the standalone admin URLs for beta rollout control and waitlist review.</p>
+                <div className="flex flex-wrap gap-2">
+                  <Button asChild variant="outline" size="sm"><Link to="/admin/feature-flags"><Flag className="w-4 h-4 mr-1" /> Feature Flags</Link></Button>
+                  <Button asChild variant="outline" size="sm"><Link to="/admin/waitlist"><Mail className="w-4 h-4 mr-1" /> Beta Waitlist</Link></Button>
+                  <Button asChild variant="outline" size="sm"><Link to="/admin/audit-log"><FileText className="w-4 h-4 mr-1" /> Audit Log</Link></Button>
+                </div>
+              </div>
               <div>
                 <h2 className="text-lg font-bold text-foreground mb-3">Pending Actions</h2>
                 <div className="space-y-2">
