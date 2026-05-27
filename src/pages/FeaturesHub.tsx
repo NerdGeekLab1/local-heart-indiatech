@@ -2,7 +2,8 @@ import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   Sparkles, Flag, ListChecks, Mail, ShieldCheck, ScrollText, Stamp,
-  ChevronRight, Crown, Users, Compass, BookOpen
+  ChevronRight, Crown, Users, Compass, BookOpen, Bot, MessageCircle,
+  Bell, CreditCard, Camera, Trophy, Map, Globe, FileText
 } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
