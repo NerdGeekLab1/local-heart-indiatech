@@ -6,7 +6,7 @@ import {
   Users, DollarSign, TrendingUp, Shield, AlertTriangle, Star, MapPin, Calendar, Settings, FileText,
   BarChart3, Globe, Flag, Eye, Plus, Trash2, UtensilsCrossed, Video, ChevronDown, Ban, CheckCircle,
   Edit, Compass, MessageSquare, Target, Lock, Receipt, Trophy, Crosshair, Search, Bell, Mail,
-  Crown, Gem, Sparkles, UserX, UserCheck, Filter, Key
+  Crown, Gem, Sparkles, UserX, UserCheck, Filter, Key, Clock
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -1826,6 +1826,14 @@ const AdminDashboard = () => {
         initialData={editDialog.data} onSave={(d) => { editDialog.onSave(d); setEditDialog(p => ({ ...p, open: false })); }}
         onDelete={editDialog.onDelete ? () => { editDialog.onDelete!(); setEditDialog(p => ({ ...p, open: false })); } : undefined}
         onClose={() => setEditDialog(p => ({ ...p, open: false }))} />
+      {activeAdminChat && (
+        <ChatPanel
+          receiverId={activeAdminChat.id}
+          receiverName={activeAdminChat.name}
+          isOpen={!!activeAdminChat}
+          onClose={() => setActiveAdminChat(null)}
+        />
+      )}
       <Footer />
     </div>
   );
