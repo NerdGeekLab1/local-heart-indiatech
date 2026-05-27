@@ -707,17 +707,17 @@ const AdminDashboard = () => {
                             <div className="px-4 pb-4 border-t border-border pt-4 space-y-4">
                               {/* Quick Actions */}
                               <div className="flex flex-wrap gap-2">
-                                <Button size="sm" variant="outline" className="rounded-full text-xs gap-1">
+                                <Button size="sm" variant="outline" className="rounded-full text-xs gap-1" onClick={() => sendUserEmail(u)}>
                                   <Mail className="w-3 h-3" /> Send Email
                                 </Button>
-                                <Button size="sm" variant="outline" className="rounded-full text-xs gap-1">
+                                <Button size="sm" variant="outline" className="rounded-full text-xs gap-1" onClick={() => notifyUser(u)}>
                                   <Bell className="w-3 h-3" /> Notify
                                 </Button>
-                                <Button size="sm" variant="outline" className="rounded-full text-xs gap-1">
+                                <Button size="sm" variant="outline" className="rounded-full text-xs gap-1" onClick={() => setActiveAdminChat({ id: u.id, name: `${u.first_name || "User"} ${u.last_name || ""}`.trim() })}>
                                   <MessageSquare className="w-3 h-3" /> Chat
                                 </Button>
-                                <Button size="sm" variant="outline" className="rounded-full text-xs gap-1 text-destructive">
-                                  <UserX className="w-3 h-3" /> Ban
+                                <Button size="sm" variant="outline" className="rounded-full text-xs gap-1 text-destructive" onClick={() => banUser(u)} disabled={bannedUserIds.has(u.id)}>
+                                  <UserX className="w-3 h-3" /> {bannedUserIds.has(u.id) ? "Banned" : "Ban"}
                                 </Button>
                               </div>
 
