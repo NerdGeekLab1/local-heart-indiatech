@@ -207,27 +207,31 @@ supabase/functions/
 - [x] Trip listings with creator info and participant tracking
 - [x] Grievance management with admin mediation
 - [x] Granular ACL (Access Control List) for feature permissions
-- [x] AI-powered destination recommendations (widget + chat)
+- [x] **AI Travel Recommender** — prompt input + multi-turn refinement via Lovable AI Gateway
+- [x] **AI Travel Guide** — floating chat companion with streaming responses
 - [x] Role-based notifications (traveler/host/admin specific)
 - [x] Mobile sticky bottom nav
 - [x] Dark/light theme with system preference detection
 - [x] Multi-currency support (INR, USD, EUR, GBP)
 - [x] Video review recording with camera integration
 - [x] Trip hosting and listing management
-- [x] Real-time data from Lovable Cloud (bookings, invoices, streaks, trips, grievances)
+- [x] **Onboarding Checklist** — per-role guided steps mapped to roadmap phases, persisted in DB
+- [x] **Beta Waitlist** — public landing + plan tiers + email-confirmation flow
+- [x] **Feature Flags** — global or per-user flag rollout with admin UI
+- [x] **Admin Audit Log** — automated tracking of flag changes & waitlist confirmations
+- [x] **Beta Moderation Tools** — flag-gated fast-track & shadow-hide
+- [x] **Traveler Stamp Collection** — 27 tiered badges across cities, activities, terrain, seasons
+- [x] **Features Hub** at \`/features\` — discoverability + route hierarchy
 
 **🔄 In Progress**:
 - [ ] Real-time chat via WebSockets
-- [ ] File storage for host images/videos
-- [ ] Email notifications for booking updates
+- [ ] Email notifications for booking updates (queue infra ready)
 - [ ] Payment gateway integration (Razorpay/Stripe)
 
 **📋 Planned**:
 - [ ] Push notifications
 - [ ] Mobile app (React Native)
-- [ ] Multi-language support
-- [ ] Advanced analytics dashboard
-- [ ] Host subscription tiers`
+- [ ] Multi-language support`
   },
   {
     id: "setup", icon: Terminal, title: "Setup Guide",
@@ -304,13 +308,23 @@ All colors use HSL via CSS variables defined in \`index.css\`:
   },
   {
     id: "changelog", icon: Clock, title: "Changelog",
-    content: `**v1.0 — April 2026** (Current)
+    content: `**v1.2 — May 2026** (Current)
+- [x] **Onboarding journeys** for admin/host/traveler mapped to roadmap phases (DB-persisted)
+- [x] **Beta waitlist** landing page \`/beta-waitlist\` + email confirmation flow \`/beta-waitlist/confirm\`
+- [x] **Feature flags** — admin UI at \`/admin/feature-flags\` (global + per-user grants)
+- [x] **Admin audit log** with automated triggers on flag + waitlist changes
+- [x] **Beta moderation tools** gated by \`advanced_moderation\` flag
+- [x] **Traveler stamp collection** — 27 tiered badges (Bronze→Legend) across 5 categories
+- [x] **Features Hub** at \`/features\` with route hierarchy + relational flow
+- [x] **AI Travel Recommender** upgraded: prompt input + multi-turn follow-up refinement
+- [x] **AI Travel Guide** fixed — migrated to \`google/gemini-2.5-flash\` with tool-calling for structured output
+- [x] Security hardening: storage bucket lockdown, RLS tightening on \`beta_waitlist\`, function search_path fixes
+
+**v1.0 — April 2026**
 - [x] Unified User & ACL management tab with search, ban, notify, chat
 - [x] Subscription/membership system (4 tiers: Free → Nomad)
 - [x] Trip participant tracking (who's joining)
 - [x] Admin experience edit/update/approve/suspend
-- [x] Trip creator info visible in admin
-- [x] Developer documentation optimization
 
 **v0.9 — April 2026**
 - [x] AI-powered destination recommendations (Lovable AI Gateway)
