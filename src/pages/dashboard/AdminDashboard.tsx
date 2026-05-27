@@ -304,6 +304,86 @@ const AdminDashboard = () => {
     toast({ title: "Permission revoked" });
   };
 
+  const sendUserEmail = async (targetUser: any) => {
+    if (!user || !targetUser.email) { toast({ title: "No email on this profile", variant: "destructive" }); return; }
+    const { error } = await supabase.from("email_notifications").insert({
+      recipient_user_id: targetUser.id,
+      recipient_email: targetUser.email,
+      subject: "Travelista account update",
+      template_name: "admin_user_email",
+      trigger_event: "admin_user_management",
+      body_html: `<p>Hi ${targetUser.first_name || "traveler"},</p><p>Your Travelista account has an update from the admin team. Please sign in to review your latest status and messages.</p>`,
+      payload: { user_id: targetUser.id, action: "send_email" },
+      sent_by: user.id,
+    });
+    if (error) { toast({ title: "Email failed", description: error.message, variant: "destructive" }); return; }
+    toast({ title: "Email queued" });
+  };
+
+  const notifyUser = async (targetUser: any) => {
+    if (!user) return;
+    const { error } = await supabase.from("messages").insert({
+      sender_id: user.id,
+      receiver_id: targetUser.id,
+      content: "Travelista admin notification: please review your dashboard for the latest account updates.",
+    });
+    if (error) { toast({ title: "Notification failed", description: error.message, variant: "destructive" }); return; }
+    toast({ title: "Notification sent" });
+  };
+
+  const banUser = async (targetUser: any) => {
+    if (!user) return;
+    const alreadyBanned = dbPermissions.some(p => p.user_id === targetUser.id && p.permission === "account_banned");
+    if (!alreadyBanned) {
+      const { data, error } = await supabase.from("user_permissions").insert({
+        user_id: targetUser.id,
+        permission: "account_banned",
+        granted_by: user.id,
+      }).select().single();
+      if (error && !error.message.includes("duplicate")) { toast({ title: "Ban failed", description: error.message, variant: "destructive" }); return; }
+      if (data) setDbPermissions(p => [data, ...p]);
+    }
+    await supabase.from("admin_audit_log").insert({
+      admin_id: user.id,
+      entity_type: "profile",
+      entity_id: targetUser.id,
+      action: "ban",
+      new_status: "banned",
+      metadata: { email: targetUser.email },
+    });
+    setAuditLogReloadKey(k => k + 1);
+    toast({ title: `${targetUser.email || "User"} marked banned` });
+  };
+
+  const updateHostApplicationStatus = async (application: any, status: string) => {
+    if (!user) return;
+    if (status === "approved") {
+      const { data, error } = await supabase.rpc("approve_host_application", { _application_id: application.id });
+      if (error) { toast({ title: "Approval failed", description: error.message, variant: "destructive" }); return; }
+      setDbHostApplications(p => p.map(a => a.id === application.id ? data : a));
+      if (!userRoles.some(r => r.user_id === application.user_id && r.role === "host")) {
+        setUserRoles(p => [...p, { id: `host-${application.user_id}`, user_id: application.user_id, role: "host" }]);
+      }
+      toast({ title: "Host approved and moved to People" });
+      return;
+    }
+    const update = { status, reviewed_by: user.id, reviewed_at: new Date().toISOString(), updated_at: new Date().toISOString() };
+    const { error } = await supabase.from("host_eligibility").update(update).eq("id", application.id);
+    if (error) { toast({ title: "Update failed", description: error.message, variant: "destructive" }); return; }
+    await supabase.from("admin_audit_log").insert({
+      admin_id: user.id,
+      entity_type: "host_eligibility",
+      entity_id: application.id,
+      action: status,
+      previous_status: application.status,
+      new_status: status,
+      metadata: { user_id: application.user_id, email: application.email },
+    });
+    setDbHostApplications(p => p.map(a => a.id === application.id ? { ...a, ...update } : a));
+    setAuditLogReloadKey(k => k + 1);
+    toast({ title: `Host application ${status.replace("_", " ")}` });
+  };
+
   const updateInvoiceStatus = async (id: string, status: string) => {
     const update: any = { status };
     if (status === "paid") update.paid_at = new Date().toISOString();
