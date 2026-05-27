@@ -1456,6 +1456,48 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      approve_host_application: {
+        Args: { _application_id: string }
+        Returns: {
+          admin_notes: string | null
+          badge: string
+          city: string
+          country_focus: string[] | null
+          created_at: string
+          cultural_training: boolean
+          eligibility_score: number
+          email: string
+          emergency_contact: string | null
+          english_proficiency: string
+          foreign_guests_hosted: number
+          full_name: string
+          has_kyc: boolean
+          has_passport: boolean
+          hosting_specialties: string[] | null
+          id: string
+          languages: string[] | null
+          phone: string | null
+          questionnaire_answers: Json
+          questionnaire_score: number
+          references_count: number
+          reviewed_at: string | null
+          reviewed_by: string | null
+          social_links: Json
+          social_score: number
+          status: string
+          updated_at: string
+          user_id: string
+          waitlist_position: number | null
+          why_host: string | null
+          years_hosting: number
+        }
+        SetofOptions: {
+          from: "*"
+          to: "host_eligibility"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       confirm_beta_waitlist: {
         Args: { _token: string }
         Returns: {
