@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
-import { Navigate } from "react-router-dom";
-import { CheckCircle2, Filter, Mail, Search, Download } from "lucide-react";
+import { Link, Navigate } from "react-router-dom";
+import { CheckCircle2, Mail, Search, Download, Flag } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
@@ -95,8 +95,18 @@ export default function WaitlistAdmin() {
             <h1 className="text-3xl font-bold">Beta Waitlist</h1>
             <p className="text-muted-foreground text-sm">Review signups, filter by plan or status, and mark users as confirmed.</p>
           </div>
-          <Button variant="outline" onClick={exportCsv}><Download className="w-4 h-4 mr-1" /> Export CSV</Button>
+          <div className="flex gap-2">
+            <Button asChild variant="outline"><Link to="/admin/feature-flags"><Flag className="w-4 h-4 mr-1" /> Feature Flags</Link></Button>
+            <Button variant="outline" onClick={exportCsv}><Download className="w-4 h-4 mr-1" /> Export CSV</Button>
+          </div>
         </div>
+
+        <section className="rounded-xl border bg-card p-4 mb-6">
+          <h2 className="font-semibold mb-2">What this page does</h2>
+          <p className="text-sm text-muted-foreground">
+            Use <span className="font-medium text-foreground">/admin/waitlist</span> to review public beta signups from <span className="font-medium text-foreground">/beta-waitlist</span>, filter by plan or confirmation status, mark emails as confirmed, queue invite emails, and export the list for launch planning.
+          </p>
+        </section>
 
         <div className="grid grid-cols-3 gap-3 mb-6">
           {[
