@@ -18,15 +18,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import AIRecommendWidget from "@/components/AIRecommendWidget";
 import ImageUpload from "@/components/ImageUpload";
-import StampCollection from "@/components/StampCollection";
-import { Award } from "lucide-react";
 
 const statusColors: Record<string, string> = {
   pending: "bg-primary/10 text-primary", confirmed: "bg-accent/10 text-accent",
   completed: "bg-secondary text-muted-foreground", cancelled: "bg-destructive/10 text-destructive",
 };
 
-type Tab = "overview" | "bookings" | "trips" | "saved" | "wanderer" | "grievances" | "messages" | "reviews" | "invoices" | "rewards" | "stamps" | "settings";
+type Tab = "overview" | "bookings" | "trips" | "saved" | "wanderer" | "grievances" | "messages" | "reviews" | "invoices" | "rewards" | "settings";
 
 const TravelerDashboard = () => {
   const [searchParams] = useSearchParams();
@@ -120,7 +118,6 @@ const TravelerDashboard = () => {
     { id: "trips", label: "My Trips", icon: Compass },
     { id: "invoices", label: "Invoices", icon: Receipt },
     { id: "rewards", label: "Rewards", icon: Trophy },
-    { id: "stamps", label: "Stamps", icon: Award },
     { id: "saved", label: "Saved", icon: Heart },
     { id: "wanderer", label: "🧭 Wanderer", icon: Target },
     { id: "grievances", label: "Grievances", icon: AlertTriangle },
@@ -489,13 +486,6 @@ const TravelerDashboard = () => {
                 <Button className="rounded-full gap-2"><Trophy className="w-4 h-4" /> View Full Rewards Hub</Button>
               </Link>
             </div>
-          </div>
-        )}
-
-        {/* Stamps */}
-        {activeTab === "stamps" && (
-          <div className="mt-6">
-            <StampCollection />
           </div>
         )}
 

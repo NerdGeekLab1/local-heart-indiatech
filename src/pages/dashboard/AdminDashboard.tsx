@@ -23,7 +23,6 @@ import ConfigurationTab from "@/components/admin/ConfigurationTab";
 import EmailTemplatesTab from "@/components/admin/EmailTemplatesTab";
 import SubscriptionPlansTab from "@/components/admin/SubscriptionPlansTab";
 import WeddingsTab from "@/components/admin/WeddingsTab";
-import BetaModerationTools from "@/components/admin/BetaModerationTools";
 import { Heart, Menu } from "lucide-react";
 
 type Tab = "overview" | "hosts" | "bookings" | "experiences" | "destinations" | "trips" | "grievances" | "users" | "wanderers" | "missions" | "leaderboard" | "invoices" | "moderation" | "analytics" | "settings" | "configuration" | "emails" | "plans" | "weddings" | "audit";
@@ -412,7 +411,6 @@ const AdminDashboard = () => {
     <div className="min-h-screen bg-background">
       <Navbar />
       <div className="pt-20 pb-16 px-4 sm:px-6 lg:px-8 mx-auto max-w-[1500px]">
-        <BetaModerationTools scope="admin" />
         <div className="flex flex-col lg:flex-row gap-6">
           {/* Sidebar */}
           <aside className="lg:w-64 lg:shrink-0">

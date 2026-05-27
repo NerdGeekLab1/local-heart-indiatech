@@ -41,17 +41,9 @@ import Membership from "./pages/Membership.tsx";
 import AuthCallback from "./pages/AuthCallback.tsx";
 import Referrals from "./pages/Referrals.tsx";
 import HostEligibility from "./pages/HostEligibility.tsx";
-import BetaWaitlist from "./pages/BetaWaitlist.tsx";
-import BetaWaitlistConfirm from "./pages/BetaWaitlistConfirm.tsx";
-import FeatureFlagsAdmin from "./pages/admin/FeatureFlagsAdmin.tsx";
-import WaitlistAdmin from "./pages/admin/WaitlistAdmin.tsx";
-import AuditLogAdmin from "./pages/admin/AuditLogAdmin.tsx";
-import FeaturesHub from "./pages/FeaturesHub.tsx";
 import MobileBottomNav from "./components/MobileBottomNav.tsx";
 import AIChatRecommender from "./components/AIChatRecommender.tsx";
-import FeatureGate from "./components/FeatureGate.tsx";
 import HeaderScripts from "./components/HeaderScripts.tsx";
-import OnboardingChecklist from "./components/OnboardingChecklist.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
@@ -102,17 +94,10 @@ const App = () => (
             <Route path="/auth/callback" element={<AuthCallback />} />
             <Route path="/referrals" element={<Referrals />} />
             <Route path="/host-eligibility" element={<HostEligibility />} />
-            <Route path="/beta-waitlist" element={<BetaWaitlist />} />
-            <Route path="/beta-waitlist/confirm" element={<BetaWaitlistConfirm />} />
-            <Route path="/admin/feature-flags" element={<FeatureFlagsAdmin />} />
-            <Route path="/admin/waitlist" element={<WaitlistAdmin />} />
-            <Route path="/admin/audit-log" element={<AuditLogAdmin />} />
-            <Route path="/features" element={<FeaturesHub />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
           <MobileBottomNav />
-          <FeatureGate flag="ai_concierge"><AIChatRecommender /></FeatureGate>
-          <OnboardingChecklist />
+          <AIChatRecommender />
         </BrowserRouter>
       </TooltipProvider>
       </CurrencyProvider>
