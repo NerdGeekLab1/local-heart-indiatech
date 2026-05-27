@@ -308,13 +308,23 @@ All colors use HSL via CSS variables defined in \`index.css\`:
   },
   {
     id: "changelog", icon: Clock, title: "Changelog",
-    content: `**v1.0 — April 2026** (Current)
+    content: `**v1.2 — May 2026** (Current)
+- [x] **Onboarding journeys** for admin/host/traveler mapped to roadmap phases (DB-persisted)
+- [x] **Beta waitlist** landing page \`/beta-waitlist\` + email confirmation flow \`/beta-waitlist/confirm\`
+- [x] **Feature flags** — admin UI at \`/admin/feature-flags\` (global + per-user grants)
+- [x] **Admin audit log** with automated triggers on flag + waitlist changes
+- [x] **Beta moderation tools** gated by \`advanced_moderation\` flag
+- [x] **Traveler stamp collection** — 27 tiered badges (Bronze→Legend) across 5 categories
+- [x] **Features Hub** at \`/features\` with route hierarchy + relational flow
+- [x] **AI Travel Recommender** upgraded: prompt input + multi-turn follow-up refinement
+- [x] **AI Travel Guide** fixed — migrated to \`google/gemini-2.5-flash\` with tool-calling for structured output
+- [x] Security hardening: storage bucket lockdown, RLS tightening on \`beta_waitlist\`, function search_path fixes
+
+**v1.0 — April 2026**
 - [x] Unified User & ACL management tab with search, ban, notify, chat
 - [x] Subscription/membership system (4 tiers: Free → Nomad)
 - [x] Trip participant tracking (who's joining)
 - [x] Admin experience edit/update/approve/suspend
-- [x] Trip creator info visible in admin
-- [x] Developer documentation optimization
 
 **v0.9 — April 2026**
 - [x] AI-powered destination recommendations (Lovable AI Gateway)
