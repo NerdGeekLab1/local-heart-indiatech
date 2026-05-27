@@ -24,9 +24,10 @@ import EmailTemplatesTab from "@/components/admin/EmailTemplatesTab";
 import SubscriptionPlansTab from "@/components/admin/SubscriptionPlansTab";
 import WeddingsTab from "@/components/admin/WeddingsTab";
 import BetaModerationTools from "@/components/admin/BetaModerationTools";
+import ChatPanel from "@/components/ChatPanel";
 import { Heart, Menu } from "lucide-react";
 
-type Tab = "overview" | "hosts" | "bookings" | "experiences" | "destinations" | "trips" | "grievances" | "users" | "wanderers" | "missions" | "leaderboard" | "invoices" | "moderation" | "analytics" | "settings" | "configuration" | "emails" | "plans" | "weddings" | "audit";
+type Tab = "overview" | "hosts" | "hostWaitlist" | "bookings" | "experiences" | "destinations" | "trips" | "grievances" | "users" | "wanderers" | "missions" | "leaderboard" | "invoices" | "moderation" | "analytics" | "settings" | "configuration" | "emails" | "plans" | "weddings" | "audit";
 
 const destinationFields: FieldConfig[] = [
   { key: "name", label: "City Name", required: true },
@@ -111,6 +112,9 @@ const AdminDashboard = () => {
   const [dbPermissions, setDbPermissions] = useState<any[]>([]);
   const [dbSubscriptions, setDbSubscriptions] = useState<any[]>([]);
   const [dbTripParticipants, setDbTripParticipants] = useState<any[]>([]);
+  const [dbHostApplications, setDbHostApplications] = useState<any[]>([]);
+  const [dbBetaWaitlist, setDbBetaWaitlist] = useState<any[]>([]);
+  const [activeAdminChat, setActiveAdminChat] = useState<{ id: string; name: string } | null>(null);
 
   // Search & filters
   const [userSearch, setUserSearch] = useState("");
@@ -132,7 +136,7 @@ const AdminDashboard = () => {
 
   useEffect(() => {
     const fetchData = async () => {
-      const [{ data: trips }, { data: grievances }, { data: expReqs }, { data: profiles }, { data: roles }, { data: wanderers }, { data: dbExp }] = await Promise.all([
+      const [{ data: trips }, { data: grievances }, { data: expReqs }, { data: profiles }, { data: roles }, { data: wanderers }, { data: dbExp }, { data: hostApps }, { data: betaSignups }] = await Promise.all([
         supabase.from("trip_listings").select("*").order("created_at", { ascending: false }),
         supabase.from("grievances").select("*").order("created_at", { ascending: false }),
         supabase.from("experience_requests").select("*").order("created_at", { ascending: false }),
@@ -140,6 +144,8 @@ const AdminDashboard = () => {
         supabase.from("user_roles").select("*"),
         supabase.from("beta_wanderers").select("*").order("created_at", { ascending: false }),
         supabase.from("experiences").select("*").order("created_at", { ascending: false }),
+        supabase.from("host_eligibility").select("*").order("created_at", { ascending: false }),
+        supabase.from("beta_waitlist").select("*").order("created_at", { ascending: false }),
       ]);
       setDbTrips(trips || []);
       setDbGrievances(grievances || []);
@@ -148,6 +154,8 @@ const AdminDashboard = () => {
       setUserRoles(roles || []);
       setDbWanderers(wanderers || []);
       setDbExperiences(dbExp || []);
+      setDbHostApplications(hostApps || []);
+      setDbBetaWaitlist(betaSignups || []);
 
       const [{ data: missions }, { data: invoices }, { data: perms }, { data: subs }, { data: participants }] = await Promise.all([
         supabase.from("wanderer_missions").select("*").order("created_at", { ascending: false }),
