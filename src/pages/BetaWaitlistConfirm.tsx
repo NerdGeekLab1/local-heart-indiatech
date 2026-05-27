@@ -21,12 +21,14 @@ export default function BetaWaitlistConfirm() {
   useEffect(() => {
     if (!token) { setState({ kind: "missing" }); return; }
     (async () => {
-      const { data, error } = await supabase.rpc("confirm_beta_waitlist", { _token: token });
-      if (error || !data || data.length === 0) {
+      const { data, error } = await supabase.functions.invoke("beta-waitlist", {
+        body: { action: "confirm", token },
+      });
+      if (error || data?.error || !data?.waitlist) {
         setState({ kind: "invalid" });
         return;
       }
-      const row = data[0] as any;
+      const row = data.waitlist as any;
       setState({ kind: "ok", email: row.email, full_name: row.full_name, plan_interest: row.plan_interest, status: row.status, confirmed_at: row.confirmed_at });
     })();
   }, [token]);
