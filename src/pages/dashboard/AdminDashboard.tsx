@@ -448,6 +448,9 @@ const AdminDashboard = () => {
   const activeReviews = reviews.filter(r => !removedReviews.includes(r.id));
   const approvedWanderers = dbWanderers.filter(w => w.status === "approved");
   const leaderboard = [...dbWanderers].filter(w => w.status === "approved").sort((a, b) => (b.score || 0) - (a.score || 0));
+  const hostQueue = dbHostApplications.filter(a => a.status !== "approved");
+  const approvedHostApplications = dbHostApplications.filter(a => a.status === "approved");
+  const bannedUserIds = new Set(dbPermissions.filter(p => p.permission === "account_banned").map(p => p.user_id));
 
   const statusBadge = (status: string) => {
     const colors: Record<string, string> = {
@@ -468,7 +471,8 @@ const AdminDashboard = () => {
     { id: "overview", label: "Overview", icon: BarChart3, group: "Insights" },
     { id: "analytics", label: "Analytics", icon: TrendingUp, group: "Insights" },
 
-    { id: "users", label: "Users & ACL", icon: Users, group: "People" },
+    { id: "users", label: "User Management", icon: Users, group: "People" },
+    { id: "hostWaitlist", label: "Host Waitlist", icon: UserCheck, badge: hostQueue.length, group: "People" },
     { id: "hosts", label: "Hosts", icon: Users, group: "People" },
     { id: "wanderers", label: "Wanderers", icon: Target, group: "People" },
     { id: "leaderboard", label: "Leaderboard", icon: Trophy, group: "People" },
