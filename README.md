@@ -245,8 +245,21 @@ bunx vitest run      # Unit tests
 
 ## Roadmap
 
-- Payment gateway integration (Razorpay / Stripe) for self-serve
-  subscription billing.
+See **`Travelista_Roadmap.md`** for the full phased plan and
+**`PROJECT_DOCUMENTATION.md`** for the complete URL / feature reference.
+The in-app developer portal lives at `/docs`.
+
+Highlights of what's next:
+
+- **Luggage Companion programme** — every trip host can offer one
+  complementary "Luggage" seat to a vetted free traveler-mate.
+  Eligibility via the Luggage Quest (KYC, bookings, stamps, video
+  review, etiquette quiz, intro chat). Nomad subscribers get one
+  **guaranteed Luggage trip per month**; Adventurer gets priority
+  queue; hosts earn a **Luggage Patron** badge.
+- Payment gateway integration (Razorpay / Stripe).
 - Wedding RSVP and ticketed guest list.
-- Push notifications for mobile.
+- Push notifications + React Native mobile app.
 - More AI-driven personalisation (host matching, dynamic pricing).
+- Multi-language support (Hindi, Tamil, Bengali, Marathi).
+
