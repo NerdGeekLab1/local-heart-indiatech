@@ -6,7 +6,7 @@ import {
   Users, DollarSign, TrendingUp, Shield, AlertTriangle, Star, MapPin, Calendar, Settings, FileText,
   BarChart3, Globe, Flag, Eye, Plus, Trash2, UtensilsCrossed, Video, ChevronDown, Ban, CheckCircle,
   Edit, Compass, MessageSquare, Target, Lock, Receipt, Trophy, Crosshair, Search, Bell, Mail,
-  Crown, Gem, Sparkles, UserX, UserCheck, Filter, Key
+  Crown, Gem, Sparkles, UserX, UserCheck, Filter, Key, Clock
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -24,9 +24,10 @@ import EmailTemplatesTab from "@/components/admin/EmailTemplatesTab";
 import SubscriptionPlansTab from "@/components/admin/SubscriptionPlansTab";
 import WeddingsTab from "@/components/admin/WeddingsTab";
 import BetaModerationTools from "@/components/admin/BetaModerationTools";
+import ChatPanel from "@/components/ChatPanel";
 import { Heart, Menu } from "lucide-react";
 
-type Tab = "overview" | "hosts" | "bookings" | "experiences" | "destinations" | "trips" | "grievances" | "users" | "wanderers" | "missions" | "leaderboard" | "invoices" | "moderation" | "analytics" | "settings" | "configuration" | "emails" | "plans" | "weddings" | "audit";
+type Tab = "overview" | "hosts" | "hostWaitlist" | "bookings" | "experiences" | "destinations" | "trips" | "grievances" | "users" | "wanderers" | "missions" | "leaderboard" | "invoices" | "moderation" | "analytics" | "settings" | "configuration" | "emails" | "plans" | "weddings" | "audit";
 
 const destinationFields: FieldConfig[] = [
   { key: "name", label: "City Name", required: true },
@@ -111,6 +112,9 @@ const AdminDashboard = () => {
   const [dbPermissions, setDbPermissions] = useState<any[]>([]);
   const [dbSubscriptions, setDbSubscriptions] = useState<any[]>([]);
   const [dbTripParticipants, setDbTripParticipants] = useState<any[]>([]);
+  const [dbHostApplications, setDbHostApplications] = useState<any[]>([]);
+  const [dbBetaWaitlist, setDbBetaWaitlist] = useState<any[]>([]);
+  const [activeAdminChat, setActiveAdminChat] = useState<{ id: string; name: string } | null>(null);
 
   // Search & filters
   const [userSearch, setUserSearch] = useState("");
@@ -132,7 +136,7 @@ const AdminDashboard = () => {
 
   useEffect(() => {
     const fetchData = async () => {
-      const [{ data: trips }, { data: grievances }, { data: expReqs }, { data: profiles }, { data: roles }, { data: wanderers }, { data: dbExp }] = await Promise.all([
+      const [{ data: trips }, { data: grievances }, { data: expReqs }, { data: profiles }, { data: roles }, { data: wanderers }, { data: dbExp }, { data: hostApps }, { data: betaSignups }] = await Promise.all([
         supabase.from("trip_listings").select("*").order("created_at", { ascending: false }),
         supabase.from("grievances").select("*").order("created_at", { ascending: false }),
         supabase.from("experience_requests").select("*").order("created_at", { ascending: false }),
@@ -140,6 +144,8 @@ const AdminDashboard = () => {
         supabase.from("user_roles").select("*"),
         supabase.from("beta_wanderers").select("*").order("created_at", { ascending: false }),
         supabase.from("experiences").select("*").order("created_at", { ascending: false }),
+        supabase.from("host_eligibility").select("*").order("created_at", { ascending: false }),
+        supabase.from("beta_waitlist").select("*").order("created_at", { ascending: false }),
       ]);
       setDbTrips(trips || []);
       setDbGrievances(grievances || []);
@@ -148,6 +154,8 @@ const AdminDashboard = () => {
       setUserRoles(roles || []);
       setDbWanderers(wanderers || []);
       setDbExperiences(dbExp || []);
+      setDbHostApplications(hostApps || []);
+      setDbBetaWaitlist(betaSignups || []);
 
       const [{ data: missions }, { data: invoices }, { data: perms }, { data: subs }, { data: participants }] = await Promise.all([
         supabase.from("wanderer_missions").select("*").order("created_at", { ascending: false }),
@@ -296,6 +304,86 @@ const AdminDashboard = () => {
     toast({ title: "Permission revoked" });
   };
 
+  const sendUserEmail = async (targetUser: any) => {
+    if (!user || !targetUser.email) { toast({ title: "No email on this profile", variant: "destructive" }); return; }
+    const { error } = await supabase.from("email_notifications").insert({
+      recipient_user_id: targetUser.id,
+      recipient_email: targetUser.email,
+      subject: "Travelista account update",
+      template_name: "admin_user_email",
+      trigger_event: "admin_user_management",
+      body_html: `<p>Hi ${targetUser.first_name || "traveler"},</p><p>Your Travelista account has an update from the admin team. Please sign in to review your latest status and messages.</p>`,
+      payload: { user_id: targetUser.id, action: "send_email" },
+      sent_by: user.id,
+    });
+    if (error) { toast({ title: "Email failed", description: error.message, variant: "destructive" }); return; }
+    toast({ title: "Email queued" });
+  };
+
+  const notifyUser = async (targetUser: any) => {
+    if (!user) return;
+    const { error } = await supabase.from("messages").insert({
+      sender_id: user.id,
+      receiver_id: targetUser.id,
+      content: "Travelista admin notification: please review your dashboard for the latest account updates.",
+    });
+    if (error) { toast({ title: "Notification failed", description: error.message, variant: "destructive" }); return; }
+    toast({ title: "Notification sent" });
+  };
+
+  const banUser = async (targetUser: any) => {
+    if (!user) return;
+    const alreadyBanned = dbPermissions.some(p => p.user_id === targetUser.id && p.permission === "account_banned");
+    if (!alreadyBanned) {
+      const { data, error } = await supabase.from("user_permissions").insert({
+        user_id: targetUser.id,
+        permission: "account_banned",
+        granted_by: user.id,
+      }).select().single();
+      if (error && !error.message.includes("duplicate")) { toast({ title: "Ban failed", description: error.message, variant: "destructive" }); return; }
+      if (data) setDbPermissions(p => [data, ...p]);
+    }
+    await supabase.from("admin_audit_log").insert({
+      admin_id: user.id,
+      entity_type: "profile",
+      entity_id: targetUser.id,
+      action: "ban",
+      new_status: "banned",
+      metadata: { email: targetUser.email },
+    });
+    setAuditLogReloadKey(k => k + 1);
+    toast({ title: `${targetUser.email || "User"} marked banned` });
+  };
+
+  const updateHostApplicationStatus = async (application: any, status: string) => {
+    if (!user) return;
+    if (status === "approved") {
+      const { data, error } = await supabase.rpc("approve_host_application", { _application_id: application.id });
+      if (error) { toast({ title: "Approval failed", description: error.message, variant: "destructive" }); return; }
+      setDbHostApplications(p => p.map(a => a.id === application.id ? data : a));
+      if (!userRoles.some(r => r.user_id === application.user_id && r.role === "host")) {
+        setUserRoles(p => [...p, { id: `host-${application.user_id}`, user_id: application.user_id, role: "host" }]);
+      }
+      toast({ title: "Host approved and moved to People" });
+      return;
+    }
+    const update = { status, reviewed_by: user.id, reviewed_at: new Date().toISOString(), updated_at: new Date().toISOString() };
+    const { error } = await supabase.from("host_eligibility").update(update).eq("id", application.id);
+    if (error) { toast({ title: "Update failed", description: error.message, variant: "destructive" }); return; }
+    await supabase.from("admin_audit_log").insert({
+      admin_id: user.id,
+      entity_type: "host_eligibility",
+      entity_id: application.id,
+      action: status,
+      previous_status: application.status,
+      new_status: status,
+      metadata: { user_id: application.user_id, email: application.email },
+    });
+    setDbHostApplications(p => p.map(a => a.id === application.id ? { ...a, ...update } : a));
+    setAuditLogReloadKey(k => k + 1);
+    toast({ title: `Host application ${status.replace("_", " ")}` });
+  };
+
   const updateInvoiceStatus = async (id: string, status: string) => {
     const update: any = { status };
     if (status === "paid") update.paid_at = new Date().toISOString();
@@ -360,6 +448,9 @@ const AdminDashboard = () => {
   const activeReviews = reviews.filter(r => !removedReviews.includes(r.id));
   const approvedWanderers = dbWanderers.filter(w => w.status === "approved");
   const leaderboard = [...dbWanderers].filter(w => w.status === "approved").sort((a, b) => (b.score || 0) - (a.score || 0));
+  const hostQueue = dbHostApplications.filter(a => a.status !== "approved");
+  const approvedHostApplications = dbHostApplications.filter(a => a.status === "approved");
+  const bannedUserIds = new Set(dbPermissions.filter(p => p.permission === "account_banned").map(p => p.user_id));
 
   const statusBadge = (status: string) => {
     const colors: Record<string, string> = {
@@ -380,7 +471,8 @@ const AdminDashboard = () => {
     { id: "overview", label: "Overview", icon: BarChart3, group: "Insights" },
     { id: "analytics", label: "Analytics", icon: TrendingUp, group: "Insights" },
 
-    { id: "users", label: "Users & ACL", icon: Users, group: "People" },
+    { id: "users", label: "User Management", icon: Users, group: "People" },
+    { id: "hostWaitlist", label: "Host Waitlist", icon: UserCheck, badge: hostQueue.length, group: "People" },
     { id: "hosts", label: "Hosts", icon: Users, group: "People" },
     { id: "wanderers", label: "Wanderers", icon: Target, group: "People" },
     { id: "leaderboard", label: "Leaderboard", icon: Trophy, group: "People" },
@@ -481,10 +573,17 @@ const AdminDashboard = () => {
             <div className="mt-8 grid grid-cols-1 lg:grid-cols-2 gap-6">
               <div className="lg:col-span-2 rounded-lg bg-card p-4 shadow-card">
                 <h2 className="text-lg font-bold text-foreground mb-2">Beta Operations</h2>
-                <p className="text-sm text-muted-foreground mb-3">Jump to the standalone admin URLs for beta rollout control and waitlist review.</p>
+                <p className="text-sm text-muted-foreground mb-3">Use these controls for rollout flags, public beta signups, host review queues, and audit history.</p>
+                <div className="grid sm:grid-cols-4 gap-3 mb-3">
+                  <div className="rounded-lg bg-secondary/40 p-3"><p className="text-lg font-bold text-foreground">{dbBetaWaitlist.length}</p><p className="text-[10px] text-muted-foreground">Beta signups</p></div>
+                  <div className="rounded-lg bg-secondary/40 p-3"><p className="text-lg font-bold text-foreground">{dbBetaWaitlist.filter(w => w.status === "confirmed").length}</p><p className="text-[10px] text-muted-foreground">Confirmed</p></div>
+                  <div className="rounded-lg bg-secondary/40 p-3"><p className="text-lg font-bold text-foreground">{hostQueue.length}</p><p className="text-[10px] text-muted-foreground">Host queue</p></div>
+                  <div className="rounded-lg bg-secondary/40 p-3"><p className="text-lg font-bold text-foreground">{approvedHostApplications.length}</p><p className="text-[10px] text-muted-foreground">Approved hosts</p></div>
+                </div>
                 <div className="flex flex-wrap gap-2">
                   <Button asChild variant="outline" size="sm"><Link to="/admin/feature-flags"><Flag className="w-4 h-4 mr-1" /> Feature Flags</Link></Button>
                   <Button asChild variant="outline" size="sm"><Link to="/admin/waitlist"><Mail className="w-4 h-4 mr-1" /> Beta Waitlist</Link></Button>
+                  <Button variant="outline" size="sm" onClick={() => setActiveTab("hostWaitlist")}><UserCheck className="w-4 h-4 mr-1" /> Host Waitlist</Button>
                   <Button asChild variant="outline" size="sm"><Link to="/admin/audit-log"><FileText className="w-4 h-4 mr-1" /> Audit Log</Link></Button>
                 </div>
               </div>
@@ -615,17 +714,17 @@ const AdminDashboard = () => {
                             <div className="px-4 pb-4 border-t border-border pt-4 space-y-4">
                               {/* Quick Actions */}
                               <div className="flex flex-wrap gap-2">
-                                <Button size="sm" variant="outline" className="rounded-full text-xs gap-1">
+                                <Button size="sm" variant="outline" className="rounded-full text-xs gap-1" onClick={() => sendUserEmail(u)}>
                                   <Mail className="w-3 h-3" /> Send Email
                                 </Button>
-                                <Button size="sm" variant="outline" className="rounded-full text-xs gap-1">
+                                <Button size="sm" variant="outline" className="rounded-full text-xs gap-1" onClick={() => notifyUser(u)}>
                                   <Bell className="w-3 h-3" /> Notify
                                 </Button>
-                                <Button size="sm" variant="outline" className="rounded-full text-xs gap-1">
+                                <Button size="sm" variant="outline" className="rounded-full text-xs gap-1" onClick={() => setActiveAdminChat({ id: u.id, name: `${u.first_name || "User"} ${u.last_name || ""}`.trim() })}>
                                   <MessageSquare className="w-3 h-3" /> Chat
                                 </Button>
-                                <Button size="sm" variant="outline" className="rounded-full text-xs gap-1 text-destructive">
-                                  <UserX className="w-3 h-3" /> Ban
+                                <Button size="sm" variant="outline" className="rounded-full text-xs gap-1 text-destructive" onClick={() => banUser(u)} disabled={bannedUserIds.has(u.id)}>
+                                  <UserX className="w-3 h-3" /> {bannedUserIds.has(u.id) ? "Banned" : "Ban"}
                                 </Button>
                               </div>
 
@@ -986,10 +1085,84 @@ const AdminDashboard = () => {
           </div>
         )}
 
+        {/* Host Waitlist Tab */}
+        {activeTab === "hostWaitlist" && (
+          <div className="mt-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+              <div>
+                <h2 className="text-xl font-bold text-foreground">Host Waitlist ({hostQueue.length})</h2>
+                <p className="text-sm text-muted-foreground">Review host applications before approval. Approved hosts are assigned the host role and appear under People → User Management.</p>
+              </div>
+              <Button asChild variant="outline" size="sm"><Link to="/host-eligibility">Public host application</Link></Button>
+            </div>
+
+            {hostQueue.length === 0 ? (
+              <div className="rounded-lg bg-card p-8 text-center shadow-card">
+                <UserCheck className="w-10 h-10 text-muted-foreground/40 mx-auto mb-3" />
+                <p className="font-medium text-foreground">No pending host applications</p>
+                <p className="text-sm text-muted-foreground">New applications from /host-eligibility will appear here until approved.</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {hostQueue.map(app => (
+                  <div key={app.id} className="rounded-xl bg-card p-5 shadow-card">
+                    <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-4">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <h3 className="font-bold text-foreground">{app.full_name}</h3>
+                          <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${statusBadge(app.status)}`}>{app.status.replace("_", " ")}</span>
+                          <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full">Score {app.eligibility_score}/100</span>
+                          <span className="text-xs bg-secondary text-muted-foreground px-2 py-0.5 rounded-full capitalize">{app.badge}</span>
+                        </div>
+                        <p className="text-sm text-muted-foreground mt-1">{app.email} · {app.city} · {app.english_proficiency} English</p>
+                        <p className="text-xs text-muted-foreground mt-2 line-clamp-2">{app.why_host || "No host story provided."}</p>
+                        <div className="grid sm:grid-cols-4 gap-2 mt-3 text-xs">
+                          <div className="rounded-lg bg-secondary/40 p-2"><p className="text-muted-foreground">Languages</p><p className="font-medium text-foreground">{app.languages?.join(", ") || "—"}</p></div>
+                          <div className="rounded-lg bg-secondary/40 p-2"><p className="text-muted-foreground">Specialties</p><p className="font-medium text-foreground">{app.hosting_specialties?.join(", ") || "—"}</p></div>
+                          <div className="rounded-lg bg-secondary/40 p-2"><p className="text-muted-foreground">Quiz</p><p className="font-medium text-foreground">{app.questionnaire_score || 0}/100</p></div>
+                          <div className="rounded-lg bg-secondary/40 p-2"><p className="text-muted-foreground">KYC</p><p className="font-medium text-foreground">{app.has_kyc ? "Provided" : "Missing"}</p></div>
+                        </div>
+                      </div>
+                      <div className="flex lg:flex-col gap-2 shrink-0 flex-wrap">
+                        <Button size="sm" className="rounded-full text-xs bg-accent text-accent-foreground hover:bg-accent/90" onClick={() => updateHostApplicationStatus(app, "approved")}>
+                          <CheckCircle className="w-3 h-3 mr-1" /> Approve
+                        </Button>
+                        <Button size="sm" variant="outline" className="rounded-full text-xs" onClick={() => updateHostApplicationStatus(app, "under_review")}>
+                          <Eye className="w-3 h-3 mr-1" /> Review
+                        </Button>
+                        <Button size="sm" variant="outline" className="rounded-full text-xs" onClick={() => updateHostApplicationStatus(app, "waitlisted")}>
+                          <Clock className="w-3 h-3 mr-1" /> Waitlist
+                        </Button>
+                        <Button size="sm" variant="outline" className="rounded-full text-xs text-destructive" onClick={() => updateHostApplicationStatus(app, "rejected")}>
+                          <Ban className="w-3 h-3 mr-1" /> Reject
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Hosts Tab */}
         {activeTab === "hosts" && (
           <div className="mt-6">
-            <h2 className="text-xl font-bold text-foreground mb-4">All Hosts ({hosts.length})</h2>
+            <h2 className="text-xl font-bold text-foreground mb-4">All Hosts ({hosts.length + approvedHostApplications.length})</h2>
+            {approvedHostApplications.length > 0 && (
+              <div className="mb-5 rounded-lg bg-card p-4 shadow-card">
+                <h3 className="font-bold text-foreground mb-2">Approved host applications</h3>
+                <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                  {approvedHostApplications.map(app => (
+                    <div key={app.id} className="rounded-lg border border-border p-3 text-sm">
+                      <p className="font-semibold text-foreground">{app.full_name}</p>
+                      <p className="text-xs text-muted-foreground">{app.city} · {app.email}</p>
+                      <span className="mt-2 inline-flex text-[10px] bg-accent/10 text-accent px-2 py-0.5 rounded-full">In People as host</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
             <div className="space-y-3">
               {hosts.map(h => {
                 const status = getHostStatus(h.id);
@@ -1653,6 +1826,14 @@ const AdminDashboard = () => {
         initialData={editDialog.data} onSave={(d) => { editDialog.onSave(d); setEditDialog(p => ({ ...p, open: false })); }}
         onDelete={editDialog.onDelete ? () => { editDialog.onDelete!(); setEditDialog(p => ({ ...p, open: false })); } : undefined}
         onClose={() => setEditDialog(p => ({ ...p, open: false }))} />
+      {activeAdminChat && (
+        <ChatPanel
+          receiverId={activeAdminChat.id}
+          receiverName={activeAdminChat.name}
+          isOpen={!!activeAdminChat}
+          onClose={() => setActiveAdminChat(null)}
+        />
+      )}
       <Footer />
     </div>
   );
