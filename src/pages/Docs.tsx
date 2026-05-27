@@ -229,9 +229,11 @@ supabase/functions/
 - [ ] Payment gateway integration (Razorpay/Stripe)
 
 **📋 Planned**:
+- [ ] **Luggage Companion programme** — host adds 1 complementary "Luggage" seat per trip; eligibility via Luggage Quest (KYC, bookings, stamps, video review, etiquette quiz, intro chat); Nomad subscribers get 1 guaranteed Luggage trip per month
 - [ ] Push notifications
 - [ ] Mobile app (React Native)
-- [ ] Multi-language support`
+- [ ] Multi-language support (Hindi, Tamil, Bengali, Marathi)`
+
   },
   {
     id: "setup", icon: Terminal, title: "Setup Guide",
