@@ -76,6 +76,10 @@ export default function FeatureFlagsAdmin() {
         </div>
 
         <section className="rounded-xl border bg-card p-5 mb-8">
+          <h2 className="font-semibold mb-2">How feature gating works</h2>
+          <p className="text-sm text-muted-foreground mb-4">
+            Use <span className="font-medium text-foreground">/admin/feature-flags</span> to enable a flag globally for everyone or grant it to a specific user ID. The app renders beta-only UI with <code className="text-xs">&lt;FeatureGate flag=&quot;flag_key&quot; /&gt;</code>; the AI Travel Guide uses <code className="text-xs">ai_concierge</code>.
+          </p>
           <h2 className="font-semibold mb-3">Create flag</h2>
           <div className="grid md:grid-cols-3 gap-3">
             <div><Label>Key</Label><Input placeholder="my_beta_feature" value={newFlag.flag_key} onChange={e => setNewFlag({ ...newFlag, flag_key: e.target.value })} /></div>

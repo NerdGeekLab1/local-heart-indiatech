@@ -1473,6 +1473,24 @@ export type Database = {
         }
         Returns: boolean
       }
+      join_beta_waitlist: {
+        Args: {
+          _city?: string
+          _email: string
+          _full_name?: string
+          _interest?: string
+          _origin?: string
+          _plan_interest?: string
+          _referral_source?: string
+        }
+        Returns: {
+          confirmation_token: string
+          email: string
+          full_name: string
+          id: string
+          plan_interest: string
+        }[]
+      }
     }
     Enums: {
       app_role: "admin" | "host" | "traveler"
