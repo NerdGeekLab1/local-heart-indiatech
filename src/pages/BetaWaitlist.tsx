@@ -25,21 +25,14 @@ export default function BetaWaitlist() {
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitting(true);
-    const { data, error } = await supabase.from("beta_waitlist").insert(form).select("id,confirmation_token,email,full_name").single();
+    const { error } = await supabase.functions.invoke("beta-waitlist", {
+      body: { action: "join", ...form, origin: window.location.origin },
+    });
     if (error) {
       toast({ title: "Couldn't join waitlist", description: error.message, variant: "destructive" });
       setSubmitting(false);
       return;
     }
-    // Queue confirmation email
-    await supabase.from("email_notifications").insert({
-      recipient_email: form.email,
-      subject: "Confirm your Travelista beta spot",
-      template_name: "beta_waitlist_confirm",
-      trigger_event: "beta_waitlist_signup",
-      body_html: `<p>Hi ${form.full_name || "traveler"},</p><p>Thanks for joining the Travelista beta waitlist! Please confirm your email to lock in your <strong>${form.plan_interest}</strong> tier spot:</p><p><a href="${window.location.origin}/beta-waitlist/confirm?token=${data?.confirmation_token}">Confirm my spot</a></p><p>— The Travelista Team</p>`,
-      payload: { waitlist_id: data?.id, confirmation_token: data?.confirmation_token, plan: form.plan_interest },
-    });
     setDone(true);
     setSubmitting(false);
   };
