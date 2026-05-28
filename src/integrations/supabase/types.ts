@@ -576,6 +576,77 @@ export type Database = {
         }
         Relationships: []
       }
+      feed_likes: {
+        Row: {
+          created_at: string
+          id: string
+          post_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          post_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          post_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "feed_likes_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "feed_posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      feed_posts: {
+        Row: {
+          caption: string | null
+          created_at: string
+          id: string
+          likes_count: number
+          location: string | null
+          media_type: string
+          media_url: string
+          tag_type: string | null
+          tag_value: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          caption?: string | null
+          created_at?: string
+          id?: string
+          likes_count?: number
+          location?: string | null
+          media_type?: string
+          media_url: string
+          tag_type?: string | null
+          tag_value?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          caption?: string | null
+          created_at?: string
+          id?: string
+          likes_count?: number
+          location?: string | null
+          media_type?: string
+          media_url?: string
+          tag_type?: string | null
+          tag_value?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       grievances: {
         Row: {
           admin_notes: string | null
