@@ -55,6 +55,7 @@ const Footer = () => (
         <div>
           <h5 className="text-sm font-semibold text-foreground mb-3">Community</h5>
           <div className="space-y-2">
+            <Link to="/feed" className="block text-sm text-muted-foreground hover:text-foreground transition-colors">Traveler Feed</Link>
             <Link to="/community" className="block text-sm text-muted-foreground hover:text-foreground transition-colors">Traveler Stories</Link>
             <Link to="/community" className="block text-sm text-muted-foreground hover:text-foreground transition-colors">Host Spotlights</Link>
             <Link to="/community?tab=tips" className="block text-sm text-muted-foreground hover:text-foreground transition-colors">Travel Tips</Link>
