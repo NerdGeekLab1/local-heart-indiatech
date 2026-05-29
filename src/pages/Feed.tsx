@@ -93,17 +93,15 @@ const Feed = () => {
       <Navbar />
       <main className="mx-auto max-w-xl px-3 sm:px-4 py-6 pb-28">
         {/* Header */}
-        <header className="mb-5 flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-primary via-primary to-accent-foreground bg-clip-text text-transparent">
-              Traveler Feed
-            </h1>
+        <header className="mb-5 flex items-center justify-between gap-3">
+          <div className="min-w-0">
+            <h1 className="text-3xl font-bold tracking-tight text-foreground">Traveler Feed</h1>
             <p className="text-sm text-muted-foreground">Stories from the road, in real time</p>
           </div>
           <Dialog open={createOpen} onOpenChange={setCreateOpen}>
             <DialogTrigger asChild>
-              <Button size="sm" className="gap-1.5 rounded-full shadow-md shadow-primary/20">
-                <Plus className="w-4 h-4" /> Share
+              <Button className="gap-1.5 rounded-full bg-primary text-primary-foreground hover:bg-primary/90 shadow-md shadow-primary/30 flex-shrink-0">
+                <Plus className="w-4 h-4" /> Share Post
               </Button>
             </DialogTrigger>
             <CreatePostDialog onClose={() => { setCreateOpen(false); loadFeed(); }} />
@@ -112,24 +110,29 @@ const Feed = () => {
 
         {/* Stories rail */}
         {stories.length > 0 && (
-          <div className="mb-5 -mx-3 sm:mx-0 px-3 sm:px-0 flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
-            {stories.map(s => {
-              const name = s.author?.first_name || "Traveler";
-              return (
-                <div key={s.user_id} className="flex flex-col items-center gap-1 flex-shrink-0 w-16">
-                  <div className="p-0.5 rounded-full bg-gradient-to-tr from-primary via-orange-400 to-pink-500">
-                    <div className="p-0.5 bg-background rounded-full">
-                      <Avatar className="w-14 h-14">
-                        <AvatarImage src={s.author?.avatar_url || undefined} />
-                        <AvatarFallback className="bg-muted text-sm">{name.charAt(0)}</AvatarFallback>
-                      </Avatar>
+          <section className="mb-5">
+            <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2 px-1">
+              Stories from the road
+            </h2>
+            <div className="-mx-3 sm:mx-0 px-3 sm:px-0 flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
+              {stories.map(s => {
+                const name = s.author?.first_name || "Traveler";
+                return (
+                  <Link to={`/host/${s.user_id}`} key={s.user_id} className="flex flex-col items-center gap-1 flex-shrink-0 w-16">
+                    <div className="p-[2px] rounded-full bg-gradient-to-tr from-primary via-orange-400 to-pink-500">
+                      <div className="p-[2px] bg-background rounded-full">
+                        <Avatar className="w-14 h-14">
+                          <AvatarImage src={s.author?.avatar_url || undefined} />
+                          <AvatarFallback className="bg-muted text-base font-semibold">{name.charAt(0)}</AvatarFallback>
+                        </Avatar>
+                      </div>
                     </div>
-                  </div>
-                  <span className="text-[10px] text-muted-foreground truncate max-w-full">{name}</span>
-                </div>
-              );
-            })}
-          </div>
+                    <span className="text-[11px] text-foreground truncate max-w-full">{name}</span>
+                  </Link>
+                );
+              })}
+            </div>
+          </section>
         )}
 
         {/* Filter chips */}
