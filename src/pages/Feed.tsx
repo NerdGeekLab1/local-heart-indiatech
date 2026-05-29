@@ -110,24 +110,29 @@ const Feed = () => {
 
         {/* Stories rail */}
         {stories.length > 0 && (
-          <div className="mb-5 -mx-3 sm:mx-0 px-3 sm:px-0 flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
-            {stories.map(s => {
-              const name = s.author?.first_name || "Traveler";
-              return (
-                <div key={s.user_id} className="flex flex-col items-center gap-1 flex-shrink-0 w-16">
-                  <div className="p-0.5 rounded-full bg-gradient-to-tr from-primary via-orange-400 to-pink-500">
-                    <div className="p-0.5 bg-background rounded-full">
-                      <Avatar className="w-14 h-14">
-                        <AvatarImage src={s.author?.avatar_url || undefined} />
-                        <AvatarFallback className="bg-muted text-sm">{name.charAt(0)}</AvatarFallback>
-                      </Avatar>
+          <section className="mb-5">
+            <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2 px-1">
+              Stories from the road
+            </h2>
+            <div className="-mx-3 sm:mx-0 px-3 sm:px-0 flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
+              {stories.map(s => {
+                const name = s.author?.first_name || "Traveler";
+                return (
+                  <Link to={`/host/${s.user_id}`} key={s.user_id} className="flex flex-col items-center gap-1 flex-shrink-0 w-16">
+                    <div className="p-[2px] rounded-full bg-gradient-to-tr from-primary via-orange-400 to-pink-500">
+                      <div className="p-[2px] bg-background rounded-full">
+                        <Avatar className="w-14 h-14">
+                          <AvatarImage src={s.author?.avatar_url || undefined} />
+                          <AvatarFallback className="bg-muted text-base font-semibold">{name.charAt(0)}</AvatarFallback>
+                        </Avatar>
+                      </div>
                     </div>
-                  </div>
-                  <span className="text-[10px] text-muted-foreground truncate max-w-full">{name}</span>
-                </div>
-              );
-            })}
-          </div>
+                    <span className="text-[11px] text-foreground truncate max-w-full">{name}</span>
+                  </Link>
+                );
+              })}
+            </div>
+          </section>
         )}
 
         {/* Filter chips */}
