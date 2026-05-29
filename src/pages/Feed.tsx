@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from "react";
 import { Link } from "react-router-dom";
-import { Heart, MessageCircle, Send, MapPin, Mountain, Sparkles, Plus, Image as ImageIcon, Video, X, Loader2 } from "lucide-react";
+import { Heart, MessageCircle, Send, MapPin, Mountain, Sparkles, Plus, Image as ImageIcon, Video, X, Loader2, Bookmark, MoreHorizontal, Play } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import Navbar from "@/components/Navbar";
@@ -12,6 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "@/hooks/use-toast";
 import { formatDistanceToNow } from "date-fns";
 
@@ -36,7 +37,12 @@ const TAG_TYPES = [
   { value: "experience", label: "Experience", icon: Sparkles },
 ];
 
-const FILTERS = ["all", "location", "adventure", "experience"];
+const FILTERS = [
+  { value: "all", label: "✨ All" },
+  { value: "location", label: "📍 Places" },
+  { value: "adventure", label: "🏔️ Adventure" },
+  { value: "experience", label: "🍜 Experience" },
+];
 
 const Feed = () => {
   const { user } = useAuth();
@@ -79,37 +85,83 @@ const Feed = () => {
     }
   };
 
+  // Build "stories" rail from unique recent authors
+  const stories = Array.from(new Map(posts.map(p => [p.user_id, p])).values()).slice(0, 10);
+
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-gradient-to-b from-background via-background to-muted/20">
       <Navbar />
-      <main className="mx-auto max-w-2xl px-4 py-8 pb-24">
-        <header className="mb-6 flex items-center justify-between">
+      <main className="mx-auto max-w-xl px-3 sm:px-4 py-6 pb-28">
+        {/* Header */}
+        <header className="mb-5 flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-foreground">Traveler Feed</h1>
-            <p className="text-sm text-muted-foreground">Stories, moments and adventures from the community</p>
+            <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-primary via-primary to-accent-foreground bg-clip-text text-transparent">
+              Traveler Feed
+            </h1>
+            <p className="text-sm text-muted-foreground">Stories from the road, in real time</p>
           </div>
           <Dialog open={createOpen} onOpenChange={setCreateOpen}>
             <DialogTrigger asChild>
-              <Button className="gap-2 rounded-full"><Plus className="w-4 h-4" /> Share</Button>
+              <Button size="sm" className="gap-1.5 rounded-full shadow-md shadow-primary/20">
+                <Plus className="w-4 h-4" /> Share
+              </Button>
             </DialogTrigger>
             <CreatePostDialog onClose={() => { setCreateOpen(false); loadFeed(); }} />
           </Dialog>
         </header>
 
-        <div className="mb-6 flex gap-2 overflow-x-auto pb-2">
+        {/* Stories rail */}
+        {stories.length > 0 && (
+          <div className="mb-5 -mx-3 sm:mx-0 px-3 sm:px-0 flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
+            {stories.map(s => {
+              const name = s.author?.first_name || "Traveler";
+              return (
+                <div key={s.user_id} className="flex flex-col items-center gap-1 flex-shrink-0 w-16">
+                  <div className="p-0.5 rounded-full bg-gradient-to-tr from-primary via-orange-400 to-pink-500">
+                    <div className="p-0.5 bg-background rounded-full">
+                      <Avatar className="w-14 h-14">
+                        <AvatarImage src={s.author?.avatar_url || undefined} />
+                        <AvatarFallback className="bg-muted text-sm">{name.charAt(0)}</AvatarFallback>
+                      </Avatar>
+                    </div>
+                  </div>
+                  <span className="text-[10px] text-muted-foreground truncate max-w-full">{name}</span>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {/* Filter chips */}
+        <div className="mb-5 flex gap-2 overflow-x-auto pb-2 -mx-3 sm:mx-0 px-3 sm:px-0 scrollbar-hide">
           {FILTERS.map(f => (
-            <button key={f} onClick={() => setFilter(f)}
-              className={`px-4 py-1.5 rounded-full text-sm font-medium capitalize whitespace-nowrap transition-colors ${filter === f ? "bg-primary text-primary-foreground" : "bg-card border border-border text-muted-foreground hover:text-foreground"}`}>
-              {f}
+            <button key={f.value} onClick={() => setFilter(f.value)}
+              className={`px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-all ${
+                filter === f.value
+                  ? "bg-foreground text-background shadow-sm"
+                  : "bg-card border border-border text-muted-foreground hover:text-foreground hover:border-foreground/30"
+              }`}>
+              {f.label}
             </button>
           ))}
         </div>
 
+        {/* Posts */}
         {loading ? (
-          <div className="flex justify-center py-12"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>
+          <div className="space-y-5">
+            {[1,2].map(i => (
+              <div key={i} className="bg-card border border-border rounded-2xl overflow-hidden">
+                <div className="p-3 flex items-center gap-2.5"><Skeleton className="w-9 h-9 rounded-full" /><Skeleton className="h-3 w-24" /></div>
+                <Skeleton className="aspect-square w-full" />
+                <div className="p-3 space-y-2"><Skeleton className="h-4 w-32" /><Skeleton className="h-3 w-full" /></div>
+              </div>
+            ))}
+          </div>
         ) : posts.length === 0 ? (
-          <div className="text-center py-16 rounded-2xl border-2 border-dashed border-border">
-            <p className="text-muted-foreground">No posts yet. Be the first to share!</p>
+          <div className="text-center py-20 rounded-2xl border-2 border-dashed border-border bg-card/50">
+            <Sparkles className="w-10 h-10 mx-auto text-muted-foreground/50 mb-3" />
+            <p className="text-muted-foreground font-medium">No posts here yet</p>
+            <p className="text-xs text-muted-foreground/70 mt-1">Be the first to share an adventure!</p>
           </div>
         ) : (
           <div className="space-y-6">
@@ -125,46 +177,96 @@ const Feed = () => {
 const PostCard = ({ post, onLike }: { post: FeedPost; onLike: () => void }) => {
   const name = post.author ? `${post.author.first_name || ""} ${post.author.last_name || ""}`.trim() || "Traveler" : "Traveler";
   const TagIcon = TAG_TYPES.find(t => t.value === post.tag_type)?.icon || Sparkles;
+  const [burst, setBurst] = useState(false);
+  const lastTap = useRef(0);
+
+  const handleDoubleTap = () => {
+    const now = Date.now();
+    if (now - lastTap.current < 300) {
+      if (!post.liked) onLike();
+      setBurst(true);
+      setTimeout(() => setBurst(false), 700);
+    }
+    lastTap.current = now;
+  };
 
   return (
-    <article className="bg-card border border-border rounded-2xl overflow-hidden shadow-sm">
+    <article className="bg-card border border-border rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+      {/* Header */}
       <div className="flex items-center justify-between p-3">
-        <Link to={`/host/${post.user_id}`} className="flex items-center gap-2.5">
-          <Avatar className="w-9 h-9">
-            <AvatarImage src={post.author?.avatar_url || undefined} />
-            <AvatarFallback>{name.charAt(0)}</AvatarFallback>
-          </Avatar>
+        <Link to={`/host/${post.user_id}`} className="flex items-center gap-2.5 group">
+          <div className="p-[1.5px] rounded-full bg-gradient-to-tr from-primary to-pink-500">
+            <Avatar className="w-9 h-9 border-2 border-background">
+              <AvatarImage src={post.author?.avatar_url || undefined} />
+              <AvatarFallback className="text-xs">{name.charAt(0)}</AvatarFallback>
+            </Avatar>
+          </div>
           <div>
-            <p className="text-sm font-semibold text-foreground">{name}</p>
-            {post.location && <p className="text-xs text-muted-foreground flex items-center gap-1"><MapPin className="w-3 h-3" />{post.location}</p>}
+            <p className="text-sm font-semibold text-foreground group-hover:text-primary transition-colors leading-tight">{name}</p>
+            {post.location && (
+              <p className="text-xs text-muted-foreground flex items-center gap-1 leading-tight">
+                <MapPin className="w-3 h-3" />{post.location}
+              </p>
+            )}
           </div>
         </Link>
-        <span className="text-xs text-muted-foreground">{formatDistanceToNow(new Date(post.created_at), { addSuffix: true })}</span>
+        <button className="text-muted-foreground hover:text-foreground"><MoreHorizontal className="w-5 h-5" /></button>
       </div>
 
-      <div className="bg-foreground/5 aspect-square w-full overflow-hidden">
+      {/* Media */}
+      <div
+        className="relative bg-foreground/5 aspect-square w-full overflow-hidden cursor-pointer select-none"
+        onClick={handleDoubleTap}
+      >
         {post.media_type === "video" ? (
-          <video src={post.media_url} className="w-full h-full object-cover" controls playsInline />
+          <video src={post.media_url} className="w-full h-full object-cover" controls playsInline preload="metadata" />
         ) : (
           <img src={post.media_url} alt={post.caption || "Feed post"} className="w-full h-full object-cover" loading="lazy" />
         )}
+        {post.media_type === "video" && (
+          <div className="absolute top-3 right-3 bg-background/70 backdrop-blur px-2 py-1 rounded-full flex items-center gap-1 text-xs font-medium">
+            <Play className="w-3 h-3 fill-current" /> Reel
+          </div>
+        )}
+        {burst && (
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+            <Heart className="w-24 h-24 fill-destructive text-destructive drop-shadow-lg animate-in zoom-in-50 fade-in duration-300" />
+          </div>
+        )}
       </div>
 
-      <div className="p-3 space-y-2">
-        <div className="flex items-center gap-3">
-          <button onClick={onLike} className="transition-transform active:scale-90">
-            <Heart className={`w-6 h-6 ${post.liked ? "fill-destructive text-destructive" : "text-foreground"}`} />
+      {/* Actions */}
+      <div className="px-3 pt-3 pb-2 flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <button onClick={onLike} className="transition-transform active:scale-75">
+            <Heart className={`w-6 h-6 transition-colors ${post.liked ? "fill-destructive text-destructive" : "text-foreground hover:text-muted-foreground"}`} />
           </button>
-          <MessageCircle className="w-6 h-6 text-foreground" />
-          <Send className="w-6 h-6 text-foreground" />
+          <button className="text-foreground hover:text-muted-foreground transition-colors"><MessageCircle className="w-6 h-6" /></button>
+          <button className="text-foreground hover:text-muted-foreground transition-colors"><Send className="w-6 h-6" /></button>
         </div>
-        <p className="text-sm font-semibold text-foreground">{post.likes_count} {post.likes_count === 1 ? "like" : "likes"}</p>
+        <button className="text-foreground hover:text-muted-foreground transition-colors"><Bookmark className="w-6 h-6" /></button>
+      </div>
+
+      {/* Meta */}
+      <div className="px-3 pb-3 space-y-1.5">
+        <p className="text-sm font-semibold text-foreground">
+          {post.likes_count.toLocaleString()} {post.likes_count === 1 ? "like" : "likes"}
+        </p>
         {post.caption && (
-          <p className="text-sm text-foreground"><span className="font-semibold">{name}</span> {post.caption}</p>
+          <p className="text-sm text-foreground leading-snug">
+            <span className="font-semibold mr-1.5">{name}</span>{post.caption}
+          </p>
         )}
-        {post.tag_type && post.tag_value && (
-          <Badge variant="secondary" className="gap-1"><TagIcon className="w-3 h-3" />{post.tag_value}</Badge>
-        )}
+        <div className="flex items-center gap-2 flex-wrap pt-1">
+          {post.tag_type && post.tag_value && (
+            <Badge variant="secondary" className="gap-1 font-normal rounded-full text-xs">
+              <TagIcon className="w-3 h-3" />{post.tag_value}
+            </Badge>
+          )}
+          <span className="text-[11px] text-muted-foreground uppercase tracking-wide">
+            {formatDistanceToNow(new Date(post.created_at), { addSuffix: true })}
+          </span>
+        </div>
       </div>
     </article>
   );
