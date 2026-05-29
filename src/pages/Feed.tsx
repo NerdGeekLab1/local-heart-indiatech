@@ -93,17 +93,15 @@ const Feed = () => {
       <Navbar />
       <main className="mx-auto max-w-xl px-3 sm:px-4 py-6 pb-28">
         {/* Header */}
-        <header className="mb-5 flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-primary via-primary to-accent-foreground bg-clip-text text-transparent">
-              Traveler Feed
-            </h1>
+        <header className="mb-5 flex items-center justify-between gap-3">
+          <div className="min-w-0">
+            <h1 className="text-3xl font-bold tracking-tight text-foreground">Traveler Feed</h1>
             <p className="text-sm text-muted-foreground">Stories from the road, in real time</p>
           </div>
           <Dialog open={createOpen} onOpenChange={setCreateOpen}>
             <DialogTrigger asChild>
-              <Button size="sm" className="gap-1.5 rounded-full shadow-md shadow-primary/20">
-                <Plus className="w-4 h-4" /> Share
+              <Button className="gap-1.5 rounded-full bg-primary text-primary-foreground hover:bg-primary/90 shadow-md shadow-primary/30 flex-shrink-0">
+                <Plus className="w-4 h-4" /> Share Post
               </Button>
             </DialogTrigger>
             <CreatePostDialog onClose={() => { setCreateOpen(false); loadFeed(); }} />
