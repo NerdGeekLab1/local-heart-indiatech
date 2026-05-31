@@ -585,6 +585,7 @@ const AdminDashboard = () => {
                   <Button asChild variant="outline" size="sm"><Link to="/admin/waitlist"><Mail className="w-4 h-4 mr-1" /> Beta Waitlist</Link></Button>
                   <Button variant="outline" size="sm" onClick={() => setActiveTab("hostWaitlist")}><UserCheck className="w-4 h-4 mr-1" /> Host Waitlist</Button>
                   <Button asChild variant="outline" size="sm"><Link to="/admin/audit-log"><FileText className="w-4 h-4 mr-1" /> Audit Log</Link></Button>
+                  <Button asChild variant="outline" size="sm"><Link to="/feed"><Sparkles className="w-4 h-4 mr-1" /> Traveler Feed</Link></Button>
                 </div>
               </div>
               <div>
