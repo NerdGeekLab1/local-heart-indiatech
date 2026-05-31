@@ -150,6 +150,20 @@ const TravelerDashboard = () => {
         {/* Overview */}
         {activeTab === "overview" && (
           <>
+            <Link to="/feed" className="mt-6 block group">
+              <div className="relative overflow-hidden rounded-2xl p-5 bg-gradient-to-br from-primary via-orange-500 to-pink-500 text-primary-foreground shadow-lg shadow-primary/30 hover:shadow-xl hover:shadow-primary/40 transition-all">
+                <div className="absolute -right-6 -top-6 w-32 h-32 rounded-full bg-white/15 blur-2xl" />
+                <div className="absolute -right-2 bottom-0 text-7xl opacity-20 group-hover:scale-110 transition-transform">📸</div>
+                <div className="relative flex items-center justify-between gap-4">
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-widest opacity-90">Traveler Feed · Live</p>
+                    <h3 className="text-xl font-bold mt-1">Share your road stories</h3>
+                    <p className="text-sm opacity-90 mt-0.5">Post reels, photos & tag adventures</p>
+                  </div>
+                  <Button size="sm" variant="secondary" className="rounded-full font-semibold shrink-0">Open Feed →</Button>
+                </div>
+              </div>
+            </Link>
             <div className="mt-6 grid grid-cols-2 sm:grid-cols-4 gap-4">
               {[
                 { label: "Total Trips", value: myTrips.length || "3", icon: MapPin },
