@@ -20,6 +20,8 @@ import AIRecommendWidget from "@/components/AIRecommendWidget";
 import ImageUpload from "@/components/ImageUpload";
 import StampCollection from "@/components/StampCollection";
 import { Award } from "lucide-react";
+import { Dialog, DialogTrigger } from "@/components/ui/dialog";
+import { CreatePostDialog } from "@/components/CreatePostDialog";
 
 const statusColors: Record<string, string> = {
   pending: "bg-primary/10 text-primary", confirmed: "bg-accent/10 text-accent",
@@ -62,6 +64,19 @@ const TravelerDashboard = () => {
   const [myGrievances, setMyGrievances] = useState<any[]>([]);
   const [myInvoices, setMyInvoices] = useState<any[]>([]);
   const [myStreaks, setMyStreaks] = useState<any[]>([]);
+  const [myPosts, setMyPosts] = useState<any[]>([]);
+  const [myBookmarks, setMyBookmarks] = useState<any[]>([]);
+  const [createOpen, setCreateOpen] = useState(false);
+
+  const loadPosts = async () => {
+    if (!user) return;
+    const [{ data: posts }, { data: bms }] = await Promise.all([
+      supabase.from("feed_posts").select("*").eq("user_id", user.id).order("created_at", { ascending: false }),
+      supabase.from("feed_bookmarks").select("*, feed_posts(*)").eq("user_id", user.id).order("created_at", { ascending: false }),
+    ]);
+    setMyPosts(posts || []);
+    setMyBookmarks(bms || []);
+  };
 
   useEffect(() => {
     if (!user) return;
@@ -87,6 +102,8 @@ const TravelerDashboard = () => {
         setProfile(p => ({ ...p, name: `${prof.first_name} ${prof.last_name || ""}`.trim(), email: prof.email || p.email, phone: prof.phone || p.phone, bio: prof.bio || p.bio }));
       }
     });
+    loadPosts();
+    // eslint-disable-next-line
   }, [user]);
 
   const toggleSaveHost = (hostId: string) => {
