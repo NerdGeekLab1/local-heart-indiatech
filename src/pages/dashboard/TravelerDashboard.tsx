@@ -167,20 +167,37 @@ const TravelerDashboard = () => {
         {/* Overview */}
         {activeTab === "overview" && (
           <>
-            <Link to="/feed" className="mt-6 block group">
-              <div className="relative overflow-hidden rounded-2xl p-5 bg-gradient-to-br from-primary via-orange-500 to-pink-500 text-primary-foreground shadow-lg shadow-primary/30 hover:shadow-xl hover:shadow-primary/40 transition-all">
-                <div className="absolute -right-6 -top-6 w-32 h-32 rounded-full bg-white/15 blur-2xl" />
-                <div className="absolute -right-2 bottom-0 text-7xl opacity-20 group-hover:scale-110 transition-transform">📸</div>
-                <div className="relative flex items-center justify-between gap-4">
-                  <div>
-                    <p className="text-xs font-semibold uppercase tracking-widest opacity-90">Traveler Feed · Live</p>
-                    <h3 className="text-xl font-bold mt-1">Share your road stories</h3>
-                    <p className="text-sm opacity-90 mt-0.5">Post reels, photos & tag adventures</p>
+            {(() => {
+              const totalLikes = myPosts.reduce((s, p) => s + (p.likes_count || 0), 0);
+              const totalEngagement = totalLikes + myBookmarks.length;
+              return (
+                <div className="mt-6 rounded-2xl p-5 bg-gradient-to-br from-primary via-orange-500 to-pink-500 text-primary-foreground shadow-lg shadow-primary/30 relative overflow-hidden">
+                  <div className="absolute -right-6 -top-6 w-32 h-32 rounded-full bg-primary-foreground/15 blur-2xl" />
+                  <div className="relative flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div>
+                      <p className="text-xs font-semibold uppercase tracking-widest opacity-90">Traveler Feed · Live Atlas</p>
+                      <h3 className="text-xl font-bold mt-1">Share your road stories</h3>
+                      <div className="flex flex-wrap gap-3 mt-2 text-xs">
+                        <span className="px-2 py-0.5 rounded-full bg-background/25 backdrop-blur font-semibold">📸 {myPosts.length} posts</span>
+                        <span className="px-2 py-0.5 rounded-full bg-background/25 backdrop-blur font-semibold">❤ {totalLikes} likes</span>
+                        <span className="px-2 py-0.5 rounded-full bg-background/25 backdrop-blur font-semibold">🔖 {myBookmarks.length} saved</span>
+                        <span className="px-2 py-0.5 rounded-full bg-background/25 backdrop-blur font-semibold">✨ {totalEngagement} engagements</span>
+                      </div>
+                    </div>
+                    <div className="flex gap-2 shrink-0">
+                      <Dialog open={createOpen} onOpenChange={setCreateOpen}>
+                        <DialogTrigger asChild>
+                          <Button size="sm" variant="secondary" className="rounded-full font-semibold">📮 One-tap Post</Button>
+                        </DialogTrigger>
+                        <CreatePostDialog onClose={() => { setCreateOpen(false); loadPosts(); }} />
+                      </Dialog>
+                      <Link to="/feed"><Button size="sm" variant="secondary" className="rounded-full font-semibold">Open Feed →</Button></Link>
+                      {user && <Link to={`/traveler/${user.id}`}><Button size="sm" variant="secondary" className="rounded-full font-semibold">My Profile</Button></Link>}
+                    </div>
                   </div>
-                  <Button size="sm" variant="secondary" className="rounded-full font-semibold shrink-0">Open Feed →</Button>
                 </div>
-              </div>
-            </Link>
+              );
+            })()}
             <div className="mt-6 grid grid-cols-2 sm:grid-cols-4 gap-4">
               {[
                 { label: "Total Trips", value: myTrips.length || "3", icon: MapPin },
