@@ -576,6 +576,27 @@ export type Database = {
         }
         Relationships: []
       }
+      feed_bookmarks: {
+        Row: {
+          created_at: string
+          id: string
+          post_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          post_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          post_id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       feed_likes: {
         Row: {
           created_at: string
@@ -614,6 +635,10 @@ export type Database = {
           location: string | null
           media_type: string
           media_url: string
+          removed_at: string | null
+          removed_by: string | null
+          removed_reason: string | null
+          status: string
           tag_type: string | null
           tag_value: string | null
           updated_at: string
@@ -627,6 +652,10 @@ export type Database = {
           location?: string | null
           media_type?: string
           media_url: string
+          removed_at?: string | null
+          removed_by?: string | null
+          removed_reason?: string | null
+          status?: string
           tag_type?: string | null
           tag_value?: string | null
           updated_at?: string
@@ -640,6 +669,10 @@ export type Database = {
           location?: string | null
           media_type?: string
           media_url?: string
+          removed_at?: string | null
+          removed_by?: string | null
+          removed_reason?: string | null
+          status?: string
           tag_type?: string | null
           tag_value?: string | null
           updated_at?: string

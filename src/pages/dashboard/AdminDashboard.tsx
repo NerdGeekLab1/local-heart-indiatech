@@ -24,6 +24,7 @@ import EmailTemplatesTab from "@/components/admin/EmailTemplatesTab";
 import SubscriptionPlansTab from "@/components/admin/SubscriptionPlansTab";
 import WeddingsTab from "@/components/admin/WeddingsTab";
 import BetaModerationTools from "@/components/admin/BetaModerationTools";
+import FeedModerationPanel from "@/components/admin/FeedModerationPanel";
 import ChatPanel from "@/components/ChatPanel";
 import { Heart, Menu } from "lucide-react";
 
@@ -1535,6 +1536,7 @@ const AdminDashboard = () => {
         {activeTab === "moderation" && (
           <div className="mt-6 space-y-6">
             <h2 className="text-xl font-bold text-foreground mb-4">Content Moderation</h2>
+            <FeedModerationPanel />
             <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
               {[
                 { label: "Verified Hosts", value: hosts.filter(h => getHostStatus(h.id) === "verified").length, icon: Shield },

@@ -1,47 +1,35 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { Heart, MessageCircle, Send, MapPin, Mountain, Sparkles, Plus, Image as ImageIcon, Video, X, Loader2, Bookmark, MoreHorizontal, Play, Flame, Zap, Camera } from "lucide-react";
+import { Heart, MessageCircle, Send, MapPin, Mountain, Sparkles, Plus, Bookmark, Play, Camera, Compass, Globe2, Flame, Filter } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogTrigger } from "@/components/ui/dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "@/hooks/use-toast";
 import { formatDistanceToNow } from "date-fns";
+import { CreatePostDialog } from "@/components/CreatePostDialog";
 
 interface FeedPost {
-  id: string;
-  user_id: string;
-  media_url: string;
-  media_type: string;
-  caption: string | null;
-  tag_type: string | null;
-  tag_value: string | null;
-  location: string | null;
-  likes_count: number;
-  created_at: string;
+  id: string; user_id: string; media_url: string; media_type: string;
+  caption: string | null; tag_type: string | null; tag_value: string | null;
+  location: string | null; likes_count: number; created_at: string;
+  status?: string;
   author?: { first_name: string; last_name: string | null; avatar_url: string | null };
-  liked?: boolean;
+  liked?: boolean; bookmarked?: boolean;
 }
 
-const TAG_TYPES = [
-  { value: "location", label: "Location", icon: MapPin },
-  { value: "adventure", label: "Adventure", icon: Mountain },
-  { value: "experience", label: "Experience", icon: Sparkles },
+const FILTERS = [
+  { value: "all", label: "All", emoji: "✨" },
+  { value: "location", label: "Places", emoji: "📍" },
+  { value: "adventure", label: "Adventure", emoji: "🏔️" },
+  { value: "experience", label: "Vibes", emoji: "🍜" },
 ];
 
-const FILTERS = [
-  { value: "all", label: "All", emoji: "✨", grad: "from-primary to-pink-500" },
-  { value: "location", label: "Places", emoji: "📍", grad: "from-sky-500 to-indigo-500" },
-  { value: "adventure", label: "Adventure", emoji: "🏔️", grad: "from-emerald-500 to-teal-500" },
-  { value: "experience", label: "Vibes", emoji: "🍜", grad: "from-orange-500 to-rose-500" },
-];
+const TAG_ICON: Record<string, any> = { location: MapPin, adventure: Mountain, experience: Sparkles };
 
 const Feed = () => {
   const { user } = useAuth();
@@ -49,25 +37,29 @@ const Feed = () => {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("all");
   const [createOpen, setCreateOpen] = useState(false);
+  const [activePin, setActivePin] = useState<string | null>(null);
 
   const loadFeed = async () => {
     setLoading(true);
-    let query = supabase.from("feed_posts").select("*").order("created_at", { ascending: false }).limit(50);
+    let query = supabase.from("feed_posts").select("*").eq("status", "active").order("created_at", { ascending: false }).limit(60);
     if (filter !== "all") query = query.eq("tag_type", filter);
     const { data: postsData } = await query;
     if (!postsData) { setPosts([]); setLoading(false); return; }
-
     const userIds = Array.from(new Set(postsData.map(p => p.user_id)));
     const { data: profiles } = await supabase.from("profiles").select("id, first_name, last_name, avatar_url").in("id", userIds);
     const profileMap = new Map(profiles?.map(p => [p.id, p]) || []);
 
     let likedSet = new Set<string>();
+    let bookmarkedSet = new Set<string>();
     if (user) {
-      const { data: likes } = await supabase.from("feed_likes").select("post_id").eq("user_id", user.id).in("post_id", postsData.map(p => p.id));
+      const [{ data: likes }, { data: bms }] = await Promise.all([
+        supabase.from("feed_likes").select("post_id").eq("user_id", user.id).in("post_id", postsData.map(p => p.id)),
+        supabase.from("feed_bookmarks").select("post_id").eq("user_id", user.id).in("post_id", postsData.map(p => p.id)),
+      ]);
       likedSet = new Set(likes?.map(l => l.post_id) || []);
+      bookmarkedSet = new Set(bms?.map(b => b.post_id) || []);
     }
-
-    setPosts(postsData.map(p => ({ ...p, author: profileMap.get(p.user_id) as any, liked: likedSet.has(p.id) })));
+    setPosts(postsData.map(p => ({ ...p, author: profileMap.get(p.user_id) as any, liked: likedSet.has(p.id), bookmarked: bookmarkedSet.has(p.id) })));
     setLoading(false);
   };
 
@@ -84,133 +76,224 @@ const Feed = () => {
     }
   };
 
-  const stories = Array.from(new Map(posts.map(p => [p.user_id, p])).values()).slice(0, 10);
+  const toggleBookmark = async (post: FeedPost) => {
+    if (!user) { toast({ title: "Sign in to bookmark", variant: "destructive" }); return; }
+    if (post.bookmarked) {
+      await supabase.from("feed_bookmarks").delete().eq("post_id", post.id).eq("user_id", user.id);
+    } else {
+      await supabase.from("feed_bookmarks").insert({ post_id: post.id, user_id: user.id });
+    }
+    setPosts(p => p.map(x => x.id === post.id ? { ...x, bookmarked: !x.bookmarked } : x));
+  };
+
+  // Aggregate locations for atlas
+  const atlas = useMemo(() => {
+    const map = new Map<string, { name: string; count: number; posts: FeedPost[] }>();
+    posts.forEach(p => {
+      const key = (p.location || p.tag_value || "").trim();
+      if (!key) return;
+      const prev = map.get(key) || { name: key, count: 0, posts: [] };
+      prev.count++; prev.posts.push(p); map.set(key, prev);
+    });
+    return Array.from(map.values()).sort((a, b) => b.count - a.count);
+  }, [posts]);
+
+  const stories = Array.from(new Map(posts.map(p => [p.user_id, p])).values()).slice(0, 12);
   const totalLikes = posts.reduce((s, p) => s + p.likes_count, 0);
+
+  const visiblePosts = activePin ? posts.filter(p => (p.location || p.tag_value) === activePin) : posts;
 
   return (
     <div className="min-h-screen bg-background relative overflow-hidden">
-      {/* Ambient flashy backdrop */}
-      <div className="pointer-events-none fixed inset-0 -z-10">
-        <div className="absolute -top-32 -left-32 w-[28rem] h-[28rem] rounded-full bg-primary/20 blur-3xl" />
-        <div className="absolute top-40 -right-32 w-[26rem] h-[26rem] rounded-full bg-pink-500/15 blur-3xl" />
-        <div className="absolute bottom-0 left-1/3 w-[24rem] h-[24rem] rounded-full bg-sky-500/10 blur-3xl" />
-      </div>
-
+      {/* Texture/grid backdrop instead of IG-style gradients */}
+      <div className="pointer-events-none fixed inset-0 -z-10 opacity-[0.04]" style={{
+        backgroundImage: "linear-gradient(to right, hsl(var(--foreground)) 1px, transparent 1px), linear-gradient(to bottom, hsl(var(--foreground)) 1px, transparent 1px)",
+        backgroundSize: "40px 40px"
+      }} />
       <Navbar />
-      <main className="mx-auto max-w-xl px-3 sm:px-4 py-6 pb-32">
-        {/* Flashy hero */}
-        <section className="relative mb-6 overflow-hidden rounded-3xl p-5 bg-gradient-to-br from-primary via-orange-500 to-pink-500 text-primary-foreground shadow-2xl shadow-primary/30">
-          <div className="absolute -right-10 -top-10 w-40 h-40 rounded-full bg-white/20 blur-2xl" />
-          <div className="absolute -left-6 -bottom-10 w-32 h-32 rounded-full bg-white/10 blur-2xl" />
-          <div className="relative flex items-start justify-between gap-3">
-            <div>
-              <div className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest opacity-95 mb-1">
-                <Flame className="w-3.5 h-3.5 animate-pulse" /> Live Feed
+
+      <main className="pt-20 pb-32 mx-auto max-w-7xl px-3 sm:px-4">
+        {/* Header strip — postcard / atlas vibe */}
+        <section className="relative mb-5 rounded-3xl overflow-hidden border-2 border-foreground/10 bg-card shadow-card">
+          <div className="absolute top-0 right-0 h-full w-1/3 bg-gradient-to-br from-primary via-orange-500 to-pink-500 opacity-90 [clip-path:polygon(30%_0,100%_0,100%_100%,0_100%)]" />
+          <div className="relative grid sm:grid-cols-3 gap-4 p-5 sm:p-6 items-center">
+            <div className="sm:col-span-2">
+              <div className="inline-flex items-center gap-2 text-[10px] uppercase tracking-[0.3em] font-bold text-primary mb-1">
+                <Flame className="w-3 h-3" /> Travelista · Live Atlas
               </div>
-              <h1 className="text-3xl font-extrabold tracking-tight leading-tight">Traveler Feed</h1>
-              <p className="text-sm opacity-95 mt-1">Reels, snaps & soul-fuel from the road</p>
-              <div className="flex items-center gap-3 mt-3 text-xs">
-                <span className="px-2.5 py-1 rounded-full bg-white/25 backdrop-blur font-semibold">{posts.length} posts</span>
-                <span className="px-2.5 py-1 rounded-full bg-white/25 backdrop-blur font-semibold flex items-center gap-1"><Heart className="w-3 h-3 fill-current" /> {totalLikes}</span>
+              <h1 className="text-3xl sm:text-4xl font-extrabold text-foreground tracking-tight leading-tight">
+                Stories pinned across <span className="bg-gradient-to-r from-primary to-pink-500 bg-clip-text text-transparent">Bharat</span>
+              </h1>
+              <p className="text-sm text-muted-foreground mt-1">A travel-zine feed — postcards from real roads, not square selfies.</p>
+              <div className="flex flex-wrap items-center gap-2 mt-3 text-xs">
+                <span className="px-2.5 py-1 rounded-full bg-foreground text-background font-bold">{posts.length} postcards</span>
+                <span className="px-2.5 py-1 rounded-full border border-foreground/20 text-foreground font-semibold flex items-center gap-1"><Heart className="w-3 h-3" /> {totalLikes}</span>
+                <span className="px-2.5 py-1 rounded-full border border-foreground/20 text-foreground font-semibold flex items-center gap-1"><MapPin className="w-3 h-3" /> {atlas.length} pins</span>
               </div>
             </div>
-            <Dialog open={createOpen} onOpenChange={setCreateOpen}>
-              <DialogTrigger asChild>
-                <button className="shrink-0 group relative w-14 h-14 rounded-2xl bg-background text-foreground shadow-xl flex items-center justify-center hover:scale-105 active:scale-95 transition-transform">
-                  <Camera className="w-6 h-6" />
-                  <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-pink-500 text-white text-[10px] font-bold flex items-center justify-center ring-2 ring-background animate-pulse">+</span>
-                </button>
-              </DialogTrigger>
-              <CreatePostDialog onClose={() => { setCreateOpen(false); loadFeed(); }} />
-            </Dialog>
+            <div className="relative flex sm:justify-end">
+              <Dialog open={createOpen} onOpenChange={setCreateOpen}>
+                <DialogTrigger asChild>
+                  <button className="relative w-full sm:w-auto px-5 py-4 rounded-2xl bg-background text-foreground font-bold shadow-2xl border-2 border-foreground/10 hover:scale-[1.02] active:scale-95 transition-transform flex items-center justify-center gap-2">
+                    <Camera className="w-5 h-5" /> Drop a Postcard
+                    <span className="absolute -top-2 -right-2 px-2 py-0.5 rounded-full bg-pink-500 text-primary-foreground text-[10px] font-bold animate-pulse">NEW</span>
+                  </button>
+                </DialogTrigger>
+                <CreatePostDialog onClose={() => { setCreateOpen(false); loadFeed(); }} />
+              </Dialog>
+            </div>
           </div>
         </section>
 
-        {/* Stories rail */}
+        {/* Stories rail — full-width mobile scroll, edge-to-edge */}
         {stories.length > 0 && (
           <section className="mb-5">
             <div className="flex items-center justify-between mb-2 px-1">
-              <h2 className="text-xs font-bold uppercase tracking-widest text-foreground flex items-center gap-1.5">
-                <Zap className="w-3.5 h-3.5 text-primary" /> Stories from the road
-              </h2>
-              <span className="text-[10px] text-muted-foreground">{stories.length} live</span>
+              <h2 className="text-xs font-bold uppercase tracking-widest text-foreground">Stories on the road</h2>
+              <span className="text-[10px] text-muted-foreground">scroll →</span>
             </div>
-            <div className="-mx-3 sm:mx-0 px-3 sm:px-0 flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
-              {stories.map(s => {
-                const name = s.author?.first_name || "Traveler";
-                return (
-                  <Link to={`/host/${s.user_id}`} key={s.user_id} className="flex flex-col items-center gap-1.5 flex-shrink-0 w-16 group">
-                    <div className="p-[2.5px] rounded-full bg-gradient-to-tr from-primary via-pink-500 to-yellow-400 group-hover:scale-110 transition-transform duration-300 shadow-lg shadow-primary/20">
-                      <div className="p-[2px] bg-background rounded-full">
-                        <Avatar className="w-14 h-14">
-                          <AvatarImage src={s.author?.avatar_url || undefined} />
-                          <AvatarFallback className="bg-gradient-to-br from-primary/20 to-pink-500/20 text-base font-bold">{name.charAt(0)}</AvatarFallback>
-                        </Avatar>
+            <div className="-mx-3 sm:mx-0 overflow-x-auto scrollbar-hide">
+              <div className="flex gap-3 px-3 sm:px-0 pb-2 w-max min-w-full">
+                {stories.map(s => {
+                  const name = s.author?.first_name || "Traveler";
+                  return (
+                    <Link to={`/traveler/${s.user_id}`} key={s.user_id} className="flex flex-col items-center gap-1.5 flex-shrink-0 w-16 group">
+                      <div className="p-[2.5px] rounded-full bg-gradient-to-tr from-primary via-pink-500 to-yellow-400 group-hover:scale-110 transition-transform">
+                        <div className="p-[2px] bg-background rounded-full">
+                          <Avatar className="w-14 h-14">
+                            <AvatarImage src={s.author?.avatar_url || undefined} />
+                            <AvatarFallback className="bg-gradient-to-br from-primary/20 to-pink-500/20 font-bold">{name.charAt(0)}</AvatarFallback>
+                          </Avatar>
+                        </div>
                       </div>
-                    </div>
-                    <span className="text-[11px] text-foreground font-medium truncate max-w-full">{name}</span>
-                  </Link>
-                );
-              })}
+                      <span className="text-[11px] text-foreground font-medium truncate max-w-full">{name}</span>
+                    </Link>
+                  );
+                })}
+              </div>
             </div>
           </section>
         )}
 
-        {/* Gradient filter chips */}
-        <div className="mb-6 flex gap-2 overflow-x-auto pb-2 -mx-3 sm:mx-0 px-3 sm:px-0 scrollbar-hide">
-          {FILTERS.map(f => {
-            const active = filter === f.value;
-            return (
-              <button
-                key={f.value}
-                onClick={() => setFilter(f.value)}
-                className={`px-4 py-2 rounded-full text-sm font-bold whitespace-nowrap transition-all duration-300 active:scale-95 ${
-                  active
-                    ? `bg-gradient-to-r ${f.grad} text-white shadow-lg scale-105`
-                    : "bg-card border border-border text-muted-foreground hover:text-foreground hover:border-primary/40"
-                }`}
-              >
-                <span className="mr-1">{f.emoji}</span>{f.label}
-              </button>
-            );
-          })}
-        </div>
+        {/* Split: Feed + Atlas */}
+        <div className="grid lg:grid-cols-[1fr_320px] gap-6">
+          {/* LEFT: feed stream */}
+          <div>
+            {/* Filter chips */}
+            <div className="mb-4 flex items-center gap-2 overflow-x-auto pb-2 -mx-3 sm:mx-0 px-3 sm:px-0 scrollbar-hide">
+              <Filter className="w-4 h-4 text-muted-foreground shrink-0" />
+              {FILTERS.map(f => {
+                const active = filter === f.value;
+                return (
+                  <button key={f.value} onClick={() => { setFilter(f.value); setActivePin(null); }}
+                    className={`px-3.5 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all border-2 ${
+                      active ? "bg-foreground text-background border-foreground" : "bg-transparent text-foreground border-foreground/15 hover:border-foreground/40"
+                    }`}>
+                    <span className="mr-1">{f.emoji}</span>{f.label}
+                  </button>
+                );
+              })}
+              {activePin && (
+                <button onClick={() => setActivePin(null)} className="ml-1 px-3 py-1.5 rounded-full text-xs font-bold bg-primary text-primary-foreground border-2 border-primary flex items-center gap-1">
+                  <MapPin className="w-3 h-3" /> {activePin} ×
+                </button>
+              )}
+            </div>
 
-        {/* Posts */}
-        {loading ? (
-          <div className="space-y-5">
-            {[1, 2].map(i => (
-              <div key={i} className="bg-card border border-border rounded-3xl overflow-hidden">
-                <div className="p-3 flex items-center gap-2.5"><Skeleton className="w-10 h-10 rounded-full" /><Skeleton className="h-3 w-24" /></div>
-                <Skeleton className="aspect-square w-full" />
-                <div className="p-3 space-y-2"><Skeleton className="h-4 w-32" /><Skeleton className="h-3 w-full" /></div>
+            {loading ? (
+              <div className="space-y-5">
+                {[1, 2].map(i => (
+                  <div key={i} className="bg-card border-2 border-foreground/10 rounded-3xl overflow-hidden p-4 space-y-3">
+                    <Skeleton className="h-8 w-40" /><Skeleton className="aspect-[4/3] w-full rounded-2xl" /><Skeleton className="h-4 w-full" />
+                  </div>
+                ))}
               </div>
-            ))}
+            ) : visiblePosts.length === 0 ? (
+              <div className="text-center py-20 rounded-3xl border-2 border-dashed border-foreground/20 bg-card">
+                <div className="text-6xl mb-3">📮</div>
+                <p className="text-foreground font-bold text-lg">No postcards yet</p>
+                <p className="text-sm text-muted-foreground mt-1">Be the first to drop one from your trip.</p>
+                <Button onClick={() => setCreateOpen(true)} className="mt-4 rounded-full">
+                  <Plus className="w-4 h-4 mr-1" /> Drop a Postcard
+                </Button>
+              </div>
+            ) : (
+              <div className="space-y-6">
+                {visiblePosts.map((post, i) => (
+                  <PostcardItem key={post.id} post={post} index={i} onLike={() => toggleLike(post)} onBookmark={() => toggleBookmark(post)} />
+                ))}
+              </div>
+            )}
           </div>
-        ) : posts.length === 0 ? (
-          <div className="text-center py-20 rounded-3xl border-2 border-dashed border-primary/30 bg-gradient-to-br from-primary/5 to-pink-500/5">
-            <div className="text-6xl mb-3 animate-bounce">📸</div>
-            <p className="text-foreground font-bold text-lg">Nothing here yet</p>
-            <p className="text-sm text-muted-foreground mt-1">Be the first to drop an adventure!</p>
-            <Button onClick={() => setCreateOpen(true)} className="mt-4 rounded-full bg-gradient-to-r from-primary to-pink-500 text-white border-0">
-              <Plus className="w-4 h-4 mr-1" /> Create the first post
-            </Button>
-          </div>
-        ) : (
-          <div className="space-y-6">
-            {posts.map((post, i) => <PostCard key={post.id} post={post} index={i} onLike={() => toggleLike(post)} />)}
-          </div>
-        )}
+
+          {/* RIGHT: Atlas (sticky on desktop, collapsible on mobile) */}
+          <aside className="lg:sticky lg:top-24 lg:self-start">
+            <div className="rounded-3xl border-2 border-foreground/10 bg-card shadow-card overflow-hidden">
+              <div className="px-4 py-3 border-b-2 border-foreground/10 bg-gradient-to-br from-primary/5 to-pink-500/5">
+                <div className="flex items-center justify-between">
+                  <h3 className="font-bold text-foreground flex items-center gap-1.5"><Globe2 className="w-4 h-4 text-primary" /> Live Atlas</h3>
+                  <span className="text-[10px] text-muted-foreground font-semibold">{atlas.length} places</span>
+                </div>
+                <p className="text-[11px] text-muted-foreground mt-0.5">Tap a pin to filter the feed.</p>
+              </div>
+
+              {/* Stylized India map with hot pins */}
+              <div className="relative aspect-[4/5] bg-gradient-to-br from-amber-50/40 via-rose-50/30 to-sky-50/40 dark:from-foreground/5 dark:via-foreground/5 dark:to-foreground/5">
+                <svg viewBox="0 0 200 250" className="absolute inset-0 w-full h-full p-4 opacity-30" fill="none" stroke="hsl(var(--foreground))" strokeWidth="1.5">
+                  {/* Highly stylized India silhouette */}
+                  <path d="M70 20 Q90 10 110 18 Q130 28 145 45 Q160 65 158 90 Q165 115 155 140 Q150 165 130 185 Q115 210 100 230 Q90 215 80 195 Q60 175 55 150 Q45 130 50 105 Q45 80 55 55 Q60 35 70 20 Z" />
+                </svg>
+                {atlas.slice(0, 12).map((a, idx) => {
+                  // Pseudo-random but stable positions
+                  const seed = a.name.split("").reduce((s, c) => s + c.charCodeAt(0), 0);
+                  const x = 18 + ((seed * 7) % 68);
+                  const y = 14 + ((seed * 13) % 72);
+                  const active = activePin === a.name;
+                  return (
+                    <button
+                      key={a.name}
+                      onClick={() => setActivePin(active ? null : a.name)}
+                      className={`absolute -translate-x-1/2 -translate-y-full group transition-transform hover:scale-125 ${active ? "scale-125 z-10" : ""}`}
+                      style={{ left: `${x}%`, top: `${y}%` }}
+                      title={`${a.name} · ${a.count}`}
+                    >
+                      <div className={`relative w-3 h-3 rounded-full ring-4 ${active ? "bg-pink-500 ring-pink-500/30" : "bg-primary ring-primary/30"} shadow-lg`}>
+                        <span className={`absolute inset-0 rounded-full animate-ping ${active ? "bg-pink-500/60" : "bg-primary/60"}`} />
+                      </div>
+                      {(active || idx < 3) && (
+                        <span className={`absolute left-1/2 -translate-x-1/2 mt-1 px-1.5 py-0.5 rounded text-[9px] font-bold whitespace-nowrap ${active ? "bg-pink-500 text-primary-foreground" : "bg-foreground text-background"}`}>
+                          {a.name}
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+
+              <div className="max-h-64 overflow-y-auto p-2 space-y-1">
+                {atlas.length === 0 && <p className="text-xs text-muted-foreground text-center py-4">No locations tagged yet.</p>}
+                {atlas.map(a => (
+                  <button key={a.name} onClick={() => setActivePin(activePin === a.name ? null : a.name)}
+                    className={`w-full text-left flex items-center justify-between gap-2 px-3 py-2 rounded-xl text-xs transition-colors ${
+                      activePin === a.name ? "bg-foreground text-background" : "hover:bg-secondary text-foreground"
+                    }`}>
+                    <span className="flex items-center gap-1.5 truncate"><MapPin className="w-3 h-3 shrink-0" /> {a.name}</span>
+                    <span className="font-bold tabular-nums shrink-0">{a.count}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          </aside>
+        </div>
       </main>
 
-      {/* Floating sticky FAB (mobile-first, visible everywhere) */}
+      {/* Mobile FAB */}
       <button
         onClick={() => setCreateOpen(true)}
-        className="fixed bottom-24 right-4 sm:bottom-8 sm:right-8 z-40 w-16 h-16 rounded-full bg-gradient-to-br from-primary via-orange-500 to-pink-500 text-white shadow-2xl shadow-primary/50 flex items-center justify-center hover:scale-110 active:scale-95 transition-transform group"
+        className="fixed bottom-24 right-4 lg:hidden z-40 w-14 h-14 rounded-2xl bg-foreground text-background shadow-2xl flex items-center justify-center hover:scale-105 active:scale-95 transition-transform"
         aria-label="Create post"
       >
-        <span className="absolute inset-0 rounded-full bg-gradient-to-br from-primary to-pink-500 animate-ping opacity-30" />
-        <Plus className="w-7 h-7 relative" />
+        <Plus className="w-6 h-6" />
       </button>
 
       <Footer />
@@ -218,224 +301,81 @@ const Feed = () => {
   );
 };
 
-const PostCard = ({ post, onLike, index }: { post: FeedPost; onLike: () => void; index: number }) => {
+const PostcardItem = ({ post, onLike, onBookmark, index }: { post: FeedPost; onLike: () => void; onBookmark: () => void; index: number }) => {
   const name = post.author ? `${post.author.first_name || ""} ${post.author.last_name || ""}`.trim() || "Traveler" : "Traveler";
-  const TagIcon = TAG_TYPES.find(t => t.value === post.tag_type)?.icon || Sparkles;
-  const tagGrad = FILTERS.find(f => f.value === post.tag_type)?.grad || "from-primary to-pink-500";
-  const [burst, setBurst] = useState(false);
-  const [popLike, setPopLike] = useState(false);
-  const lastTap = useRef(0);
-
-  const triggerLike = () => {
-    if (!post.liked) {
-      setPopLike(true);
-      setTimeout(() => setPopLike(false), 400);
-    }
-    onLike();
-  };
-
-  const handleDoubleTap = () => {
-    const now = Date.now();
-    if (now - lastTap.current < 300) {
-      if (!post.liked) onLike();
-      setBurst(true);
-      setTimeout(() => setBurst(false), 700);
-    }
-    lastTap.current = now;
-  };
+  const TagIcon = post.tag_type ? (TAG_ICON[post.tag_type] || Sparkles) : Sparkles;
+  const tilt = index % 2 === 0 ? "sm:-rotate-[0.4deg]" : "sm:rotate-[0.4deg]";
 
   return (
-    <article
-      className="bg-card border border-border rounded-3xl overflow-hidden shadow-md hover:shadow-2xl hover:shadow-primary/10 transition-all duration-300 animate-fade-in"
-      style={{ animationDelay: `${Math.min(index * 60, 240)}ms` }}
-    >
-      {/* Header */}
-      <div className="flex items-center justify-between p-3.5">
-        <Link to={`/host/${post.user_id}`} className="flex items-center gap-3 group">
-          <div className="p-[2px] rounded-full bg-gradient-to-tr from-primary via-pink-500 to-yellow-400">
-            <Avatar className="w-10 h-10 border-2 border-background">
-              <AvatarImage src={post.author?.avatar_url || undefined} />
-              <AvatarFallback className="text-xs bg-gradient-to-br from-primary/20 to-pink-500/20 font-bold">{name.charAt(0)}</AvatarFallback>
-            </Avatar>
-          </div>
-          <div>
-            <p className="text-sm font-bold text-foreground group-hover:text-primary transition-colors leading-tight">{name}</p>
-            {post.location ? (
-              <p className="text-xs text-muted-foreground flex items-center gap-1 leading-tight mt-0.5">
-                <MapPin className="w-3 h-3 text-primary" />{post.location}
-              </p>
-            ) : (
-              <p className="text-xs text-muted-foreground leading-tight mt-0.5">
-                {formatDistanceToNow(new Date(post.created_at), { addSuffix: true })}
-              </p>
-            )}
+    <article className={`group bg-card border-2 border-foreground/10 rounded-3xl overflow-hidden shadow-card hover:shadow-elevated transition-all duration-300 ${tilt} hover:rotate-0`}>
+      {/* Postcard ticket header */}
+      <div className="flex items-stretch border-b-2 border-dashed border-foreground/15">
+        <Link to={`/traveler/${post.user_id}`} className="flex items-center gap-3 p-3 flex-1 group/header">
+          <Avatar className="w-10 h-10 ring-2 ring-foreground/10">
+            <AvatarImage src={post.author?.avatar_url || undefined} />
+            <AvatarFallback className="text-xs font-bold bg-secondary">{name.charAt(0)}</AvatarFallback>
+          </Avatar>
+          <div className="min-w-0">
+            <p className="text-sm font-bold text-foreground group-hover/header:text-primary leading-tight">{name}</p>
+            <p className="text-[11px] text-muted-foreground flex items-center gap-1">
+              <Compass className="w-3 h-3" />
+              {post.location || formatDistanceToNow(new Date(post.created_at), { addSuffix: true })}
+            </p>
           </div>
         </Link>
-        <button className="text-muted-foreground hover:text-foreground p-1"><MoreHorizontal className="w-5 h-5" /></button>
+        <div className="border-l-2 border-dashed border-foreground/15 px-3 flex flex-col items-center justify-center text-center bg-secondary/30">
+          <span className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground">Postcard</span>
+          <span className="text-sm font-extrabold text-foreground tabular-nums">#{(index + 1).toString().padStart(3, "0")}</span>
+        </div>
       </div>
 
       {/* Media */}
-      <div
-        className="relative bg-foreground/5 aspect-square w-full overflow-hidden cursor-pointer select-none group"
-        onClick={handleDoubleTap}
-      >
+      <div className="relative bg-foreground/5 aspect-[4/3] w-full overflow-hidden">
         {post.media_type === "video" ? (
           <video src={post.media_url} className="w-full h-full object-cover" controls playsInline preload="metadata" />
         ) : (
-          <img src={post.media_url} alt={post.caption || "Feed post"} className="w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-500" loading="lazy" />
+          <img src={post.media_url} alt={post.caption || "Postcard"} className="w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-700" loading="lazy" />
         )}
 
-        {/* Tag floating chip on media */}
         {post.tag_type && post.tag_value && (
-          <div className={`absolute top-3 left-3 flex items-center gap-1 px-2.5 py-1 rounded-full bg-gradient-to-r ${tagGrad} text-white text-xs font-bold shadow-lg backdrop-blur`}>
-            <TagIcon className="w-3 h-3" />{post.tag_value}
+          <div className="absolute top-3 left-3 inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-background/95 text-foreground text-[11px] font-bold shadow-md backdrop-blur border border-foreground/10">
+            <TagIcon className="w-3 h-3 text-primary" />{post.tag_value}
           </div>
         )}
-
         {post.media_type === "video" && (
-          <div className="absolute top-3 right-3 bg-foreground/70 text-background backdrop-blur px-2.5 py-1 rounded-full flex items-center gap-1 text-xs font-bold">
+          <div className="absolute top-3 right-3 bg-foreground text-background px-2 py-0.5 rounded-md flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider">
             <Play className="w-3 h-3 fill-current" /> Reel
           </div>
         )}
-
-        {burst && (
-          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-            <Heart className="w-28 h-28 fill-pink-500 text-pink-500 drop-shadow-2xl animate-in zoom-in-50 fade-in duration-300" />
-          </div>
-        )}
-      </div>
-
-      {/* Actions */}
-      <div className="px-3.5 pt-3 pb-1.5 flex items-center justify-between">
-        <div className="flex items-center gap-1">
-          <button
-            onClick={triggerLike}
-            className={`p-2 rounded-full transition-all active:scale-75 ${popLike ? "scale-125" : ""}`}
-          >
-            <Heart className={`w-7 h-7 transition-all ${post.liked ? "fill-pink-500 text-pink-500 drop-shadow-md" : "text-foreground hover:text-pink-500"}`} />
-          </button>
-          <button className="p-2 rounded-full text-foreground hover:text-primary transition-colors"><MessageCircle className="w-7 h-7" /></button>
-          <button className="p-2 rounded-full text-foreground hover:text-primary transition-colors"><Send className="w-7 h-7" /></button>
+        {/* Decorative stamp corner */}
+        <div className="absolute bottom-3 right-3 rotate-[8deg] px-2 py-1 rounded-md border-2 border-pink-500/70 text-pink-500 text-[9px] font-extrabold uppercase tracking-widest bg-background/70 backdrop-blur">
+          ✈ Bharat
         </div>
-        <button className="p-2 rounded-full text-foreground hover:text-primary transition-colors"><Bookmark className="w-7 h-7" /></button>
       </div>
 
-      {/* Meta */}
-      <div className="px-4 pb-4 space-y-1.5">
-        <p className="text-sm font-bold text-foreground flex items-center gap-1.5">
-          <span className="bg-gradient-to-r from-primary to-pink-500 bg-clip-text text-transparent">
-            {post.likes_count.toLocaleString()}
-          </span>
-          <span className="text-foreground">{post.likes_count === 1 ? "like" : "likes"}</span>
-        </p>
-        {post.caption && (
-          <p className="text-sm text-foreground leading-snug">
-            <span className="font-bold mr-1.5">{name}</span>{post.caption}
-          </p>
-        )}
-        <p className="text-[11px] text-muted-foreground uppercase tracking-wide pt-1">
-          {formatDistanceToNow(new Date(post.created_at), { addSuffix: true })}
-        </p>
+      {/* Meta + actions */}
+      <div className="p-4">
+        {post.caption && <p className="text-sm text-foreground leading-relaxed mb-3"><span className="font-bold">{name.split(" ")[0]}:</span> {post.caption}</p>}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-1">
+            <button onClick={onLike} className="px-2.5 py-1.5 rounded-full hover:bg-secondary transition flex items-center gap-1.5">
+              <Heart className={`w-4 h-4 ${post.liked ? "fill-pink-500 text-pink-500" : "text-foreground"}`} />
+              <span className="text-xs font-bold tabular-nums">{post.likes_count}</span>
+            </button>
+            <button className="p-2 rounded-full hover:bg-secondary transition"><MessageCircle className="w-4 h-4 text-foreground" /></button>
+            <button className="p-2 rounded-full hover:bg-secondary transition"><Send className="w-4 h-4 text-foreground" /></button>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
+              {formatDistanceToNow(new Date(post.created_at), { addSuffix: true })}
+            </span>
+            <button onClick={onBookmark} className="p-2 rounded-full hover:bg-secondary transition">
+              <Bookmark className={`w-4 h-4 ${post.bookmarked ? "fill-primary text-primary" : "text-foreground"}`} />
+            </button>
+          </div>
+        </div>
       </div>
     </article>
-  );
-};
-
-const CreatePostDialog = ({ onClose }: { onClose: () => void }) => {
-  const { user } = useAuth();
-  const [file, setFile] = useState<File | null>(null);
-  const [preview, setPreview] = useState<string | null>(null);
-  const [caption, setCaption] = useState("");
-  const [tagType, setTagType] = useState<string>("");
-  const [tagValue, setTagValue] = useState("");
-  const [location, setLocation] = useState("");
-  const [submitting, setSubmitting] = useState(false);
-  const fileRef = useRef<HTMLInputElement>(null);
-
-  const handleFile = (f: File | null) => {
-    if (!f) return;
-    if (f.size > 50 * 1024 * 1024) { toast({ title: "Max 50MB", variant: "destructive" }); return; }
-    setFile(f);
-    setPreview(URL.createObjectURL(f));
-  };
-
-  const submit = async () => {
-    if (!user) { toast({ title: "Please sign in", variant: "destructive" }); return; }
-    if (!file) { toast({ title: "Add a photo or video", variant: "destructive" }); return; }
-    setSubmitting(true);
-    try {
-      const ext = file.name.split(".").pop();
-      const path = `${user.id}/${Date.now()}.${ext}`;
-      const { error: upErr } = await supabase.storage.from("feed-media").upload(path, file);
-      if (upErr) throw upErr;
-      const { data: pub } = supabase.storage.from("feed-media").getPublicUrl(path);
-      const media_type = file.type.startsWith("video") ? "video" : "image";
-      const { error: insErr } = await supabase.from("feed_posts").insert({
-        user_id: user.id, media_url: pub.publicUrl, media_type,
-        caption: caption.trim() || null,
-        tag_type: tagType || null,
-        tag_value: tagType ? (tagValue.trim() || null) : null,
-        location: location.trim() || null,
-      });
-      if (insErr) throw insErr;
-      toast({ title: "Posted to feed! 🎉" });
-      onClose();
-    } catch (e: any) {
-      toast({ title: "Failed to post", description: e.message, variant: "destructive" });
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  return (
-    <DialogContent className="max-w-md">
-      <DialogHeader>
-        <DialogTitle className="flex items-center gap-2">
-          <span className="bg-gradient-to-r from-primary to-pink-500 bg-clip-text text-transparent font-extrabold">Share to Feed</span>
-          <Sparkles className="w-5 h-5 text-primary" />
-        </DialogTitle>
-      </DialogHeader>
-      <div className="space-y-3">
-        {preview ? (
-          <div className="relative aspect-square rounded-2xl overflow-hidden bg-muted">
-            {file?.type.startsWith("video") ? <video src={preview} className="w-full h-full object-cover" controls /> : <img src={preview} alt="preview" className="w-full h-full object-cover" />}
-            <button onClick={() => { setFile(null); setPreview(null); }} className="absolute top-2 right-2 w-8 h-8 rounded-full bg-background/80 flex items-center justify-center hover:bg-background"><X className="w-4 h-4" /></button>
-          </div>
-        ) : (
-          <button onClick={() => fileRef.current?.click()} className="w-full aspect-square rounded-2xl border-2 border-dashed border-primary/40 flex flex-col items-center justify-center gap-3 hover:border-primary hover:bg-primary/5 transition-all bg-gradient-to-br from-primary/5 to-pink-500/5">
-            <div className="flex gap-3">
-              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary to-pink-500 flex items-center justify-center text-white shadow-lg">
-                <ImageIcon className="w-7 h-7" />
-              </div>
-              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-sky-500 to-indigo-500 flex items-center justify-center text-white shadow-lg">
-                <Video className="w-7 h-7" />
-              </div>
-            </div>
-            <p className="text-sm font-bold text-foreground">Tap to upload photo or video</p>
-            <p className="text-xs text-muted-foreground">Max 50MB · jpg, png, mp4</p>
-          </button>
-        )}
-        <input ref={fileRef} type="file" accept="image/*,video/*" className="hidden" onChange={e => handleFile(e.target.files?.[0] || null)} />
-
-        <Textarea placeholder="Write a caption…" value={caption} onChange={e => setCaption(e.target.value)} maxLength={500} rows={3} className="rounded-xl" />
-
-        <div className="grid grid-cols-2 gap-2">
-          <Select value={tagType} onValueChange={setTagType}>
-            <SelectTrigger className="rounded-xl"><SelectValue placeholder="Tag type" /></SelectTrigger>
-            <SelectContent>
-              {TAG_TYPES.map(t => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}
-            </SelectContent>
-          </Select>
-          <Input className="rounded-xl" placeholder={tagType === "location" ? "e.g. Manali" : tagType === "adventure" ? "e.g. Trekking" : "e.g. Homestay"} value={tagValue} onChange={e => setTagValue(e.target.value)} maxLength={50} />
-        </div>
-
-        <Input className="rounded-xl" placeholder="📍 Location (optional)" value={location} onChange={e => setLocation(e.target.value)} maxLength={100} />
-
-        <Button onClick={submit} disabled={submitting || !file} className="w-full rounded-full bg-gradient-to-r from-primary via-orange-500 to-pink-500 text-white border-0 shadow-lg shadow-primary/30 hover:opacity-95 h-11 font-bold">
-          {submitting ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Posting…</> : <><Sparkles className="w-4 h-4 mr-1" /> Share Post</>}
-        </Button>
-      </div>
-    </DialogContent>
   );
 };
 
