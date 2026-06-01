@@ -48,6 +48,7 @@ import WaitlistAdmin from "./pages/admin/WaitlistAdmin.tsx";
 import AuditLogAdmin from "./pages/admin/AuditLogAdmin.tsx";
 import FeaturesHub from "./pages/FeaturesHub.tsx";
 import Feed from "./pages/Feed.tsx";
+import TravelerProfile from "./pages/TravelerProfile.tsx";
 import MobileBottomNav from "./components/MobileBottomNav.tsx";
 import AIChatRecommender from "./components/AIChatRecommender.tsx";
 import FeatureGate from "./components/FeatureGate.tsx";
@@ -110,6 +111,7 @@ const App = () => (
             <Route path="/admin/audit-log" element={<AuditLogAdmin />} />
             <Route path="/features" element={<FeaturesHub />} />
             <Route path="/feed" element={<Feed />} />
+            <Route path="/traveler/:id" element={<TravelerProfile />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
           <MobileBottomNav />
