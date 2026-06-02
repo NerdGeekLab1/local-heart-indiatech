@@ -61,11 +61,26 @@ const TripLeaderProfile = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <Helmet>
+        <title>{`${profile?.first_name || "Trip Leader"} — Trip Leader on Travelista`}</title>
+        <meta name="description" content={(profile?.bio || `Trip Leader profile with ${trips.length} active trips across India.`).slice(0, 155)} />
+        <link rel="canonical" href={`/trip-leader/${id}`} />
+        <meta property="og:type" content="profile" />
+        <meta property="og:title" content={`${profile?.first_name || "Trip Leader"} — Trip Leader`} />
+        <meta property="og:description" content={(profile?.bio || `Trip Leader with ${trips.length} active trips.`).slice(0, 200)} />
+        <meta property="og:url" content={`/trip-leader/${id}`} />
+        {profile?.avatar_url && <meta property="og:image" content={profile.avatar_url} />}
+      </Helmet>
       <Navbar />
       <div className="pt-20 px-4 sm:px-6 lg:px-8 mx-auto max-w-5xl pb-16">
-        <Link to="/trips" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-4">
-          <ArrowLeft className="w-4 h-4" /> Back to Trips
-        </Link>
+        <div className="flex items-center justify-between mb-4 gap-2 flex-wrap">
+          <Link to="/trips" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
+            <ArrowLeft className="w-4 h-4" /> Back to Trips
+          </Link>
+          <Link to={`/traveler/${id}`}>
+            <Button variant="outline" size="sm" className="rounded-full gap-1.5"><User className="w-3.5 h-3.5" /> View Traveler Profile</Button>
+          </Link>
+        </div>
 
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
           {/* Hero */}
