@@ -12,6 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import { hosts, reviews } from "@/lib/data";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import VideoModal from "@/components/VideoModal";
+import { useBookmarks } from "@/hooks/use-bookmarks";
 
 const tripTypeLabels: Record<string, string> = {
   bike_tour: "🏍️ Bike Tour", car_trip: "🚗 Car Trip", bus_trip: "🚌 Bus Trip", road_trip: "🛣️ Road Trip", train_trip: "🚂 Train Trip",
