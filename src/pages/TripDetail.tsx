@@ -117,6 +117,29 @@ const TripDetail = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <Helmet>
+        <title>{`${trip.title} — ${trip.destination || "Trip"} on Travelista`}</title>
+        <meta name="description" content={(trip.description || `${trip.title} — ${trip.duration || "trip"} starting from ₹${trip.total_price}.`).slice(0, 155)} />
+        <link rel="canonical" href={`/trip/${id}`} />
+        <meta property="og:type" content="article" />
+        <meta property="og:title" content={trip.title} />
+        <meta property="og:description" content={(trip.description || `${trip.destination || "Trip"} adventure on Travelista.`).slice(0, 200)} />
+        <meta property="og:url" content={`/trip/${id}`} />
+        {trip.image_url && <meta property="og:image" content={trip.image_url} />}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={trip.title} />
+        {trip.image_url && <meta name="twitter:image" content={trip.image_url} />}
+        <script type="application/ld+json">{JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "TouristTrip",
+          name: trip.title,
+          description: trip.description || undefined,
+          touristType: trip.nature,
+          itinerary: trip.route || undefined,
+          image: trip.image_url || undefined,
+          offers: { "@type": "Offer", price: trip.total_price, priceCurrency: "INR" }
+        })}</script>
+      </Helmet>
       <Navbar />
       <div className="pt-20 px-4 sm:px-6 lg:px-8 mx-auto max-w-5xl pb-16">
         <Link to="/trips" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-4">
