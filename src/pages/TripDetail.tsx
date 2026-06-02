@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
+import { Helmet } from "react-helmet-async";
 import { motion } from "framer-motion";
-import { MapPin, Calendar, Users, Clock, Bike, Car, Bus, Compass, Train, ArrowLeft, Share2, Heart, CheckCircle, Shield, HelpCircle, Flame, TrendingUp, Star, ChevronDown, ChevronUp, Play, Camera, User } from "lucide-react";
+import { MapPin, Calendar, Users, Clock, Bike, Car, Bus, Compass, Train, ArrowLeft, Share2, Heart, CheckCircle, Shield, HelpCircle, Flame, TrendingUp, Star, ChevronDown, ChevronUp, Play, Camera, User, Bookmark } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
