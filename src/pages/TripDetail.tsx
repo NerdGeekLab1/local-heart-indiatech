@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
+import { Helmet } from "react-helmet-async";
 import { motion } from "framer-motion";
-import { MapPin, Calendar, Users, Clock, Bike, Car, Bus, Compass, Train, ArrowLeft, Share2, Heart, CheckCircle, Shield, HelpCircle, Flame, TrendingUp, Star, ChevronDown, ChevronUp, Play, Camera, User } from "lucide-react";
+import { MapPin, Calendar, Users, Clock, Bike, Car, Bus, Compass, Train, ArrowLeft, Share2, Heart, CheckCircle, Shield, HelpCircle, Flame, TrendingUp, Star, ChevronDown, ChevronUp, Play, Camera, User, Bookmark } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -11,6 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import { hosts, reviews } from "@/lib/data";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import VideoModal from "@/components/VideoModal";
+import { useBookmarks } from "@/hooks/use-bookmarks";
 
 const tripTypeLabels: Record<string, string> = {
   bike_tour: "🏍️ Bike Tour", car_trip: "🚗 Car Trip", bus_trip: "🚌 Bus Trip", road_trip: "🛣️ Road Trip", train_trip: "🚂 Train Trip",
@@ -67,6 +69,7 @@ const TripDetail = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const { format } = useCurrency();
+  const { isBookmarked, toggle } = useBookmarks("trip");
   const [trip, setTrip] = useState<any>(null);
   const [creator, setCreator] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -114,6 +117,29 @@ const TripDetail = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <Helmet>
+        <title>{`${trip.title} — ${trip.destination || "Trip"} on Travelista`}</title>
+        <meta name="description" content={(trip.description || `${trip.title} — ${trip.duration || "trip"} starting from ₹${trip.total_price}.`).slice(0, 155)} />
+        <link rel="canonical" href={`/trip/${id}`} />
+        <meta property="og:type" content="article" />
+        <meta property="og:title" content={trip.title} />
+        <meta property="og:description" content={(trip.description || `${trip.destination || "Trip"} adventure on Travelista.`).slice(0, 200)} />
+        <meta property="og:url" content={`/trip/${id}`} />
+        {trip.image_url && <meta property="og:image" content={trip.image_url} />}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={trip.title} />
+        {trip.image_url && <meta name="twitter:image" content={trip.image_url} />}
+        <script type="application/ld+json">{JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "TouristTrip",
+          name: trip.title,
+          description: trip.description || undefined,
+          touristType: trip.nature,
+          itinerary: trip.route || undefined,
+          image: trip.image_url || undefined,
+          offers: { "@type": "Offer", price: trip.total_price, priceCurrency: "INR" }
+        })}</script>
+      </Helmet>
       <Navbar />
       <div className="pt-20 px-4 sm:px-6 lg:px-8 mx-auto max-w-5xl pb-16">
         <Link to="/trips" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-4">
@@ -382,7 +408,9 @@ const TripDetail = () => {
                     <Link to="/signup"><Button className="w-full rounded-full" size="lg">Sign Up to Join</Button></Link>
                   )}
                   <div className="flex gap-2 mt-3">
-                    <Button variant="outline" className="flex-1 rounded-full gap-1 text-sm"><Heart className="w-4 h-4" /> Save</Button>
+                    <Button variant={isBookmarked("trip", trip.id) ? "default" : "outline"} className="flex-1 rounded-full gap-1 text-sm" onClick={() => toggle("trip", trip.id)}>
+                      <Bookmark className={`w-4 h-4 ${isBookmarked("trip", trip.id) ? "fill-current" : ""}`} /> {isBookmarked("trip", trip.id) ? "Saved" : "Save"}
+                    </Button>
                     <Button variant="outline" className="flex-1 rounded-full gap-1 text-sm" onClick={share}><Share2 className="w-4 h-4" /> Share</Button>
                   </div>
                 </div>
@@ -423,20 +451,26 @@ const TripDetail = () => {
 
                 {/* Trip Leader Profile Link */}
                 {creator && (
-                  <Link to={`/trip-leader/${creator.id}`}>
-                    <div className="rounded-2xl bg-gradient-to-br from-primary/5 to-accent/5 border border-primary/10 p-4 hover:shadow-elevated transition-shadow cursor-pointer">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-sm font-bold text-primary">
-                          {creator.first_name?.[0] || "?"}
-                        </div>
-                        <div className="flex-1">
-                          <p className="text-sm font-bold text-foreground">{creator.first_name} {creator.last_name || ""}</p>
-                          <p className="text-[10px] text-muted-foreground">View full Trip Leader profile →</p>
-                        </div>
-                        <Compass className="w-4 h-4 text-primary" />
+                  <div className="rounded-2xl bg-gradient-to-br from-primary/5 to-accent/5 border border-primary/10 p-4">
+                    <div className="flex items-center gap-3">
+                      <Link to={`/traveler/${creator.id}`} className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-sm font-bold text-primary overflow-hidden">
+                        {creator.avatar_url
+                          ? <img src={creator.avatar_url} alt={creator.first_name} className="w-full h-full object-cover" />
+                          : (creator.first_name?.[0] || "?")}
+                      </Link>
+                      <div className="flex-1 min-w-0">
+                        <Link to={`/traveler/${creator.id}`} className="text-sm font-bold text-foreground hover:text-primary block truncate">
+                          {creator.first_name} {creator.last_name || ""}
+                        </Link>
+                        <p className="text-[10px] text-muted-foreground">Tap photo or name for public profile</p>
                       </div>
+                      <Compass className="w-4 h-4 text-primary shrink-0" />
                     </div>
-                  </Link>
+                    <div className="grid grid-cols-2 gap-2 mt-3">
+                      <Link to={`/trip-leader/${creator.id}`} className="text-[11px] font-semibold text-center px-2 py-1.5 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition">Leader Profile →</Link>
+                      <Link to={`/traveler/${creator.id}`} className="text-[11px] font-semibold text-center px-2 py-1.5 rounded-lg bg-secondary text-foreground hover:bg-secondary/80 transition flex items-center justify-center gap-1"><User className="w-3 h-3" /> Traveler</Link>
+                    </div>
+                  </div>
                 )}
 
                 {/* Organizer from DB (fallback) */}
