@@ -69,6 +69,7 @@ const TripDetail = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const { format } = useCurrency();
+  const { isBookmarked, toggle } = useBookmarks("trip");
   const [trip, setTrip] = useState<any>(null);
   const [creator, setCreator] = useState<any>(null);
   const [loading, setLoading] = useState(true);
