@@ -408,7 +408,9 @@ const TripDetail = () => {
                     <Link to="/signup"><Button className="w-full rounded-full" size="lg">Sign Up to Join</Button></Link>
                   )}
                   <div className="flex gap-2 mt-3">
-                    <Button variant="outline" className="flex-1 rounded-full gap-1 text-sm"><Heart className="w-4 h-4" /> Save</Button>
+                    <Button variant={isBookmarked("trip", trip.id) ? "default" : "outline"} className="flex-1 rounded-full gap-1 text-sm" onClick={() => toggle("trip", trip.id)}>
+                      <Bookmark className={`w-4 h-4 ${isBookmarked("trip", trip.id) ? "fill-current" : ""}`} /> {isBookmarked("trip", trip.id) ? "Saved" : "Save"}
+                    </Button>
                     <Button variant="outline" className="flex-1 rounded-full gap-1 text-sm" onClick={share}><Share2 className="w-4 h-4" /> Share</Button>
                   </div>
                 </div>
