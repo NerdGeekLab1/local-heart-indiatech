@@ -1520,13 +1520,6 @@ export type Database = {
             referencedRelation: "beta_wanderers"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "wanderer_missions_wanderer_id_fkey"
-            columns: ["wanderer_id"]
-            isOneToOne: false
-            referencedRelation: "beta_wanderers_public"
-            referencedColumns: ["id"]
-          },
         ]
       }
       wedding_events: {
@@ -1588,93 +1581,7 @@ export type Database = {
       }
     }
     Views: {
-      beta_wanderers_public: {
-        Row: {
-          badge: string | null
-          bio: string | null
-          city: string | null
-          created_at: string | null
-          full_name: string | null
-          id: string | null
-          missions_completed: number | null
-          preferred_destinations: string[] | null
-          score: number | null
-          social_links: Json | null
-          status: string | null
-          total_videos: number | null
-          travel_styles: string[] | null
-          user_id: string | null
-          video_url: string | null
-        }
-        Insert: {
-          badge?: string | null
-          bio?: string | null
-          city?: string | null
-          created_at?: string | null
-          full_name?: string | null
-          id?: string | null
-          missions_completed?: number | null
-          preferred_destinations?: string[] | null
-          score?: number | null
-          social_links?: Json | null
-          status?: string | null
-          total_videos?: number | null
-          travel_styles?: string[] | null
-          user_id?: string | null
-          video_url?: string | null
-        }
-        Update: {
-          badge?: string | null
-          bio?: string | null
-          city?: string | null
-          created_at?: string | null
-          full_name?: string | null
-          id?: string | null
-          missions_completed?: number | null
-          preferred_destinations?: string[] | null
-          score?: number | null
-          social_links?: Json | null
-          status?: string | null
-          total_videos?: number | null
-          travel_styles?: string[] | null
-          user_id?: string | null
-          video_url?: string | null
-        }
-        Relationships: []
-      }
-      profiles_public: {
-        Row: {
-          avatar_url: string | null
-          bio: string | null
-          first_name: string | null
-          id: string | null
-          interests: string[] | null
-          last_name: string | null
-          nationality: string | null
-          travel_styles: string[] | null
-        }
-        Insert: {
-          avatar_url?: string | null
-          bio?: string | null
-          first_name?: string | null
-          id?: string | null
-          interests?: string[] | null
-          last_name?: string | null
-          nationality?: string | null
-          travel_styles?: string[] | null
-        }
-        Update: {
-          avatar_url?: string | null
-          bio?: string | null
-          first_name?: string | null
-          id?: string | null
-          interests?: string[] | null
-          last_name?: string | null
-          nationality?: string | null
-          travel_styles?: string[] | null
-        }
-        Relationships: []
-      }
+      [_ in never]: never
     }
     Functions: {
       approve_host_application: {
@@ -1727,6 +1634,72 @@ export type Database = {
           full_name: string
           plan_interest: string
           status: string
+        }[]
+      }
+      get_public_profile: {
+        Args: { _id: string }
+        Returns: {
+          avatar_url: string
+          bio: string
+          first_name: string
+          id: string
+          interests: string[]
+          last_name: string
+          nationality: string
+          travel_styles: string[]
+        }[]
+      }
+      get_public_profiles: {
+        Args: { _ids: string[] }
+        Returns: {
+          avatar_url: string
+          bio: string
+          first_name: string
+          id: string
+          interests: string[]
+          last_name: string
+          nationality: string
+          travel_styles: string[]
+        }[]
+      }
+      get_public_wanderer: {
+        Args: { _id: string }
+        Returns: {
+          badge: string
+          bio: string
+          city: string
+          created_at: string
+          full_name: string
+          id: string
+          missions_completed: number
+          preferred_destinations: string[]
+          score: number
+          social_links: Json
+          status: string
+          total_videos: number
+          travel_styles: string[]
+          user_id: string
+          video_url: string
+        }[]
+      }
+      get_public_wanderers: {
+        Args: never
+        Returns: {
+          badge: string
+          bio: string
+          city: string
+          created_at: string
+          full_name: string
+          id: string
+          missions_completed: number
+          preferred_destinations: string[]
+          score: number
+          social_links: Json
+          status: string
+          total_videos: number
+          travel_styles: string[]
+          user_id: string
+          video_url: string
         }[]
       }
       has_role: {
