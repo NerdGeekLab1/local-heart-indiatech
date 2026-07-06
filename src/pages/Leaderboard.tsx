@@ -38,10 +38,10 @@ const Leaderboard = () => {
   const [period, setPeriod] = useState("all");
 
   useEffect(() => {
-    supabase.from("beta_wanderers").select("*").eq("status", "approved").order("score", { ascending: false })
+    supabase.rpc("get_public_wanderers")
       .then(({ data }) => {
         if (data && data.length > 0) {
-          const merged = [...demoLeaderboard, ...data.map(d => ({ ...d, weeklyScore: Math.floor((d.score || 0) * 0.2), monthlyScore: d.score || 0 }))];
+          const merged = [...demoLeaderboard, ...data.map((d: any) => ({ ...d, weeklyScore: Math.floor((d.score || 0) * 0.2), monthlyScore: d.score || 0 }))];
           merged.sort((a, b) => (b.score || 0) - (a.score || 0));
           setWanderers(merged);
         }
