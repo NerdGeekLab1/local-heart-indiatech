@@ -1636,6 +1636,72 @@ export type Database = {
           status: string
         }[]
       }
+      get_public_profile: {
+        Args: { _id: string }
+        Returns: {
+          avatar_url: string
+          bio: string
+          first_name: string
+          id: string
+          interests: string[]
+          last_name: string
+          nationality: string
+          travel_styles: string[]
+        }[]
+      }
+      get_public_profiles: {
+        Args: { _ids: string[] }
+        Returns: {
+          avatar_url: string
+          bio: string
+          first_name: string
+          id: string
+          interests: string[]
+          last_name: string
+          nationality: string
+          travel_styles: string[]
+        }[]
+      }
+      get_public_wanderer: {
+        Args: { _id: string }
+        Returns: {
+          badge: string
+          bio: string
+          city: string
+          created_at: string
+          full_name: string
+          id: string
+          missions_completed: number
+          preferred_destinations: string[]
+          score: number
+          social_links: Json
+          status: string
+          total_videos: number
+          travel_styles: string[]
+          user_id: string
+          video_url: string
+        }[]
+      }
+      get_public_wanderers: {
+        Args: never
+        Returns: {
+          badge: string
+          bio: string
+          city: string
+          created_at: string
+          full_name: string
+          id: string
+          missions_completed: number
+          preferred_destinations: string[]
+          score: number
+          social_links: Json
+          status: string
+          total_videos: number
+          travel_styles: string[]
+          user_id: string
+          video_url: string
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

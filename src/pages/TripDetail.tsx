@@ -79,12 +79,16 @@ const TripDetail = () => {
 
   useEffect(() => {
     const fetchData = async () => {
-      if (!id) return;
-      const { data } = await supabase.from("trip_listings").select("*").eq("id", id).single();
+      if (!id) { setLoading(false); return; }
+      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+      if (!isUuid) { setLoading(false); return; }
+      const { data } = await supabase.from("trip_listings").select("*").eq("id", id).maybeSingle();
       if (data) {
         setTrip(data);
-        const { data: profile } = await supabase.from("profiles").select("*").eq("id", data.creator_id).single();
-        setCreator(profile);
+        if (data.creator_id) {
+          const { data: profs } = await supabase.rpc("get_public_profile", { _id: data.creator_id });
+          setCreator(profs?.[0] || null);
+        }
       }
       setLoading(false);
     };
