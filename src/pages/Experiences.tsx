@@ -25,7 +25,7 @@ const priceRanges = [
 const bikeExperiences = [
   {
     id: "exp-bike-ladakh", title: "Leh-Ladakh Bike Expedition", description: "Ride through the world's highest motorable passes on a Royal Enfield. Cross Khardung La (18,380 ft) and experience breathtaking Himalayan landscapes.",
-    image: "https://images.unsplash.com/photo-1558618666-fcd25c85f82e?w=600&q=80",
+    image: "https://images.unsplash.com/photo-1449426468159-d96dbf08f19f?w=600&q=80",
     price: 29000, duration: "7 Days", category: "Bike Tour", hostId: "arjun-varanasi", hostName: "Arjun", hostCity: "Varanasi", rating: 4.9, reviewCount: 45,
     difficulty: "Hard" as const, groupSize: "4-8", maxGuests: 8,
     includes: ["Royal Enfield 500cc", "Fuel", "Mechanic support", "Camping gear", "Meals", "Permits", "First aid", "Oxygen cylinder"],
