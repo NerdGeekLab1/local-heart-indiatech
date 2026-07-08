@@ -84,7 +84,7 @@ const App = () => (
             <Route path="/resource/:slug" element={<ResourceGuide />} />
             <Route path="/dashboard/traveler" element={<TravelerDashboard />} />
             <Route path="/dashboard/host" element={<HostDashboard />} />
-            <Route path="/dashboard/admin" element={<AdminDashboard />} />
+            <Route path="/dashboard/admin" element={<AdminGuard><AdminDashboard /></AdminGuard>} />
             <Route path="/help" element={<HelpCenter />} />
             <Route path="/safety" element={<Safety />} />
             <Route path="/terms" element={<Terms />} />
@@ -107,9 +107,9 @@ const App = () => (
             <Route path="/host-eligibility" element={<HostEligibility />} />
             <Route path="/beta-waitlist" element={<BetaWaitlist />} />
             <Route path="/beta-waitlist/confirm" element={<BetaWaitlistConfirm />} />
-            <Route path="/admin/feature-flags" element={<FeatureFlagsAdmin />} />
-            <Route path="/admin/waitlist" element={<WaitlistAdmin />} />
-            <Route path="/admin/audit-log" element={<AuditLogAdmin />} />
+            <Route path="/admin/feature-flags" element={<AdminGuard><FeatureFlagsAdmin /></AdminGuard>} />
+            <Route path="/admin/waitlist" element={<AdminGuard><WaitlistAdmin /></AdminGuard>} />
+            <Route path="/admin/audit-log" element={<AdminGuard><AuditLogAdmin /></AdminGuard>} />
             <Route path="/features" element={<FeaturesHub />} />
             <Route path="/feed" element={<Feed />} />
             <Route path="/traveler/:id" element={<TravelerProfile />} />
