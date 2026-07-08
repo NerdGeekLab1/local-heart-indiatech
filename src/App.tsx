@@ -47,6 +47,7 @@ import FeatureFlagsAdmin from "./pages/admin/FeatureFlagsAdmin.tsx";
 import WaitlistAdmin from "./pages/admin/WaitlistAdmin.tsx";
 import AuditLogAdmin from "./pages/admin/AuditLogAdmin.tsx";
 import FeaturesHub from "./pages/FeaturesHub.tsx";
+import AdminGuard from "./components/AdminGuard.tsx";
 import Feed from "./pages/Feed.tsx";
 import TravelerProfile from "./pages/TravelerProfile.tsx";
 import MobileBottomNav from "./components/MobileBottomNav.tsx";
