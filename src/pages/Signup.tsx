@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Eye, EyeOff, ArrowLeft, LogIn } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -19,6 +19,8 @@ const Signup = () => {
   });
   const { toast } = useToast();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const nextPath = searchParams.get("next") || "/dashboard/traveler";
 
   const update = (field: string, value: any) => setForm(prev => ({ ...prev, [field]: value }));
   const toggleArray = (field: "travelStyle" | "interests", val: string) => {
@@ -77,7 +79,7 @@ const Signup = () => {
       toast({ title: error.message, variant: "destructive" });
     } else {
       toast({ title: "Welcome back! 🎉" });
-      navigate("/dashboard/traveler");
+      navigate(nextPath);
     }
   };
 
@@ -92,7 +94,7 @@ const Signup = () => {
       }
       if (result.redirected) return;
       toast({ title: "Welcome! 🎉" });
-      navigate("/dashboard/traveler");
+      navigate(nextPath);
     } catch (e: any) {
       toast({ title: "Google sign-in error", description: e?.message ?? String(e), variant: "destructive" });
     } finally {
