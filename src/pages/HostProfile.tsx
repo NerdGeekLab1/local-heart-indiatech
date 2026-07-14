@@ -813,6 +813,35 @@ const HostProfile = () => {
         videoUrl={host.introVideoUrl}
         title={`${host.name}'s Intro`}
       />
+
+      {/* Write Review Dialog */}
+      <Dialog open={reviewOpen} onOpenChange={setReviewOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Write a review for {host.name}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <p className="text-sm text-muted-foreground mb-2">Rating</p>
+              <div className="flex gap-1">
+                {[1, 2, 3, 4, 5].map(n => (
+                  <button key={n} type="button" onClick={() => setReviewRating(n)}>
+                    <Star className={`w-6 h-6 ${n <= reviewRating ? "fill-primary text-primary" : "text-muted"}`} />
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div>
+              <p className="text-sm text-muted-foreground mb-2">Your review</p>
+              <Textarea rows={4} value={reviewText} onChange={e => setReviewText(e.target.value)} placeholder="Share your experience..." />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setReviewOpen(false)}>Cancel</Button>
+            <Button onClick={handleSubmitReview}>Submit Review</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
