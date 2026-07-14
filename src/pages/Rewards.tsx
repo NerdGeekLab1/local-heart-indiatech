@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useNavigate, Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   Flame, Gift, Calendar, MapPin, Star, Lock, CheckCircle, Trophy,
@@ -9,6 +10,7 @@ import { Progress } from "@/components/ui/progress";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/contexts/AuthContext";
 
 const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
@@ -46,9 +48,25 @@ const badges = [
 ];
 
 const Rewards = () => {
+  const { user, loading } = useAuth();
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<"streak" | "calendar" | "badges">("streak");
   const currentStreak = streakData.filter(s => s.completed).length;
   const progress = (currentStreak / 11) * 100;
+
+  useEffect(() => {
+    if (!loading && !user) {
+      navigate("/signup?next=/rewards", { replace: true });
+    }
+  }, [user, loading, navigate]);
+
+  if (loading || !user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -183,7 +201,12 @@ const Rewards = () => {
                       </div>
                     </div>
                     <p className="text-xs text-muted-foreground mb-3">{s.reason}</p>
-                    <Button size="sm" variant="outline" className="w-full text-xs rounded-lg group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => navigate(`/destination/${encodeURIComponent(s.dest)}`)}
+                      className="w-full text-xs rounded-lg group-hover:bg-primary group-hover:text-primary-foreground transition-colors"
+                    >
                       <Plane className="w-3 h-3 mr-1" /> Plan This Trip
                     </Button>
                   </motion.div>

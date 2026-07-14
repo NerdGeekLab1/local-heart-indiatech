@@ -15,6 +15,9 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { hosts, experiences, reviews } from "@/lib/data";
 import { useCurrency } from "@/contexts/CurrencyContext";
+import { useAuth } from "@/contexts/AuthContext";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
 
 const serviceIcons: Record<string, React.ElementType> = {
   Guide: Compass, Stay: Home, Transport: Car, Food: UtensilsCrossed,
@@ -39,6 +42,30 @@ const HostProfile = () => {
   const [lightboxIndex, setLightboxIndex] = useState(0);
   const [videoOpen, setVideoOpen] = useState(false);
   const [roomSliderIndex, setRoomSliderIndex] = useState<Record<string, number>>({});
+  const [reviewOpen, setReviewOpen] = useState(false);
+  const [reviewRating, setReviewRating] = useState(5);
+  const [reviewText, setReviewText] = useState("");
+  const { user, userRole } = useAuth();
+  const canReview = !!user && userRole === "traveler";
+
+  const handleSubmitReview = () => {
+    if (!user) {
+      toast({ title: "Please sign in as a traveler to post a review", variant: "destructive" });
+      return;
+    }
+    if (userRole !== "traveler") {
+      toast({ title: "Only travelers can post reviews", description: "Hosts and admins cannot review hosts.", variant: "destructive" });
+      return;
+    }
+    if (!reviewText.trim()) {
+      toast({ title: "Please write your review", variant: "destructive" });
+      return;
+    }
+    toast({ title: "Review submitted!", description: "Thanks for sharing your experience." });
+    setReviewOpen(false);
+    setReviewText("");
+    setReviewRating(5);
+  };
 
   const openLightbox = (images: string[], index: number) => {
     setLightboxImages(images);
@@ -718,6 +745,27 @@ const HostProfile = () => {
                   </div>
                 </div>
 
+                {/* Write Review CTA */}
+                <div className="rounded-2xl bg-card shadow-card p-5 flex items-center justify-between">
+                  <div>
+                    <p className="font-semibold text-foreground">Share your experience</p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {canReview
+                        ? "Post a review to help other travelers."
+                        : !user
+                          ? "Sign in as a traveler to post a review."
+                          : "Only travelers can post reviews."}
+                    </p>
+                  </div>
+                  <Button
+                    onClick={() => canReview ? setReviewOpen(true) : toast({ title: !user ? "Please sign in as a traveler" : "Only travelers can post reviews", variant: "destructive" })}
+                    disabled={!canReview}
+                    className="rounded-full"
+                  >
+                    Write a Review
+                  </Button>
+                </div>
+
                 {hostReviews.map(review => (
                   <motion.div key={review.id} initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
                     className="rounded-2xl bg-card shadow-card p-5">
@@ -765,6 +813,35 @@ const HostProfile = () => {
         videoUrl={host.introVideoUrl}
         title={`${host.name}'s Intro`}
       />
+
+      {/* Write Review Dialog */}
+      <Dialog open={reviewOpen} onOpenChange={setReviewOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Write a review for {host.name}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <p className="text-sm text-muted-foreground mb-2">Rating</p>
+              <div className="flex gap-1">
+                {[1, 2, 3, 4, 5].map(n => (
+                  <button key={n} type="button" onClick={() => setReviewRating(n)}>
+                    <Star className={`w-6 h-6 ${n <= reviewRating ? "fill-primary text-primary" : "text-muted"}`} />
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div>
+              <p className="text-sm text-muted-foreground mb-2">Your review</p>
+              <Textarea rows={4} value={reviewText} onChange={e => setReviewText(e.target.value)} placeholder="Share your experience..." />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setReviewOpen(false)}>Cancel</Button>
+            <Button onClick={handleSubmitReview}>Submit Review</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
