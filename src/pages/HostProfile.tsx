@@ -42,6 +42,30 @@ const HostProfile = () => {
   const [lightboxIndex, setLightboxIndex] = useState(0);
   const [videoOpen, setVideoOpen] = useState(false);
   const [roomSliderIndex, setRoomSliderIndex] = useState<Record<string, number>>({});
+  const [reviewOpen, setReviewOpen] = useState(false);
+  const [reviewRating, setReviewRating] = useState(5);
+  const [reviewText, setReviewText] = useState("");
+  const { user, userRole } = useAuth();
+  const canReview = !!user && userRole === "traveler";
+
+  const handleSubmitReview = () => {
+    if (!user) {
+      toast({ title: "Please sign in as a traveler to post a review", variant: "destructive" });
+      return;
+    }
+    if (userRole !== "traveler") {
+      toast({ title: "Only travelers can post reviews", description: "Hosts and admins cannot review hosts.", variant: "destructive" });
+      return;
+    }
+    if (!reviewText.trim()) {
+      toast({ title: "Please write your review", variant: "destructive" });
+      return;
+    }
+    toast({ title: "Review submitted!", description: "Thanks for sharing your experience." });
+    setReviewOpen(false);
+    setReviewText("");
+    setReviewRating(5);
+  };
 
   const openLightbox = (images: string[], index: number) => {
     setLightboxImages(images);
