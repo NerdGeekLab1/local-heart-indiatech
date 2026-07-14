@@ -15,6 +15,9 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { hosts, experiences, reviews } from "@/lib/data";
 import { useCurrency } from "@/contexts/CurrencyContext";
+import { useAuth } from "@/contexts/AuthContext";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
 
 const serviceIcons: Record<string, React.ElementType> = {
   Guide: Compass, Stay: Home, Transport: Car, Food: UtensilsCrossed,
