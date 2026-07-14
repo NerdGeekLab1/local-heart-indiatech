@@ -48,9 +48,25 @@ const badges = [
 ];
 
 const Rewards = () => {
+  const { user, loading } = useAuth();
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<"streak" | "calendar" | "badges">("streak");
   const currentStreak = streakData.filter(s => s.completed).length;
   const progress = (currentStreak / 11) * 100;
+
+  useEffect(() => {
+    if (!loading && !user) {
+      navigate("/signup?next=/rewards", { replace: true });
+    }
+  }, [user, loading, navigate]);
+
+  if (loading || !user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
