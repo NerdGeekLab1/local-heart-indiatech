@@ -745,6 +745,27 @@ const HostProfile = () => {
                   </div>
                 </div>
 
+                {/* Write Review CTA */}
+                <div className="rounded-2xl bg-card shadow-card p-5 flex items-center justify-between">
+                  <div>
+                    <p className="font-semibold text-foreground">Share your experience</p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {canReview
+                        ? "Post a review to help other travelers."
+                        : !user
+                          ? "Sign in as a traveler to post a review."
+                          : "Only travelers can post reviews."}
+                    </p>
+                  </div>
+                  <Button
+                    onClick={() => canReview ? setReviewOpen(true) : toast({ title: !user ? "Please sign in as a traveler" : "Only travelers can post reviews", variant: "destructive" })}
+                    disabled={!canReview}
+                    className="rounded-full"
+                  >
+                    Write a Review
+                  </Button>
+                </div>
+
                 {hostReviews.map(review => (
                   <motion.div key={review.id} initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
                     className="rounded-2xl bg-card shadow-card p-5">
