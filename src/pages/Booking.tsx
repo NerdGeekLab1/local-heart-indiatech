@@ -42,6 +42,7 @@ const Booking = () => {
   const host = hosts.find(h => h.id === id);
   const { user } = useAuth();
   const { toast } = useToast();
+  const { format: formatCurrency } = useCurrency();
   const navigate = useNavigate();
 
   const [step, setStep] = useState(1);
