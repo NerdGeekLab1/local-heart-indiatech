@@ -450,6 +450,12 @@ const ExperienceDetail = () => {
         </div>
       </div>
       <Footer />
+      <VideoModal
+        open={videoOpen}
+        onClose={() => setVideoOpen(false)}
+        videoUrl="https://www.youtube.com/embed/dQw4w9WgXcQ?autoplay=1"
+        title={exp.title}
+      />
     </div>
   );
 };
