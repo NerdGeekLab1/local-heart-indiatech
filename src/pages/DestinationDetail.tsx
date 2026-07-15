@@ -565,7 +565,7 @@ const DestinationDetail = () => {
               </Button>
             </Link>
             <Link to="/experiences">
-              <Button size="lg" variant="outline" className="rounded-full bg-primary-foreground text-primary border-2 border-primary-foreground hover:bg-primary-foreground/90 hover:text-primary px-8 font-semibold">
+              <Button size="lg" variant="outline" className="rounded-full bg-transparent border-2 border-primary-foreground text-primary-foreground hover:bg-primary-foreground hover:text-primary px-8 font-semibold">
                 Browse Experiences
               </Button>
             </Link>
