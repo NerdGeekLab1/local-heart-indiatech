@@ -16,6 +16,7 @@ import ChatPanel from "@/components/ChatPanel";
 import { hosts } from "@/lib/data";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
+import { useCurrency } from "@/contexts/CurrencyContext";
 
 const serviceOptions = [
   { key: "Guide", label: "Local Guide", desc: "Personalized tours & experiences", icon: "🧭", price: 40 },
@@ -41,6 +42,7 @@ const Booking = () => {
   const host = hosts.find(h => h.id === id);
   const { user } = useAuth();
   const { toast } = useToast();
+  const { format: formatCurrency } = useCurrency();
   const navigate = useNavigate();
 
   const [step, setStep] = useState(1);
@@ -163,7 +165,7 @@ const Booking = () => {
               {selectedSpecialRequests.length > 0 && (
                 <p className="text-sm"><strong>Special Requests:</strong> {selectedSpecialRequests.map(id => specialRequests.find(s => s.id === id)?.label).join(", ")}</p>
               )}
-              <p className="text-sm font-semibold"><strong>Total:</strong> ${total}</p>
+              <p className="text-sm font-semibold"><strong>Total:</strong> {formatCurrency(total)}</p>
             </div>
             <div className="mt-8 flex gap-3 justify-center flex-wrap">
               <Button variant="outline" className="rounded-full px-6" onClick={() => setChatOpen(true)}>
@@ -217,7 +219,7 @@ const Booking = () => {
                           <p className="font-semibold text-foreground">{s.label}</p>
                           <p className="text-sm text-muted-foreground">{s.desc}</p>
                         </div>
-                        <span className="text-lg font-bold text-primary">${s.price}<span className="text-xs font-normal text-muted-foreground">/day</span></span>
+                        <span className="text-lg font-bold text-primary">{formatCurrency(s.price)}<span className="text-xs font-normal text-muted-foreground">/day</span></span>
                         {selectedServices.includes(s.key) && (
                           <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center">
                             <Check className="w-4 h-4 text-primary-foreground" />
@@ -276,7 +278,7 @@ const Booking = () => {
               {step === 3 && (
                 <div>
                   <h2 className="text-2xl font-bold text-foreground">Special Requests</h2>
-                  <p className="mt-1 text-muted-foreground">Add extras to make your trip special (+$15 each)</p>
+                  <p className="mt-1 text-muted-foreground">Add extras to make your trip special (+{formatCurrency(15)} each)</p>
                   <div className="mt-6 grid grid-cols-2 sm:grid-cols-4 gap-3">
                     {specialRequests.map(sr => (
                       <button key={sr.id} onClick={() => toggleSpecialRequest(sr.id)}
@@ -341,24 +343,24 @@ const Booking = () => {
                   if (!opt) return null;
                   return (
                     <div key={s} className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">{opt.icon} {opt.label} (${opt.price} × {days}d × {guests})</span>
-                      <span className="text-foreground">${opt.price * days * guests}</span>
+                      <span className="text-muted-foreground">{opt.icon} {opt.label} ({formatCurrency(opt.price)} × {days}d × {guests})</span>
+                      <span className="text-foreground">{formatCurrency(opt.price * days * guests)}</span>
                     </div>
                   );
                 })}
                 {selectedSpecialRequests.length > 0 && (
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">✨ Special requests ({selectedSpecialRequests.length})</span>
-                    <span className="text-foreground">${specialRequestFee}</span>
+                    <span className="text-foreground">{formatCurrency(specialRequestFee)}</span>
                   </div>
                 )}
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Service fee</span>
-                  <span className="text-foreground">${serviceFee}</span>
+                  <span className="text-foreground">{formatCurrency(serviceFee)}</span>
                 </div>
                 <div className="flex justify-between text-sm font-semibold border-t border-border pt-2">
                   <span className="text-foreground">Total</span>
-                  <span className="text-foreground">${total}</span>
+                  <span className="text-foreground">{formatCurrency(total)}</span>
                 </div>
               </div>
 
