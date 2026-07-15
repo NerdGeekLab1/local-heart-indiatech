@@ -94,8 +94,10 @@ const ExperienceDetail = () => {
   const { id } = useParams();
   const { toast } = useToast();
   const { user } = useAuth();
+  const { format: formatCurrency } = useCurrency();
   const [liked, setLiked] = useState(false);
   const [dbStatus, setDbStatus] = useState<string | null>(null);
+  const [videoOpen, setVideoOpen] = useState(false);
   const exp = allExperiences.find(e => e.id === id);
 
   // If this id isn't in the static catalog (or even if it is), check DB for moderation status.
