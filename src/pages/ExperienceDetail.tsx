@@ -365,7 +365,7 @@ const ExperienceDetail = () => {
               <div className="sticky top-24 space-y-4">
                 <div className="rounded-2xl bg-card p-5 shadow-card">
                   <div className="flex items-baseline gap-1">
-                    <span className="text-3xl font-bold text-foreground">${exp.price}</span>
+                    <span className="text-3xl font-bold text-foreground">{formatCurrency(exp.price)}</span>
                     <span className="text-sm text-muted-foreground">/ person</span>
                   </div>
                   <p className="text-sm text-muted-foreground mt-1">{exp.duration}</p>
