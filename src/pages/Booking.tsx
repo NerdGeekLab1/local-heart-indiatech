@@ -165,7 +165,7 @@ const Booking = () => {
               {selectedSpecialRequests.length > 0 && (
                 <p className="text-sm"><strong>Special Requests:</strong> {selectedSpecialRequests.map(id => specialRequests.find(s => s.id === id)?.label).join(", ")}</p>
               )}
-              <p className="text-sm font-semibold"><strong>Total:</strong> ${total}</p>
+              <p className="text-sm font-semibold"><strong>Total:</strong> {formatCurrency(total)}</p>
             </div>
             <div className="mt-8 flex gap-3 justify-center flex-wrap">
               <Button variant="outline" className="rounded-full px-6" onClick={() => setChatOpen(true)}>
