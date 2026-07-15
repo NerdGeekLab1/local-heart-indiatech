@@ -16,6 +16,7 @@ import ChatPanel from "@/components/ChatPanel";
 import { hosts } from "@/lib/data";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
+import { useCurrency } from "@/contexts/CurrencyContext";
 
 const serviceOptions = [
   { key: "Guide", label: "Local Guide", desc: "Personalized tours & experiences", icon: "🧭", price: 40 },
