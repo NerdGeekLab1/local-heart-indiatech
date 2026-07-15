@@ -453,7 +453,7 @@ const ExperienceDetail = () => {
       <VideoModal
         open={videoOpen}
         onClose={() => setVideoOpen(false)}
-        videoUrl="https://www.youtube.com/embed/dQw4w9WgXcQ?autoplay=1"
+        videoUrl="https://www.youtube.com/embed/videoseries?list=PLbpi6ZahtOH7lwiQMPmVsFtdrHi2fWMOh&autoplay=1"
         title={exp.title}
       />
     </div>
