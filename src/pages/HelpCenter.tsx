@@ -40,15 +40,15 @@ const HelpCenter = () => {
         {/* Contact Cards */}
         <div className="mt-10 grid grid-cols-1 sm:grid-cols-3 gap-4">
           {[
-            { icon: MessageCircle, title: "Live Chat", desc: "Available 24/7", action: "Start Chat" },
-            { icon: Mail, title: "Email Us", desc: "support@travelista.com", action: "Send Email" },
-            { icon: Phone, title: "Call Us", desc: "+91 1800 123 4567", action: "Call Now" },
+            { icon: MessageCircle, title: "Live Chat", desc: "Available 24/7", action: "Start Chat", onClick: () => window.dispatchEvent(new Event("open-ai-chat")) },
+            { icon: Mail, title: "Email Us", desc: "support@travelista.com", action: "Send Email", onClick: () => { window.location.href = "mailto:support@travelista.com"; } },
+            { icon: Phone, title: "Call Us", desc: "+91 1800 123 4567", action: "Call Now", onClick: () => { window.location.href = "tel:+911800123456"; } },
           ].map(c => (
             <div key={c.title} className="rounded-lg bg-card p-5 shadow-card text-center">
               <c.icon className="w-6 h-6 text-primary mx-auto mb-2" />
               <h3 className="font-semibold text-foreground">{c.title}</h3>
               <p className="text-xs text-muted-foreground mt-1">{c.desc}</p>
-              <Button size="sm" variant="outline" className="mt-3 rounded-full text-xs">{c.action}</Button>
+              <Button size="sm" variant="outline" className="mt-3 rounded-full text-xs" onClick={c.onClick}>{c.action}</Button>
             </div>
           ))}
         </div>
