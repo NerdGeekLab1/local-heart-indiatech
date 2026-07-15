@@ -343,24 +343,24 @@ const Booking = () => {
                   if (!opt) return null;
                   return (
                     <div key={s} className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">{opt.icon} {opt.label} (${opt.price} × {days}d × {guests})</span>
-                      <span className="text-foreground">${opt.price * days * guests}</span>
+                      <span className="text-muted-foreground">{opt.icon} {opt.label} ({formatCurrency(opt.price)} × {days}d × {guests})</span>
+                      <span className="text-foreground">{formatCurrency(opt.price * days * guests)}</span>
                     </div>
                   );
                 })}
                 {selectedSpecialRequests.length > 0 && (
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">✨ Special requests ({selectedSpecialRequests.length})</span>
-                    <span className="text-foreground">${specialRequestFee}</span>
+                    <span className="text-foreground">{formatCurrency(specialRequestFee)}</span>
                   </div>
                 )}
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Service fee</span>
-                  <span className="text-foreground">${serviceFee}</span>
+                  <span className="text-foreground">{formatCurrency(serviceFee)}</span>
                 </div>
                 <div className="flex justify-between text-sm font-semibold border-t border-border pt-2">
                   <span className="text-foreground">Total</span>
-                  <span className="text-foreground">${total}</span>
+                  <span className="text-foreground">{formatCurrency(total)}</span>
                 </div>
               </div>
 
