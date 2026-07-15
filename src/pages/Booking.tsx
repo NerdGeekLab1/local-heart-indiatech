@@ -219,7 +219,7 @@ const Booking = () => {
                           <p className="font-semibold text-foreground">{s.label}</p>
                           <p className="text-sm text-muted-foreground">{s.desc}</p>
                         </div>
-                        <span className="text-lg font-bold text-primary">${s.price}<span className="text-xs font-normal text-muted-foreground">/day</span></span>
+                        <span className="text-lg font-bold text-primary">{formatCurrency(s.price)}<span className="text-xs font-normal text-muted-foreground">/day</span></span>
                         {selectedServices.includes(s.key) && (
                           <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center">
                             <Check className="w-4 h-4 text-primary-foreground" />
