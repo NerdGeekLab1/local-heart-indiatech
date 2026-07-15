@@ -8,7 +8,9 @@ import { experiences, hosts, reviews } from "@/lib/data";
 import { useEffect, useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
+import { useCurrency } from "@/contexts/CurrencyContext";
 import { supabase } from "@/integrations/supabase/client";
+import VideoModal from "@/components/VideoModal";
 
 // Bike experiences from Experiences page
 const bikeExperiences = [
