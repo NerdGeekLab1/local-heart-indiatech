@@ -278,7 +278,7 @@ const Booking = () => {
               {step === 3 && (
                 <div>
                   <h2 className="text-2xl font-bold text-foreground">Special Requests</h2>
-                  <p className="mt-1 text-muted-foreground">Add extras to make your trip special (+$15 each)</p>
+                  <p className="mt-1 text-muted-foreground">Add extras to make your trip special (+{formatCurrency(15)} each)</p>
                   <div className="mt-6 grid grid-cols-2 sm:grid-cols-4 gap-3">
                     {specialRequests.map(sr => (
                       <button key={sr.id} onClick={() => toggleSpecialRequest(sr.id)}
