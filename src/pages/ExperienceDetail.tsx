@@ -320,7 +320,12 @@ const ExperienceDetail = () => {
                 <h2 className="text-xl font-bold text-foreground mb-3">📹 Past Experience Videos</h2>
                 <div className="grid grid-cols-2 gap-3">
                   {[1, 2].map(i => (
-                    <div key={i} className="relative aspect-video rounded-lg overflow-hidden bg-secondary group cursor-pointer">
+                    <button
+                      key={i}
+                      type="button"
+                      onClick={() => setVideoOpen(true)}
+                      className="relative aspect-video rounded-lg overflow-hidden bg-secondary group cursor-pointer text-left"
+                    >
                       <img src={exp.image} alt="video" className="w-full h-full object-cover opacity-80" />
                       <div className="absolute inset-0 flex items-center justify-center">
                         <div className="w-14 h-14 rounded-full bg-primary/80 flex items-center justify-center backdrop-blur-sm group-hover:scale-110 transition-transform">
@@ -330,7 +335,7 @@ const ExperienceDetail = () => {
                       <div className="absolute bottom-2 left-2 text-xs font-medium text-primary-foreground bg-foreground/40 backdrop-blur-sm px-2 py-0.5 rounded">
                         {exp.title} • Clip {i}
                       </div>
-                    </div>
+                    </button>
                   ))}
                 </div>
               </div>
