@@ -685,7 +685,7 @@ const TravelerDashboard = () => {
             </div>
             <div className="rounded-lg bg-card p-5 shadow-card space-y-3">
               <h3 className="font-bold text-foreground flex items-center gap-2"><Shield className="w-4 h-4 text-primary" /> Security</h3>
-              <Button variant="outline" size="sm" className="rounded-full text-xs" onClick={() => toast({ title: "Password reset sent" })}>Change Password</Button>
+              <ChangePasswordDialog />
             </div>
             <div className="rounded-lg bg-card p-5 shadow-card space-y-3">
               <h3 className="font-bold text-foreground flex items-center gap-2"><CreditCard className="w-4 h-4 text-primary" /> Payment</h3>
