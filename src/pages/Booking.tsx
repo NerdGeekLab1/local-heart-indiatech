@@ -379,9 +379,26 @@ const Booking = () => {
               </div>
 
               {/* Chat button */}
-              <Button variant="outline" className="w-full rounded-full gap-2" onClick={() => setChatOpen(true)}>
+              <Button
+                variant="outline"
+                className="w-full rounded-full gap-2"
+                onClick={() => {
+                  if (!isRealHost) {
+                    toast({ title: "Demo host", description: "Chat is available with verified hosts only." });
+                    return;
+                  }
+                  setChatOpen(true);
+                }}
+                disabled={!isRealHost}
+                title={isRealHost ? undefined : "Chat is available with verified hosts only"}
+              >
                 <MessageCircle className="w-4 h-4" /> Chat with {host.name}
               </Button>
+              {!isRealHost && (
+                <p className="text-[11px] text-muted-foreground text-center">
+                  This is a sample host — chat & bookings work with verified hosts.
+                </p>
+              )}
             </div>
           </div>
         </div>
