@@ -1,3 +1,4 @@
+import { lazy, Suspense } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -5,59 +6,67 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { CurrencyProvider } from "@/contexts/CurrencyContext";
+import MobileBottomNav from "@/components/MobileBottomNav.tsx";
+import AIChatRecommender from "@/components/AIChatRecommender.tsx";
+import FeatureGate from "@/components/FeatureGate.tsx";
+import HeaderScripts from "@/components/HeaderScripts.tsx";
+import OnboardingChecklist from "@/components/OnboardingChecklist.tsx";
+import AdminGuard from "@/components/AdminGuard.tsx";
 import Index from "./pages/Index.tsx";
-import Explore from "./pages/Explore.tsx";
-import Experiences from "./pages/Experiences.tsx";
-import ExperienceDetail from "./pages/ExperienceDetail.tsx";
-import HostProfile from "./pages/HostProfile.tsx";
-import Booking from "./pages/Booking.tsx";
-import BecomeHost from "./pages/BecomeHost.tsx";
-import Signup from "./pages/Signup.tsx";
-import Destinations from "./pages/Destinations.tsx";
-import DestinationDetail from "./pages/DestinationDetail.tsx";
-import Community from "./pages/Community.tsx";
-import Resources from "./pages/Resources.tsx";
-import ResourceGuide from "./pages/ResourceGuide.tsx";
-import TravelerDashboard from "./pages/dashboard/TravelerDashboard.tsx";
-import HostDashboard from "./pages/dashboard/HostDashboard.tsx";
-import AdminDashboard from "./pages/dashboard/AdminDashboard.tsx";
-import HelpCenter from "./pages/HelpCenter.tsx";
-import Safety from "./pages/Safety.tsx";
-import Terms from "./pages/Terms.tsx";
-import Docs from "./pages/Docs.tsx";
-import HostTrip from "./pages/HostTrip.tsx";
-import Grievances from "./pages/Grievances.tsx";
-import BikeToursDetail from "./pages/BikeToursDetail.tsx";
-import Trips from "./pages/Trips.tsx";
-import TripDetail from "./pages/TripDetail.tsx";
-import TripLeaderProfile from "./pages/TripLeaderProfile.tsx";
-import BetaWanderers from "./pages/BetaWanderers.tsx";
-import BetaWandererApply from "./pages/BetaWandererApply.tsx";
-import BetaWandererProfile from "./pages/BetaWandererProfile.tsx";
-import Leaderboard from "./pages/Leaderboard.tsx";
-import Rewards from "./pages/Rewards.tsx";
-import BlogDetail from "./pages/BlogDetail.tsx";
-import Membership from "./pages/Membership.tsx";
-import AuthCallback from "./pages/AuthCallback.tsx";
-import Referrals from "./pages/Referrals.tsx";
-import HostEligibility from "./pages/HostEligibility.tsx";
-import BetaWaitlist from "./pages/BetaWaitlist.tsx";
-import BetaWaitlistConfirm from "./pages/BetaWaitlistConfirm.tsx";
-import FeatureFlagsAdmin from "./pages/admin/FeatureFlagsAdmin.tsx";
-import WaitlistAdmin from "./pages/admin/WaitlistAdmin.tsx";
-import AuditLogAdmin from "./pages/admin/AuditLogAdmin.tsx";
-import FeaturesHub from "./pages/FeaturesHub.tsx";
-import AdminGuard from "./components/AdminGuard.tsx";
-import Feed from "./pages/Feed.tsx";
-import TravelerProfile from "./pages/TravelerProfile.tsx";
-import MobileBottomNav from "./components/MobileBottomNav.tsx";
-import AIChatRecommender from "./components/AIChatRecommender.tsx";
-import FeatureGate from "./components/FeatureGate.tsx";
-import HeaderScripts from "./components/HeaderScripts.tsx";
-import OnboardingChecklist from "./components/OnboardingChecklist.tsx";
-import NotFound from "./pages/NotFound.tsx";
+
+// Lazy-loaded route components for code-splitting / perf
+const Explore = lazy(() => import("./pages/Explore.tsx"));
+const Experiences = lazy(() => import("./pages/Experiences.tsx"));
+const ExperienceDetail = lazy(() => import("./pages/ExperienceDetail.tsx"));
+const HostProfile = lazy(() => import("./pages/HostProfile.tsx"));
+const Booking = lazy(() => import("./pages/Booking.tsx"));
+const BecomeHost = lazy(() => import("./pages/BecomeHost.tsx"));
+const Signup = lazy(() => import("./pages/Signup.tsx"));
+const Destinations = lazy(() => import("./pages/Destinations.tsx"));
+const DestinationDetail = lazy(() => import("./pages/DestinationDetail.tsx"));
+const Community = lazy(() => import("./pages/Community.tsx"));
+const Resources = lazy(() => import("./pages/Resources.tsx"));
+const ResourceGuide = lazy(() => import("./pages/ResourceGuide.tsx"));
+const TravelerDashboard = lazy(() => import("./pages/dashboard/TravelerDashboard.tsx"));
+const HostDashboard = lazy(() => import("./pages/dashboard/HostDashboard.tsx"));
+const AdminDashboard = lazy(() => import("./pages/dashboard/AdminDashboard.tsx"));
+const HelpCenter = lazy(() => import("./pages/HelpCenter.tsx"));
+const Safety = lazy(() => import("./pages/Safety.tsx"));
+const Terms = lazy(() => import("./pages/Terms.tsx"));
+const Docs = lazy(() => import("./pages/Docs.tsx"));
+const HostTrip = lazy(() => import("./pages/HostTrip.tsx"));
+const Grievances = lazy(() => import("./pages/Grievances.tsx"));
+const BikeToursDetail = lazy(() => import("./pages/BikeToursDetail.tsx"));
+const Trips = lazy(() => import("./pages/Trips.tsx"));
+const TripDetail = lazy(() => import("./pages/TripDetail.tsx"));
+const TripLeaderProfile = lazy(() => import("./pages/TripLeaderProfile.tsx"));
+const BetaWanderers = lazy(() => import("./pages/BetaWanderers.tsx"));
+const BetaWandererApply = lazy(() => import("./pages/BetaWandererApply.tsx"));
+const BetaWandererProfile = lazy(() => import("./pages/BetaWandererProfile.tsx"));
+const Leaderboard = lazy(() => import("./pages/Leaderboard.tsx"));
+const Rewards = lazy(() => import("./pages/Rewards.tsx"));
+const BlogDetail = lazy(() => import("./pages/BlogDetail.tsx"));
+const Membership = lazy(() => import("./pages/Membership.tsx"));
+const AuthCallback = lazy(() => import("./pages/AuthCallback.tsx"));
+const Referrals = lazy(() => import("./pages/Referrals.tsx"));
+const HostEligibility = lazy(() => import("./pages/HostEligibility.tsx"));
+const BetaWaitlist = lazy(() => import("./pages/BetaWaitlist.tsx"));
+const BetaWaitlistConfirm = lazy(() => import("./pages/BetaWaitlistConfirm.tsx"));
+const FeatureFlagsAdmin = lazy(() => import("./pages/admin/FeatureFlagsAdmin.tsx"));
+const WaitlistAdmin = lazy(() => import("./pages/admin/WaitlistAdmin.tsx"));
+const AuditLogAdmin = lazy(() => import("./pages/admin/AuditLogAdmin.tsx"));
+const FeaturesHub = lazy(() => import("./pages/FeaturesHub.tsx"));
+const Feed = lazy(() => import("./pages/Feed.tsx"));
+const TravelerProfile = lazy(() => import("./pages/TravelerProfile.tsx"));
+const NotFound = lazy(() => import("./pages/NotFound.tsx"));
 
 const queryClient = new QueryClient();
+
+const RouteFallback = () => (
+  <div className="min-h-screen flex items-center justify-center bg-background">
+    <div className="w-10 h-10 rounded-full border-2 border-primary/30 border-t-primary animate-spin" />
+  </div>
+);
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -68,6 +77,7 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <HeaderScripts />
+          <Suspense fallback={<RouteFallback />}>
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/explore" element={<Explore />} />
@@ -115,6 +125,7 @@ const App = () => (
             <Route path="/traveler/:id" element={<TravelerProfile />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
+          </Suspense>
           <MobileBottomNav />
           <FeatureGate flag="ai_concierge"><AIChatRecommender /></FeatureGate>
           <OnboardingChecklist />

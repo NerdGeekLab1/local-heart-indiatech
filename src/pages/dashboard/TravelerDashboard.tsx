@@ -22,6 +22,9 @@ import StampCollection from "@/components/StampCollection";
 import { Award } from "lucide-react";
 import { Dialog, DialogTrigger } from "@/components/ui/dialog";
 import { CreatePostDialog } from "@/components/CreatePostDialog";
+import ChangePasswordDialog from "@/components/ChangePasswordDialog";
+import PhoneInput from "@/components/PhoneInput";
+import { isValidLocalPhone, splitPhone } from "@/lib/phone";
 
 const statusColors: Record<string, string> = {
   pending: "bg-primary/10 text-primary", confirmed: "bg-accent/10 text-accent",
@@ -609,8 +612,15 @@ const TravelerDashboard = () => {
                   currentUrl={dbProfile?.avatar_url}
                   onUpload={async (url) => {
                     if (user) {
-                      await supabase.from("profiles").update({ avatar_url: url }).eq("id", user.id);
-                      setDbProfile((p: any) => ({ ...p, avatar_url: url }));
+                      const { error } = await supabase.from("profiles").upsert(
+                        { id: user.id, avatar_url: url },
+                        { onConflict: "id" }
+                      );
+                      if (error) {
+                        toast({ title: "Couldn't save avatar", description: error.message, variant: "destructive" });
+                        return;
+                      }
+                      setDbProfile((p: any) => ({ ...(p || {}), avatar_url: url }));
                     }
                   }}
                   className="w-20 h-20"
@@ -624,21 +634,34 @@ const TravelerDashboard = () => {
               <div className="space-y-3">
                 <div><label className="text-sm font-medium text-foreground">Name</label><Input value={profile.name} onChange={e => setProfile(p => ({ ...p, name: e.target.value }))} /></div>
                 <div><label className="text-sm font-medium text-foreground">Email</label><Input type="email" value={profile.email} onChange={e => setProfile(p => ({ ...p, email: e.target.value }))} /></div>
-                <div><label className="text-sm font-medium text-foreground">Phone</label><Input value={profile.phone} onChange={e => setProfile(p => ({ ...p, phone: e.target.value }))} /></div>
+                <div>
+                  <label className="text-sm font-medium text-foreground">Phone</label>
+                  <PhoneInput value={profile.phone} onChange={(val) => setProfile(p => ({ ...p, phone: val }))} showError />
+                </div>
                 <div><label className="text-sm font-medium text-foreground">Bio</label>
                   <textarea className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm min-h-[80px]"
                     value={profile.bio} onChange={e => setProfile(p => ({ ...p, bio: e.target.value }))} /></div>
               </div>
               <Button size="sm" className="rounded-full gap-2" onClick={async () => {
                 if (!user) return;
+                const { number } = splitPhone(profile.phone);
+                if (number && !isValidLocalPhone(number)) {
+                  toast({ title: "Invalid phone", description: "Enter a 10-digit phone number", variant: "destructive" });
+                  return;
+                }
                 const names = profile.name.split(" ");
-                await supabase.from("profiles").update({
+                const { error } = await supabase.from("profiles").upsert({
+                  id: user.id,
                   first_name: names[0] || "",
                   last_name: names.slice(1).join(" ") || "",
                   email: profile.email,
                   phone: profile.phone,
                   bio: profile.bio,
-                }).eq("id", user.id);
+                }, { onConflict: "id" });
+                if (error) {
+                  toast({ title: "Couldn't save profile", description: error.message, variant: "destructive" });
+                  return;
+                }
                 toast({ title: "Profile saved! ✅" });
               }}><Save className="w-4 h-4" /> Save</Button>
             </div>
@@ -662,7 +685,7 @@ const TravelerDashboard = () => {
             </div>
             <div className="rounded-lg bg-card p-5 shadow-card space-y-3">
               <h3 className="font-bold text-foreground flex items-center gap-2"><Shield className="w-4 h-4 text-primary" /> Security</h3>
-              <Button variant="outline" size="sm" className="rounded-full text-xs" onClick={() => toast({ title: "Password reset sent" })}>Change Password</Button>
+              <ChangePasswordDialog />
             </div>
             <div className="rounded-lg bg-card p-5 shadow-card space-y-3">
               <h3 className="font-bold text-foreground flex items-center gap-2"><CreditCard className="w-4 h-4 text-primary" /> Payment</h3>

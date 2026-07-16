@@ -36,6 +36,8 @@ const specialRequests = [
   { id: "photography", label: "Photography", emoji: "📸" },
 ];
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 const Booking = () => {
   const { id } = useParams();
   const [searchParams] = useSearchParams();
@@ -44,6 +46,8 @@ const Booking = () => {
   const { toast } = useToast();
   const { format: formatCurrency } = useCurrency();
   const navigate = useNavigate();
+
+  const isRealHost = !!id && UUID_RE.test(id);
 
   const [step, setStep] = useState(1);
   const [selectedServices, setSelectedServices] = useState<string[]>(
@@ -118,6 +122,16 @@ const Booking = () => {
 
   const handleSubmit = async () => {
     if (!user || !startDate || !endDate) return;
+    // Demo hosts (from static data) can't be booked in the DB – their IDs aren't UUIDs.
+    if (!isRealHost) {
+      toast({
+        title: "Demo host — booking not available",
+        description: "This is a sample host profile. Try booking a verified host from Explore.",
+        variant: "destructive",
+      });
+      setSubmitted(true);
+      return;
+    }
     const { error } = await supabase.from("bookings").insert({
       traveler_id: user.id,
       host_id: host.id,
@@ -176,7 +190,7 @@ const Booking = () => {
           </motion.div>
         </div>
         <Footer />
-        <ChatPanel receiverId={host.id} receiverName={host.name} receiverImage={host.image} isOpen={chatOpen} onClose={() => setChatOpen(false)} />
+        {isRealHost && <ChatPanel receiverId={host.id} receiverName={host.name} receiverImage={host.image} isOpen={chatOpen} onClose={() => setChatOpen(false)} />}
       </div>
     );
   }
@@ -365,15 +379,32 @@ const Booking = () => {
               </div>
 
               {/* Chat button */}
-              <Button variant="outline" className="w-full rounded-full gap-2" onClick={() => setChatOpen(true)}>
+              <Button
+                variant="outline"
+                className="w-full rounded-full gap-2"
+                onClick={() => {
+                  if (!isRealHost) {
+                    toast({ title: "Demo host", description: "Chat is available with verified hosts only." });
+                    return;
+                  }
+                  setChatOpen(true);
+                }}
+                disabled={!isRealHost}
+                title={isRealHost ? undefined : "Chat is available with verified hosts only"}
+              >
                 <MessageCircle className="w-4 h-4" /> Chat with {host.name}
               </Button>
+              {!isRealHost && (
+                <p className="text-[11px] text-muted-foreground text-center">
+                  This is a sample host — chat & bookings work with verified hosts.
+                </p>
+              )}
             </div>
           </div>
         </div>
       </div>
       <Footer />
-      <ChatPanel receiverId={host.id} receiverName={host.name} receiverImage={host.image} isOpen={chatOpen} onClose={() => setChatOpen(false)} />
+      {isRealHost && <ChatPanel receiverId={host.id} receiverName={host.name} receiverImage={host.image} isOpen={chatOpen} onClose={() => setChatOpen(false)} />}
     </div>
   );
 };
