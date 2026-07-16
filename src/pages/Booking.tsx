@@ -190,7 +190,7 @@ const Booking = () => {
           </motion.div>
         </div>
         <Footer />
-        <ChatPanel receiverId={host.id} receiverName={host.name} receiverImage={host.image} isOpen={chatOpen} onClose={() => setChatOpen(false)} />
+        {isRealHost && <ChatPanel receiverId={host.id} receiverName={host.name} receiverImage={host.image} isOpen={chatOpen} onClose={() => setChatOpen(false)} />}
       </div>
     );
   }
