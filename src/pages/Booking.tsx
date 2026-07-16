@@ -36,6 +36,8 @@ const specialRequests = [
   { id: "photography", label: "Photography", emoji: "📸" },
 ];
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 const Booking = () => {
   const { id } = useParams();
   const [searchParams] = useSearchParams();
@@ -44,6 +46,8 @@ const Booking = () => {
   const { toast } = useToast();
   const { format: formatCurrency } = useCurrency();
   const navigate = useNavigate();
+
+  const isRealHost = !!id && UUID_RE.test(id);
 
   const [step, setStep] = useState(1);
   const [selectedServices, setSelectedServices] = useState<string[]>(
@@ -118,6 +122,16 @@ const Booking = () => {
 
   const handleSubmit = async () => {
     if (!user || !startDate || !endDate) return;
+    // Demo hosts (from static data) can't be booked in the DB – their IDs aren't UUIDs.
+    if (!isRealHost) {
+      toast({
+        title: "Demo host — booking not available",
+        description: "This is a sample host profile. Try booking a verified host from Explore.",
+        variant: "destructive",
+      });
+      setSubmitted(true);
+      return;
+    }
     const { error } = await supabase.from("bookings").insert({
       traveler_id: user.id,
       host_id: host.id,
