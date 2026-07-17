@@ -22,6 +22,7 @@ const HostProfile = lazy(() => import("./pages/HostProfile.tsx"));
 const Booking = lazy(() => import("./pages/Booking.tsx"));
 const BecomeHost = lazy(() => import("./pages/BecomeHost.tsx"));
 const Signup = lazy(() => import("./pages/Signup.tsx"));
+const AdminLogin = lazy(() => import("./pages/AdminLogin.tsx"));
 const Destinations = lazy(() => import("./pages/Destinations.tsx"));
 const DestinationDetail = lazy(() => import("./pages/DestinationDetail.tsx"));
 const Community = lazy(() => import("./pages/Community.tsx"));
@@ -87,6 +88,7 @@ const App = () => (
             <Route path="/book/:id" element={<Booking />} />
             <Route path="/become-host" element={<BecomeHost />} />
             <Route path="/signup" element={<Signup />} />
+            <Route path="/admin-login" element={<AdminLogin />} />
             <Route path="/destinations" element={<Destinations />} />
             <Route path="/destination/:name" element={<DestinationDetail />} />
             <Route path="/community" element={<Community />} />
