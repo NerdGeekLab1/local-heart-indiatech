@@ -668,12 +668,22 @@ const TravelerDashboard = () => {
               }}><Save className="w-4 h-4" /> Save</Button>
             </div>
             <div className="rounded-lg bg-card p-5 shadow-card space-y-4">
-              <h3 className="font-bold text-foreground flex items-center gap-2"><Globe className="w-4 h-4 text-primary" /> Social</h3>
+              <h3 className="font-bold text-foreground flex items-center gap-2"><Globe className="w-4 h-4 text-primary" /> Social Links</h3>
               <div className="space-y-3">
-                <div className="flex items-center gap-2"><Instagram className="w-4 h-4 text-muted-foreground" /><Input placeholder="Instagram" value={socialMedia.instagram} onChange={e => setSocialMedia(p => ({ ...p, instagram: e.target.value }))} /></div>
+                <div className="flex items-center gap-2"><Instagram className="w-4 h-4 text-muted-foreground" /><Input placeholder="Instagram username or URL" value={socialMedia.instagram} onChange={e => setSocialMedia(p => ({ ...p, instagram: e.target.value }))} /></div>
                 <div className="flex items-center gap-2"><Facebook className="w-4 h-4 text-muted-foreground" /><Input placeholder="Facebook" value={socialMedia.facebook} onChange={e => setSocialMedia(p => ({ ...p, facebook: e.target.value }))} /></div>
+                <div className="flex items-center gap-2"><Twitter className="w-4 h-4 text-muted-foreground" /><Input placeholder="X / Twitter" value={socialMedia.twitter} onChange={e => setSocialMedia(p => ({ ...p, twitter: e.target.value }))} /></div>
+                <div className="flex items-center gap-2"><Video className="w-4 h-4 text-muted-foreground" /><Input placeholder="YouTube channel URL" value={socialMedia.youtube} onChange={e => setSocialMedia(p => ({ ...p, youtube: e.target.value }))} /></div>
+                <div className="flex items-center gap-2"><span className="text-xs w-4 text-center">👻</span><Input placeholder="Snapchat username" value={socialMedia.snapchat} onChange={e => setSocialMedia(p => ({ ...p, snapchat: e.target.value }))} /></div>
+                <div className="flex items-center gap-2"><span className="text-xs w-4 text-center">🎵</span><Input placeholder="TikTok username" value={socialMedia.tiktok} onChange={e => setSocialMedia(p => ({ ...p, tiktok: e.target.value }))} /></div>
+                <div className="flex items-center gap-2"><Globe className="w-4 h-4 text-muted-foreground" /><Input placeholder="Website" value={socialMedia.website} onChange={e => setSocialMedia(p => ({ ...p, website: e.target.value }))} /></div>
               </div>
-              <Button size="sm" className="rounded-full gap-2" onClick={() => toast({ title: "Saved!" })}><Save className="w-4 h-4" /> Save</Button>
+              <Button size="sm" className="rounded-full gap-2" onClick={async () => {
+                if (!user) return;
+                const { error } = await supabase.from("profiles").upsert({ id: user.id, social_links: socialMedia as any }, { onConflict: "id" });
+                if (error) { toast({ title: "Couldn't save socials", description: error.message, variant: "destructive" }); return; }
+                toast({ title: "Social links saved! ✅" });
+              }}><Save className="w-4 h-4" /> Save</Button>
             </div>
             <div className="rounded-lg bg-card p-5 shadow-card space-y-3">
               <h3 className="font-bold text-foreground flex items-center gap-2"><Bell className="w-4 h-4 text-primary" /> Notifications</h3>
