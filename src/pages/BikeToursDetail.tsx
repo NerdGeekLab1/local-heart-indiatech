@@ -12,9 +12,9 @@ import Footer from "@/components/Footer";
 const bikeRoutes = [
   {
     id: "ladakh", name: "Leh-Ladakh Expedition", tagline: "Ride the Roof of the World",
-    image: "https://images.unsplash.com/photo-1558618666-fcd25c85f82e?w=800&q=80",
+    image: "https://images.unsplash.com/photo-1449426468159-d96dbf08f19f?w=800&q=80",
     gallery: [
-      "https://images.unsplash.com/photo-1558618666-fcd25c85f82e?w=600&q=80",
+      "https://images.unsplash.com/photo-1449426468159-d96dbf08f19f?w=600&q=80",
       "https://images.unsplash.com/photo-1506929562872-bb421503ef21?w=600&q=80",
       "https://images.unsplash.com/photo-1477587458883-47145ed94245?w=600&q=80",
     ],
@@ -32,7 +32,7 @@ const bikeRoutes = [
     image: "https://images.unsplash.com/photo-1477587458883-47145ed94245?w=800&q=80",
     gallery: [
       "https://images.unsplash.com/photo-1477587458883-47145ed94245?w=600&q=80",
-      "https://images.unsplash.com/photo-1558618666-fcd25c85f82e?w=600&q=80",
+      "https://images.unsplash.com/photo-1449426468159-d96dbf08f19f?w=600&q=80",
     ],
     difficulty: "Moderate", duration: "5 Days", distance: "800 km", elevation: "3,200 ft",
     price: 280, rating: 4.9, reviewCount: 19, maxRiders: 12,
