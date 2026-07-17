@@ -57,6 +57,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
 
       try {
+        setUserRole(null);
         await fetchRole(nextSession.user.id);
       } finally {
         if (mounted) setLoading(false);
@@ -70,6 +71,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         // Only show loading on real sign-in / initial hydrate; skip token refreshes to avoid flicker
         const isFreshAuth = event === "SIGNED_IN" || event === "INITIAL_SESSION" || event === "USER_UPDATED";
         if (isFreshAuth) setLoading(true);
+        if (isFreshAuth) setUserRole(null);
         setTimeout(async () => {
           try {
             await fetchRole(session.user.id);

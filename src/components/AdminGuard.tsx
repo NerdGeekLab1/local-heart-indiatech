@@ -16,7 +16,7 @@ export default function AdminGuard({ children }: AdminGuardProps) {
   const { user, userRole, loading } = useAuth();
   const location = useLocation();
 
-  if (loading) {
+  if (loading || (user && userRole === null)) {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
