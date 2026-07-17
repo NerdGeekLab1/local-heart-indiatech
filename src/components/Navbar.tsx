@@ -2,7 +2,7 @@ import { useState, lazy, Suspense } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 
 const GlobalSearch = lazy(() => import("@/components/GlobalSearch"));
-import { Search, Menu, X, Compass, User, LogOut, Settings, LayoutDashboard, HelpCircle, FileText, ChevronDown, Bell } from "lucide-react";
+import { Search, Menu, X, Compass, User, LogOut, Settings, LayoutDashboard, HelpCircle, FileText, ChevronDown, Heart, Receipt, MessageCircle, Star, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
@@ -134,6 +134,25 @@ const Navbar = () => {
                     <DropdownMenuItem onClick={() => navigate(`${dashboardPath}?tab=overview`)} className="cursor-pointer">
                       <User className="mr-2 h-4 w-4" /> My Profile
                     </DropdownMenuItem>
+                    {userRole !== "admin" && (
+                      <>
+                        <DropdownMenuItem onClick={() => navigate(`${dashboardPath}?tab=saved`)} className="cursor-pointer">
+                          <Heart className="mr-2 h-4 w-4" /> Saved
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => navigate(`${dashboardPath}?tab=invoices`)} className="cursor-pointer">
+                          <Receipt className="mr-2 h-4 w-4" /> Invoices
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => navigate(`${dashboardPath}?tab=messages`)} className="cursor-pointer">
+                          <MessageCircle className="mr-2 h-4 w-4" /> Messages
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => navigate(`${dashboardPath}?tab=reviews`)} className="cursor-pointer">
+                          <Star className="mr-2 h-4 w-4" /> Reviews
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => navigate(`${dashboardPath}?tab=grievances`)} className="cursor-pointer">
+                          <AlertTriangle className="mr-2 h-4 w-4" /> Grievances
+                        </DropdownMenuItem>
+                      </>
+                    )}
                     <DropdownMenuItem onClick={() => navigate(`${dashboardPath}?tab=settings`)} className="cursor-pointer">
                       <Settings className="mr-2 h-4 w-4" /> Settings
                     </DropdownMenuItem>
@@ -180,6 +199,11 @@ const Navbar = () => {
                   <DropdownMenuLabel className="font-normal text-xs text-muted-foreground">{user.email}</DropdownMenuLabel>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={() => navigate(dashboardPath)}><LayoutDashboard className="mr-2 h-4 w-4" /> Dashboard</DropdownMenuItem>
+                  {userRole !== "admin" && <DropdownMenuItem onClick={() => navigate(`${dashboardPath}?tab=saved`)}><Heart className="mr-2 h-4 w-4" /> Saved</DropdownMenuItem>}
+                  {userRole !== "admin" && <DropdownMenuItem onClick={() => navigate(`${dashboardPath}?tab=invoices`)}><Receipt className="mr-2 h-4 w-4" /> Invoices</DropdownMenuItem>}
+                  {userRole !== "admin" && <DropdownMenuItem onClick={() => navigate(`${dashboardPath}?tab=messages`)}><MessageCircle className="mr-2 h-4 w-4" /> Messages</DropdownMenuItem>}
+                  {userRole !== "admin" && <DropdownMenuItem onClick={() => navigate(`${dashboardPath}?tab=reviews`)}><Star className="mr-2 h-4 w-4" /> Reviews</DropdownMenuItem>}
+                  {userRole !== "admin" && <DropdownMenuItem onClick={() => navigate(`${dashboardPath}?tab=grievances`)}><AlertTriangle className="mr-2 h-4 w-4" /> Grievances</DropdownMenuItem>}
                   <DropdownMenuItem onClick={() => navigate("/help")}><HelpCircle className="mr-2 h-4 w-4" /> Help</DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={handleSignOut} className="text-destructive focus:text-destructive"><LogOut className="mr-2 h-4 w-4" /> Sign Out</DropdownMenuItem>
