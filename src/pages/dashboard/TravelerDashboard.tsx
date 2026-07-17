@@ -103,6 +103,8 @@ const TravelerDashboard = () => {
       if (prof) {
         setDbProfile(prof);
         setProfile(p => ({ ...p, name: `${prof.first_name} ${prof.last_name || ""}`.trim(), email: prof.email || p.email, phone: prof.phone || p.phone, bio: prof.bio || p.bio }));
+        const sl = (prof.social_links || {}) as Record<string, string>;
+        setSocialMedia(s => ({ ...s, ...sl }));
       }
     });
     loadPosts();
