@@ -53,7 +53,7 @@ const TravelerDashboard = () => {
     name: "Alex Traveler", email: "alex@example.com", phone: "+1 555-0123", bio: "Love exploring!",
     currency: "USD", language: "English",
   });
-  const [socialMedia, setSocialMedia] = useLocalStorage("traveler_social_media", { instagram: "", facebook: "", twitter: "", website: "" });
+  const [socialMedia, setSocialMedia] = useState({ instagram: "", facebook: "", twitter: "", youtube: "", snapchat: "", tiktok: "", website: "" });
   const [notifSettings, setNotifSettings] = useLocalStorage("traveler_notifications", { bookings: true, messages: true, deals: true, reviews: true });
   const [savedHostIds, setSavedHostIds] = useLocalStorage<string[]>("traveler_saved_hosts", hosts.slice(0, 4).map(h => h.id));
   const [reviewingBooking, setReviewingBooking] = useState<string | null>(null);
