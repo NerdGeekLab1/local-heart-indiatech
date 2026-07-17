@@ -39,14 +39,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       setSession(session);
       setUser(session?.user ?? null);
       if (session?.user) {
-        setLoading(true);
+        // Only show loading on real sign-in / initial hydrate; skip token refreshes to avoid flicker
+        const isFreshAuth = event === "SIGNED_IN" || event === "INITIAL_SESSION" || event === "USER_UPDATED";
+        if (isFreshAuth) setLoading(true);
         setTimeout(async () => {
           await fetchRole(session.user.id);
-          setLoading(false);
+          if (isFreshAuth) setLoading(false);
         }, 0);
       } else {
         setUserRole(null);
