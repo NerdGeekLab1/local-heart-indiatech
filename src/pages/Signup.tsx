@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
-import { useAuth } from "@/contexts/AuthContext";
 
 const Signup = () => {
   const [mode, setMode] = useState<"signup" | "login">("signup");
@@ -19,7 +18,6 @@ const Signup = () => {
     travelStyle: [] as string[], interests: [] as string[], agreeTerms: false,
   });
   const { toast } = useToast();
-  const { signIn } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const nextPath = searchParams.get("next") || "/dashboard/traveler";
@@ -75,7 +73,7 @@ const Signup = () => {
       return;
     }
     setLoading(true);
-    const { error } = await signIn(form.email, form.password);
+    const { error } = await supabase.auth.signInWithPassword({ email: form.email, password: form.password });
     setLoading(false);
     if (error) {
       toast({ title: error.message, variant: "destructive" });
@@ -268,7 +266,7 @@ const Signup = () => {
                   key={demo.label}
                   onClick={async () => {
                     setLoading(true);
-                    const { error } = await signIn(demo.email, demo.password);
+                    const { error } = await supabase.auth.signInWithPassword({ email: demo.email, password: demo.password });
                     setLoading(false);
                     if (error) {
                       toast({ title: `Demo ${demo.label} not set up yet`, description: "Please sign up first with this email", variant: "destructive" });

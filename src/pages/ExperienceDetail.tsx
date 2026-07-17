@@ -8,9 +8,7 @@ import { experiences, hosts, reviews } from "@/lib/data";
 import { useEffect, useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
-import { useCurrency } from "@/contexts/CurrencyContext";
 import { supabase } from "@/integrations/supabase/client";
-import VideoModal from "@/components/VideoModal";
 
 // Bike experiences from Experiences page
 const bikeExperiences = [
@@ -94,10 +92,8 @@ const ExperienceDetail = () => {
   const { id } = useParams();
   const { toast } = useToast();
   const { user } = useAuth();
-  const { format: formatCurrency } = useCurrency();
   const [liked, setLiked] = useState(false);
   const [dbStatus, setDbStatus] = useState<string | null>(null);
-  const [videoOpen, setVideoOpen] = useState(false);
   const exp = allExperiences.find(e => e.id === id);
 
   // If this id isn't in the static catalog (or even if it is), check DB for moderation status.
@@ -320,12 +316,7 @@ const ExperienceDetail = () => {
                 <h2 className="text-xl font-bold text-foreground mb-3">📹 Past Experience Videos</h2>
                 <div className="grid grid-cols-2 gap-3">
                   {[1, 2].map(i => (
-                    <button
-                      key={i}
-                      type="button"
-                      onClick={() => setVideoOpen(true)}
-                      className="relative aspect-video rounded-lg overflow-hidden bg-secondary group cursor-pointer text-left"
-                    >
+                    <div key={i} className="relative aspect-video rounded-lg overflow-hidden bg-secondary group cursor-pointer">
                       <img src={exp.image} alt="video" className="w-full h-full object-cover opacity-80" />
                       <div className="absolute inset-0 flex items-center justify-center">
                         <div className="w-14 h-14 rounded-full bg-primary/80 flex items-center justify-center backdrop-blur-sm group-hover:scale-110 transition-transform">
@@ -335,7 +326,7 @@ const ExperienceDetail = () => {
                       <div className="absolute bottom-2 left-2 text-xs font-medium text-primary-foreground bg-foreground/40 backdrop-blur-sm px-2 py-0.5 rounded">
                         {exp.title} • Clip {i}
                       </div>
-                    </button>
+                    </div>
                   ))}
                 </div>
               </div>
@@ -365,7 +356,7 @@ const ExperienceDetail = () => {
               <div className="sticky top-24 space-y-4">
                 <div className="rounded-2xl bg-card p-5 shadow-card">
                   <div className="flex items-baseline gap-1">
-                    <span className="text-3xl font-bold text-foreground">{formatCurrency(exp.price)}</span>
+                    <span className="text-3xl font-bold text-foreground">${exp.price}</span>
                     <span className="text-sm text-muted-foreground">/ person</span>
                   </div>
                   <p className="text-sm text-muted-foreground mt-1">{exp.duration}</p>
@@ -450,12 +441,6 @@ const ExperienceDetail = () => {
         </div>
       </div>
       <Footer />
-      <VideoModal
-        open={videoOpen}
-        onClose={() => setVideoOpen(false)}
-        videoUrl="https://www.youtube.com/embed/videoseries?list=PLbpi6ZahtOH7lwiQMPmVsFtdrHi2fWMOh&autoplay=1"
-        title={exp.title}
-      />
     </div>
   );
 };

@@ -9,14 +9,14 @@ interface AdminGuardProps {
 /**
  * Guards admin-only routes.
  * - While auth is loading: render nothing (avoid flicker).
- * - Unauthenticated: redirect to dedicated /admin-login with a `next` param.
+ * - Unauthenticated: redirect to /signup with a `next` param so users return here after login.
  * - Authenticated but not admin: redirect to home.
  */
 export default function AdminGuard({ children }: AdminGuardProps) {
   const { user, userRole, loading } = useAuth();
   const location = useLocation();
 
-  if (loading || (user && userRole === null)) {
+  if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
@@ -26,7 +26,7 @@ export default function AdminGuard({ children }: AdminGuardProps) {
 
   if (!user) {
     const next = encodeURIComponent(location.pathname + location.search);
-    return <Navigate to={`/admin-login?next=${next}`} replace />;
+    return <Navigate to={`/signup?next=${next}`} replace />;
   }
 
   if (userRole !== "admin") {
