@@ -41,12 +41,14 @@ const TripLeaderProfile = () => {
 
   useEffect(() => {
     const fetch = async () => {
-      if (!id) return;
-      const [{ data: prof }, { data: trps }] = await Promise.all([
-        supabase.from("profiles").select("*").eq("id", id).single(),
+      if (!id) { setLoading(false); return; }
+      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+      if (!isUuid) { setLoading(false); return; }
+      const [{ data: profs }, { data: trps }] = await Promise.all([
+        supabase.rpc("get_public_profile", { _id: id }),
         supabase.from("trip_listings").select("*").eq("creator_id", id).eq("status", "active").order("created_at", { ascending: false }),
       ]);
-      setProfile(prof);
+      setProfile(profs?.[0] || null);
       setTrips(trps || []);
       setLoading(false);
     };

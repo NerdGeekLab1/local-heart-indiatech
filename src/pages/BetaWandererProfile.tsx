@@ -27,10 +27,12 @@ const BetaWandererProfile = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!id) return;
+    if (!id) { setLoading(false); return; }
     if (demoWanderers[id]) { setWanderer(demoWanderers[id]); setLoading(false); return; }
-    supabase.from("beta_wanderers").select("*").eq("id", id).single()
-      .then(({ data }) => { setWanderer(data); setLoading(false); });
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+    if (!isUuid) { setLoading(false); return; }
+    supabase.rpc("get_public_wanderer", { _id: id })
+      .then(({ data }) => { setWanderer(data?.[0] || null); setLoading(false); });
   }, [id]);
 
   if (loading) return <div className="min-h-screen bg-background"><Navbar /><div className="pt-24 text-center text-muted-foreground">Loading...</div></div>;

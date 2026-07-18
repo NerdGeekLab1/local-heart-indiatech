@@ -58,8 +58,8 @@ const Feed = () => {
     if (!postsData || postsData.length === 0) return { rows: [] as FeedPost[], end: true };
 
     const userIds = Array.from(new Set(postsData.map(p => p.user_id)));
-    const { data: profiles } = await supabase.from("profiles").select("id, first_name, last_name, avatar_url").in("id", userIds);
-    const profileMap = new Map(profiles?.map(p => [p.id, p]) || []);
+    const { data: profiles } = await supabase.rpc("get_public_profiles", { _ids: userIds });
+    const profileMap = new Map((profiles || []).map((p: any) => [p.id, p]));
 
     let likedSet = new Set<string>();
     if (user) {
