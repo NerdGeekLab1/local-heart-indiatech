@@ -103,7 +103,14 @@ const Experiences = () => {
       });
   }, []);
 
-  const allExperiences = useMemo(() => [...dbExperiences, ...staticExperiences], [dbExperiences]);
+  const allExperiences = useMemo(() => {
+    const seen = new Set<string>();
+    return [...dbExperiences, ...staticExperiences].filter(e => {
+      if (seen.has(e.id)) return false;
+      seen.add(e.id);
+      return true;
+    });
+  }, [dbExperiences]);
 
   const filtered = useMemo(() => {
     let result = allExperiences.filter(e => {
