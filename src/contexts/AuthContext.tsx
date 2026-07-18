@@ -23,25 +23,61 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [userRole, setUserRole] = useState<string | null>(null);
 
   const fetchRole = async (userId: string) => {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from("user_roles")
       .select("role")
-      .eq("user_id", userId)
-      .maybeSingle();
-    const role = data?.role ?? "traveler";
+      .eq("user_id", userId);
+    if (error) {
+      setUserRole("traveler");
+      return "traveler";
+    }
+    const roles = (data ?? []).map((r: any) => r.role);
+    // Priority: admin > host > traveler
+    const role = roles.includes("admin")
+      ? "admin"
+      : roles.includes("host")
+        ? "host"
+        : roles[0] ?? "traveler";
     setUserRole(role);
     return role;
   };
 
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    let mounted = true;
+
+    const hydrateSession = async (nextSession: Session | null) => {
+      if (!mounted) return;
+      setSession(nextSession);
+      setUser(nextSession?.user ?? null);
+
+      if (!nextSession?.user) {
+        setUserRole(null);
+        setLoading(false);
+        return;
+      }
+
+      try {
+        setUserRole(null);
+        await fetchRole(nextSession.user.id);
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    };
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       setSession(session);
       setUser(session?.user ?? null);
       if (session?.user) {
-        setLoading(true);
+        // Only show loading on real sign-in / initial hydrate; skip token refreshes to avoid flicker
+        const isFreshAuth = event === "SIGNED_IN" || event === "INITIAL_SESSION" || event === "USER_UPDATED";
+        if (isFreshAuth) setLoading(true);
+        if (isFreshAuth) setUserRole(null);
         setTimeout(async () => {
-          await fetchRole(session.user.id);
-          setLoading(false);
+          try {
+            await fetchRole(session.user.id);
+          } finally {
+            if (mounted && isFreshAuth) setLoading(false);
+          }
         }, 0);
       } else {
         setUserRole(null);
@@ -49,16 +85,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
     });
 
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      if (session?.user) {
-        await fetchRole(session.user.id);
-      }
-      setLoading(false);
-    });
+    supabase.auth.getSession().then(({ data: { session } }) => hydrateSession(session));
 
-    return () => subscription.unsubscribe();
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   const signUp = async (email: string, password: string, metadata?: Record<string, any>) => {
@@ -73,7 +105,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const signIn = async (email: string, password: string) => {
-    return supabase.auth.signInWithPassword({ email, password });
+    setLoading(true);
+    const result = await supabase.auth.signInWithPassword({ email, password });
+    if (result.error || !result.data.user) {
+      setLoading(false);
+      return result;
+    }
+
+    setSession(result.data.session);
+    setUser(result.data.user);
+    await fetchRole(result.data.user.id);
+    setLoading(false);
+    return result;
   };
 
   const signOut = async () => {

@@ -950,6 +950,7 @@ export type Database = {
           last_name: string | null
           nationality: string | null
           phone: string | null
+          social_links: Json
           travel_styles: string[] | null
           updated_at: string
         }
@@ -964,6 +965,7 @@ export type Database = {
           last_name?: string | null
           nationality?: string | null
           phone?: string | null
+          social_links?: Json
           travel_styles?: string[] | null
           updated_at?: string
         }
@@ -978,6 +980,7 @@ export type Database = {
           last_name?: string | null
           nationality?: string | null
           phone?: string | null
+          social_links?: Json
           travel_styles?: string[] | null
           updated_at?: string
         }
@@ -1646,6 +1649,7 @@ export type Database = {
           interests: string[]
           last_name: string
           nationality: string
+          social_links: Json
           travel_styles: string[]
         }[]
       }
@@ -1659,6 +1663,7 @@ export type Database = {
           interests: string[]
           last_name: string
           nationality: string
+          social_links: Json
           travel_styles: string[]
         }[]
       }
