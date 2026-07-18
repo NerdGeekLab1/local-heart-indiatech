@@ -26,14 +26,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const { data } = await supabase
       .from("user_roles")
       .select("role")
-      .eq("user_id", userId);
-    const roles = (data ?? []).map((r: any) => r.role);
-    // Priority: admin > host > traveler
-    const role = roles.includes("admin")
-      ? "admin"
-      : roles.includes("host")
-        ? "host"
-        : roles[0] ?? "traveler";
+      .eq("user_id", userId)
+      .maybeSingle();
+    const role = data?.role ?? "traveler";
     setUserRole(role);
     return role;
   };
