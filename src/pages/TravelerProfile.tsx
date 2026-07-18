@@ -28,18 +28,16 @@ const TravelerProfile = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!id) { setLoading(false); return; }
-    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
-    if (!isUuid) { setLoading(false); return; }
+    if (!id) return;
     (async () => {
       setLoading(true);
-      const [{ data: profs }, { data: po }, { data: tr }, { data: rv }] = await Promise.all([
-        supabase.rpc("get_public_profile", { _id: id }),
+      const [{ data: prof }, { data: po }, { data: tr }, { data: rv }] = await Promise.all([
+        supabase.from("profiles").select("*").eq("id", id).maybeSingle(),
         supabase.from("feed_posts").select("*").eq("user_id", id).eq("status", "active").order("created_at", { ascending: false }).limit(48),
         supabase.from("trip_listings").select("*").eq("creator_id", id).order("created_at", { ascending: false }).limit(24),
         supabase.from("reviews").select("*").eq("traveler_id", id).order("created_at", { ascending: false }).limit(20),
       ]);
-      setProfile(profs?.[0] || null);
+      setProfile(prof);
       setPosts(po || []);
       setTrips(tr || []);
       setReviews(rv || []);
