@@ -137,6 +137,11 @@ const DestinationDetail = () => {
                   <Heart className={`w-5 h-5 ${liked ? "fill-destructive text-destructive" : ""}`} />
                 </Button>
                 <Button size="icon" variant="ghost"
+                  onClick={() => {
+                    const url = window.location.href;
+                    if (navigator.share) { navigator.share({ title: destination.name, url }).catch(() => {}); }
+                    else { navigator.clipboard.writeText(url); }
+                  }}
                   className="rounded-full bg-primary-foreground/10 backdrop-blur-md text-primary-foreground hover:bg-primary-foreground/20">
                   <Share2 className="w-5 h-5" />
                 </Button>
@@ -560,7 +565,7 @@ const DestinationDetail = () => {
               </Button>
             </Link>
             <Link to="/experiences">
-              <Button size="lg" variant="outline" className="rounded-full border-primary-foreground/30 text-primary-foreground hover:bg-primary-foreground/10 px-8">
+              <Button size="lg" variant="outline" className="rounded-full bg-transparent border-2 border-primary-foreground text-primary-foreground hover:bg-primary-foreground hover:text-primary px-8 font-semibold">
                 Browse Experiences
               </Button>
             </Link>
