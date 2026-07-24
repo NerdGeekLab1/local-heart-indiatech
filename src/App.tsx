@@ -82,6 +82,17 @@ const RouteFallback = () => (
   </div>
 );
 
+const HIDE_CRUMBS = new Set(["/", "/signup", "/admin-login", "/auth/callback"]);
+const BreadcrumbsBar = () => {
+  const { pathname } = useLocation();
+  if (HIDE_CRUMBS.has(pathname)) return null;
+  return (
+    <div className="pt-20 pb-2 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+      <Breadcrumbs />
+    </div>
+  );
+};
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
