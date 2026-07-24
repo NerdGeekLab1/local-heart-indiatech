@@ -396,10 +396,10 @@ const DestinationDetail = () => {
                   <div key={r.id} className="rounded-2xl bg-card shadow-card p-5 hover:shadow-elevated transition-shadow">
                     <div className="flex items-center gap-3 mb-3">
                       <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center font-bold text-primary">
-                        {r.userName?.[0] || "T"}
+                        {r.travelerName?.[0] || "T"}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="font-semibold text-foreground text-sm">{r.userName}</p>
+                        <p className="font-semibold text-foreground text-sm">{r.travelerName}</p>
                         {reviewedHost && (
                           <Link to={`/host/${reviewedHost.id}`} className="text-xs text-muted-foreground hover:text-primary">
                             about <span className="font-medium">{reviewedHost.name}</span>
@@ -412,7 +412,7 @@ const DestinationDetail = () => {
                         ))}
                       </div>
                     </div>
-                    <p className="text-sm text-foreground/90 line-clamp-4">{r.comment}</p>
+                    <p className="text-sm text-foreground/90 line-clamp-4">{r.text}</p>
                     {r.date && <p className="text-[10px] text-muted-foreground mt-3">{r.date}</p>}
                   </div>
                 );
