@@ -61,7 +61,18 @@ const Feed = lazy(() => import("./pages/Feed.tsx"));
 const TravelerProfile = lazy(() => import("./pages/TravelerProfile.tsx"));
 const NotFound = lazy(() => import("./pages/NotFound.tsx"));
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5 * 60 * 1000,
+      gcTime: 30 * 60 * 1000,
+      refetchOnWindowFocus: false,
+      refetchOnMount: false,
+      refetchOnReconnect: false,
+      retry: 1,
+    },
+  },
+});
 
 const RouteFallback = () => (
   <div className="min-h-screen flex items-center justify-center bg-background">
