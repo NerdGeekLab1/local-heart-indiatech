@@ -12,6 +12,8 @@ import FeatureGate from "@/components/FeatureGate.tsx";
 import HeaderScripts from "@/components/HeaderScripts.tsx";
 import OnboardingChecklist from "@/components/OnboardingChecklist.tsx";
 import AdminGuard from "@/components/AdminGuard.tsx";
+import Breadcrumbs from "@/components/Breadcrumbs.tsx";
+import { useLocation } from "react-router-dom";
 import Index from "./pages/Index.tsx";
 
 // Lazy-loaded route components for code-splitting / perf
