@@ -826,15 +826,81 @@ const HostDashboard = () => {
           </div>
         )}
 
-        {activeTab === "earnings" && (
-          <div className="mt-6 space-y-6">
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <div className="rounded-lg bg-card p-5 shadow-card"><p className="text-xs text-muted-foreground uppercase">Total Earned</p><p className="text-3xl font-bold text-foreground mt-1">${totalEarnings}</p></div>
-              <div className="rounded-lg bg-card p-5 shadow-card"><p className="text-xs text-muted-foreground uppercase">This Month</p><p className="text-3xl font-bold text-accent mt-1">$270</p></div>
-              <div className="rounded-lg bg-card p-5 shadow-card"><p className="text-xs text-muted-foreground uppercase">Pending</p><p className="text-3xl font-bold text-primary mt-1">$80</p></div>
+        {activeTab === "earnings" && (() => {
+          const commissionRate = 0.15;
+          const now = new Date();
+          const thisMonth = hostBookings.filter((b: any) => {
+            const d = new Date(b.created_at); return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+          });
+          const paidBookings = hostBookings.filter((b: any) => b.status === "confirmed" || b.status === "completed");
+          const pendingBookings = hostBookings.filter((b: any) => b.status === "pending");
+          const monthTotal = thisMonth.reduce((s: number, b: any) => s + Number(b.total_price || 0), 0);
+          const pendingTotal = pendingBookings.reduce((s: number, b: any) => s + Number(b.total_price || 0), 0);
+          const netEarnings = totalEarnings * (1 - commissionRate);
+          const commissionTotal = totalEarnings * commissionRate;
+          return (
+            <div className="mt-6 space-y-6">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="rounded-lg bg-card p-5 shadow-card"><p className="text-xs text-muted-foreground uppercase">Gross Earned</p><p className="text-2xl font-bold text-foreground mt-1">₹{totalEarnings.toLocaleString()}</p></div>
+                <div className="rounded-lg bg-card p-5 shadow-card"><p className="text-xs text-muted-foreground uppercase">Net Payout (85%)</p><p className="text-2xl font-bold text-accent mt-1">₹{Math.round(netEarnings).toLocaleString()}</p></div>
+                <div className="rounded-lg bg-card p-5 shadow-card"><p className="text-xs text-muted-foreground uppercase">Platform Fee (15%)</p><p className="text-2xl font-bold text-primary mt-1">₹{Math.round(commissionTotal).toLocaleString()}</p></div>
+                <div className="rounded-lg bg-card p-5 shadow-card"><p className="text-xs text-muted-foreground uppercase">Pending</p><p className="text-2xl font-bold text-muted-foreground mt-1">₹{Math.round(pendingTotal).toLocaleString()}</p></div>
+              </div>
+
+              <div className="rounded-lg bg-card shadow-card overflow-hidden">
+                <div className="px-5 py-3 border-b border-border flex items-center justify-between">
+                  <h3 className="font-bold text-foreground">Payout History</h3>
+                  <span className="text-xs text-muted-foreground">{paidBookings.length} bookings · This month: ₹{Math.round(monthTotal).toLocaleString()}</span>
+                </div>
+                {hostBookings.length === 0 ? (
+                  <div className="text-center py-12 text-sm text-muted-foreground">No booking earnings yet.</div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead className="bg-secondary/40 text-xs uppercase text-muted-foreground">
+                        <tr>
+                          <th className="text-left px-4 py-2">Booking Ref</th>
+                          <th className="text-left px-4 py-2">Date</th>
+                          <th className="text-left px-4 py-2">Status</th>
+                          <th className="text-right px-4 py-2">Gross</th>
+                          <th className="text-right px-4 py-2">Fee (15%)</th>
+                          <th className="text-right px-4 py-2">Net Payout</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {hostBookings.map((b: any) => {
+                          const gross = Number(b.total_price || 0);
+                          const fee = gross * commissionRate;
+                          const net = gross - fee;
+                          return (
+                            <tr key={b.id} className="border-t border-border">
+                              <td className="px-4 py-2 font-mono text-xs">#{b.id.slice(0, 8)}</td>
+                              <td className="px-4 py-2 text-muted-foreground">{new Date(b.created_at).toLocaleDateString()}</td>
+                              <td className="px-4 py-2">
+                                <span className={`text-xs px-2 py-0.5 rounded-full ${statusColors[b.status] || "bg-secondary text-muted-foreground"}`}>{b.status}</span>
+                              </td>
+                              <td className="px-4 py-2 text-right">₹{gross.toLocaleString()}</td>
+                              <td className="px-4 py-2 text-right text-muted-foreground">-₹{Math.round(fee).toLocaleString()}</td>
+                              <td className="px-4 py-2 text-right font-semibold text-accent">₹{Math.round(net).toLocaleString()}</td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                      <tfoot className="bg-secondary/20 font-semibold">
+                        <tr>
+                          <td className="px-4 py-2" colSpan={3}>Total</td>
+                          <td className="px-4 py-2 text-right">₹{totalEarnings.toLocaleString()}</td>
+                          <td className="px-4 py-2 text-right text-muted-foreground">-₹{Math.round(commissionTotal).toLocaleString()}</td>
+                          <td className="px-4 py-2 text-right text-accent">₹{Math.round(netEarnings).toLocaleString()}</td>
+                        </tr>
+                      </tfoot>
+                    </table>
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
-        )}
+          );
+        })()}
 
         {/* Invoices */}
         {activeTab === "invoices" && (
