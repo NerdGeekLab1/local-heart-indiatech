@@ -450,7 +450,7 @@ const DestinationDetail = () => {
                           <span className="text-xs text-muted-foreground flex items-center gap-0.5">
                             <Star className="w-3 h-3 fill-primary text-primary" /> {host.rating}
                           </span>
-                          <span className="text-xs text-muted-foreground">${host.pricePerDay}/day</span>
+                          <span className="text-xs text-muted-foreground">₹{host.pricePerDay.toLocaleString("en-IN")}/day</span>
                           <span className="text-xs text-muted-foreground">{host.services.length} services</span>
                         </div>
                       </div>
