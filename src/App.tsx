@@ -91,6 +91,7 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <HeaderScripts />
+          <BreadcrumbsBar />
           <Suspense fallback={<RouteFallback />}>
           <Routes>
             <Route path="/" element={<Index />} />
