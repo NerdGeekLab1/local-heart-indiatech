@@ -12,6 +12,8 @@ import FeatureGate from "@/components/FeatureGate.tsx";
 import HeaderScripts from "@/components/HeaderScripts.tsx";
 import OnboardingChecklist from "@/components/OnboardingChecklist.tsx";
 import AdminGuard from "@/components/AdminGuard.tsx";
+import Breadcrumbs from "@/components/Breadcrumbs.tsx";
+import { useLocation } from "react-router-dom";
 import Index from "./pages/Index.tsx";
 
 // Lazy-loaded route components for code-splitting / perf
@@ -61,13 +63,35 @@ const Feed = lazy(() => import("./pages/Feed.tsx"));
 const TravelerProfile = lazy(() => import("./pages/TravelerProfile.tsx"));
 const NotFound = lazy(() => import("./pages/NotFound.tsx"));
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5 * 60 * 1000,
+      gcTime: 30 * 60 * 1000,
+      refetchOnWindowFocus: false,
+      refetchOnMount: false,
+      refetchOnReconnect: false,
+      retry: 1,
+    },
+  },
+});
 
 const RouteFallback = () => (
   <div className="min-h-screen flex items-center justify-center bg-background">
     <div className="w-10 h-10 rounded-full border-2 border-primary/30 border-t-primary animate-spin" />
   </div>
 );
+
+const HIDE_CRUMBS = new Set(["/", "/signup", "/admin-login", "/auth/callback"]);
+const BreadcrumbsBar = () => {
+  const { pathname } = useLocation();
+  if (HIDE_CRUMBS.has(pathname)) return null;
+  return (
+    <div className="pt-20 pb-2 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+      <Breadcrumbs />
+    </div>
+  );
+};
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -78,6 +102,7 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <HeaderScripts />
+          <BreadcrumbsBar />
           <Suspense fallback={<RouteFallback />}>
           <Routes>
             <Route path="/" element={<Index />} />
