@@ -154,8 +154,10 @@ const App = () => (
           </Routes>
           </Suspense>
           <MobileBottomNav />
-          <FeatureGate flag="ai_concierge"><AIChatRecommender /></FeatureGate>
-          <OnboardingChecklist />
+          <Suspense fallback={null}>
+            <FeatureGate flag="ai_concierge"><AIChatRecommender /></FeatureGate>
+            <OnboardingChecklist />
+          </Suspense>
         </BrowserRouter>
       </TooltipProvider>
       </CurrencyProvider>
