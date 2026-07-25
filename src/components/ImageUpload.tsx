@@ -3,6 +3,7 @@ import { Upload, X, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { compressImage } from "@/lib/imageCompression";
 
 interface ImageUploadProps {
   bucket: "avatars" | "experience-images" | "trip-images";
@@ -20,18 +21,36 @@ const ImageUpload = ({ bucket, folder, currentUrl, onUpload, className = "", sha
   const { toast } = useToast();
 
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    if (file.size > 5 * 1024 * 1024) {
-      toast({ title: "File too large", description: "Max 5MB", variant: "destructive" });
+    const raw = e.target.files?.[0];
+    if (!raw) return;
+    if (raw.size > 10 * 1024 * 1024) {
+      toast({ title: "File too large", description: "Max 10MB", variant: "destructive" });
       return;
     }
 
-    setUploading(true);
-    const ext = file.name.split(".").pop();
-    const path = `${folder}/${Date.now()}.${ext}`;
+    // Ensure the auth session is loaded and the folder matches auth.uid so storage RLS passes.
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      toast({ title: "Not signed in", description: "Please sign in to upload.", variant: "destructive" });
+      return;
+    }
+    const safeFolder = folder || user.id;
+    if (safeFolder !== user.id) {
+      // Storage RLS requires the first path segment to be the user id.
+      // Fall through with warning; some buckets allow admin overrides.
+      console.warn("[ImageUpload] folder does not match auth.uid; storage RLS may reject upload");
+    }
 
-    const { error } = await supabase.storage.from(bucket).upload(path, file, { upsert: true });
+    setUploading(true);
+    const file = await compressImage(raw, { maxDimension: 1280, quality: 0.82 });
+    const ext = (file.name.split(".").pop() || "webp").toLowerCase();
+    const path = `${safeFolder}/${Date.now()}.${ext}`;
+
+    const { error } = await supabase.storage.from(bucket).upload(path, file, {
+      upsert: true,
+      cacheControl: "31536000", // 1 year CDN cache
+      contentType: file.type,
+    });
     if (error) {
       toast({ title: "Upload failed", description: error.message, variant: "destructive" });
       setUploading(false);
@@ -42,7 +61,7 @@ const ImageUpload = ({ bucket, folder, currentUrl, onUpload, className = "", sha
     setPreview(publicUrl);
     onUpload(publicUrl);
     setUploading(false);
-    toast({ title: "Image uploaded! 📸" });
+    toast({ title: "Image uploaded! 📸", description: `${(file.size / 1024).toFixed(0)}KB after compression` });
   };
 
   const clear = () => {

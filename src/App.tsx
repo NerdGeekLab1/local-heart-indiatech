@@ -58,6 +58,7 @@ const BetaWaitlistConfirm = lazy(() => import("./pages/BetaWaitlistConfirm.tsx")
 const FeatureFlagsAdmin = lazy(() => import("./pages/admin/FeatureFlagsAdmin.tsx"));
 const WaitlistAdmin = lazy(() => import("./pages/admin/WaitlistAdmin.tsx"));
 const AuditLogAdmin = lazy(() => import("./pages/admin/AuditLogAdmin.tsx"));
+const PerformanceAdmin = lazy(() => import("./pages/admin/PerformanceAdmin.tsx"));
 const FeaturesHub = lazy(() => import("./pages/FeaturesHub.tsx"));
 const Feed = lazy(() => import("./pages/Feed.tsx"));
 const TravelerProfile = lazy(() => import("./pages/TravelerProfile.tsx"));
@@ -147,6 +148,7 @@ const App = () => (
             <Route path="/admin/feature-flags" element={<AdminGuard><FeatureFlagsAdmin /></AdminGuard>} />
             <Route path="/admin/waitlist" element={<AdminGuard><WaitlistAdmin /></AdminGuard>} />
             <Route path="/admin/audit-log" element={<AdminGuard><AuditLogAdmin /></AdminGuard>} />
+            <Route path="/admin/performance" element={<AdminGuard><PerformanceAdmin /></AdminGuard>} />
             <Route path="/features" element={<FeaturesHub />} />
             <Route path="/feed" element={<Feed />} />
             <Route path="/traveler/:id" element={<TravelerProfile />} />

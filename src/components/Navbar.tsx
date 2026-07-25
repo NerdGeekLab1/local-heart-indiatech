@@ -34,12 +34,23 @@ const Navbar = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const isHome = location.pathname === "/";
-  const { user, userRole, userRoles, signOut } = useAuth();
+  const { user, userRole, signOut } = useAuth();
   const { toast } = useToast();
 
-  const dashboardPath = userRole === "admin" ? "/dashboard/admin" : userRole === "host" ? "/dashboard/host" : "/dashboard/traveler";
-  const hasTraveler = userRoles.includes("traveler") || userRole === "traveler";
-  const hasHost = userRoles.includes("host");
+  // Single-role enforced by DB (unique constraint on user_roles.user_id).
+  // Persist last visited dashboard so refreshes/back-navigation land on the same view.
+  const dashboardPath =
+    userRole === "admin"
+      ? "/dashboard/admin"
+      : userRole === "host"
+        ? "/dashboard/host"
+        : "/dashboard/traveler";
+
+  if (typeof window !== "undefined" && userRole) {
+    try {
+      window.localStorage.setItem("travelista.lastDashboard", dashboardPath);
+    } catch {}
+  }
 
   const userInitials = user?.user_metadata?.first_name
     ? `${user.user_metadata.first_name[0]}${user.user_metadata.last_name?.[0] || ""}`.toUpperCase()
@@ -135,12 +146,12 @@ const Navbar = () => {
                         <LayoutDashboard className="mr-2 h-4 w-4" /> Admin Dashboard
                       </DropdownMenuItem>
                     )}
-                    {hasTraveler && (
+                    {userRole === "traveler" && (
                       <DropdownMenuItem onClick={() => navigate("/dashboard/traveler")} className="cursor-pointer">
                         <LayoutDashboard className="mr-2 h-4 w-4" /> Traveler Dashboard
                       </DropdownMenuItem>
                     )}
-                    {hasHost && (
+                    {userRole === "host" && (
                       <DropdownMenuItem onClick={() => navigate("/dashboard/host")} className="cursor-pointer">
                         <LayoutDashboard className="mr-2 h-4 w-4" /> Host Dashboard
                       </DropdownMenuItem>
