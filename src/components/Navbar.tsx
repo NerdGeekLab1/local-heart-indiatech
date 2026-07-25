@@ -34,10 +34,12 @@ const Navbar = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const isHome = location.pathname === "/";
-  const { user, userRole, signOut } = useAuth();
+  const { user, userRole, userRoles, signOut } = useAuth();
   const { toast } = useToast();
 
   const dashboardPath = userRole === "admin" ? "/dashboard/admin" : userRole === "host" ? "/dashboard/host" : "/dashboard/traveler";
+  const hasTraveler = userRoles.includes("traveler") || userRole === "traveler";
+  const hasHost = userRoles.includes("host");
 
   const userInitials = user?.user_metadata?.first_name
     ? `${user.user_metadata.first_name[0]}${user.user_metadata.last_name?.[0] || ""}`.toUpperCase()
@@ -128,9 +130,21 @@ const Navbar = () => {
                       </div>
                     </DropdownMenuLabel>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={() => navigate(dashboardPath)} className="cursor-pointer">
-                      <LayoutDashboard className="mr-2 h-4 w-4" /> Dashboard
-                    </DropdownMenuItem>
+                    {userRole === "admin" && (
+                      <DropdownMenuItem onClick={() => navigate("/dashboard/admin")} className="cursor-pointer">
+                        <LayoutDashboard className="mr-2 h-4 w-4" /> Admin Dashboard
+                      </DropdownMenuItem>
+                    )}
+                    {hasTraveler && (
+                      <DropdownMenuItem onClick={() => navigate("/dashboard/traveler")} className="cursor-pointer">
+                        <LayoutDashboard className="mr-2 h-4 w-4" /> Traveler Dashboard
+                      </DropdownMenuItem>
+                    )}
+                    {hasHost && (
+                      <DropdownMenuItem onClick={() => navigate("/dashboard/host")} className="cursor-pointer">
+                        <LayoutDashboard className="mr-2 h-4 w-4" /> Host Dashboard
+                      </DropdownMenuItem>
+                    )}
                     <DropdownMenuItem onClick={() => navigate(`${dashboardPath}?tab=overview`)} className="cursor-pointer">
                       <User className="mr-2 h-4 w-4" /> My Profile
                     </DropdownMenuItem>

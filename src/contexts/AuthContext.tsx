@@ -7,6 +7,7 @@ interface AuthContextType {
   session: Session | null;
   loading: boolean;
   userRole: string | null;
+  userRoles: string[];
   signUp: (email: string, password: string, metadata?: Record<string, any>) => Promise<any>;
   signIn: (email: string, password: string) => Promise<any>;
   signOut: () => Promise<void>;
@@ -21,6 +22,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const [userRole, setUserRole] = useState<string | null>(null);
+  const [userRoles, setUserRoles] = useState<string[]>([]);
 
   const fetchRole = async (userId: string) => {
     const { data, error } = await supabase
@@ -32,12 +34,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       return "traveler";
     }
     const roles = (data ?? []).map((r: any) => r.role);
-    // Priority: admin > host > traveler
+    setUserRoles(roles);
+    // Priority for default landing: admin > traveler > host (traveler is the default experience)
     const role = roles.includes("admin")
       ? "admin"
-      : roles.includes("host")
-        ? "host"
-        : roles[0] ?? "traveler";
+      : roles.includes("traveler")
+        ? "traveler"
+        : roles.includes("host")
+          ? "host"
+          : roles[0] ?? "traveler";
     setUserRole(role);
     return role;
   };
@@ -127,7 +132,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, session, loading, userRole, signUp, signIn, signOut }}>
+    <AuthContext.Provider value={{ user, session, loading, userRole, userRoles, signUp, signIn, signOut }}>
       {children}
     </AuthContext.Provider>
   );
