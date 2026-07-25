@@ -34,12 +34,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       return "traveler";
     }
     const roles = (data ?? []).map((r: any) => r.role);
-    // Priority: admin > host > traveler
+    setUserRoles(roles);
+    // Priority for default landing: admin > traveler > host (traveler is the default experience)
     const role = roles.includes("admin")
       ? "admin"
-      : roles.includes("host")
-        ? "host"
-        : roles[0] ?? "traveler";
+      : roles.includes("traveler")
+        ? "traveler"
+        : roles.includes("host")
+          ? "host"
+          : roles[0] ?? "traveler";
     setUserRole(role);
     return role;
   };
