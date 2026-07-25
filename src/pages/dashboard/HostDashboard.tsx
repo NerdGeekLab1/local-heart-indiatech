@@ -973,10 +973,16 @@ const HostDashboard = () => {
                   folder={user?.id || "anon"}
                   currentUrl={hostDbProfile?.avatar_url}
                   onUpload={async (url) => {
-                    if (user) {
-                      await supabase.from("profiles").update({ avatar_url: url }).eq("id", user.id);
-                      setHostDbProfile((p: any) => ({ ...p, avatar_url: url }));
+                    if (!user) return;
+                    const { error } = await supabase.from("profiles").upsert(
+                      { id: user.id, avatar_url: url },
+                      { onConflict: "id" }
+                    );
+                    if (error) {
+                      toast({ title: "Couldn't save avatar", description: error.message, variant: "destructive" });
+                      return;
                     }
+                    setHostDbProfile((p: any) => ({ ...(p || {}), avatar_url: url }));
                   }}
                   className="w-20 h-20"
                   shape="circle"
