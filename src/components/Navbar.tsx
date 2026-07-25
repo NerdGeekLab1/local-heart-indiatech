@@ -34,10 +34,12 @@ const Navbar = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const isHome = location.pathname === "/";
-  const { user, userRole, signOut } = useAuth();
+  const { user, userRole, userRoles, signOut } = useAuth();
   const { toast } = useToast();
 
   const dashboardPath = userRole === "admin" ? "/dashboard/admin" : userRole === "host" ? "/dashboard/host" : "/dashboard/traveler";
+  const hasTraveler = userRoles.includes("traveler") || userRole === "traveler";
+  const hasHost = userRoles.includes("host");
 
   const userInitials = user?.user_metadata?.first_name
     ? `${user.user_metadata.first_name[0]}${user.user_metadata.last_name?.[0] || ""}`.toUpperCase()
