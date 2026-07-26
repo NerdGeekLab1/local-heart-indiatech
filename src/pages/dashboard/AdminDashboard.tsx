@@ -1192,7 +1192,71 @@ const AdminDashboard = () => {
         {/* Hosts Tab */}
         {activeTab === "hosts" && (
           <div className="mt-6">
-            <h2 className="text-xl font-bold text-foreground mb-4">All Hosts ({hosts.length + approvedHostApplications.length})</h2>
+            <div className="flex items-center justify-between mb-4 gap-3 flex-wrap">
+              <h2 className="text-xl font-bold text-foreground">
+                Hosts ({registeredHosts.length} registered · {hosts.length} showcase)
+              </h2>
+              <Button size="sm" variant="outline" className="rounded-full text-xs gap-1.5" onClick={() => setDataRefreshKey(k => k + 1)}>
+                <TrendingUp className="w-3.5 h-3.5" /> Refresh live data
+              </Button>
+            </div>
+
+            {/* Live registered hosts pulled from the database */}
+            <div className="mb-6 rounded-xl bg-card p-4 shadow-card">
+              <h3 className="font-bold text-foreground mb-1">Registered hosts (live)</h3>
+              <p className="text-xs text-muted-foreground mb-3">
+                Every account carrying the host role, with their real listings, trips, bookings and revenue.
+              </p>
+              {registeredHosts.length === 0 ? (
+                <p className="text-sm text-muted-foreground">No hosts registered yet. Approve a host application to add one.</p>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-xs">
+                    <thead className="text-muted-foreground">
+                      <tr className="border-b border-border">
+                        <th className="text-left py-2">Host</th>
+                        <th className="text-left">City</th>
+                        <th className="text-right">Listings</th>
+                        <th className="text-right">Trips</th>
+                        <th className="text-right">Bookings</th>
+                        <th className="text-right">Revenue</th>
+                        <th className="text-right">Joined</th>
+                        <th className="text-right">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {registeredHosts.map(h => (
+                        <tr key={h.id} className="border-b border-border last:border-0">
+                          <td className="py-2">
+                            <p className="font-semibold text-foreground">{h.full_name}</p>
+                            <p className="text-[11px] text-muted-foreground">{h.email}</p>
+                          </td>
+                          <td>{h.city}</td>
+                          <td className="text-right">{h.listings}</td>
+                          <td className="text-right">{h.tripsHosted}</td>
+                          <td className="text-right">{h.bookingsCount}</td>
+                          <td className="text-right">{format(h.revenue)}</td>
+                          <td className="text-right">{h.created_at ? new Date(h.created_at).toLocaleDateString() : "—"}</td>
+                          <td className="text-right">
+                            <div className="inline-flex gap-1">
+                              <Button size="sm" variant="outline" className="rounded-full text-[11px] h-7 px-2 gap-1"
+                                onClick={() => setActiveAdminChat({ id: h.id, name: h.full_name })}>
+                                <MessageSquare className="w-3 h-3" /> Chat
+                              </Button>
+                              <Button size="sm" variant="outline" className="rounded-full text-[11px] h-7 px-2 gap-1 text-destructive"
+                                onClick={() => banUser(h)} disabled={bannedUserIds.has(h.id)}>
+                                <Ban className="w-3 h-3" /> {bannedUserIds.has(h.id) ? "Banned" : "Ban"}
+                              </Button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+
             {approvedHostApplications.length > 0 && (
               <div className="mb-5 rounded-lg bg-card p-4 shadow-card">
                 <h3 className="font-bold text-foreground mb-2">Approved host applications</h3>
@@ -1207,6 +1271,8 @@ const AdminDashboard = () => {
                 </div>
               </div>
             )}
+            <h3 className="font-bold text-foreground mb-2">Showcase hosts (catalog)</h3>
+
             <div className="space-y-3">
               {hosts.map(h => {
                 const status = getHostStatus(h.id);
