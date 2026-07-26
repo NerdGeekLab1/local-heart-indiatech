@@ -473,6 +473,26 @@ const AdminDashboard = () => {
   const leaderboard = [...dbWanderers].filter(w => w.status === "approved").sort((a, b) => (b.score || 0) - (a.score || 0));
   const hostQueue = dbHostApplications.filter(a => a.status !== "approved");
   const approvedHostApplications = dbHostApplications.filter(a => a.status === "approved");
+  // Live registered hosts = profiles that hold the host role in the database
+  const registeredHosts = useMemo(() => {
+    const hostIds = new Set(userRoles.filter(r => r.role === "host").map(r => r.user_id));
+    return dbUsers
+      .filter(u => hostIds.has(u.id))
+      .map(u => {
+        const app = dbHostApplications.find(a => a.user_id === u.id);
+        return {
+          ...u,
+          full_name: `${u.first_name || ""} ${u.last_name || ""}`.trim() || u.email || "Host",
+          city: u.city || app?.city || "—",
+          application: app || null,
+          listings: dbExperiences.filter((e: any) => e.host_id === u.id).length,
+          tripsHosted: dbTrips.filter((t: any) => t.host_id === u.id || t.created_by === u.id).length,
+          bookingsCount: dbBookings.filter((b: any) => b.host_id === u.id).length,
+          revenue: dbInvoices.filter((i: any) => i.host_id === u.id).reduce((s: number, i: any) => s + Number(i.total_amount || 0), 0),
+        };
+      });
+  }, [dbUsers, userRoles, dbHostApplications, dbExperiences, dbTrips, dbBookings, dbInvoices]);
+
   const bannedUserIds = new Set(dbPermissions.filter(p => p.permission === "account_banned").map(p => p.user_id));
 
   const statusBadge = (status: string) => {
