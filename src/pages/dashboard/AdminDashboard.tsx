@@ -1695,13 +1695,39 @@ const AdminDashboard = () => {
 
         {activeTab === "analytics" && (
           <div className="mt-6 space-y-6">
-            <h2 className="text-xl font-bold text-foreground mb-4">Platform Analytics</h2>
+            <div className="flex items-center justify-between gap-3 flex-wrap mb-4">
+              <div>
+                <h2 className="text-xl font-bold text-foreground">Platform Analytics</h2>
+                <p className="text-xs text-muted-foreground">
+                  Live database metrics · auto-refresh every 60s
+                  {lastSynced ? ` · last synced ${lastSynced.toLocaleTimeString()}` : ""}
+                </p>
+              </div>
+              <div className="flex gap-2">
+                <Button size="sm" variant="outline" className="rounded-full text-xs gap-1.5" onClick={() => setDataRefreshKey(k => k + 1)}>
+                  <TrendingUp className="w-3.5 h-3.5" /> Refresh now
+                </Button>
+                <Link to="/admin/performance">
+                  <Button size="sm" variant="outline" className="rounded-full text-xs gap-1.5">
+                    <BarChart3 className="w-3.5 h-3.5" /> Performance profiler
+                  </Button>
+                </Link>
+              </div>
+            </div>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
               {[
                 { label: "Total Users", value: dbUsers.length },
+                { label: "Hosts", value: userRoles.filter(r => r.role === "host").length },
+                { label: "Travelers", value: userRoles.filter(r => r.role === "traveler").length },
                 { label: "Active Subscriptions", value: dbSubscriptions.filter(s => s.is_active && s.tier !== "free").length },
-                { label: "Total Invoices", value: dbInvoices.length },
-                { label: "Total Revenue", value: format(dbInvoices.reduce((s, i) => s + Number(i.total_amount || 0), 0)) },
+                { label: "Bookings", value: dbBookings.length },
+                { label: "Booking Value", value: format(dbBookings.reduce((s, b) => s + Number(b.total_price || 0), 0)) },
+                { label: "Invoiced Revenue", value: format(dbInvoices.reduce((s, i) => s + Number(i.total_amount || 0), 0)) },
+                { label: "Trips Listed", value: dbTrips.length },
+                { label: "Experiences", value: dbExperiences.length },
+                { label: "Feed Posts", value: dbFeedPosts.length },
+                { label: "Reviews", value: dbReviews.length },
+                { label: "Open Grievances", value: dbGrievances.filter(g => g.status === "open").length },
               ].map(s => (
                 <div key={s.label} className="rounded-lg bg-card p-4 shadow-card">
                   <p className="text-2xl font-bold text-foreground">{s.value}</p>
@@ -1709,6 +1735,59 @@ const AdminDashboard = () => {
                 </div>
               ))}
             </div>
+
+            {/* Bookings & revenue trend (real data) */}
+            <div className="rounded-xl bg-card p-5 shadow-card">
+              <h3 className="font-bold text-foreground mb-4">Bookings &amp; Revenue by Month</h3>
+              <ResponsiveContainer width="100%" height={250}>
+                <BarChart data={(() => {
+                  const months: Record<string, { month: string; bookings: number; revenue: number }> = {};
+                  dbBookings.forEach(b => {
+                    const m = new Date(b.created_at).toLocaleDateString("en", { month: "short", year: "2-digit" });
+                    months[m] ||= { month: m, bookings: 0, revenue: 0 };
+                    months[m].bookings += 1;
+                    months[m].revenue += Number(b.total_price || 0);
+                  });
+                  return Object.values(months);
+                })()}>
+                  <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
+                  <XAxis dataKey="month" className="text-xs fill-muted-foreground" />
+                  <YAxis className="text-xs fill-muted-foreground" />
+                  <RechartsTooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 8 }} />
+                  <Bar dataKey="bookings" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="revenue" fill="hsl(var(--accent))" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+
+            {/* Top destinations from real trip listings */}
+            <div className="rounded-xl bg-card p-5 shadow-card">
+              <h3 className="font-bold text-foreground mb-4">Top Destinations (live trips)</h3>
+              {dbTrips.length === 0 ? (
+                <p className="text-sm text-muted-foreground">No trips listed yet.</p>
+              ) : (
+                <ResponsiveContainer width="100%" height={220}>
+                  <BarChart data={(() => {
+                    const counts: Record<string, number> = {};
+                    dbTrips.forEach((t: any) => {
+                      const d = t.destination || "Unspecified";
+                      counts[d] = (counts[d] || 0) + 1;
+                    });
+                    return Object.entries(counts)
+                      .map(([destination, trips]) => ({ destination, trips }))
+                      .sort((a, b) => b.trips - a.trips)
+                      .slice(0, 8);
+                  })()}>
+                    <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
+                    <XAxis dataKey="destination" className="text-xs fill-muted-foreground" />
+                    <YAxis allowDecimals={false} className="text-xs fill-muted-foreground" />
+                    <RechartsTooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 8 }} />
+                    <Bar dataKey="trips" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              )}
+            </div>
+
 
             {/* User Growth Chart */}
             <div className="rounded-xl bg-card p-5 shadow-card">
