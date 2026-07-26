@@ -116,6 +116,13 @@ const AdminDashboard = () => {
   const [dbHostApplications, setDbHostApplications] = useState<any[]>([]);
   const [dbBetaWaitlist, setDbBetaWaitlist] = useState<any[]>([]);
   const [activeAdminChat, setActiveAdminChat] = useState<{ id: string; name: string } | null>(null);
+  const [dbBookings, setDbBookings] = useState<any[]>([]);
+  const [dbFeedPosts, setDbFeedPosts] = useState<any[]>([]);
+  const [dbReviews, setDbReviews] = useState<any[]>([]);
+  const [dataRefreshKey, setDataRefreshKey] = useState(0);
+  const [lastSynced, setLastSynced] = useState<Date | null>(null);
+
+
 
   // Search & filters
   const [userSearch, setUserSearch] = useState("");
