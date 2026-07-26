@@ -51,6 +51,27 @@ const LABELS: Record<string, string> = {
 
 const humanize = (seg: string) => LABELS[seg] || seg.replace(/-/g, " ").replace(/\b\w/g, c => c.toUpperCase());
 
+// Paths that exist only as URL prefixes (no route of their own) get remapped or de-linked
+const PATH_ALIASES: Record<string, string> = {
+  "/admin": "/dashboard/admin",
+  "/dashboard/admin": "/dashboard/admin",
+  "/trip": "/trips",
+  "/experience": "/experiences",
+  "/destination": "/destinations",
+  "/resource": "/resources",
+  "/beta-wanderer": "/beta-wanderers",
+  "/blog": "/community",
+  "/trip-leader": "/trips",
+  "/beta-waitlist": "/beta-waitlist",
+};
+
+const NON_NAVIGABLE = new Set(["/dashboard", "/host", "/book", "/traveler", "/auth"]);
+
+const resolveHref = (href: string): string | undefined => {
+  if (NON_NAVIGABLE.has(href)) return undefined;
+  return PATH_ALIASES[href] ?? href;
+};
+
 interface Crumb { label: string; href?: string }
 
 interface BreadcrumbsProps {
@@ -63,16 +84,18 @@ const Breadcrumbs = ({ items, className }: BreadcrumbsProps) => {
   const auto = useMemo<Crumb[]>(() => {
     const segs = location.pathname.split("/").filter(Boolean);
     return segs.map((s, i) => {
-      const href = "/" + segs.slice(0, i + 1).join("/");
+      const rawHref = "/" + segs.slice(0, i + 1).join("/");
       // Truncate long IDs/UUIDs
       const isUuid = /^[0-9a-f]{8}-/i.test(s);
       const label = isUuid ? s.slice(0, 8) + "…" : humanize(s);
-      return { label, href: i < segs.length - 1 ? href : undefined };
+      const isLast = i === segs.length - 1;
+      return { label, href: isLast ? undefined : resolveHref(rawHref) };
     });
   }, [location.pathname]);
 
   const crumbs = items ?? auto;
   if (crumbs.length === 0) return null;
+
 
   return (
     <nav aria-label="Breadcrumb" className={`text-xs text-muted-foreground ${className ?? ""}`}>
