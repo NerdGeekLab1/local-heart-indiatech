@@ -165,19 +165,27 @@ const AdminDashboard = () => {
       setDbHostApplications(hostApps || []);
       setDbBetaWaitlist(betaSignups || []);
 
-      const [{ data: missions }, { data: invoices }, { data: perms }, { data: subs }, { data: participants }] = await Promise.all([
+      const [{ data: missions }, { data: invoices }, { data: perms }, { data: subs }, { data: participants }, { data: bookingRows }, { data: posts }, { data: reviewRows }] = await Promise.all([
         supabase.from("wanderer_missions").select("*").order("created_at", { ascending: false }),
         supabase.from("invoices").select("*").order("created_at", { ascending: false }),
         supabase.from("user_permissions").select("*").order("granted_at", { ascending: false }),
         supabase.from("subscriptions").select("*"),
         supabase.from("trip_participants").select("*"),
+        supabase.from("bookings").select("*").order("created_at", { ascending: false }),
+        supabase.from("feed_posts").select("*").order("created_at", { ascending: false }),
+        supabase.from("reviews").select("*").order("created_at", { ascending: false }),
       ]);
       setDbMissions(missions || []);
       setDbInvoices(invoices || []);
       setDbPermissions(perms || []);
       setDbSubscriptions(subs || []);
       setDbTripParticipants(participants || []);
+      setDbBookings(bookingRows || []);
+      setDbFeedPosts(posts || []);
+      setDbReviews(reviewRows || []);
+      setLastSynced(new Date());
     };
+
     fetchData();
   }, []);
 
