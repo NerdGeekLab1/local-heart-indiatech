@@ -486,7 +486,7 @@ const AdminDashboard = () => {
           city: u.city || app?.city || "—",
           application: app || null,
           listings: dbExperiences.filter((e: any) => e.host_id === u.id).length,
-          tripsHosted: dbTrips.filter((t: any) => t.host_id === u.id || t.created_by === u.id).length,
+          tripsHosted: dbTrips.filter((t: any) => t.creator_id === u.id).length,
           bookingsCount: dbBookings.filter((b: any) => b.host_id === u.id).length,
           revenue: dbInvoices.filter((i: any) => i.host_id === u.id).reduce((s: number, i: any) => s + Number(i.total_amount || 0), 0),
         };
