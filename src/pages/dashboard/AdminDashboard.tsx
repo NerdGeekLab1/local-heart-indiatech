@@ -187,7 +187,14 @@ const AdminDashboard = () => {
     };
 
     fetchData();
+  }, [dataRefreshKey]);
+
+  // Live analytics: re-pull platform data every 60s while the console is open
+  useEffect(() => {
+    const id = setInterval(() => setDataRefreshKey(k => k + 1), 60000);
+    return () => clearInterval(id);
   }, []);
+
 
   // Audit log loader — refreshes when an admin action bumps the reload key
   useEffect(() => {
