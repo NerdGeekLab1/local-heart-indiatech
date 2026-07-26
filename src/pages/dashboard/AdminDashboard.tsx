@@ -116,6 +116,13 @@ const AdminDashboard = () => {
   const [dbHostApplications, setDbHostApplications] = useState<any[]>([]);
   const [dbBetaWaitlist, setDbBetaWaitlist] = useState<any[]>([]);
   const [activeAdminChat, setActiveAdminChat] = useState<{ id: string; name: string } | null>(null);
+  const [dbBookings, setDbBookings] = useState<any[]>([]);
+  const [dbFeedPosts, setDbFeedPosts] = useState<any[]>([]);
+  const [dbReviews, setDbReviews] = useState<any[]>([]);
+  const [dataRefreshKey, setDataRefreshKey] = useState(0);
+  const [lastSynced, setLastSynced] = useState<Date | null>(null);
+
+
 
   // Search & filters
   const [userSearch, setUserSearch] = useState("");
@@ -158,21 +165,36 @@ const AdminDashboard = () => {
       setDbHostApplications(hostApps || []);
       setDbBetaWaitlist(betaSignups || []);
 
-      const [{ data: missions }, { data: invoices }, { data: perms }, { data: subs }, { data: participants }] = await Promise.all([
+      const [{ data: missions }, { data: invoices }, { data: perms }, { data: subs }, { data: participants }, { data: bookingRows }, { data: posts }, { data: reviewRows }] = await Promise.all([
         supabase.from("wanderer_missions").select("*").order("created_at", { ascending: false }),
         supabase.from("invoices").select("*").order("created_at", { ascending: false }),
         supabase.from("user_permissions").select("*").order("granted_at", { ascending: false }),
         supabase.from("subscriptions").select("*"),
         supabase.from("trip_participants").select("*"),
+        supabase.from("bookings").select("*").order("created_at", { ascending: false }),
+        supabase.from("feed_posts").select("*").order("created_at", { ascending: false }),
+        supabase.from("reviews").select("*").order("created_at", { ascending: false }),
       ]);
       setDbMissions(missions || []);
       setDbInvoices(invoices || []);
       setDbPermissions(perms || []);
       setDbSubscriptions(subs || []);
       setDbTripParticipants(participants || []);
+      setDbBookings(bookingRows || []);
+      setDbFeedPosts(posts || []);
+      setDbReviews(reviewRows || []);
+      setLastSynced(new Date());
     };
+
     fetchData();
+  }, [dataRefreshKey]);
+
+  // Live analytics: re-pull platform data every 60s while the console is open
+  useEffect(() => {
+    const id = setInterval(() => setDataRefreshKey(k => k + 1), 60000);
+    return () => clearInterval(id);
   }, []);
+
 
   // Audit log loader — refreshes when an admin action bumps the reload key
   useEffect(() => {
@@ -451,6 +473,26 @@ const AdminDashboard = () => {
   const leaderboard = [...dbWanderers].filter(w => w.status === "approved").sort((a, b) => (b.score || 0) - (a.score || 0));
   const hostQueue = dbHostApplications.filter(a => a.status !== "approved");
   const approvedHostApplications = dbHostApplications.filter(a => a.status === "approved");
+  // Live registered hosts = profiles that hold the host role in the database
+  const registeredHosts = useMemo(() => {
+    const hostIds = new Set(userRoles.filter(r => r.role === "host").map(r => r.user_id));
+    return dbUsers
+      .filter(u => hostIds.has(u.id))
+      .map(u => {
+        const app = dbHostApplications.find(a => a.user_id === u.id);
+        return {
+          ...u,
+          full_name: `${u.first_name || ""} ${u.last_name || ""}`.trim() || u.email || "Host",
+          city: u.city || app?.city || "—",
+          application: app || null,
+          listings: dbExperiences.filter((e: any) => e.host_id === u.id).length,
+          tripsHosted: dbTrips.filter((t: any) => t.creator_id === u.id).length,
+          bookingsCount: dbBookings.filter((b: any) => b.host_id === u.id).length,
+          revenue: dbInvoices.filter((i: any) => i.host_id === u.id).reduce((s: number, i: any) => s + Number(i.total_amount || 0), 0),
+        };
+      });
+  }, [dbUsers, userRoles, dbHostApplications, dbExperiences, dbTrips, dbBookings, dbInvoices]);
+
   const bannedUserIds = new Set(dbPermissions.filter(p => p.permission === "account_banned").map(p => p.user_id));
 
   const statusBadge = (status: string) => {
@@ -1150,7 +1192,71 @@ const AdminDashboard = () => {
         {/* Hosts Tab */}
         {activeTab === "hosts" && (
           <div className="mt-6">
-            <h2 className="text-xl font-bold text-foreground mb-4">All Hosts ({hosts.length + approvedHostApplications.length})</h2>
+            <div className="flex items-center justify-between mb-4 gap-3 flex-wrap">
+              <h2 className="text-xl font-bold text-foreground">
+                Hosts ({registeredHosts.length} registered · {hosts.length} showcase)
+              </h2>
+              <Button size="sm" variant="outline" className="rounded-full text-xs gap-1.5" onClick={() => setDataRefreshKey(k => k + 1)}>
+                <TrendingUp className="w-3.5 h-3.5" /> Refresh live data
+              </Button>
+            </div>
+
+            {/* Live registered hosts pulled from the database */}
+            <div className="mb-6 rounded-xl bg-card p-4 shadow-card">
+              <h3 className="font-bold text-foreground mb-1">Registered hosts (live)</h3>
+              <p className="text-xs text-muted-foreground mb-3">
+                Every account carrying the host role, with their real listings, trips, bookings and revenue.
+              </p>
+              {registeredHosts.length === 0 ? (
+                <p className="text-sm text-muted-foreground">No hosts registered yet. Approve a host application to add one.</p>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-xs">
+                    <thead className="text-muted-foreground">
+                      <tr className="border-b border-border">
+                        <th className="text-left py-2">Host</th>
+                        <th className="text-left">City</th>
+                        <th className="text-right">Listings</th>
+                        <th className="text-right">Trips</th>
+                        <th className="text-right">Bookings</th>
+                        <th className="text-right">Revenue</th>
+                        <th className="text-right">Joined</th>
+                        <th className="text-right">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {registeredHosts.map(h => (
+                        <tr key={h.id} className="border-b border-border last:border-0">
+                          <td className="py-2">
+                            <p className="font-semibold text-foreground">{h.full_name}</p>
+                            <p className="text-[11px] text-muted-foreground">{h.email}</p>
+                          </td>
+                          <td>{h.city}</td>
+                          <td className="text-right">{h.listings}</td>
+                          <td className="text-right">{h.tripsHosted}</td>
+                          <td className="text-right">{h.bookingsCount}</td>
+                          <td className="text-right">{format(h.revenue)}</td>
+                          <td className="text-right">{h.created_at ? new Date(h.created_at).toLocaleDateString() : "—"}</td>
+                          <td className="text-right">
+                            <div className="inline-flex gap-1">
+                              <Button size="sm" variant="outline" className="rounded-full text-[11px] h-7 px-2 gap-1"
+                                onClick={() => setActiveAdminChat({ id: h.id, name: h.full_name })}>
+                                <MessageSquare className="w-3 h-3" /> Chat
+                              </Button>
+                              <Button size="sm" variant="outline" className="rounded-full text-[11px] h-7 px-2 gap-1 text-destructive"
+                                onClick={() => banUser(h)} disabled={bannedUserIds.has(h.id)}>
+                                <Ban className="w-3 h-3" /> {bannedUserIds.has(h.id) ? "Banned" : "Ban"}
+                              </Button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+
             {approvedHostApplications.length > 0 && (
               <div className="mb-5 rounded-lg bg-card p-4 shadow-card">
                 <h3 className="font-bold text-foreground mb-2">Approved host applications</h3>
@@ -1165,6 +1271,8 @@ const AdminDashboard = () => {
                 </div>
               </div>
             )}
+            <h3 className="font-bold text-foreground mb-2">Showcase hosts (catalog)</h3>
+
             <div className="space-y-3">
               {hosts.map(h => {
                 const status = getHostStatus(h.id);
@@ -1587,13 +1695,39 @@ const AdminDashboard = () => {
 
         {activeTab === "analytics" && (
           <div className="mt-6 space-y-6">
-            <h2 className="text-xl font-bold text-foreground mb-4">Platform Analytics</h2>
+            <div className="flex items-center justify-between gap-3 flex-wrap mb-4">
+              <div>
+                <h2 className="text-xl font-bold text-foreground">Platform Analytics</h2>
+                <p className="text-xs text-muted-foreground">
+                  Live database metrics · auto-refresh every 60s
+                  {lastSynced ? ` · last synced ${lastSynced.toLocaleTimeString()}` : ""}
+                </p>
+              </div>
+              <div className="flex gap-2">
+                <Button size="sm" variant="outline" className="rounded-full text-xs gap-1.5" onClick={() => setDataRefreshKey(k => k + 1)}>
+                  <TrendingUp className="w-3.5 h-3.5" /> Refresh now
+                </Button>
+                <Link to="/admin/performance">
+                  <Button size="sm" variant="outline" className="rounded-full text-xs gap-1.5">
+                    <BarChart3 className="w-3.5 h-3.5" /> Performance profiler
+                  </Button>
+                </Link>
+              </div>
+            </div>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
               {[
                 { label: "Total Users", value: dbUsers.length },
+                { label: "Hosts", value: userRoles.filter(r => r.role === "host").length },
+                { label: "Travelers", value: userRoles.filter(r => r.role === "traveler").length },
                 { label: "Active Subscriptions", value: dbSubscriptions.filter(s => s.is_active && s.tier !== "free").length },
-                { label: "Total Invoices", value: dbInvoices.length },
-                { label: "Total Revenue", value: format(dbInvoices.reduce((s, i) => s + Number(i.total_amount || 0), 0)) },
+                { label: "Bookings", value: dbBookings.length },
+                { label: "Booking Value", value: format(dbBookings.reduce((s, b) => s + Number(b.total_price || 0), 0)) },
+                { label: "Invoiced Revenue", value: format(dbInvoices.reduce((s, i) => s + Number(i.total_amount || 0), 0)) },
+                { label: "Trips Listed", value: dbTrips.length },
+                { label: "Experiences", value: dbExperiences.length },
+                { label: "Feed Posts", value: dbFeedPosts.length },
+                { label: "Reviews", value: dbReviews.length },
+                { label: "Open Grievances", value: dbGrievances.filter(g => g.status === "open").length },
               ].map(s => (
                 <div key={s.label} className="rounded-lg bg-card p-4 shadow-card">
                   <p className="text-2xl font-bold text-foreground">{s.value}</p>
@@ -1601,6 +1735,63 @@ const AdminDashboard = () => {
                 </div>
               ))}
             </div>
+
+            {/* Bookings & revenue trend (real data) */}
+            <div className="rounded-xl bg-card p-5 shadow-card">
+              <h3 className="font-bold text-foreground mb-4">Bookings &amp; Revenue by Month</h3>
+              {dbBookings.length === 0 && (
+                <p className="text-sm text-muted-foreground mb-2">No bookings recorded yet — this chart fills automatically as travelers book.</p>
+              )}
+              <ResponsiveContainer width="100%" height={250}>
+
+                <BarChart data={(() => {
+                  const months: Record<string, { month: string; bookings: number; revenue: number }> = {};
+                  dbBookings.forEach(b => {
+                    const m = new Date(b.created_at).toLocaleDateString("en", { month: "short", year: "2-digit" });
+                    months[m] ||= { month: m, bookings: 0, revenue: 0 };
+                    months[m].bookings += 1;
+                    months[m].revenue += Number(b.total_price || 0);
+                  });
+                  return Object.values(months);
+                })()}>
+                  <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
+                  <XAxis dataKey="month" className="text-xs fill-muted-foreground" />
+                  <YAxis className="text-xs fill-muted-foreground" />
+                  <RechartsTooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 8 }} />
+                  <Bar dataKey="bookings" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="revenue" fill="hsl(var(--accent))" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+
+            {/* Top destinations from real trip listings */}
+            <div className="rounded-xl bg-card p-5 shadow-card">
+              <h3 className="font-bold text-foreground mb-4">Top Destinations (live trips)</h3>
+              {dbTrips.length === 0 ? (
+                <p className="text-sm text-muted-foreground">No trips listed yet.</p>
+              ) : (
+                <ResponsiveContainer width="100%" height={220}>
+                  <BarChart data={(() => {
+                    const counts: Record<string, number> = {};
+                    dbTrips.forEach((t: any) => {
+                      const d = t.destination || "Unspecified";
+                      counts[d] = (counts[d] || 0) + 1;
+                    });
+                    return Object.entries(counts)
+                      .map(([destination, trips]) => ({ destination, trips }))
+                      .sort((a, b) => b.trips - a.trips)
+                      .slice(0, 8);
+                  })()}>
+                    <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
+                    <XAxis dataKey="destination" className="text-xs fill-muted-foreground" />
+                    <YAxis allowDecimals={false} className="text-xs fill-muted-foreground" />
+                    <RechartsTooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 8 }} />
+                    <Bar dataKey="trips" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              )}
+            </div>
+
 
             {/* User Growth Chart */}
             <div className="rounded-xl bg-card p-5 shadow-card">
