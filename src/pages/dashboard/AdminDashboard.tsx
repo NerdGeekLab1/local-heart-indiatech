@@ -1739,7 +1739,11 @@ const AdminDashboard = () => {
             {/* Bookings & revenue trend (real data) */}
             <div className="rounded-xl bg-card p-5 shadow-card">
               <h3 className="font-bold text-foreground mb-4">Bookings &amp; Revenue by Month</h3>
+              {dbBookings.length === 0 && (
+                <p className="text-sm text-muted-foreground mb-2">No bookings recorded yet — this chart fills automatically as travelers book.</p>
+              )}
               <ResponsiveContainer width="100%" height={250}>
+
                 <BarChart data={(() => {
                   const months: Record<string, { month: string; bookings: number; revenue: number }> = {};
                   dbBookings.forEach(b => {
