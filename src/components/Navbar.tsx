@@ -64,6 +64,41 @@ const Navbar = () => {
 
   const isActive = (path: string) => location.pathname === path;
 
+  // Admin console runs chrome-free: replace the public site nav with a slim admin bar
+  const isAdminArea =
+    location.pathname.startsWith("/admin") || location.pathname.startsWith("/dashboard/admin");
+
+  if (isAdminArea) {
+    return (
+      <nav className="fixed top-0 left-0 right-0 z-50 bg-card/90 backdrop-blur-xl shadow-card">
+        <div className="mx-auto max-w-[1500px] px-4 sm:px-6 lg:px-8">
+          <div className="flex h-14 items-center justify-between gap-3">
+            <div className="flex items-center gap-3 min-w-0">
+              <Link to="/dashboard/admin" className="text-lg font-bold text-primary shrink-0">
+                Travelista <span className="text-foreground/70 font-medium">Admin</span>
+              </Link>
+            </div>
+            <div className="flex items-center gap-2">
+              <ThemeToggle />
+              <Link to="/">
+                <Button variant="ghost" size="sm" className="rounded-full text-xs gap-1.5">
+                  <Compass className="w-3.5 h-3.5" /> View site
+                </Button>
+              </Link>
+              {user && (
+                <Button variant="outline" size="sm" className="rounded-full text-xs gap-1.5" onClick={handleSignOut}>
+                  <LogOut className="w-3.5 h-3.5" /> Sign out
+                </Button>
+              )}
+            </div>
+          </div>
+        </div>
+      </nav>
+    );
+  }
+
+
+
   return (
     <nav className={`fixed top-0 left-0 right-0 z-50 transition-colors duration-300 ${isHome ? "bg-transparent" : "bg-card/80 backdrop-blur-xl shadow-card"}`}>
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
