@@ -1,12 +1,15 @@
 import { BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer } from "recharts";
 import { useState, useEffect, useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
+import TestModePanel from "@/components/admin/TestModePanel";
+
 import { Link, useSearchParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Users, DollarSign, TrendingUp, Shield, AlertTriangle, Star, MapPin, Calendar, Settings, FileText,
   BarChart3, Globe, Flag, Eye, Plus, Trash2, UtensilsCrossed, Video, ChevronDown, Ban, CheckCircle,
   Edit, Compass, MessageSquare, Target, Lock, Receipt, Trophy, Crosshair, Search, Bell, Mail,
-  Crown, Gem, Sparkles, UserX, UserCheck, Filter, Key, Clock
+  Crown, Gem, Sparkles, UserX, UserCheck, Filter, Key, Clock, Beaker
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -28,7 +31,10 @@ import FeedModerationPanel from "@/components/admin/FeedModerationPanel";
 import ChatPanel from "@/components/ChatPanel";
 import { Heart, Menu } from "lucide-react";
 
-type Tab = "overview" | "hosts" | "hostWaitlist" | "bookings" | "experiences" | "destinations" | "trips" | "grievances" | "users" | "wanderers" | "missions" | "leaderboard" | "invoices" | "moderation" | "analytics" | "settings" | "configuration" | "emails" | "plans" | "weddings" | "audit";
+type Tab = "overview" | "hosts" | "hostWaitlist" | "bookings" | "experiences" | "destinations" | "trips" | "grievances" | "users" | "wanderers" | "missions" | "leaderboard" | "invoices" | "moderation" | "analytics" | "settings" | "configuration" | "emails" | "plans" | "weddings" | "audit" | "testmode";
+
+const ADMIN_TAB_KEY = "travelista.admin.activeTab";
+
 
 const destinationFields: FieldConfig[] = [
   { key: "name", label: "City Name", required: true },
@@ -73,9 +79,21 @@ const SUBSCRIPTION_TIERS = [
 ];
 
 const AdminDashboard = () => {
-  const [searchParams] = useSearchParams();
-  const initialTab = (searchParams.get("tab") as Tab) || "overview";
-  const [activeTab, setActiveTab] = useState<Tab>(initialTab);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const initialTab = (searchParams.get("tab") as Tab)
+    || (typeof localStorage !== "undefined" ? (localStorage.getItem(ADMIN_TAB_KEY) as Tab | null) : null)
+    || "overview";
+  const [activeTab, setActiveTabState] = useState<Tab>(initialTab);
+
+  // Controlled + persisted: survives tab switches, visibility changes and reloads
+  const setActiveTab = (tab: Tab) => {
+    setActiveTabState(tab);
+    try { localStorage.setItem(ADMIN_TAB_KEY, tab); } catch { /* storage unavailable */ }
+    const next = new URLSearchParams(searchParams);
+    next.set("tab", tab);
+    setSearchParams(next, { replace: true });
+  };
+
   const { toast } = useToast();
   const { user } = useAuth();
   const { format } = useCurrency();
@@ -142,8 +160,15 @@ const AdminDashboard = () => {
   const [permUserId, setPermUserId] = useState("");
   const [permType, setPermType] = useState(AVAILABLE_PERMISSIONS[0]);
 
-  useEffect(() => {
-    const fetchData = async () => {
+  // Cached admin data layer — switching tabs reuses the cache instead of refetching
+  const { data: adminData } = useQuery({
+    queryKey: ["admin-console-data", dataRefreshKey],
+    staleTime: 5 * 60 * 1000,
+    gcTime: 30 * 60 * 1000,
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    placeholderData: (prev: any) => prev,
+    queryFn: async () => {
       const [{ data: trips }, { data: grievances }, { data: expReqs }, { data: profiles }, { data: roles }, { data: wanderers }, { data: dbExp }, { data: hostApps }, { data: betaSignups }] = await Promise.all([
         supabase.from("trip_listings").select("*").order("created_at", { ascending: false }),
         supabase.from("grievances").select("*").order("created_at", { ascending: false }),
@@ -155,15 +180,6 @@ const AdminDashboard = () => {
         supabase.from("host_eligibility").select("*").order("created_at", { ascending: false }),
         supabase.from("beta_waitlist").select("*").order("created_at", { ascending: false }),
       ]);
-      setDbTrips(trips || []);
-      setDbGrievances(grievances || []);
-      setDbExperienceRequests(expReqs || []);
-      setDbUsers(profiles || []);
-      setUserRoles(roles || []);
-      setDbWanderers(wanderers || []);
-      setDbExperiences(dbExp || []);
-      setDbHostApplications(hostApps || []);
-      setDbBetaWaitlist(betaSignups || []);
 
       const [{ data: missions }, { data: invoices }, { data: perms }, { data: subs }, { data: participants }, { data: bookingRows }, { data: posts }, { data: reviewRows }] = await Promise.all([
         supabase.from("wanderer_missions").select("*").order("created_at", { ascending: false }),
@@ -175,19 +191,36 @@ const AdminDashboard = () => {
         supabase.from("feed_posts").select("*").order("created_at", { ascending: false }),
         supabase.from("reviews").select("*").order("created_at", { ascending: false }),
       ]);
-      setDbMissions(missions || []);
-      setDbInvoices(invoices || []);
-      setDbPermissions(perms || []);
-      setDbSubscriptions(subs || []);
-      setDbTripParticipants(participants || []);
-      setDbBookings(bookingRows || []);
-      setDbFeedPosts(posts || []);
-      setDbReviews(reviewRows || []);
-      setLastSynced(new Date());
-    };
 
-    fetchData();
-  }, [dataRefreshKey]);
+      return {
+        trips, grievances, expReqs, profiles, roles, wanderers, dbExp, hostApps, betaSignups,
+        missions, invoices, perms, subs, participants, bookingRows, posts, reviewRows,
+      };
+    },
+  });
+
+  useEffect(() => {
+    if (!adminData) return;
+    setDbTrips(adminData.trips || []);
+    setDbGrievances(adminData.grievances || []);
+    setDbExperienceRequests(adminData.expReqs || []);
+    setDbUsers(adminData.profiles || []);
+    setUserRoles(adminData.roles || []);
+    setDbWanderers(adminData.wanderers || []);
+    setDbExperiences(adminData.dbExp || []);
+    setDbHostApplications(adminData.hostApps || []);
+    setDbBetaWaitlist(adminData.betaSignups || []);
+    setDbMissions(adminData.missions || []);
+    setDbInvoices(adminData.invoices || []);
+    setDbPermissions(adminData.perms || []);
+    setDbSubscriptions(adminData.subs || []);
+    setDbTripParticipants(adminData.participants || []);
+    setDbBookings(adminData.bookingRows || []);
+    setDbFeedPosts(adminData.posts || []);
+    setDbReviews(adminData.reviewRows || []);
+    setLastSynced(new Date());
+  }, [adminData]);
+
 
   // Live analytics: re-pull platform data every 60s while the console is open
   useEffect(() => {
@@ -536,6 +569,8 @@ const AdminDashboard = () => {
     { id: "emails", label: "Emails", icon: Mail, group: "Settings" },
     { id: "configuration", label: "Configuration", icon: Key, group: "Settings" },
     { id: "settings", label: "General", icon: Settings, group: "Settings" },
+    { id: "testmode", label: "Test Mode", icon: Beaker, group: "Settings" },
+
   ];
 
   const groupedTabs = tabs.reduce<Record<string, typeof tabs>>((acc, t) => {
@@ -1927,6 +1962,8 @@ const AdminDashboard = () => {
 
         {activeTab === "plans" && <SubscriptionPlansTab />}
         {activeTab === "weddings" && <WeddingsTab admin />}
+        {activeTab === "testmode" && <div className="mt-2"><TestModePanel /></div>}
+
 
         {activeTab === "audit" && (
           <div className="space-y-4 mt-2">

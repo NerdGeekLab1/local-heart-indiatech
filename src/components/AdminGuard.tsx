@@ -1,4 +1,4 @@
-import { ReactNode } from "react";
+import { ReactNode, useRef } from "react";
 import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -8,13 +8,19 @@ interface AdminGuardProps {
 
 /**
  * Guards admin-only routes.
- * - While auth is loading: render nothing (avoid flicker).
+ * - While auth is loading: render a spinner (avoid flicker).
  * - Unauthenticated: redirect to dedicated /admin-login with a `next` param.
  * - Authenticated but not admin: redirect to home.
+ * - Once authorized, the subtree stays mounted through background token/role
+ *   refreshes so the console never resets mid-session.
  */
 export default function AdminGuard({ children }: AdminGuardProps) {
   const { user, userRole, loading } = useAuth();
   const location = useLocation();
+  const authorizedOnce = useRef(false);
+
+  if (user && userRole === "admin") authorizedOnce.current = true;
+  if (authorizedOnce.current && user) return <>{children}</>;
 
   if (loading || (user && userRole === null)) {
     return (
@@ -35,3 +41,4 @@ export default function AdminGuard({ children }: AdminGuardProps) {
 
   return <>{children}</>;
 }
+
