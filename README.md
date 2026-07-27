@@ -263,3 +263,25 @@ Highlights of what's next:
 - More AI-driven personalisation (host matching, dynamic pricing).
 - Multi-language support (Hindi, Tamil, Bengali, Marathi).
 
+
+## API package & external database setup
+
+| File | Purpose |
+| --- | --- |
+| `docs/api/travelista.postman_collection.json` | Importable Postman collection — Auth, all tables (CRUD), RPCs, storage, edge functions. Base for the mobile app. |
+| `docs/api/README.md` | API guide: auth flow, PostgREST filters, RLS rules, storage upload contract. |
+| `docs/db/schema.sql` | Full portable schema (types, tables, grants, RLS, functions, triggers, buckets, auth trigger) for a new external Supabase project. |
+
+## Route protection
+
+- `/dashboard/admin`, `/admin/*` → `AdminGuard` (admin role, redirects to `/admin-login`).
+- `/dashboard/traveler`, `/dashboard/host` → `RequireAuth` with role (redirects to `/signup?next=…`).
+- Both guards keep the subtree mounted after the first successful authorization, so background
+  token/role refreshes never reset the dashboard.
+
+## Admin Test Mode
+
+`Admin Console → Settings → Test Mode` exposes the feature registry (`src/lib/featureRegistry.ts`)
+with semantic versions per capability (e.g. Trip 1.0 → 1.1 → 2.0). Admins can pin a version,
+choose the audiences it is exposed to (admin / host / traveler / guest), preview the product as a
+role, and read each version's changelog. State is persisted in localStorage via `useTestMode`.
