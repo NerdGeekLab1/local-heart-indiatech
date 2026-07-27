@@ -73,7 +73,7 @@ const allCategories = [
   { label: "Wedding", emoji: "💍" },
   { label: "Village", emoji: "🏡" },
   { label: "Festival", emoji: "🪔" },
-];
+].filter((c, i, arr) => arr.findIndex(x => x.label === c.label) === i);
 
 const Experiences = () => {
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
