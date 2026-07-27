@@ -12,6 +12,8 @@ import FeatureGate from "@/components/FeatureGate.tsx";
 import HeaderScripts from "@/components/HeaderScripts.tsx";
 const OnboardingChecklist = lazy(() => import("@/components/OnboardingChecklist.tsx"));
 import AdminGuard from "@/components/AdminGuard.tsx";
+import RequireAuth from "@/components/RequireAuth.tsx";
+
 import Breadcrumbs from "@/components/Breadcrumbs.tsx";
 import { useLocation } from "react-router-dom";
 import Index from "./pages/Index.tsx";
@@ -120,8 +122,9 @@ const App = () => (
             <Route path="/community" element={<Community />} />
             <Route path="/resources" element={<Resources />} />
             <Route path="/resource/:slug" element={<ResourceGuide />} />
-            <Route path="/dashboard/traveler" element={<TravelerDashboard />} />
-            <Route path="/dashboard/host" element={<HostDashboard />} />
+            <Route path="/dashboard/traveler" element={<RequireAuth role="traveler"><TravelerDashboard /></RequireAuth>} />
+            <Route path="/dashboard/host" element={<RequireAuth role="host"><HostDashboard /></RequireAuth>} />
+
             <Route path="/dashboard/admin" element={<AdminGuard><AdminDashboard /></AdminGuard>} />
             <Route path="/help" element={<HelpCenter />} />
             <Route path="/safety" element={<Safety />} />

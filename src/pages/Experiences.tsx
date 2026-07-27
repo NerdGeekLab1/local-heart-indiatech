@@ -73,7 +73,7 @@ const allCategories = [
   { label: "Wedding", emoji: "💍" },
   { label: "Village", emoji: "🏡" },
   { label: "Festival", emoji: "🪔" },
-];
+].filter((c, i, arr) => arr.findIndex(x => x.label === c.label) === i);
 
 const Experiences = () => {
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
@@ -307,7 +307,7 @@ const Experiences = () => {
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               {bikeExperiences.map((exp, i) => (
-                <Link to={`/experience/${exp.id}`} key={exp.id}>
+                <Link to={`/experience/${exp.id}`} key={`${exp.id}-${i}`}>
                   <motion.div
                     initial={{ opacity: 0, y: 10 }}
                     whileInView={{ opacity: 1, y: 0 }}
@@ -375,7 +375,7 @@ const Experiences = () => {
           </h2>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
             {allExperiences.slice(0, 4).map((exp, i) => (
-              <motion.div key={exp.id} initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }}
+              <motion.div key={`${exp.id}-${i}`} initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }}
                 className="relative aspect-[9/16] rounded-xl overflow-hidden group cursor-pointer">
                 <img src={exp.image} alt={exp.title} className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-500" />
                 <div className="absolute inset-0 bg-gradient-to-t from-foreground/70 via-transparent to-transparent" />
@@ -407,7 +407,7 @@ const Experiences = () => {
         {/* Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {filtered.map((exp, i) => (
-            <Link to={`/experience/${exp.id}`} key={exp.id}>
+            <Link to={`/experience/${exp.id}`} key={`${exp.id}-${i}`}>
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 whileInView={{ opacity: 1, y: 0 }}
