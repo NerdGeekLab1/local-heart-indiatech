@@ -6,6 +6,9 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/hooks/use-toast";
+import AdminPagination from "@/components/admin/AdminPagination";
+
+const PAGE_SIZE = 10;
 
 const REASON_CODES = [
   "Spam / promotional",

@@ -504,7 +504,20 @@ const AdminDashboard = () => {
   const allDestinations = [...destinations, ...customDestinations];
   const getHostStatus = (id: string) => hostStatuses[id] || "verified";
   const getBookingStatus = (id: string, orig: string) => bookingOverrides[id] || orig;
-  const activeReviews = reviews.filter(r => !removedReviews.includes(r.id));
+
+  // Pagination for tabular views
+  const [bookingsPage, setBookingsPage] = useState(0);
+  const [usersPage, setUsersPage] = useState(0);
+  const [hostQueuePage, setHostQueuePage] = useState(0);
+  const [wanderersPage, setWanderersPage] = useState(0);
+  const TABLE_PAGE_SIZE = 10;
+
+  const updateBookingStatus = async (id: string, status: string) => {
+    const { error } = await supabase.from("bookings").update({ status }).eq("id", id);
+    if (error) { toast({ title: "Update failed", description: error.message, variant: "destructive" }); return; }
+    setDbBookings(p => p.map(b => b.id === id ? { ...b, status } : b));
+    toast({ title: `Booking → ${status}` });
+  };
   const approvedWanderers = dbWanderers.filter(w => w.status === "approved");
   const leaderboard = [...dbWanderers].filter(w => w.status === "approved").sort((a, b) => (b.score || 0) - (a.score || 0));
   const hostQueue = dbHostApplications.filter(a => a.status !== "approved");
