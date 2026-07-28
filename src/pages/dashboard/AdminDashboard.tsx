@@ -1382,27 +1382,75 @@ const AdminDashboard = () => {
 
         {/* Bookings Tab */}
         {activeTab === "bookings" && (
-          <div className="mt-6 space-y-3">
-            <h2 className="text-xl font-bold text-foreground mb-4">All Bookings ({mockBookings.length})</h2>
-            {mockBookings.map(b => {
-              const h = hosts.find(x => x.id === b.hostId);
-              const status = getBookingStatus(b.id, b.status);
+          <div className="mt-6">
+            <h2 className="text-xl font-bold text-foreground mb-4">All Bookings ({dbBookings.length > 0 ? dbBookings.length : mockBookings.length})</h2>
+            {(() => {
+              const liveRows = dbBookings.map(b => ({
+                id: b.id as string, ref: `#${(b.id as string).slice(0, 8)}`,
+                host: getUserName(b.host_id), traveler: getUserName(b.traveler_id),
+                dates: `${b.start_date} → ${b.end_date}`, guests: b.guests ?? "—",
+                total: Number(b.total_price || 0), status: b.status || "pending", live: true,
+              }));
+              const demoRows = liveRows.length === 0 ? mockBookings.map(b => {
+                const h = hosts.find(x => x.id === b.hostId);
+                return {
+                  id: b.id, ref: `#${b.id}`, host: h ? `${h.name}, ${h.city}` : "—", traveler: b.travelerId,
+                  dates: `${b.startDate} → ${b.endDate}`, guests: b.guests,
+                  total: b.totalPrice, status: getBookingStatus(b.id, b.status), live: false,
+                };
+              }) : [];
+              const rows = [...liveRows, ...demoRows];
+              const pageCount = Math.max(1, Math.ceil(rows.length / TABLE_PAGE_SIZE));
+              const safePage = Math.min(bookingsPage, pageCount - 1);
+              const paged = rows.slice(safePage * TABLE_PAGE_SIZE, (safePage + 1) * TABLE_PAGE_SIZE);
               return (
-                <div key={b.id} className="rounded-lg bg-card p-4 shadow-card flex justify-between items-center">
-                  <div>
-                    <p className="font-medium text-foreground">#{b.id} · {h?.name}, {h?.city}</p>
-                    <p className="text-xs text-muted-foreground">{b.startDate} → {b.endDate} · {b.services.join(", ")}</p>
+                <div className="rounded-2xl border border-border bg-card shadow-card overflow-hidden">
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead className="bg-secondary/40 text-xs uppercase tracking-wider text-muted-foreground">
+                        <tr>
+                          <th className="text-left font-semibold px-4 py-3">Booking</th>
+                          <th className="text-left font-semibold px-4 py-3">Traveler</th>
+                          <th className="text-left font-semibold px-4 py-3">Host</th>
+                          <th className="text-left font-semibold px-4 py-3">Dates</th>
+                          <th className="text-left font-semibold px-4 py-3">Guests</th>
+                          <th className="text-right font-semibold px-4 py-3">Total</th>
+                          <th className="text-right font-semibold px-4 py-3">Status</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-border">
+                        {paged.map(r => (
+                          <tr key={r.id} className="hover:bg-secondary/20">
+                            <td className="px-4 py-3 font-medium text-foreground whitespace-nowrap">
+                              {r.ref}
+                              {!r.live && <span className="ml-1.5 text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-secondary text-muted-foreground">demo</span>}
+                            </td>
+                            <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">{r.traveler || "—"}</td>
+                            <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">{r.host || "—"}</td>
+                            <td className="px-4 py-3 text-xs text-muted-foreground whitespace-nowrap">{r.dates}</td>
+                            <td className="px-4 py-3 text-muted-foreground">{r.guests}</td>
+                            <td className="px-4 py-3 text-right font-bold text-foreground whitespace-nowrap">{format(r.total)}</td>
+                            <td className="px-4 py-3 text-right">
+                              <select className="text-xs rounded-md border border-input bg-background px-2 py-1"
+                                value={r.status}
+                                onChange={e => r.live
+                                  ? updateBookingStatus(r.id, e.target.value)
+                                  : (setBookingOverrides(p => ({ ...p, [r.id]: e.target.value })), toast({ title: `Booking → ${e.target.value}` }))}>
+                                <option value="pending">Pending</option><option value="confirmed">Confirmed</option>
+                                <option value="completed">Completed</option><option value="cancelled">Cancelled</option>
+                              </select>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
                   </div>
-                  <div className="text-right flex items-center gap-3">
-                    <p className="font-bold text-foreground">{format(b.totalPrice)}</p>
-                    <select className="text-xs rounded-md border border-input bg-background px-2 py-1"
-                      value={status} onChange={e => { setBookingOverrides(p => ({ ...p, [b.id]: e.target.value })); toast({ title: `Booking → ${e.target.value}` }); }}>
-                      <option value="pending">Pending</option><option value="confirmed">Confirmed</option><option value="completed">Completed</option><option value="cancelled">Cancelled</option>
-                    </select>
+                  <div className="px-4 pb-3">
+                    <AdminPagination page={safePage} total={rows.length} pageSize={TABLE_PAGE_SIZE} onPage={setBookingsPage} />
                   </div>
                 </div>
               );
-            })}
+            })()}
           </div>
         )}
 
@@ -1984,7 +2032,8 @@ const AdminDashboard = () => {
 
         {activeTab === "plans" && <SubscriptionPlansTab />}
         {activeTab === "weddings" && <WeddingsTab admin />}
-        {activeTab === "testmode" && <div className="mt-2"><TestModePanel /></div>}
+        {activeTab === "testmode" && <div className="mt-2"><TestModePanel />}</div>}
+        {activeTab === "docs" && <DocsTab />}
 
 
         {activeTab === "audit" && (
