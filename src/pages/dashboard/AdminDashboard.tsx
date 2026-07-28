@@ -2032,7 +2032,7 @@ const AdminDashboard = () => {
 
         {activeTab === "plans" && <SubscriptionPlansTab />}
         {activeTab === "weddings" && <WeddingsTab admin />}
-        {activeTab === "testmode" && <div className="mt-2"><TestModePanel />}</div>}
+        {activeTab === "testmode" && <div className="mt-2"><TestModePanel /></div>}
         {activeTab === "docs" && <DocsTab />}
 
 
