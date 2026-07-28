@@ -97,7 +97,7 @@ export const FeedModerationPanel = () => {
         <p className="text-sm text-muted-foreground text-center py-8">No posts in this view.</p>
       ) : (
         <div className="space-y-3">
-          {posts.map(p => {
+          {pagedPosts.map(p => {
             const author = authors[p.user_id];
             const isRemoving = removing === p.id;
             return (
@@ -158,6 +158,7 @@ export const FeedModerationPanel = () => {
           })}
         </div>
       )}
+      <AdminPagination page={safePage} total={posts.length} pageSize={PAGE_SIZE} onPage={setPage} />
     </div>
   );
 };
