@@ -6,6 +6,9 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/hooks/use-toast";
+import AdminPagination from "@/components/admin/AdminPagination";
+
+const PAGE_SIZE = 10;
 
 const REASON_CODES = [
   "Spam / promotional",
@@ -28,6 +31,7 @@ export const FeedModerationPanel = () => {
   const [removing, setRemoving] = useState<string | null>(null);
   const [reason, setReason] = useState(REASON_CODES[0]);
   const [reasonDetail, setReasonDetail] = useState("");
+  const [page, setPage] = useState(0);
 
   const load = async () => {
     let q = supabase.from("feed_posts").select("*").order("created_at", { ascending: false }).limit(100);
@@ -42,7 +46,11 @@ export const FeedModerationPanel = () => {
       setAuthors(map);
     }
   };
-  useEffect(() => { load(); /* eslint-disable-next-line */ }, [filter]);
+  useEffect(() => { load(); setPage(0); /* eslint-disable-next-line */ }, [filter]);
+
+  const pageCount = Math.max(1, Math.ceil(posts.length / PAGE_SIZE));
+  const safePage = Math.min(page, pageCount - 1);
+  const pagedPosts = posts.slice(safePage * PAGE_SIZE, (safePage + 1) * PAGE_SIZE);
 
   const approve = async (post: any) => {
     await supabase.from("feed_posts").update({ status: "active", removed_reason: null, removed_by: null, removed_at: null }).eq("id", post.id);
@@ -89,7 +97,7 @@ export const FeedModerationPanel = () => {
         <p className="text-sm text-muted-foreground text-center py-8">No posts in this view.</p>
       ) : (
         <div className="space-y-3">
-          {posts.map(p => {
+          {pagedPosts.map(p => {
             const author = authors[p.user_id];
             const isRemoving = removing === p.id;
             return (
@@ -150,6 +158,7 @@ export const FeedModerationPanel = () => {
           })}
         </div>
       )}
+      <AdminPagination page={safePage} total={posts.length} pageSize={PAGE_SIZE} onPage={setPage} />
     </div>
   );
 };

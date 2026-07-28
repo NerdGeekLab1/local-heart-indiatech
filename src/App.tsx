@@ -38,6 +38,8 @@ const AdminDashboard = lazy(() => import("./pages/dashboard/AdminDashboard.tsx")
 const HelpCenter = lazy(() => import("./pages/HelpCenter.tsx"));
 const Safety = lazy(() => import("./pages/Safety.tsx"));
 const Terms = lazy(() => import("./pages/Terms.tsx"));
+const Privacy = lazy(() => import("./pages/Privacy.tsx"));
+const Cookies = lazy(() => import("./pages/Cookies.tsx"));
 const Docs = lazy(() => import("./pages/Docs.tsx"));
 const HostTrip = lazy(() => import("./pages/HostTrip.tsx"));
 const Grievances = lazy(() => import("./pages/Grievances.tsx"));
@@ -129,6 +131,8 @@ const App = () => (
             <Route path="/help" element={<HelpCenter />} />
             <Route path="/safety" element={<Safety />} />
             <Route path="/terms" element={<Terms />} />
+            <Route path="/privacy" element={<Privacy />} />
+            <Route path="/cookies" element={<Cookies />} />
             <Route path="/docs" element={<Docs />} />
             <Route path="/host-trip" element={<HostTrip />} />
             <Route path="/grievances" element={<Grievances />} />

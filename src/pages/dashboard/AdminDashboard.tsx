@@ -28,10 +28,13 @@ import SubscriptionPlansTab from "@/components/admin/SubscriptionPlansTab";
 import WeddingsTab from "@/components/admin/WeddingsTab";
 import BetaModerationTools from "@/components/admin/BetaModerationTools";
 import FeedModerationPanel from "@/components/admin/FeedModerationPanel";
+import ReviewModerationPanel from "@/components/admin/ReviewModerationPanel";
+import AdminPagination from "@/components/admin/AdminPagination";
+import DocsTab from "@/components/admin/DocsTab";
 import ChatPanel from "@/components/ChatPanel";
-import { Heart, Menu } from "lucide-react";
+import { Heart, Menu, BookOpen } from "lucide-react";
 
-type Tab = "overview" | "hosts" | "hostWaitlist" | "bookings" | "experiences" | "destinations" | "trips" | "grievances" | "users" | "wanderers" | "missions" | "leaderboard" | "invoices" | "moderation" | "analytics" | "settings" | "configuration" | "emails" | "plans" | "weddings" | "audit" | "testmode";
+type Tab = "overview" | "hosts" | "hostWaitlist" | "bookings" | "experiences" | "destinations" | "trips" | "grievances" | "users" | "wanderers" | "missions" | "leaderboard" | "invoices" | "feedModeration" | "reviewModeration" | "analytics" | "settings" | "configuration" | "emails" | "plans" | "weddings" | "audit" | "testmode" | "docs";
 
 const ADMIN_TAB_KEY = "travelista.admin.activeTab";
 
@@ -501,7 +504,20 @@ const AdminDashboard = () => {
   const allDestinations = [...destinations, ...customDestinations];
   const getHostStatus = (id: string) => hostStatuses[id] || "verified";
   const getBookingStatus = (id: string, orig: string) => bookingOverrides[id] || orig;
-  const activeReviews = reviews.filter(r => !removedReviews.includes(r.id));
+
+  // Pagination for tabular views
+  const [bookingsPage, setBookingsPage] = useState(0);
+  const [usersPage, setUsersPage] = useState(0);
+  const [hostQueuePage, setHostQueuePage] = useState(0);
+  const [wanderersPage, setWanderersPage] = useState(0);
+  const TABLE_PAGE_SIZE = 10;
+
+  const updateBookingStatus = async (id: string, status: string) => {
+    const { error } = await supabase.from("bookings").update({ status }).eq("id", id);
+    if (error) { toast({ title: "Update failed", description: error.message, variant: "destructive" }); return; }
+    setDbBookings(p => p.map(b => b.id === id ? { ...b, status } : b));
+    toast({ title: `Booking → ${status}` });
+  };
   const approvedWanderers = dbWanderers.filter(w => w.status === "approved");
   const leaderboard = [...dbWanderers].filter(w => w.status === "approved").sort((a, b) => (b.score || 0) - (a.score || 0));
   const hostQueue = dbHostApplications.filter(a => a.status !== "approved");
@@ -562,7 +578,8 @@ const AdminDashboard = () => {
     { id: "invoices", label: "Invoices", icon: Receipt, group: "Operations" },
     { id: "missions", label: "Missions", icon: Crosshair, group: "Operations" },
     { id: "grievances", label: "Grievances", icon: MessageSquare, badge: dbGrievances.filter(g => g.status === "open").length, group: "Operations" },
-    { id: "moderation", label: "Moderation", icon: Shield, group: "Operations" },
+    { id: "feedModeration", label: "Feed Moderation", icon: Shield, badge: dbFeedPosts.filter(p => p.status === "pending").length, group: "Moderation" },
+    { id: "reviewModeration", label: "Review Moderation", icon: Star, badge: flaggedReviews.length, group: "Moderation" },
     { id: "audit", label: "Audit Log", icon: FileText, group: "Operations" },
 
     { id: "plans", label: "Subscription Plans", icon: Crown, group: "Settings" },
@@ -570,6 +587,8 @@ const AdminDashboard = () => {
     { id: "configuration", label: "Configuration", icon: Key, group: "Settings" },
     { id: "settings", label: "General", icon: Settings, group: "Settings" },
     { id: "testmode", label: "Test Mode", icon: Beaker, group: "Settings" },
+
+    { id: "docs", label: "Docs", icon: BookOpen, group: "Docs" },
 
   ];
 
@@ -1363,27 +1382,75 @@ const AdminDashboard = () => {
 
         {/* Bookings Tab */}
         {activeTab === "bookings" && (
-          <div className="mt-6 space-y-3">
-            <h2 className="text-xl font-bold text-foreground mb-4">All Bookings ({mockBookings.length})</h2>
-            {mockBookings.map(b => {
-              const h = hosts.find(x => x.id === b.hostId);
-              const status = getBookingStatus(b.id, b.status);
+          <div className="mt-6">
+            <h2 className="text-xl font-bold text-foreground mb-4">All Bookings ({dbBookings.length > 0 ? dbBookings.length : mockBookings.length})</h2>
+            {(() => {
+              const liveRows = dbBookings.map(b => ({
+                id: b.id as string, ref: `#${(b.id as string).slice(0, 8)}`,
+                host: getUserName(b.host_id), traveler: getUserName(b.traveler_id),
+                dates: `${b.start_date} → ${b.end_date}`, guests: b.guests ?? "—",
+                total: Number(b.total_price || 0), status: b.status || "pending", live: true,
+              }));
+              const demoRows = liveRows.length === 0 ? mockBookings.map(b => {
+                const h = hosts.find(x => x.id === b.hostId);
+                return {
+                  id: b.id, ref: `#${b.id}`, host: h ? `${h.name}, ${h.city}` : "—", traveler: b.travelerId,
+                  dates: `${b.startDate} → ${b.endDate}`, guests: b.guests,
+                  total: b.totalPrice, status: getBookingStatus(b.id, b.status), live: false,
+                };
+              }) : [];
+              const rows = [...liveRows, ...demoRows];
+              const pageCount = Math.max(1, Math.ceil(rows.length / TABLE_PAGE_SIZE));
+              const safePage = Math.min(bookingsPage, pageCount - 1);
+              const paged = rows.slice(safePage * TABLE_PAGE_SIZE, (safePage + 1) * TABLE_PAGE_SIZE);
               return (
-                <div key={b.id} className="rounded-lg bg-card p-4 shadow-card flex justify-between items-center">
-                  <div>
-                    <p className="font-medium text-foreground">#{b.id} · {h?.name}, {h?.city}</p>
-                    <p className="text-xs text-muted-foreground">{b.startDate} → {b.endDate} · {b.services.join(", ")}</p>
+                <div className="rounded-2xl border border-border bg-card shadow-card overflow-hidden">
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead className="bg-secondary/40 text-xs uppercase tracking-wider text-muted-foreground">
+                        <tr>
+                          <th className="text-left font-semibold px-4 py-3">Booking</th>
+                          <th className="text-left font-semibold px-4 py-3">Traveler</th>
+                          <th className="text-left font-semibold px-4 py-3">Host</th>
+                          <th className="text-left font-semibold px-4 py-3">Dates</th>
+                          <th className="text-left font-semibold px-4 py-3">Guests</th>
+                          <th className="text-right font-semibold px-4 py-3">Total</th>
+                          <th className="text-right font-semibold px-4 py-3">Status</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-border">
+                        {paged.map(r => (
+                          <tr key={r.id} className="hover:bg-secondary/20">
+                            <td className="px-4 py-3 font-medium text-foreground whitespace-nowrap">
+                              {r.ref}
+                              {!r.live && <span className="ml-1.5 text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-secondary text-muted-foreground">demo</span>}
+                            </td>
+                            <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">{r.traveler || "—"}</td>
+                            <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">{r.host || "—"}</td>
+                            <td className="px-4 py-3 text-xs text-muted-foreground whitespace-nowrap">{r.dates}</td>
+                            <td className="px-4 py-3 text-muted-foreground">{r.guests}</td>
+                            <td className="px-4 py-3 text-right font-bold text-foreground whitespace-nowrap">{format(r.total)}</td>
+                            <td className="px-4 py-3 text-right">
+                              <select className="text-xs rounded-md border border-input bg-background px-2 py-1"
+                                value={r.status}
+                                onChange={e => r.live
+                                  ? updateBookingStatus(r.id, e.target.value)
+                                  : (setBookingOverrides(p => ({ ...p, [r.id]: e.target.value })), toast({ title: `Booking → ${e.target.value}` }))}>
+                                <option value="pending">Pending</option><option value="confirmed">Confirmed</option>
+                                <option value="completed">Completed</option><option value="cancelled">Cancelled</option>
+                              </select>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
                   </div>
-                  <div className="text-right flex items-center gap-3">
-                    <p className="font-bold text-foreground">{format(b.totalPrice)}</p>
-                    <select className="text-xs rounded-md border border-input bg-background px-2 py-1"
-                      value={status} onChange={e => { setBookingOverrides(p => ({ ...p, [b.id]: e.target.value })); toast({ title: `Booking → ${e.target.value}` }); }}>
-                      <option value="pending">Pending</option><option value="confirmed">Confirmed</option><option value="completed">Completed</option><option value="cancelled">Cancelled</option>
-                    </select>
+                  <div className="px-4 pb-3">
+                    <AdminPagination page={safePage} total={rows.length} pageSize={TABLE_PAGE_SIZE} onPage={setBookingsPage} />
                   </div>
                 </div>
               );
-            })}
+            })()}
           </div>
         )}
 
@@ -1676,16 +1743,19 @@ const AdminDashboard = () => {
         )}
 
         {/* Moderation */}
-        {activeTab === "moderation" && (
+        {/* ===== FEED MODERATION TAB ===== */}
+        {activeTab === "feedModeration" && (
           <div className="mt-6 space-y-6">
-            <h2 className="text-xl font-bold text-foreground mb-4">Content Moderation</h2>
-            <FeedModerationPanel />
-            <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+            <div>
+              <h2 className="text-xl font-bold text-foreground">Feed Moderation</h2>
+              <p className="text-sm text-muted-foreground mt-1">Approve, remove, and restore Traveler Feed posts. All actions are written to the audit log.</p>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
               {[
-                { label: "Verified Hosts", value: hosts.filter(h => getHostStatus(h.id) === "verified").length, icon: Shield },
-                { label: "Flagged Reviews", value: flaggedReviews.length, icon: Flag },
-                { label: "Removed Reviews", value: removedReviews.length, icon: Ban },
-                { label: "Pending Reports", value: 0, icon: AlertTriangle },
+                { label: "Active Posts", value: dbFeedPosts.filter(p => p.status === "active").length, icon: Shield },
+                { label: "Pending", value: dbFeedPosts.filter(p => p.status === "pending").length, icon: Clock },
+                { label: "Removed", value: dbFeedPosts.filter(p => p.status === "removed").length, icon: Ban },
+                { label: "Total Posts", value: dbFeedPosts.length, icon: FileText },
               ].map(s => (
                 <div key={s.label} className="rounded-lg bg-card p-5 shadow-card text-center">
                   <s.icon className="w-8 h-8 text-primary mx-auto mb-2" />
@@ -1694,37 +1764,37 @@ const AdminDashboard = () => {
                 </div>
               ))}
             </div>
+            <FeedModerationPanel />
+          </div>
+        )}
+
+        {/* ===== REVIEW MODERATION TAB ===== */}
+        {activeTab === "reviewModeration" && (
+          <div className="mt-6 space-y-6">
             <div>
-              <h3 className="font-bold text-foreground mb-3">Reviews to Moderate</h3>
-              <div className="space-y-3">
-                {activeReviews.map(r => {
-                  const isFlagged = flaggedReviews.includes(r.id);
-                  return (
-                    <div key={r.id} className={`rounded-lg bg-card p-4 shadow-card flex justify-between items-start ${isFlagged ? "border-2 border-destructive/30" : ""}`}>
-                      <div>
-                        <p className="text-sm font-medium text-foreground">{r.travelerName} → {hosts.find(h => h.id === r.hostId)?.name}</p>
-                        <div className="flex gap-0.5 mt-0.5">{Array.from({ length: r.rating }).map((_, j) => <Star key={j} className="w-3 h-3 fill-primary text-primary" />)}</div>
-                        <p className="text-xs text-muted-foreground mt-1">{r.text}</p>
-                      </div>
-                      <div className="flex gap-2 shrink-0">
-                        {!isFlagged ? (
-                          <Button variant="outline" size="sm" className="text-xs rounded-full" onClick={() => { setFlaggedReviews(p => [...p, r.id]); toast({ title: "Flagged" }); }}>
-                            <Flag className="w-3 h-3 mr-1" /> Flag
-                          </Button>
-                        ) : (
-                          <>
-                            <Button variant="outline" size="sm" className="text-xs rounded-full" onClick={() => { setFlaggedReviews(p => p.filter(id => id !== r.id)); }}>Unflag</Button>
-                            <Button variant="outline" size="sm" className="text-xs rounded-full text-destructive" onClick={() => {
-                              setRemovedReviews(p => [...p, r.id]); setFlaggedReviews(p => p.filter(id => id !== r.id)); toast({ title: "Removed", variant: "destructive" });
-                            }}><Trash2 className="w-3 h-3 mr-1" /> Remove</Button>
-                          </>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
+              <h2 className="text-xl font-bold text-foreground">Review Moderation</h2>
+              <p className="text-sm text-muted-foreground mt-1">Flag and remove traveler reviews. Live database reviews are shown first; demo reviews appear when the database has none.</p>
             </div>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+              {[
+                { label: "Live Reviews", value: dbReviews.length, icon: Star },
+                { label: "Verified Hosts", value: hosts.filter(h => getHostStatus(h.id) === "verified").length, icon: Shield },
+                { label: "Flagged Reviews", value: flaggedReviews.length, icon: Flag },
+                { label: "Removed Reviews", value: removedReviews.length, icon: Ban },
+              ].map(s => (
+                <div key={s.label} className="rounded-lg bg-card p-5 shadow-card text-center">
+                  <s.icon className="w-8 h-8 text-primary mx-auto mb-2" />
+                  <p className="text-2xl font-bold text-foreground">{s.value}</p>
+                  <p className="text-xs text-muted-foreground">{s.label}</p>
+                </div>
+              ))}
+            </div>
+            <ReviewModerationPanel
+              dbReviews={dbReviews}
+              mockReviews={reviews}
+              getUserName={getUserName}
+              getMockHostName={(hostId) => hosts.find(h => h.id === hostId)?.name || "Unknown host"}
+            />
           </div>
         )}
 
@@ -1963,6 +2033,7 @@ const AdminDashboard = () => {
         {activeTab === "plans" && <SubscriptionPlansTab />}
         {activeTab === "weddings" && <WeddingsTab admin />}
         {activeTab === "testmode" && <div className="mt-2"><TestModePanel /></div>}
+        {activeTab === "docs" && <DocsTab />}
 
 
         {activeTab === "audit" && (
