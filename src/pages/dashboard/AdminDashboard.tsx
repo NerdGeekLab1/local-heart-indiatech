@@ -28,10 +28,13 @@ import SubscriptionPlansTab from "@/components/admin/SubscriptionPlansTab";
 import WeddingsTab from "@/components/admin/WeddingsTab";
 import BetaModerationTools from "@/components/admin/BetaModerationTools";
 import FeedModerationPanel from "@/components/admin/FeedModerationPanel";
+import ReviewModerationPanel from "@/components/admin/ReviewModerationPanel";
+import AdminPagination from "@/components/admin/AdminPagination";
+import DocsTab from "@/components/admin/DocsTab";
 import ChatPanel from "@/components/ChatPanel";
-import { Heart, Menu } from "lucide-react";
+import { Heart, Menu, BookOpen } from "lucide-react";
 
-type Tab = "overview" | "hosts" | "hostWaitlist" | "bookings" | "experiences" | "destinations" | "trips" | "grievances" | "users" | "wanderers" | "missions" | "leaderboard" | "invoices" | "moderation" | "analytics" | "settings" | "configuration" | "emails" | "plans" | "weddings" | "audit" | "testmode";
+type Tab = "overview" | "hosts" | "hostWaitlist" | "bookings" | "experiences" | "destinations" | "trips" | "grievances" | "users" | "wanderers" | "missions" | "leaderboard" | "invoices" | "feedModeration" | "reviewModeration" | "analytics" | "settings" | "configuration" | "emails" | "plans" | "weddings" | "audit" | "testmode" | "docs";
 
 const ADMIN_TAB_KEY = "travelista.admin.activeTab";
 
@@ -562,7 +565,8 @@ const AdminDashboard = () => {
     { id: "invoices", label: "Invoices", icon: Receipt, group: "Operations" },
     { id: "missions", label: "Missions", icon: Crosshair, group: "Operations" },
     { id: "grievances", label: "Grievances", icon: MessageSquare, badge: dbGrievances.filter(g => g.status === "open").length, group: "Operations" },
-    { id: "moderation", label: "Moderation", icon: Shield, group: "Operations" },
+    { id: "feedModeration", label: "Feed Moderation", icon: Shield, badge: dbFeedPosts.filter(p => p.status === "pending").length, group: "Moderation" },
+    { id: "reviewModeration", label: "Review Moderation", icon: Star, badge: flaggedReviews.length, group: "Moderation" },
     { id: "audit", label: "Audit Log", icon: FileText, group: "Operations" },
 
     { id: "plans", label: "Subscription Plans", icon: Crown, group: "Settings" },
@@ -570,6 +574,8 @@ const AdminDashboard = () => {
     { id: "configuration", label: "Configuration", icon: Key, group: "Settings" },
     { id: "settings", label: "General", icon: Settings, group: "Settings" },
     { id: "testmode", label: "Test Mode", icon: Beaker, group: "Settings" },
+
+    { id: "docs", label: "Docs", icon: BookOpen, group: "Docs" },
 
   ];
 
