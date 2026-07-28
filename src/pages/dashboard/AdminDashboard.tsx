@@ -1682,16 +1682,19 @@ const AdminDashboard = () => {
         )}
 
         {/* Moderation */}
-        {activeTab === "moderation" && (
+        {/* ===== FEED MODERATION TAB ===== */}
+        {activeTab === "feedModeration" && (
           <div className="mt-6 space-y-6">
-            <h2 className="text-xl font-bold text-foreground mb-4">Content Moderation</h2>
-            <FeedModerationPanel />
-            <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+            <div>
+              <h2 className="text-xl font-bold text-foreground">Feed Moderation</h2>
+              <p className="text-sm text-muted-foreground mt-1">Approve, remove, and restore Traveler Feed posts. All actions are written to the audit log.</p>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
               {[
-                { label: "Verified Hosts", value: hosts.filter(h => getHostStatus(h.id) === "verified").length, icon: Shield },
-                { label: "Flagged Reviews", value: flaggedReviews.length, icon: Flag },
-                { label: "Removed Reviews", value: removedReviews.length, icon: Ban },
-                { label: "Pending Reports", value: 0, icon: AlertTriangle },
+                { label: "Active Posts", value: dbFeedPosts.filter(p => p.status === "active").length, icon: Shield },
+                { label: "Pending", value: dbFeedPosts.filter(p => p.status === "pending").length, icon: Clock },
+                { label: "Removed", value: dbFeedPosts.filter(p => p.status === "removed").length, icon: Ban },
+                { label: "Total Posts", value: dbFeedPosts.length, icon: FileText },
               ].map(s => (
                 <div key={s.label} className="rounded-lg bg-card p-5 shadow-card text-center">
                   <s.icon className="w-8 h-8 text-primary mx-auto mb-2" />
@@ -1700,37 +1703,37 @@ const AdminDashboard = () => {
                 </div>
               ))}
             </div>
+            <FeedModerationPanel />
+          </div>
+        )}
+
+        {/* ===== REVIEW MODERATION TAB ===== */}
+        {activeTab === "reviewModeration" && (
+          <div className="mt-6 space-y-6">
             <div>
-              <h3 className="font-bold text-foreground mb-3">Reviews to Moderate</h3>
-              <div className="space-y-3">
-                {activeReviews.map(r => {
-                  const isFlagged = flaggedReviews.includes(r.id);
-                  return (
-                    <div key={r.id} className={`rounded-lg bg-card p-4 shadow-card flex justify-between items-start ${isFlagged ? "border-2 border-destructive/30" : ""}`}>
-                      <div>
-                        <p className="text-sm font-medium text-foreground">{r.travelerName} → {hosts.find(h => h.id === r.hostId)?.name}</p>
-                        <div className="flex gap-0.5 mt-0.5">{Array.from({ length: r.rating }).map((_, j) => <Star key={j} className="w-3 h-3 fill-primary text-primary" />)}</div>
-                        <p className="text-xs text-muted-foreground mt-1">{r.text}</p>
-                      </div>
-                      <div className="flex gap-2 shrink-0">
-                        {!isFlagged ? (
-                          <Button variant="outline" size="sm" className="text-xs rounded-full" onClick={() => { setFlaggedReviews(p => [...p, r.id]); toast({ title: "Flagged" }); }}>
-                            <Flag className="w-3 h-3 mr-1" /> Flag
-                          </Button>
-                        ) : (
-                          <>
-                            <Button variant="outline" size="sm" className="text-xs rounded-full" onClick={() => { setFlaggedReviews(p => p.filter(id => id !== r.id)); }}>Unflag</Button>
-                            <Button variant="outline" size="sm" className="text-xs rounded-full text-destructive" onClick={() => {
-                              setRemovedReviews(p => [...p, r.id]); setFlaggedReviews(p => p.filter(id => id !== r.id)); toast({ title: "Removed", variant: "destructive" });
-                            }}><Trash2 className="w-3 h-3 mr-1" /> Remove</Button>
-                          </>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
+              <h2 className="text-xl font-bold text-foreground">Review Moderation</h2>
+              <p className="text-sm text-muted-foreground mt-1">Flag and remove traveler reviews. Live database reviews are shown first; demo reviews appear when the database has none.</p>
             </div>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+              {[
+                { label: "Live Reviews", value: dbReviews.length, icon: Star },
+                { label: "Verified Hosts", value: hosts.filter(h => getHostStatus(h.id) === "verified").length, icon: Shield },
+                { label: "Flagged Reviews", value: flaggedReviews.length, icon: Flag },
+                { label: "Removed Reviews", value: removedReviews.length, icon: Ban },
+              ].map(s => (
+                <div key={s.label} className="rounded-lg bg-card p-5 shadow-card text-center">
+                  <s.icon className="w-8 h-8 text-primary mx-auto mb-2" />
+                  <p className="text-2xl font-bold text-foreground">{s.value}</p>
+                  <p className="text-xs text-muted-foreground">{s.label}</p>
+                </div>
+              ))}
+            </div>
+            <ReviewModerationPanel
+              dbReviews={dbReviews}
+              mockReviews={reviews}
+              getUserName={getUserName}
+              getMockHostName={(hostId) => hosts.find(h => h.id === hostId)?.name || "Unknown host"}
+            />
           </div>
         )}
 
