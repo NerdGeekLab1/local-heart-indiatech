@@ -18,9 +18,16 @@ export default function AdminGuard({ children }: AdminGuardProps) {
   const { user, userRole, loading } = useAuth();
   const location = useLocation();
   const authorizedOnce = useRef(false);
+  const authorizedFor = useRef<string | null>(null);
+
+  if (authorizedFor.current !== (user?.id ?? null)) {
+    authorizedOnce.current = false;
+    authorizedFor.current = user?.id ?? null;
+  }
 
   if (user && userRole === "admin") authorizedOnce.current = true;
   if (authorizedOnce.current && user) return <>{children}</>;
+
 
   if (loading || (user && userRole === null)) {
     return (

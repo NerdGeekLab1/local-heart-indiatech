@@ -23,11 +23,20 @@ export default function RequireAuth({ children, role }: RequireAuthProps) {
   const { user, userRole, userRoles, loading } = useAuth();
   const location = useLocation();
   const authorizedOnce = useRef(false);
+  const authorizedFor = useRef<string | null>(null);
+
+  // Reset the "sticky" authorization whenever the signed-in account changes,
+  // so a traveler signing in after a host never inherits host access.
+  if (authorizedFor.current !== (user?.id ?? null)) {
+    authorizedOnce.current = false;
+    authorizedFor.current = user?.id ?? null;
+  }
 
   const hasRole = !role || userRole === role || userRoles.includes(role) || userRole === "admin";
 
   if (user && userRole !== null && hasRole) authorizedOnce.current = true;
   if (authorizedOnce.current && user) return <>{children}</>;
+
 
   if (loading || (user && userRole === null)) return <Spinner />;
 
