@@ -1560,51 +1560,72 @@ const AdminDashboard = () => {
             </div>
             {dbWanderers.length === 0 ? (
               <p className="text-muted-foreground text-center py-8">No wanderer applications yet.</p>
-            ) : (
-              <div className="space-y-3">
-                {dbWanderers.map(w => (
-                  <div key={w.id} className={`rounded-xl bg-card p-5 shadow-card ${w.status === "pending" ? "ring-2 ring-primary/20" : ""}`}>
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                      <div className="flex items-center gap-3 flex-1">
-                        <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-sm font-bold text-primary">{w.full_name[0]}</div>
-                        <div>
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <h3 className="font-bold text-foreground">{w.full_name}</h3>
-                            <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${statusBadge(w.status)}`}>{w.status}</span>
-                            <span className="text-xs bg-secondary text-muted-foreground px-2 py-0.5 rounded-full">{w.badge}</span>
-                            <span className="text-xs text-muted-foreground">Score: {w.score || 0}</span>
-                          </div>
-                          <p className="text-xs text-muted-foreground mt-0.5">{w.city} · {w.email}</p>
-                          <div className="flex gap-1 mt-1 flex-wrap">
-                            {w.travel_styles?.map((s: string) => (
-                              <span key={s} className="text-[10px] bg-primary/5 text-primary px-2 py-0.5 rounded-full">{s}</span>
-                            ))}
-                          </div>
-                        </div>
-                      </div>
-                      <div className="flex gap-2 shrink-0">
-                        {w.status === "pending" && (
-                          <>
-                            <Button size="sm" className="rounded-full text-xs bg-accent text-accent-foreground" onClick={() => updateWandererStatus(w.id, "approved")}>
-                              <CheckCircle className="w-3 h-3 mr-1" /> Approve
-                            </Button>
-                            <Button size="sm" variant="outline" className="rounded-full text-xs text-destructive" onClick={() => updateWandererStatus(w.id, "rejected")}>
-                              <Ban className="w-3 h-3 mr-1" /> Reject
-                            </Button>
-                          </>
-                        )}
-                        {w.status === "approved" && (
-                          <Button size="sm" variant="outline" className="rounded-full text-xs text-destructive" onClick={() => updateWandererStatus(w.id, "suspended")}>Suspend</Button>
-                        )}
-                        {(w.status === "rejected" || w.status === "suspended") && (
-                          <Button size="sm" variant="outline" className="rounded-full text-xs" onClick={() => updateWandererStatus(w.id, "approved")}>Reactivate</Button>
-                        )}
-                      </div>
-                    </div>
+            ) : (() => {
+              const pageCount = Math.max(1, Math.ceil(dbWanderers.length / TABLE_PAGE_SIZE));
+              const safePage = Math.min(wanderersPage, pageCount - 1);
+              const paged = dbWanderers.slice(safePage * TABLE_PAGE_SIZE, (safePage + 1) * TABLE_PAGE_SIZE);
+              return (
+                <div className="rounded-2xl border border-border bg-card shadow-card overflow-hidden">
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead className="bg-secondary/40 text-xs uppercase tracking-wider text-muted-foreground">
+                        <tr>
+                          <th className="text-left font-semibold px-3 py-2.5">Wanderer</th>
+                          <th className="text-left font-semibold px-3 py-2.5">City</th>
+                          <th className="text-left font-semibold px-3 py-2.5">Styles</th>
+                          <th className="text-left font-semibold px-3 py-2.5">Badge</th>
+                          <th className="text-left font-semibold px-3 py-2.5">Score</th>
+                          <th className="text-left font-semibold px-3 py-2.5">Status</th>
+                          <th className="text-right font-semibold px-3 py-2.5">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-border">
+                        {paged.map(w => (
+                          <tr key={w.id} className={w.status === "pending" ? "bg-primary/5" : "hover:bg-secondary/20"}>
+                            <td className="px-3 py-2.5">
+                              <p className="font-medium text-foreground whitespace-nowrap">{w.full_name}</p>
+                              <p className="text-xs text-muted-foreground">{w.email}</p>
+                            </td>
+                            <td className="px-3 py-2.5 text-muted-foreground whitespace-nowrap">{w.city}</td>
+                            <td className="px-3 py-2.5 text-xs text-muted-foreground max-w-[200px]">
+                              <span className="line-clamp-2">{w.travel_styles?.join(", ") || "—"}</span>
+                            </td>
+                            <td className="px-3 py-2.5 text-xs capitalize text-muted-foreground">{w.badge || "—"}</td>
+                            <td className="px-3 py-2.5 font-semibold text-foreground">{w.score || 0}</td>
+                            <td className="px-3 py-2.5">
+                              <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${statusBadge(w.status)}`}>{w.status}</span>
+                            </td>
+                            <td className="px-3 py-2.5 text-right whitespace-nowrap">
+                              <div className="flex gap-1.5 justify-end flex-wrap">
+                                {w.status === "pending" && (
+                                  <>
+                                    <Button size="sm" className="rounded-full text-xs bg-accent text-accent-foreground" onClick={() => updateWandererStatus(w.id, "approved")}>
+                                      <CheckCircle className="w-3 h-3 mr-1" /> Approve
+                                    </Button>
+                                    <Button size="sm" variant="outline" className="rounded-full text-xs text-destructive" onClick={() => updateWandererStatus(w.id, "rejected")}>
+                                      <Ban className="w-3 h-3 mr-1" /> Reject
+                                    </Button>
+                                  </>
+                                )}
+                                {w.status === "approved" && (
+                                  <Button size="sm" variant="outline" className="rounded-full text-xs text-destructive" onClick={() => updateWandererStatus(w.id, "suspended")}>Suspend</Button>
+                                )}
+                                {(w.status === "rejected" || w.status === "suspended") && (
+                                  <Button size="sm" variant="outline" className="rounded-full text-xs" onClick={() => updateWandererStatus(w.id, "approved")}>Reactivate</Button>
+                                )}
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
                   </div>
-                ))}
-              </div>
-            )}
+                  <div className="px-3 pb-3">
+                    <AdminPagination page={safePage} total={dbWanderers.length} pageSize={TABLE_PAGE_SIZE} onPage={setWanderersPage} />
+                  </div>
+                </div>
+              );
+            })()}
           </div>
         )}
 
