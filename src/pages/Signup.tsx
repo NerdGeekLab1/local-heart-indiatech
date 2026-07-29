@@ -69,19 +69,30 @@ const Signup = () => {
     }
   };
 
+  /** Land users on the dashboard matching their actual role, never a stale `next` path. */
+  const resolveLanding = (role: string | null | undefined) => {
+    const home =
+      role === "admin" ? "/dashboard/admin" : role === "host" ? "/dashboard/host" : "/dashboard/traveler";
+    const isDashboard = nextPath.startsWith("/dashboard/");
+    // Only honour `next` when it matches the signed-in role (or isn't a dashboard route).
+    if (!isDashboard) return nextPath;
+    return nextPath === home ? nextPath : home;
+  };
+
   const handleLogin = async () => {
     if (!form.email || !form.password) {
       toast({ title: "Please enter email and password", variant: "destructive" });
       return;
     }
     setLoading(true);
-    const { error } = await signIn(form.email, form.password);
+    const { error, role } = await signIn(form.email, form.password);
     setLoading(false);
     if (error) {
       toast({ title: error.message, variant: "destructive" });
     } else {
       toast({ title: "Welcome back! 🎉" });
-      navigate(nextPath);
+      try { window.localStorage.setItem("travelista.lastDashboard", resolveLanding(role)); } catch {}
+      navigate(resolveLanding(role), { replace: true });
     }
   };
 
