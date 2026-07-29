@@ -1200,46 +1200,71 @@ const AdminDashboard = () => {
                 <p className="font-medium text-foreground">No pending host applications</p>
                 <p className="text-sm text-muted-foreground">New applications from /host-eligibility will appear here until approved.</p>
               </div>
-            ) : (
-              <div className="space-y-3">
-                {hostQueue.map(app => (
-                  <div key={app.id} className="rounded-xl bg-card p-5 shadow-card">
-                    <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-4">
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <h3 className="font-bold text-foreground">{app.full_name}</h3>
-                          <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${statusBadge(app.status)}`}>{app.status.replace("_", " ")}</span>
-                          <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full">Score {app.eligibility_score}/100</span>
-                          <span className="text-xs bg-secondary text-muted-foreground px-2 py-0.5 rounded-full capitalize">{app.badge}</span>
-                        </div>
-                        <p className="text-sm text-muted-foreground mt-1">{app.email} · {app.city} · {app.english_proficiency} English</p>
-                        <p className="text-xs text-muted-foreground mt-2 line-clamp-2">{app.why_host || "No host story provided."}</p>
-                        <div className="grid sm:grid-cols-4 gap-2 mt-3 text-xs">
-                          <div className="rounded-lg bg-secondary/40 p-2"><p className="text-muted-foreground">Languages</p><p className="font-medium text-foreground">{app.languages?.join(", ") || "—"}</p></div>
-                          <div className="rounded-lg bg-secondary/40 p-2"><p className="text-muted-foreground">Specialties</p><p className="font-medium text-foreground">{app.hosting_specialties?.join(", ") || "—"}</p></div>
-                          <div className="rounded-lg bg-secondary/40 p-2"><p className="text-muted-foreground">Quiz</p><p className="font-medium text-foreground">{app.questionnaire_score || 0}/100</p></div>
-                          <div className="rounded-lg bg-secondary/40 p-2"><p className="text-muted-foreground">KYC</p><p className="font-medium text-foreground">{app.has_kyc ? "Provided" : "Missing"}</p></div>
-                        </div>
-                      </div>
-                      <div className="flex lg:flex-col gap-2 shrink-0 flex-wrap">
-                        <Button size="sm" className="rounded-full text-xs bg-accent text-accent-foreground hover:bg-accent/90" onClick={() => updateHostApplicationStatus(app, "approved")}>
-                          <CheckCircle className="w-3 h-3 mr-1" /> Approve
-                        </Button>
-                        <Button size="sm" variant="outline" className="rounded-full text-xs" onClick={() => updateHostApplicationStatus(app, "under_review")}>
-                          <Eye className="w-3 h-3 mr-1" /> Review
-                        </Button>
-                        <Button size="sm" variant="outline" className="rounded-full text-xs" onClick={() => updateHostApplicationStatus(app, "waitlisted")}>
-                          <Clock className="w-3 h-3 mr-1" /> Waitlist
-                        </Button>
-                        <Button size="sm" variant="outline" className="rounded-full text-xs text-destructive" onClick={() => updateHostApplicationStatus(app, "rejected")}>
-                          <Ban className="w-3 h-3 mr-1" /> Reject
-                        </Button>
-                      </div>
-                    </div>
+            ) : (() => {
+              const pageCount = Math.max(1, Math.ceil(hostQueue.length / TABLE_PAGE_SIZE));
+              const safePage = Math.min(hostQueuePage, pageCount - 1);
+              const paged = hostQueue.slice(safePage * TABLE_PAGE_SIZE, (safePage + 1) * TABLE_PAGE_SIZE);
+              return (
+                <div className="rounded-2xl border border-border bg-card shadow-card overflow-hidden">
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead className="bg-secondary/40 text-xs uppercase tracking-wider text-muted-foreground">
+                        <tr>
+                          <th className="text-left font-semibold px-3 py-2.5">Applicant</th>
+                          <th className="text-left font-semibold px-3 py-2.5">City</th>
+                          <th className="text-left font-semibold px-3 py-2.5">Score</th>
+                          <th className="text-left font-semibold px-3 py-2.5">Quiz</th>
+                          <th className="text-left font-semibold px-3 py-2.5">Languages</th>
+                          <th className="text-left font-semibold px-3 py-2.5">KYC</th>
+                          <th className="text-left font-semibold px-3 py-2.5">Status</th>
+                          <th className="text-right font-semibold px-3 py-2.5">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-border">
+                        {paged.map(app => (
+                          <tr key={app.id} className="hover:bg-secondary/20 align-top">
+                            <td className="px-3 py-2.5">
+                              <p className="font-medium text-foreground whitespace-nowrap">{app.full_name}</p>
+                              <p className="text-xs text-muted-foreground">{app.email}</p>
+                              <p className="text-xs text-muted-foreground capitalize">{app.badge} · {app.english_proficiency} English</p>
+                            </td>
+                            <td className="px-3 py-2.5 text-muted-foreground whitespace-nowrap">{app.city}</td>
+                            <td className="px-3 py-2.5 font-semibold text-primary whitespace-nowrap">{app.eligibility_score}/100</td>
+                            <td className="px-3 py-2.5 text-muted-foreground whitespace-nowrap">{app.questionnaire_score || 0}/100</td>
+                            <td className="px-3 py-2.5 text-xs text-muted-foreground max-w-[180px]">
+                              <span className="line-clamp-2">{app.languages?.join(", ") || "—"}</span>
+                            </td>
+                            <td className="px-3 py-2.5 text-xs text-muted-foreground">{app.has_kyc ? "Provided" : "Missing"}</td>
+                            <td className="px-3 py-2.5">
+                              <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${statusBadge(app.status)}`}>{app.status.replace("_", " ")}</span>
+                            </td>
+                            <td className="px-3 py-2.5 text-right whitespace-nowrap">
+                              <div className="flex gap-1.5 justify-end flex-wrap">
+                                <Button size="sm" className="rounded-full text-xs bg-accent text-accent-foreground hover:bg-accent/90" onClick={() => updateHostApplicationStatus(app, "approved")}>
+                                  <CheckCircle className="w-3 h-3 mr-1" /> Approve
+                                </Button>
+                                <Button size="sm" variant="outline" className="rounded-full text-xs" onClick={() => updateHostApplicationStatus(app, "under_review")}>
+                                  <Eye className="w-3 h-3 mr-1" /> Review
+                                </Button>
+                                <Button size="sm" variant="outline" className="rounded-full text-xs" onClick={() => updateHostApplicationStatus(app, "waitlisted")}>
+                                  <Clock className="w-3 h-3 mr-1" /> Waitlist
+                                </Button>
+                                <Button size="sm" variant="outline" className="rounded-full text-xs text-destructive" onClick={() => updateHostApplicationStatus(app, "rejected")}>
+                                  <Ban className="w-3 h-3 mr-1" /> Reject
+                                </Button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
                   </div>
-                ))}
-              </div>
-            )}
+                  <div className="px-3 pb-3">
+                    <AdminPagination page={safePage} total={hostQueue.length} pageSize={TABLE_PAGE_SIZE} onPage={setHostQueuePage} />
+                  </div>
+                </div>
+              );
+            })()}
           </div>
         )}
 
