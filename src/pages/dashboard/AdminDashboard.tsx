@@ -1,5 +1,5 @@
 import { BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer } from "recharts";
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, Fragment } from "react";
 import { useQuery } from "@tanstack/react-query";
 import TestModePanel from "@/components/admin/TestModePanel";
 
