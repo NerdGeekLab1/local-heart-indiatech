@@ -773,125 +773,165 @@ const AdminDashboard = () => {
             {/* User List */}
             {filteredUsers.length === 0 ? (
               <p className="text-muted-foreground text-center py-8">No users found.</p>
-            ) : (
-              <div className="space-y-2">
-                {filteredUsers.map(u => {
-                  const roles = userRoles.filter(r => r.user_id === u.id);
-                  const perms = dbPermissions.filter(p => p.user_id === u.id);
-                  const sub = dbSubscriptions.find(s => s.user_id === u.id);
-                  const isExpanded = expandedUser === u.id;
+            ) : (() => {
+              const pageCount = Math.max(1, Math.ceil(filteredUsers.length / TABLE_PAGE_SIZE));
+              const safePage = Math.min(usersPage, pageCount - 1);
+              const paged = filteredUsers.slice(safePage * TABLE_PAGE_SIZE, (safePage + 1) * TABLE_PAGE_SIZE);
+              return (
+                <div className="rounded-2xl border border-border bg-card shadow-card overflow-hidden">
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead className="bg-secondary/40 text-xs uppercase tracking-wider text-muted-foreground">
+                        <tr>
+                          <th className="text-left font-semibold px-3 py-2.5">User</th>
+                          <th className="text-left font-semibold px-3 py-2.5">Role</th>
+                          <th className="text-left font-semibold px-3 py-2.5">Plan</th>
+                          <th className="text-left font-semibold px-3 py-2.5">Phone</th>
+                          <th className="text-left font-semibold px-3 py-2.5">Permissions</th>
+                          <th className="text-left font-semibold px-3 py-2.5">Joined</th>
+                          <th className="text-right font-semibold px-3 py-2.5">Manage</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-border">
+                        {paged.map(u => {
+                          const roles = userRoles.filter(r => r.user_id === u.id);
+                          const perms = dbPermissions.filter(p => p.user_id === u.id);
+                          const sub = dbSubscriptions.find(s => s.user_id === u.id);
+                          const isExpanded = expandedUser === u.id;
 
-                  return (
-                    <div key={u.id} className={`rounded-xl bg-card shadow-card overflow-hidden ${isExpanded ? "ring-2 ring-primary/20" : ""}`}>
-                      <div className="p-4 flex items-center gap-3 cursor-pointer" onClick={() => setExpandedUser(isExpanded ? null : u.id)}>
-                        <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-sm font-bold text-primary shrink-0">
-                          {(u.first_name || "U")[0]}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <p className="font-semibold text-foreground">{u.first_name} {u.last_name || ""}</p>
-                            {roles.map(r => (
-                              <span key={r.id} className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${r.role === "admin" ? "bg-destructive/10 text-destructive" : r.role === "host" ? "bg-primary/10 text-primary" : "bg-accent/10 text-accent"}`}>
-                                {r.role}
-                              </span>
-                            ))}
-                            {sub && sub.tier !== "free" && (
-                              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-primary/10 text-primary flex items-center gap-0.5">
-                                <Crown className="w-2.5 h-2.5" /> {sub.tier}
-                              </span>
-                            )}
-                          </div>
-                          <p className="text-xs text-muted-foreground">{u.email || "No email"} · Joined {new Date(u.created_at).toLocaleDateString()}</p>
-                        </div>
-                        <ChevronDown className={`w-4 h-4 text-muted-foreground transition-transform shrink-0 ${isExpanded ? "rotate-180" : ""}`} />
-                      </div>
-
-                      <AnimatePresence>
-                        {isExpanded && (
-                          <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
-                            <div className="px-4 pb-4 border-t border-border pt-4 space-y-4">
-                              {/* Quick Actions */}
-                              <div className="flex flex-wrap gap-2">
-                                <Button size="sm" variant="outline" className="rounded-full text-xs gap-1" onClick={() => sendUserEmail(u)}>
-                                  <Mail className="w-3 h-3" /> Send Email
-                                </Button>
-                                <Button size="sm" variant="outline" className="rounded-full text-xs gap-1" onClick={() => notifyUser(u)}>
-                                  <Bell className="w-3 h-3" /> Notify
-                                </Button>
-                                <Button size="sm" variant="outline" className="rounded-full text-xs gap-1" onClick={() => setActiveAdminChat({ id: u.id, name: `${u.first_name || "User"} ${u.last_name || ""}`.trim() })}>
-                                  <MessageSquare className="w-3 h-3" /> Chat
-                                </Button>
-                                <Button size="sm" variant="outline" className="rounded-full text-xs gap-1 text-destructive" onClick={() => banUser(u)} disabled={bannedUserIds.has(u.id)}>
-                                  <UserX className="w-3 h-3" /> {bannedUserIds.has(u.id) ? "Banned" : "Ban"}
-                                </Button>
-                              </div>
-
-                              {/* Subscription Management */}
-                              <div className="rounded-lg bg-secondary/30 p-3">
-                                <p className="text-xs font-bold text-foreground mb-2 flex items-center gap-1"><Crown className="w-3 h-3 text-primary" /> Subscription Tier</p>
-                                <div className="flex gap-2 flex-wrap">
-                                  {SUBSCRIPTION_TIERS.map(tier => (
-                                    <button key={tier.id}
-                                      onClick={() => updateSubscription(u.id, tier.id)}
-                                      className={`text-xs px-3 py-1.5 rounded-full border transition-colors ${(sub?.tier || "free") === tier.id ? "bg-primary text-primary-foreground border-primary" : "border-border text-muted-foreground hover:text-foreground hover:border-foreground/30"}`}>
-                                      {tier.label} {tier.price > 0 && `₹${tier.price}`}
-                                    </button>
-                                  ))}
-                                </div>
-                              </div>
-
-                              {/* ACL - Inline Permission Management */}
-                              <div className="rounded-lg bg-secondary/30 p-3">
-                                <p className="text-xs font-bold text-foreground mb-2 flex items-center gap-1"><Lock className="w-3 h-3 text-primary" /> Permissions (ACL)</p>
-                                {perms.length > 0 && (
-                                  <div className="flex flex-wrap gap-1 mb-2">
-                                    {perms.map(p => (
-                                      <span key={p.id} className="text-[10px] bg-primary/10 text-primary px-2 py-1 rounded-full flex items-center gap-1">
-                                        {p.permission.replace(/_/g, " ")}
-                                        <button onClick={(e) => { e.stopPropagation(); revokePermission(p.id); }} className="ml-0.5 hover:text-destructive">×</button>
+                          return (
+                            <Fragment key={u.id}>
+                              <tr className={isExpanded ? "bg-primary/5" : "hover:bg-secondary/20"}>
+                                <td className="px-3 py-2.5">
+                                  <div className="flex items-center gap-2.5">
+                                    <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-xs font-bold text-primary shrink-0">
+                                      {(u.first_name || "U")[0]}
+                                    </div>
+                                    <div className="min-w-0">
+                                      <p className="font-medium text-foreground whitespace-nowrap">{u.first_name} {u.last_name || ""}</p>
+                                      <p className="text-xs text-muted-foreground truncate max-w-[200px]">{u.email || "No email"}</p>
+                                    </div>
+                                  </div>
+                                </td>
+                                <td className="px-3 py-2.5">
+                                  <div className="flex gap-1 flex-wrap">
+                                    {roles.length === 0 && <span className="text-xs text-muted-foreground">—</span>}
+                                    {roles.map(r => (
+                                      <span key={r.id} className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${r.role === "admin" ? "bg-destructive/10 text-destructive" : r.role === "host" ? "bg-primary/10 text-primary" : "bg-accent/10 text-accent"}`}>
+                                        {r.role}
                                       </span>
                                     ))}
                                   </div>
-                                )}
-                                <div className="flex gap-2">
-                                  <select className="text-xs h-8 rounded-md border border-input bg-background px-2 flex-1"
-                                    value={permType} onChange={e => setPermType(e.target.value)}>
-                                    {AVAILABLE_PERMISSIONS.map(p => <option key={p} value={p}>{p.replace(/_/g, " ")}</option>)}
-                                  </select>
-                                  <Button size="sm" className="rounded-full text-xs h-8" onClick={() => grantPermission(u.id)}>
-                                    <Plus className="w-3 h-3 mr-1" /> Grant
+                                </td>
+                                <td className="px-3 py-2.5">
+                                  <span className="text-xs capitalize text-muted-foreground flex items-center gap-1">
+                                    {sub && sub.tier !== "free" && <Crown className="w-3 h-3 text-primary" />}
+                                    {sub?.tier || "free"}
+                                  </span>
+                                </td>
+                                <td className="px-3 py-2.5 text-xs text-muted-foreground whitespace-nowrap">{u.phone || "—"}</td>
+                                <td className="px-3 py-2.5 text-xs text-muted-foreground">{perms.length}</td>
+                                <td className="px-3 py-2.5 text-xs text-muted-foreground whitespace-nowrap">{new Date(u.created_at).toLocaleDateString()}</td>
+                                <td className="px-3 py-2.5 text-right">
+                                  <Button variant="outline" size="sm" className="rounded-full text-xs gap-1" onClick={() => setExpandedUser(isExpanded ? null : u.id)}>
+                                    {isExpanded ? "Close" : "Manage"}
+                                    <ChevronDown className={`w-3 h-3 transition-transform ${isExpanded ? "rotate-180" : ""}`} />
                                   </Button>
-                                </div>
-                              </div>
+                                </td>
+                              </tr>
+                              {isExpanded && (
+                                <tr className="bg-secondary/10">
+                                  <td colSpan={7} className="px-4 pb-4 pt-3">
+                                    <div className="space-y-4">
+                                      {/* Quick Actions */}
+                                      <div className="flex flex-wrap gap-2">
+                                        <Button size="sm" variant="outline" className="rounded-full text-xs gap-1" onClick={() => sendUserEmail(u)}>
+                                          <Mail className="w-3 h-3" /> Send Email
+                                        </Button>
+                                        <Button size="sm" variant="outline" className="rounded-full text-xs gap-1" onClick={() => notifyUser(u)}>
+                                          <Bell className="w-3 h-3" /> Notify
+                                        </Button>
+                                        <Button size="sm" variant="outline" className="rounded-full text-xs gap-1" onClick={() => setActiveAdminChat({ id: u.id, name: `${u.first_name || "User"} ${u.last_name || ""}`.trim() })}>
+                                          <MessageSquare className="w-3 h-3" /> Chat
+                                        </Button>
+                                        <Button size="sm" variant="outline" className="rounded-full text-xs gap-1 text-destructive" onClick={() => banUser(u)} disabled={bannedUserIds.has(u.id)}>
+                                          <UserX className="w-3 h-3" /> {bannedUserIds.has(u.id) ? "Banned" : "Ban"}
+                                        </Button>
+                                      </div>
 
-                              {/* User Details */}
-                              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
-                                <div className="rounded-lg bg-secondary/30 p-2">
-                                  <p className="text-muted-foreground">Phone</p>
-                                  <p className="font-medium text-foreground">{u.phone || "N/A"}</p>
-                                </div>
-                                <div className="rounded-lg bg-secondary/30 p-2">
-                                  <p className="text-muted-foreground">Nationality</p>
-                                  <p className="font-medium text-foreground">{u.nationality || "N/A"}</p>
-                                </div>
-                                <div className="rounded-lg bg-secondary/30 p-2">
-                                  <p className="text-muted-foreground">Interests</p>
-                                  <p className="font-medium text-foreground">{u.interests?.join(", ") || "N/A"}</p>
-                                </div>
-                                <div className="rounded-lg bg-secondary/30 p-2">
-                                  <p className="text-muted-foreground">Travel Styles</p>
-                                  <p className="font-medium text-foreground">{u.travel_styles?.join(", ") || "N/A"}</p>
-                                </div>
-                              </div>
-                            </div>
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
+                                      {/* Subscription Management */}
+                                      <div className="rounded-lg bg-card p-3 border border-border">
+                                        <p className="text-xs font-bold text-foreground mb-2 flex items-center gap-1"><Crown className="w-3 h-3 text-primary" /> Subscription Tier</p>
+                                        <div className="flex gap-2 flex-wrap">
+                                          {SUBSCRIPTION_TIERS.map(tier => (
+                                            <button key={tier.id}
+                                              onClick={() => updateSubscription(u.id, tier.id)}
+                                              className={`text-xs px-3 py-1.5 rounded-full border transition-colors ${(sub?.tier || "free") === tier.id ? "bg-primary text-primary-foreground border-primary" : "border-border text-muted-foreground hover:text-foreground hover:border-foreground/30"}`}>
+                                              {tier.label} {tier.price > 0 && `₹${tier.price}`}
+                                            </button>
+                                          ))}
+                                        </div>
+                                      </div>
+
+                                      {/* ACL */}
+                                      <div className="rounded-lg bg-card p-3 border border-border">
+                                        <p className="text-xs font-bold text-foreground mb-2 flex items-center gap-1"><Lock className="w-3 h-3 text-primary" /> Permissions (ACL)</p>
+                                        {perms.length > 0 && (
+                                          <div className="flex flex-wrap gap-1 mb-2">
+                                            {perms.map(p => (
+                                              <span key={p.id} className="text-[10px] bg-primary/10 text-primary px-2 py-1 rounded-full flex items-center gap-1">
+                                                {p.permission.replace(/_/g, " ")}
+                                                <button onClick={(e) => { e.stopPropagation(); revokePermission(p.id); }} className="ml-0.5 hover:text-destructive">×</button>
+                                              </span>
+                                            ))}
+                                          </div>
+                                        )}
+                                        <div className="flex gap-2">
+                                          <select className="text-xs h-8 rounded-md border border-input bg-background px-2 flex-1"
+                                            value={permType} onChange={e => setPermType(e.target.value)}>
+                                            {AVAILABLE_PERMISSIONS.map(p => <option key={p} value={p}>{p.replace(/_/g, " ")}</option>)}
+                                          </select>
+                                          <Button size="sm" className="rounded-full text-xs h-8" onClick={() => grantPermission(u.id)}>
+                                            <Plus className="w-3 h-3 mr-1" /> Grant
+                                          </Button>
+                                        </div>
+                                      </div>
+
+                                      {/* Details */}
+                                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+                                        <div className="rounded-lg bg-card p-2 border border-border">
+                                          <p className="text-muted-foreground">Phone</p>
+                                          <p className="font-medium text-foreground">{u.phone || "N/A"}</p>
+                                        </div>
+                                        <div className="rounded-lg bg-card p-2 border border-border">
+                                          <p className="text-muted-foreground">Nationality</p>
+                                          <p className="font-medium text-foreground">{u.nationality || "N/A"}</p>
+                                        </div>
+                                        <div className="rounded-lg bg-card p-2 border border-border">
+                                          <p className="text-muted-foreground">Interests</p>
+                                          <p className="font-medium text-foreground">{u.interests?.join(", ") || "N/A"}</p>
+                                        </div>
+                                        <div className="rounded-lg bg-card p-2 border border-border">
+                                          <p className="text-muted-foreground">Travel Styles</p>
+                                          <p className="font-medium text-foreground">{u.travel_styles?.join(", ") || "N/A"}</p>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </td>
+                                </tr>
+                              )}
+                            </Fragment>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                  <div className="px-3 pb-3">
+                    <AdminPagination page={safePage} total={filteredUsers.length} pageSize={TABLE_PAGE_SIZE} onPage={setUsersPage} />
+                  </div>
+                </div>
+              );
+            })()}
           </div>
         )}
 
