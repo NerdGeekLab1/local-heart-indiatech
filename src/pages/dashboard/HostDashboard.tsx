@@ -18,6 +18,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import ImageUpload from "@/components/ImageUpload";
 import BetaModerationTools from "@/components/admin/BetaModerationTools";
+import ListingForm, { ListingModule } from "@/components/ListingForm";
 
 const host = hosts[0];
 const hostReviews = reviews.filter(r => r.hostId === host.id);
@@ -92,6 +93,7 @@ const HostDashboard = () => {
   const [customDishes, setCustomDishes] = useLocalStorage<any[]>("host_custom_dishes", host.foodInfo?.dishes || []);
   const [customProperties, setCustomProperties] = useLocalStorage<any[]>("host_custom_properties", host.stayInfo ? [host.stayInfo] : []);
   const [customRooms, setCustomRooms] = useLocalStorage<any[]>("host_custom_rooms", host.stayInfo?.rooms || []);
+  const [listingEditor, setListingEditor] = useState<{ module: ListingModule; index?: number } | null>(null);
 
   const [expForm, setExpForm] = useState({
     title: "", description: "", category: "Cultural", location: "", price: 0, duration: "",
@@ -265,6 +267,40 @@ const HostDashboard = () => {
     if (data) setHostDbExperiences(p => [data, ...p]);
     setExpForm(blankExpForm);
     setShowExpForm(false);
+  };
+
+  const saveUnifiedExperience = async (listing: Record<string, any>) => {
+    if (!user) return;
+    const tags = (value: unknown) => typeof value === "string" ? value.split(",").map(item => item.trim()).filter(Boolean) : [];
+    const { data, error } = await supabase.from("experiences").insert({
+      host_id: user.id,
+      host_name: hostProfile.name,
+      host_city: hostProfile.city,
+      title: listing.title,
+      description: listing.description,
+      category: listing.category,
+      location: listing.location,
+      price: Number(listing.price) || 0,
+      duration: listing.duration,
+      max_guests: Number(listing.maxGuests) || null,
+      highlights: tags(listing.highlights),
+      includes: tags(listing.includes),
+      image_url: listing.imageUrl || null,
+      is_year_round: true,
+      template_data: {
+        gallery: listing.images,
+        price_type: listing.priceType,
+        languages: tags(listing.languages),
+        meeting_point: listing.meetingPoint,
+        cancellation_policy: listing.cancellationPolicy,
+        availability: listing.availability,
+      },
+      status: "pending",
+    }).select().single();
+    if (error) { toast({ title: "Unable to save experience", description: error.message, variant: "destructive" }); return; }
+    if (data) setHostDbExperiences(current => [data, ...current]);
+    setShowExpForm(false);
+    toast({ title: "Experience submitted", description: "It is pending admin approval." });
   };
 
   const submitNewTypeRequest = async () => {
@@ -534,7 +570,8 @@ const HostDashboard = () => {
                 </Button>
               </div>
 
-              {showExpForm && <>
+              {showExpForm && user && <ListingForm module="experience" userId={user.id} onCancel={() => setShowExpForm(false)} onSave={saveUnifiedExperience} />}
+              {false && <>
               <div className="mt-5 mb-4">
                 <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">Quick-start templates</p>
                 <div className="flex flex-wrap gap-2">
@@ -681,8 +718,19 @@ const HostDashboard = () => {
                 </Button>
               </div>
 
-              {showReqForm && (
+              {showReqForm && user && (
                 <div className="mt-5 space-y-4">
+                  <ListingForm module="specialRequest" userId={user.id} onCancel={() => setShowReqForm(false)} onSave={async (listing) => {
+                    const { error } = await supabase.from("experience_requests").insert({
+                      host_id: user.id, title: String(listing.title), category: String(listing.category),
+                      description: String(listing.description), location: hostProfile.city || "TBD",
+                      price: Number(listing.price) || 0, image_url: String(listing.imageUrl || "") || null,
+                      template_data: { gallery: listing.images, price_type: listing.priceType, includes: listing.includes, availability: listing.availability },
+                    });
+                    if (error) { toast({ title: "Unable to send request", description: error.message, variant: "destructive" }); return; }
+                    setShowReqForm(false); toast({ title: "Request sent to admin" });
+                  }} />
+                  {false && <>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div><label className="text-sm font-medium text-foreground">Proposed Name *</label><Input className="mt-1" value={reqForm.title} onChange={e => setReqForm(p => ({ ...p, title: e.target.value }))} placeholder="e.g. Spiritual Retreat Tour" /></div>
                     <div><label className="text-sm font-medium text-foreground">Suggested Category *</label><Input className="mt-1" value={reqForm.category} onChange={e => setReqForm(p => ({ ...p, category: e.target.value }))} placeholder="e.g. Spiritual" /></div>
@@ -697,7 +745,7 @@ const HostDashboard = () => {
                   </div>
                   <Button onClick={submitNewTypeRequest} disabled={submittingReq} className="rounded-full gap-2">
                     {submittingReq ? "Sending..." : <><FileText className="w-4 h-4" /> Send to Admin</>}
-                  </Button>
+                  </Button></>}
                 </div>
               )}
             </div>
@@ -729,13 +777,20 @@ const HostDashboard = () => {
         {activeTab === "listings" && (
           <div className="mt-6 space-y-6">
             <div className="flex items-center justify-between"><h2 className="text-xl font-bold text-foreground">Properties & Vehicles</h2></div>
+            {listingEditor && user && (listingEditor.module === "property" || listingEditor.module === "transport") && (
+              <ListingForm module={listingEditor.module} userId={user.id}
+                initialData={listingEditor.index === undefined ? undefined : listingEditor.module === "property" ? customProperties[listingEditor.index] : customVehicles[listingEditor.index]}
+                onCancel={() => setListingEditor(null)} onSave={(listing) => {
+                  const target = listingEditor;
+                  if (target.module === "property") setCustomProperties(current => target.index === undefined ? [...current, listing] : current.map((item, index) => index === target.index ? listing : item));
+                  else setCustomVehicles(current => target.index === undefined ? [...current, listing] : current.map((item, index) => index === target.index ? listing : item));
+                  setListingEditor(null); toast({ title: `${target.module === "property" ? "Property" : "Transport"} saved` });
+                }} />
+            )}
             <div>
               <div className="flex items-center justify-between mb-3">
                 <h3 className="font-bold text-foreground flex items-center gap-2"><Home className="w-4 h-4 text-primary" /> Properties</h3>
-                <Button size="sm" className="rounded-full gap-1 text-xs" onClick={() => setEditDialog({
-                  open: true, title: "Add Property", fields: propertyFields,
-                  onSave: (d) => { setCustomProperties(p => [...p, d]); toast({ title: "Property added!" }); },
-                })}><Plus className="w-3 h-3" /> Add</Button>
+                <Button size="sm" className="rounded-full gap-1 text-xs" onClick={() => setListingEditor({ module: "property" })}><Plus className="w-3 h-3" /> Add</Button>
               </div>
               {customProperties.map((prop, i) => (
                 <div key={i} className="rounded-lg bg-card p-5 shadow-card mb-3">
@@ -745,10 +800,7 @@ const HostDashboard = () => {
                       <h4 className="font-bold text-foreground">{prop.propertyName}</h4>
                       <span className="text-xs bg-accent/10 text-accent px-2 py-0.5 rounded-full">{prop.propertyType}</span>
                     </div>
-                    <Button variant="outline" size="sm" className="rounded-full text-xs" onClick={() => setEditDialog({
-                      open: true, title: "Edit", fields: propertyFields, data: prop,
-                      onSave: (d) => { setCustomProperties(p => p.map((x, j) => j === i ? { ...x, ...d } : x)); toast({ title: "Updated!" }); },
-                    })}>Edit</Button>
+                    <Button variant="outline" size="sm" className="rounded-full text-xs" onClick={() => setListingEditor({ module: "property", index: i })}>Edit</Button>
                   </div>
                   <p className="text-sm text-muted-foreground mt-1">{prop.description}</p>
                 </div>
@@ -757,10 +809,7 @@ const HostDashboard = () => {
             <div>
               <div className="flex items-center justify-between mb-3">
                 <h3 className="font-bold text-foreground flex items-center gap-2"><Car className="w-4 h-4 text-primary" /> Vehicles</h3>
-                <Button size="sm" className="rounded-full gap-1 text-xs" onClick={() => setEditDialog({
-                  open: true, title: "Add Vehicle", fields: vehicleFields,
-                  onSave: (d) => { setCustomVehicles(p => [...p, d]); toast({ title: "Vehicle added!" }); },
-                })}><Plus className="w-3 h-3" /> Add</Button>
+                <Button size="sm" className="rounded-full gap-1 text-xs" onClick={() => setListingEditor({ module: "transport" })}><Plus className="w-3 h-3" /> Add</Button>
               </div>
               {allVehicles.map((v, i) => (
                 <div key={i} className="rounded-lg bg-card p-4 shadow-card mb-2 flex justify-between items-center">
@@ -768,10 +817,7 @@ const HostDashboard = () => {
                     <p className="font-medium text-foreground">{v.model} <span className="text-xs bg-secondary text-muted-foreground px-2 py-0.5 rounded-full ml-1">{v.type}</span></p>
                     <p className="text-xs text-muted-foreground">{v.capacity} pax · ${v.pricePerDay}/day</p>
                   </div>
-                  <Button variant="outline" size="sm" className="rounded-full text-xs" onClick={() => setEditDialog({
-                    open: true, title: "Edit Vehicle", fields: vehicleFields, data: v,
-                    onSave: (d) => { const ci = i - (host.transportInfo?.vehicles?.length || 0); if (ci >= 0) setCustomVehicles(p => p.map((x, j) => j === ci ? { ...x, ...d } : x)); toast({ title: "Updated!" }); },
-                  })}>Edit</Button>
+                  <Button variant="outline" size="sm" className="rounded-full text-xs" onClick={() => { const index = i - (host.transportInfo?.vehicles?.length || 0); if (index >= 0) setListingEditor({ module: "transport", index }); }}>Edit</Button>
                 </div>
               ))}
             </div>
@@ -782,22 +828,16 @@ const HostDashboard = () => {
           <div className="mt-6 space-y-6">
             <div className="flex items-center justify-between">
               <h2 className="text-xl font-bold text-foreground">Food Menu</h2>
-              <Button size="sm" className="rounded-full gap-1 text-xs" onClick={() => setEditDialog({
-                open: true, title: "Add Dish", fields: dishFields,
-                onSave: (d) => { setCustomDishes(p => [...p, d]); toast({ title: "Dish added!" }); },
-              })}><Plus className="w-3 h-3" /> Add Dish</Button>
+              <Button size="sm" className="rounded-full gap-1 text-xs" onClick={() => setListingEditor({ module: "dish" })}><Plus className="w-3 h-3" /> Add Dish</Button>
             </div>
+            {listingEditor?.module === "dish" && user && <ListingForm module="dish" userId={user.id} initialData={listingEditor.index === undefined ? undefined : customDishes[listingEditor.index]} onCancel={() => setListingEditor(null)} onSave={(listing) => { setCustomDishes(current => listingEditor.index === undefined ? [...current, listing] : current.map((item, index) => index === listingEditor.index ? listing : item)); setListingEditor(null); toast({ title: "Dish saved" }); }} />}
             {customDishes.map((dish, i) => (
               <div key={i} className="rounded-lg bg-card p-4 shadow-card flex justify-between items-center">
                 <div>
                   <h4 className="font-semibold text-foreground">{dish.name}</h4>
                   <p className="text-sm text-muted-foreground">{dish.cuisine} · ${dish.price}/person</p>
                 </div>
-                <Button variant="outline" size="sm" className="rounded-full text-xs" onClick={() => setEditDialog({
-                  open: true, title: "Edit Dish", fields: dishFields, data: dish,
-                  onSave: (d) => { setCustomDishes(p => p.map((x, j) => j === i ? { ...x, ...d } : x)); toast({ title: "Updated!" }); },
-                  onDelete: () => { setCustomDishes(p => p.filter((_, j) => j !== i)); toast({ title: "Removed" }); },
-                })}>Edit</Button>
+                <Button variant="outline" size="sm" className="rounded-full text-xs" onClick={() => setListingEditor({ module: "dish", index: i })}>Edit</Button>
               </div>
             ))}
             {customDishes.length === 0 && <p className="text-muted-foreground text-center py-8">No dishes yet.</p>}
