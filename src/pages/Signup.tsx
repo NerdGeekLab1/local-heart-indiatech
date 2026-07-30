@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { Link, useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Eye, EyeOff, ArrowLeft, LogIn } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -22,6 +22,9 @@ const Signup = () => {
   const { signIn } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const { pathname } = useLocation();
+  const portalRole = pathname === "/login/host" ? "host" : pathname === "/login/traveler" ? "traveler" : null;
+  const expectedDashboard = portalRole === "host" ? "/dashboard/host" : "/dashboard/traveler";
   const nextPath = searchParams.get("next") || "/dashboard/traveler";
 
   const update = (field: string, value: any) => setForm(prev => ({ ...prev, [field]: value }));
@@ -89,10 +92,13 @@ const Signup = () => {
     setLoading(false);
     if (error) {
       toast({ title: error.message, variant: "destructive" });
+    } else if (portalRole && role !== portalRole) {
+      await supabase.auth.signOut();
+      toast({ title: `This is the ${portalRole} sign-in`, description: `Use the ${role || "correct"} portal for this account.`, variant: "destructive" });
     } else {
       toast({ title: "Welcome back! 🎉" });
       try { window.localStorage.setItem("travelista.lastDashboard", resolveLanding(role)); } catch {}
-      navigate(resolveLanding(role), { replace: true });
+      navigate(portalRole ? expectedDashboard : resolveLanding(role), { replace: true });
     }
   };
 
@@ -123,14 +129,14 @@ const Signup = () => {
             <ArrowLeft className="w-4 h-4" /> Back to Home
           </Link>
 
-          <h1 className="text-3xl font-bold text-foreground">{mode === "signup" ? "Join Travelista" : "Welcome Back"}</h1>
-          <p className="mt-1 text-muted-foreground">{mode === "signup" ? "Create your traveler account" : "Sign in to your account"}</p>
+          <h1 className="text-3xl font-bold text-foreground">{portalRole ? `${portalRole === "host" ? "Host" : "Traveler"} sign in` : mode === "signup" ? "Join Travelista" : "Welcome Back"}</h1>
+          <p className="mt-1 text-muted-foreground">{portalRole ? `Access your ${portalRole} workspace` : mode === "signup" ? "Create your traveler account" : "Sign in to your account"}</p>
 
           {/* Mode Toggle */}
-          <div className="mt-4 flex gap-1 bg-secondary rounded-lg p-1">
+          {!portalRole && <div className="mt-4 flex gap-1 bg-secondary rounded-lg p-1">
             <button onClick={() => setMode("signup")} className={`flex-1 py-2 text-sm font-medium rounded-md transition-all ${mode === "signup" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground"}`}>Sign Up</button>
             <button onClick={() => setMode("login")} className={`flex-1 py-2 text-sm font-medium rounded-md transition-all ${mode === "login" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground"}`}>Log In</button>
-          </div>
+          </div>}
 
           {/* Google sign-in */}
           <button onClick={handleGoogle} disabled={loading}
@@ -143,7 +149,7 @@ const Signup = () => {
             <div className="flex-1 h-px bg-border" /> or <div className="flex-1 h-px bg-border" />
           </div>
 
-          {mode === "login" ? (
+          {mode === "login" || portalRole ? (
             <div className="mt-6 space-y-4">
               <div>
                 <label className="text-xs font-medium text-muted-foreground">Email *</label>
@@ -258,13 +264,14 @@ const Signup = () => {
             </>
           )}
 
-          <p className="mt-6 text-center text-sm text-muted-foreground">
+          {!portalRole && <p className="mt-6 text-center text-sm text-muted-foreground">
             {mode === "signup" ? (
               <>Already have an account? <button onClick={() => setMode("login")} className="text-primary font-medium hover:underline">Log in</button></>
             ) : (
               <>Don't have an account? <button onClick={() => setMode("signup")} className="text-primary font-medium hover:underline">Sign up</button></>
             )}
-          </p>
+          </p>}
+          {portalRole && <p className="mt-6 text-center text-sm text-muted-foreground">Wrong portal? <Link className="font-medium text-primary hover:underline" to={portalRole === "host" ? "/login/traveler" : "/login/host"}>Sign in as {portalRole === "host" ? "traveler" : "host"}</Link></p>}
 
           {/* Demo Accounts */}
           <div className="mt-6 rounded-xl bg-secondary/50 border border-border p-4">

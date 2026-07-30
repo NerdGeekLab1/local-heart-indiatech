@@ -118,6 +118,8 @@ const App = () => (
             <Route path="/book/:id" element={<Booking />} />
             <Route path="/become-host" element={<BecomeHost />} />
             <Route path="/signup" element={<Signup />} />
+            <Route path="/login/traveler" element={<Signup />} />
+            <Route path="/login/host" element={<Signup />} />
             <Route path="/admin-login" element={<AdminLogin />} />
             <Route path="/destinations" element={<Destinations />} />
             <Route path="/destination/:name" element={<DestinationDetail />} />

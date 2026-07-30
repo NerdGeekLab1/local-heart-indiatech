@@ -232,7 +232,7 @@ const Navbar = () => {
               </div>
             ) : (
               <div className="flex items-center gap-2">
-                <Link to="/signup">
+                <Link to="/login/traveler">
                   <Button variant="ghost" className="rounded-full px-4 text-sm">Log In</Button>
                 </Link>
                 <Link to="/signup">
@@ -301,7 +301,7 @@ const Navbar = () => {
               <Link to="/grievances" className="block py-2.5 px-3 text-sm font-medium rounded-lg" onClick={() => setMobileOpen(false)}>Grievances</Link>
               <div className="pt-2 border-t border-border mt-2">
                 {!user && (
-                  <Link to="/signup" onClick={() => setMobileOpen(false)}>
+                  <Link to="/login/traveler" onClick={() => setMobileOpen(false)}>
                     <Button className="w-full rounded-full bg-primary text-primary-foreground">Sign Up / Log In</Button>
                   </Link>
                 )}
