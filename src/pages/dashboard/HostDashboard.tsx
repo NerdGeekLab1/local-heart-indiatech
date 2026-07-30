@@ -19,6 +19,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import ImageUpload from "@/components/ImageUpload";
 import BetaModerationTools from "@/components/admin/BetaModerationTools";
 import ListingForm, { ListingModule } from "@/components/ListingForm";
+import type { TablesInsert } from "@/integrations/supabase/types";
 
 const host = hosts[0];
 const hostReviews = reviews.filter(r => r.hostId === host.id);
@@ -721,12 +722,13 @@ const HostDashboard = () => {
               {showReqForm && user && (
                 <div className="mt-5 space-y-4">
                   <ListingForm module="specialRequest" userId={user.id} onCancel={() => setShowReqForm(false)} onSave={async (listing) => {
-                    const { error } = await supabase.from("experience_requests").insert({
+                    const payload: TablesInsert<"experience_requests"> = {
                       host_id: user.id, title: String(listing.title), category: String(listing.category),
                       description: String(listing.description), location: hostProfile.city || "TBD",
                       price: Number(listing.price) || 0, image_url: String(listing.imageUrl || "") || null,
-                      template_data: { gallery: listing.images, price_type: listing.priceType, includes: listing.includes, availability: listing.availability },
-                    });
+                      template_data: JSON.parse(JSON.stringify({ gallery: listing.images, price_type: listing.priceType, includes: listing.includes, availability: listing.availability })),
+                    };
+                    const { error } = await supabase.from("experience_requests").insert(payload);
                     if (error) { toast({ title: "Unable to send request", description: error.message, variant: "destructive" }); return; }
                     setShowReqForm(false); toast({ title: "Request sent to admin" });
                   }} />
