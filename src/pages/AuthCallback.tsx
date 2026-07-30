@@ -17,7 +17,17 @@ const AuthCallback = () => {
         if (data.session) {
           setStatus("success");
           setMessage("Email verified! Redirecting...");
-          const { data: roleData } = await supabase.from("user_roles").select("role").eq("user_id", data.session.user.id).single(); const target = roleData?.role === "host" ? "/dashboard/host" : roleData?.role === "admin" ? "/dashboard/admin" : "/dashboard/traveler"; setTimeout(() => navigate(target), 1500);
+          const { data: roleData } = await supabase
+            .from("user_roles")
+            .select("role")
+            .eq("user_id", data.session.user.id)
+            .maybeSingle();
+          const target = roleData?.role === "host"
+            ? "/dashboard/host"
+            : roleData?.role === "admin"
+              ? "/dashboard/admin"
+              : "/dashboard/traveler";
+          setTimeout(() => navigate(target), 1500);
         } else {
           setStatus("success");
           setMessage("Email verified! Please sign in.");

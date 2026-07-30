@@ -42,7 +42,8 @@ export default function RequireAuth({ children, role }: RequireAuthProps) {
 
   if (!user) {
     const next = encodeURIComponent(location.pathname + location.search);
-    return <Navigate to={`/signup?next=${next}`} replace />;
+    const loginPath = role === "host" ? "/login/host" : role === "traveler" ? "/login/traveler" : "/signup";
+    return <Navigate to={`${loginPath}?next=${next}`} replace />;
   }
 
   if (!hasRole) {

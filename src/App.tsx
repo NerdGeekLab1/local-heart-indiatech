@@ -87,7 +87,7 @@ const RouteFallback = () => (
   </div>
 );
 
-const HIDE_CRUMBS = new Set(["/", "/signup", "/admin-login", "/auth/callback"]);
+const HIDE_CRUMBS = new Set(["/", "/signup", "/login/traveler", "/login/host", "/admin-login", "/auth/callback"]);
 const BreadcrumbsBar = () => {
   const { pathname } = useLocation();
   if (HIDE_CRUMBS.has(pathname)) return null;
