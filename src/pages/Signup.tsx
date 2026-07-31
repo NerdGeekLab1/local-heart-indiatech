@@ -56,6 +56,7 @@ const Signup = () => {
         data: {
           first_name: form.firstName,
           last_name: form.lastName,
+          role: portalRole || "traveler",
           phone: form.phone,
           nationality: form.nationality,
           travel_styles: form.travelStyle,
@@ -286,13 +287,13 @@ const Signup = () => {
                   key={demo.label}
                   onClick={async () => {
                     setLoading(true);
-                    const { error } = await signIn(demo.email, demo.password);
+                    const { error, role } = await signIn(demo.email, demo.password);
                     setLoading(false);
                     if (error) {
                       toast({ title: `Demo ${demo.label} not set up yet`, description: "Please sign up first with this email", variant: "destructive" });
                     } else {
                       toast({ title: `Welcome, Demo ${demo.label}! 🎉` });
-                      navigate(demo.label === "Admin" ? "/dashboard/admin" : demo.label === "Host" ? "/dashboard/host" : "/dashboard/traveler");
+                      navigate(resolveLanding(role), { replace: true });
                     }
                   }}
                   disabled={loading}
