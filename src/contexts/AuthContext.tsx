@@ -28,21 +28,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const { data, error } = await supabase
       .from("user_roles")
       .select("role")
-      .eq("user_id", userId);
+      .eq("user_id", userId)
+      .maybeSingle();
     if (error) {
-      setUserRole("traveler");
-      return "traveler";
+      setUserRole(null);
+      setUserRoles([]);
+      return null;
     }
-    const roles = (data ?? []).map((r: any) => r.role);
+    const roles = data?.role ? [data.role] : [];
     setUserRoles(roles);
-    // Priority for default landing: admin > traveler > host (traveler is the default experience)
-    const role = roles.includes("admin")
-      ? "admin"
-      : roles.includes("traveler")
-        ? "traveler"
-        : roles.includes("host")
-          ? "host"
-          : roles[0] ?? "traveler";
+    const role = roles[0] ?? null;
     setUserRole(role);
     return role;
   };
@@ -57,6 +52,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
       if (!nextSession?.user) {
         setUserRole(null);
+        setUserRoles([]);
         setLoading(false);
         return;
       }
@@ -86,6 +82,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         }, 0);
       } else {
         setUserRole(null);
+        setUserRoles([]);
         setLoading(false);
       }
     });
@@ -129,6 +126,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setUser(null);
     setSession(null);
     setUserRole(null);
+    setUserRoles([]);
   };
 
   return (
