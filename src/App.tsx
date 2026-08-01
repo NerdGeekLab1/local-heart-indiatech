@@ -8,7 +8,6 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { CurrencyProvider } from "@/contexts/CurrencyContext";
 import MobileBottomNav from "@/components/MobileBottomNav.tsx";
 const AIChatRecommender = lazy(() => import("@/components/AIChatRecommender.tsx"));
-import FeatureGate from "@/components/FeatureGate.tsx";
 import HeaderScripts from "@/components/HeaderScripts.tsx";
 const OnboardingChecklist = lazy(() => import("@/components/OnboardingChecklist.tsx"));
 import AdminGuard from "@/components/AdminGuard.tsx";
@@ -166,7 +165,7 @@ const App = () => (
           </Suspense>
           <MobileBottomNav />
           <Suspense fallback={null}>
-            <FeatureGate flag="ai_concierge"><AIChatRecommender /></FeatureGate>
+            <AIChatRecommender />
             <OnboardingChecklist />
           </Suspense>
         </BrowserRouter>
