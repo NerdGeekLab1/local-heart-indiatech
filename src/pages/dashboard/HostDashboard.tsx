@@ -1012,6 +1012,7 @@ const HostDashboard = () => {
               <div className="flex items-center gap-4 mb-2">
                 <ImageUpload
                   bucket="avatars"
+                  crop
                   folder={user?.id || "anon"}
                   currentUrl={hostDbProfile?.avatar_url}
                   onUpload={async (url) => {

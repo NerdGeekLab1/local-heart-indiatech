@@ -610,6 +610,7 @@ const TravelerDashboard = () => {
               <div className="flex items-center gap-4 mb-2">
                 <ImageUpload
                   bucket="avatars"
+                  crop
                   folder={user?.id || "anon"}
                   currentUrl={dbProfile?.avatar_url}
                   onUpload={async (url) => {
