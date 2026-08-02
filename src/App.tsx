@@ -105,6 +105,7 @@ const App = () => (
         <Toaster />
         <Sonner />
         <BrowserRouter>
+          <SiteHead />
           <HeaderScripts />
           <BreadcrumbsBar />
           <Suspense fallback={<RouteFallback />}>
