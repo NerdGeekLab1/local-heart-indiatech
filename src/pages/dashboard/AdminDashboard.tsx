@@ -590,6 +590,9 @@ const AdminDashboard = () => {
     { id: "settings", label: "General", icon: Settings, group: "Settings" },
     { id: "testmode", label: "Test Mode", icon: Beaker, group: "Settings" },
 
+    { id: "websiteCms", label: "Website CMS", icon: Globe, group: "Content" },
+    { id: "content", label: "Content Manager", icon: BookOpen, group: "Content" },
+
     { id: "docs", label: "Docs", icon: BookOpen, group: "Docs" },
 
   ];
