@@ -130,7 +130,7 @@ const ContentManagerTab = () => {
 
     if (editing?.id) {
       const { id, created_at, updated_at, created_by, is_published, ...rest } = { ...editing, ...payload };
-      const { error } = await supabase.from(config.table).update(rest).eq("id", editing.id);
+      const { error } = await supabase.from(config.table).update(rest as never).eq("id", editing.id);
       if (error) return toast({ title: "Update failed", description: error.message, variant: "destructive" });
       toast({ title: "Saved" });
     } else {
