@@ -5,7 +5,8 @@ import { MessageCircle, Heart, Users, BookOpen, MapPin, Clock, ArrowRight, Chevr
 import { Button } from "@/components/ui/button";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { communityStories, communityReels, hosts, reviews, travelTips, blogPosts } from "@/lib/data";
+import { communityReels, hosts, reviews } from "@/lib/data";
+import { useCmsContent } from "@/hooks/useCmsContent";
 
 const tipCategoryColors: Record<string, string> = {
   safety: "bg-destructive/10 text-destructive",
@@ -17,9 +18,10 @@ const tipCategoryColors: Record<string, string> = {
   health: "bg-destructive/10 text-destructive",
 };
 
-type Tab = "reels" | "stories" | "spotlights" | "reviews" | "blog" | "tips";
+type Tab = "reels" | "stories" | "spotlights" | "reviews" | "blog" | "tips" | "channels";
 
 const Community = () => {
+  const { blogs: blogPosts, stories: communityStories, tips: travelTips, channels } = useCmsContent();
   const [searchParams] = useSearchParams();
   const [activeTab, setActiveTab] = useState<Tab>((searchParams.get("tab") as Tab) || "reels");
   const [expandedStory, setExpandedStory] = useState<string | null>(null);
@@ -42,6 +44,7 @@ const Community = () => {
     { id: "reviews", label: "Reviews", icon: MessageCircle },
     { id: "blog", label: "Blog", icon: Sparkles },
     { id: "tips", label: "Tips", icon: Lightbulb },
+    { id: "channels", label: "Channels", icon: Hash },
   ];
 
   return (
