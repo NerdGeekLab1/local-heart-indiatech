@@ -31,6 +31,8 @@ import FeedModerationPanel from "@/components/admin/FeedModerationPanel";
 import ReviewModerationPanel from "@/components/admin/ReviewModerationPanel";
 import AdminPagination from "@/components/admin/AdminPagination";
 import DocsTab from "@/components/admin/DocsTab";
+import WebsiteCMSTab from "@/components/admin/WebsiteCMSTab";
+import ContentManagerTab from "@/components/admin/ContentManagerTab";
 import ChatPanel from "@/components/ChatPanel";
 import { Heart, Menu, BookOpen } from "lucide-react";
 
