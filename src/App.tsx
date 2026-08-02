@@ -9,6 +9,7 @@ import { CurrencyProvider } from "@/contexts/CurrencyContext";
 import MobileBottomNav from "@/components/MobileBottomNav.tsx";
 const AIChatRecommender = lazy(() => import("@/components/AIChatRecommender.tsx"));
 import HeaderScripts from "@/components/HeaderScripts.tsx";
+import SiteHead from "@/components/SiteHead";
 const OnboardingChecklist = lazy(() => import("@/components/OnboardingChecklist.tsx"));
 import AdminGuard from "@/components/AdminGuard.tsx";
 import RequireAuth from "@/components/RequireAuth.tsx";
@@ -105,6 +106,7 @@ const App = () => (
         <Toaster />
         <Sonner />
         <BrowserRouter>
+          <SiteHead />
           <HeaderScripts />
           <BreadcrumbsBar />
           <Suspense fallback={<RouteFallback />}>

@@ -5,7 +5,8 @@ import { MessageCircle, Heart, Users, BookOpen, MapPin, Clock, ArrowRight, Chevr
 import { Button } from "@/components/ui/button";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { communityStories, communityReels, hosts, reviews, travelTips, blogPosts } from "@/lib/data";
+import { communityReels, hosts, reviews } from "@/lib/data";
+import { useCmsContent } from "@/hooks/useCmsContent";
 
 const tipCategoryColors: Record<string, string> = {
   safety: "bg-destructive/10 text-destructive",
@@ -17,9 +18,10 @@ const tipCategoryColors: Record<string, string> = {
   health: "bg-destructive/10 text-destructive",
 };
 
-type Tab = "reels" | "stories" | "spotlights" | "reviews" | "blog" | "tips";
+type Tab = "reels" | "stories" | "spotlights" | "reviews" | "blog" | "tips" | "channels";
 
 const Community = () => {
+  const { blogs: blogPosts, stories: communityStories, tips: travelTips, channels } = useCmsContent();
   const [searchParams] = useSearchParams();
   const [activeTab, setActiveTab] = useState<Tab>((searchParams.get("tab") as Tab) || "reels");
   const [expandedStory, setExpandedStory] = useState<string | null>(null);
@@ -42,6 +44,7 @@ const Community = () => {
     { id: "reviews", label: "Reviews", icon: MessageCircle },
     { id: "blog", label: "Blog", icon: Sparkles },
     { id: "tips", label: "Tips", icon: Lightbulb },
+    { id: "channels", label: "Channels", icon: Hash },
   ];
 
   return (
@@ -383,6 +386,35 @@ const Community = () => {
                 </Link>
               ))}
             </div>
+          </div>
+        )}
+
+        {/* Community Channels (CMS-managed) */}
+        {activeTab === "channels" && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {channels.length === 0 ? (
+              <p className="text-sm text-muted-foreground col-span-full text-center py-10">
+                No community channels published yet.
+              </p>
+            ) : channels.map((ch, i) => (
+              <motion.div key={ch.id} initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
+                transition={{ delay: i * 0.04 }}
+                className="rounded-xl bg-card p-5 shadow-card hover:shadow-card-hover transition-all">
+                <div className="flex items-center gap-2">
+                  <Hash className="w-4 h-4 text-primary" />
+                  <h3 className="font-bold text-foreground text-sm">{ch.name}</h3>
+                  <span className="ml-auto text-xs text-muted-foreground flex items-center gap-1">
+                    <Users className="w-3 h-3" /> {ch.member_count}
+                  </span>
+                </div>
+                {ch.description && <p className="mt-2 text-xs text-muted-foreground">{ch.description}</p>}
+                {ch.external_url && (
+                  <Button asChild size="sm" variant="outline" className="mt-3 rounded-full gap-1.5">
+                    <a href={ch.external_url} target="_blank" rel="noreferrer">Join <ArrowRight className="w-3 h-3" /></a>
+                  </Button>
+                )}
+              </motion.div>
+            ))}
           </div>
         )}
 

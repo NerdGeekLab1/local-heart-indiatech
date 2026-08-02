@@ -31,10 +31,12 @@ import FeedModerationPanel from "@/components/admin/FeedModerationPanel";
 import ReviewModerationPanel from "@/components/admin/ReviewModerationPanel";
 import AdminPagination from "@/components/admin/AdminPagination";
 import DocsTab from "@/components/admin/DocsTab";
+import WebsiteCMSTab from "@/components/admin/WebsiteCMSTab";
+import ContentManagerTab from "@/components/admin/ContentManagerTab";
 import ChatPanel from "@/components/ChatPanel";
 import { Heart, Menu, BookOpen } from "lucide-react";
 
-type Tab = "overview" | "hosts" | "hostWaitlist" | "bookings" | "experiences" | "destinations" | "trips" | "grievances" | "users" | "wanderers" | "missions" | "leaderboard" | "invoices" | "feedModeration" | "reviewModeration" | "analytics" | "settings" | "configuration" | "emails" | "plans" | "weddings" | "audit" | "testmode" | "docs";
+type Tab = "overview" | "hosts" | "hostWaitlist" | "bookings" | "experiences" | "destinations" | "trips" | "grievances" | "users" | "wanderers" | "missions" | "leaderboard" | "invoices" | "feedModeration" | "reviewModeration" | "analytics" | "settings" | "configuration" | "emails" | "plans" | "weddings" | "audit" | "testmode" | "docs" | "websiteCms" | "content";
 
 const ADMIN_TAB_KEY = "travelista.admin.activeTab";
 
@@ -587,6 +589,9 @@ const AdminDashboard = () => {
     { id: "configuration", label: "Configuration", icon: Key, group: "Settings" },
     { id: "settings", label: "General", icon: Settings, group: "Settings" },
     { id: "testmode", label: "Test Mode", icon: Beaker, group: "Settings" },
+
+    { id: "websiteCms", label: "Website CMS", icon: Globe, group: "Content" },
+    { id: "content", label: "Content Manager", icon: BookOpen, group: "Content" },
 
     { id: "docs", label: "Docs", icon: BookOpen, group: "Docs" },
 
@@ -2120,6 +2125,8 @@ const AdminDashboard = () => {
         {activeTab === "weddings" && <WeddingsTab admin />}
         {activeTab === "testmode" && <div className="mt-2"><TestModePanel /></div>}
         {activeTab === "docs" && <DocsTab />}
+        {activeTab === "websiteCms" && <WebsiteCMSTab />}
+        {activeTab === "content" && <ContentManagerTab />}
 
 
         {activeTab === "audit" && (
