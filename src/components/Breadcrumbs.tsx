@@ -1,6 +1,10 @@
 import { Link, useLocation } from "react-router-dom";
 import { ChevronRight, Home } from "lucide-react";
 import { useMemo } from "react";
+import JsonLd from "@/components/JsonLd";
+import { breadcrumbSchema } from "@/lib/structuredData";
+import { useSiteSettings } from "@/hooks/useSiteSettings";
+
 
 const LABELS: Record<string, string> = {
   dashboard: "Dashboard",
