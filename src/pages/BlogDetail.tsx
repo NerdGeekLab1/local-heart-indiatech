@@ -1,28 +1,39 @@
 import { useParams, Link } from "react-router-dom";
 import { motion } from "framer-motion";
+import { Helmet } from "react-helmet-async";
 import { ArrowLeft, Calendar, Clock, Tag, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { blogPosts } from "@/lib/data";
+import Breadcrumbs from "@/components/Breadcrumbs";
+import JsonLd from "@/components/JsonLd";
+import { useCmsContent } from "@/hooks/useCmsContent";
+import { useSiteSettings } from "@/hooks/useSiteSettings";
+import { articleSchema, stripHtml } from "@/lib/structuredData";
 
 const BlogDetail = () => {
   const { id } = useParams();
-  const post = blogPosts.find(p => p.id === id);
+  const { blogs, loading } = useCmsContent();
+  const { settings } = useSiteSettings();
+  const post = blogs.find(p => p.id === id);
 
   if (!post) {
     return (
       <div className="min-h-screen bg-background">
         <Navbar />
         <div className="pt-24 text-center">
-          <p className="text-muted-foreground text-lg">Blog post not found</p>
+          <p className="text-muted-foreground text-lg">{loading ? "Loading article…" : "Blog post not found"}</p>
           <Link to="/community?tab=blog" className="text-primary hover:underline text-sm mt-2 inline-block">Back to Blog</Link>
         </div>
       </div>
     );
   }
 
-  const relatedPosts = blogPosts.filter(p => p.id !== post.id && p.category === post.category).slice(0, 3);
+  const relatedPosts = blogs.filter(p => p.id !== post.id && p.category === post.category).slice(0, 3);
+  const canonical = `${(settings.base_url || "").replace(/\/$/, "")}/blog/${post.id}`;
+  const description = post.excerpt || stripHtml(post.content).slice(0, 155);
+  const isHtml = /<[a-z][\s\S]*>/i.test(post.content);
+
 
   return (
     <div className="min-h-screen bg-background">
