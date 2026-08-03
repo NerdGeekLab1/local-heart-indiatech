@@ -85,6 +85,8 @@ interface BreadcrumbsProps {
 
 const Breadcrumbs = ({ items, className }: BreadcrumbsProps) => {
   const location = useLocation();
+  const { settings } = useSiteSettings();
+
   const auto = useMemo<Crumb[]>(() => {
     const segs = location.pathname.split("/").filter(Boolean);
     return segs.map((s, i) => {
