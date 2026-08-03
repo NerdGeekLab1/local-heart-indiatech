@@ -1253,5 +1253,7 @@ CREATE TRIGGER update_cms_preview_tokens_updated_at
 -- Full body: see supabase/migrations (resolve_cms_preview).
 -- SELECT public.resolve_cms_preview('<token-uuid>');
 
--- Seed data for cms_blogs / cms_stories / cms_tips / cms_channels ships in
--- docs/db/seed_data.sql (exported from the live database).
+-- Seed data for cms_blogs / cms_stories / cms_tips / cms_channels (6 blogs,
+-- 3 traveler stories, 10 travel tips, 6 community channels) is included in the
+-- corresponding Supabase migration under supabase/migrations and is safe to
+-- re-run against a fresh external project (ON CONFLICT (slug) DO NOTHING).
