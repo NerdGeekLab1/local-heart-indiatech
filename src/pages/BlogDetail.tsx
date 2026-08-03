@@ -37,11 +37,34 @@ const BlogDetail = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <Helmet>
+        <title>{`${post.title} | Travelista`}</title>
+        <meta name="description" content={description} />
+        <link rel="canonical" href={canonical} />
+        <meta property="og:type" content="article" />
+        <meta property="og:title" content={post.title} />
+        <meta property="og:description" content={description} />
+        <meta property="og:url" content={canonical} />
+      </Helmet>
+      <JsonLd data={articleSchema(settings, {
+        title: post.title,
+        description: post.excerpt,
+        body: post.content,
+        image: post.image,
+        author: post.author,
+        category: post.category,
+        tags: post.tags,
+        datePublished: post.date,
+        path: `/blog/${post.id}`,
+      })} />
       <Navbar />
       <div className="pt-20 pb-16 px-4 sm:px-6 lg:px-8 mx-auto max-w-4xl">
+        <Breadcrumbs className="mb-4" items={[{ label: "Community", href: "/community" }, { label: post.title }]} />
         <Link to="/community?tab=blog" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-6">
           <ArrowLeft className="w-4 h-4" /> Back to Blog
         </Link>
+
+
 
         <motion.article initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
           {/* Hero Image */}
