@@ -12,6 +12,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import {
   SiteSettings, SITE_SETTINGS_DEFAULTS, normalizeSettings,
 } from "@/hooks/useSiteSettings";
+import CmsPreviewLinks from "@/components/admin/CmsPreviewLinks";
 import { buildRobots, buildSitemap, downloadText, SitemapItem } from "@/lib/cmsSeo";
 
 interface VersionRow {
@@ -22,7 +23,7 @@ interface VersionRow {
   snapshot: unknown;
 }
 
-type Section = "branding" | "seo" | "contact" | "seofiles" | "history";
+type Section = "branding" | "seo" | "contact" | "seofiles" | "share" | "history";
 
 const TEXT_FIELDS: { key: keyof SiteSettings; label: string; hint?: string; area?: boolean; section: Section }[] = [
   { key: "site_title", label: "Website title", hint: "Shown in the browser tab and search results (<60 chars)", section: "seo" },
@@ -146,6 +147,7 @@ const WebsiteCMSTab = () => {
     { id: "seo", label: "SEO & Meta", icon: Globe },
     { id: "contact", label: "Contact & Social", icon: FileCode2 },
     { id: "seofiles", label: "Sitemap & Robots", icon: Bot },
+    { id: "share", label: "Share Preview", icon: Eye },
     { id: "history", label: "Version History", icon: History },
   ];
 
@@ -279,6 +281,8 @@ const WebsiteCMSTab = () => {
           </p>
         </div>
       )}
+
+      {section === "share" && <CmsPreviewLinks baseUrl={draft.base_url} />}
 
       {section === "history" && (
         <div className="rounded-lg bg-card shadow-card overflow-hidden">

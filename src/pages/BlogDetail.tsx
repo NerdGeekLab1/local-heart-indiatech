@@ -94,7 +94,11 @@ const BlogDetail = () => {
           {/* Content */}
           <div className="mt-8 prose prose-sm max-w-none text-foreground/90 leading-relaxed space-y-4">
             <p className="text-lg text-muted-foreground font-medium">{post.excerpt}</p>
-            <div className="whitespace-pre-line text-base leading-7">{post.content}</div>
+            {isHtml ? (
+              <div className="text-base leading-7 [&_h2]:text-xl [&_h2]:font-bold [&_h3]:font-semibold [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_a]:text-primary" dangerouslySetInnerHTML={{ __html: post.content }} />
+            ) : (
+              <div className="whitespace-pre-line text-base leading-7">{post.content}</div>
+            )}
           </div>
 
           {/* Tags */}
