@@ -1,6 +1,10 @@
 import { Link, useLocation } from "react-router-dom";
 import { ChevronRight, Home } from "lucide-react";
 import { useMemo } from "react";
+import JsonLd from "@/components/JsonLd";
+import { breadcrumbSchema } from "@/lib/structuredData";
+import { useSiteSettings } from "@/hooks/useSiteSettings";
+
 
 const LABELS: Record<string, string> = {
   dashboard: "Dashboard",
@@ -81,6 +85,8 @@ interface BreadcrumbsProps {
 
 const Breadcrumbs = ({ items, className }: BreadcrumbsProps) => {
   const location = useLocation();
+  const { settings } = useSiteSettings();
+
   const auto = useMemo<Crumb[]>(() => {
     const segs = location.pathname.split("/").filter(Boolean);
     return segs.map((s, i) => {
@@ -96,9 +102,11 @@ const Breadcrumbs = ({ items, className }: BreadcrumbsProps) => {
   const crumbs = items ?? auto;
   if (crumbs.length === 0) return null;
 
+  const isPrivate = /^\/(dashboard|admin)/.test(location.pathname);
 
   return (
     <nav aria-label="Breadcrumb" className={`text-xs text-muted-foreground ${className ?? ""}`}>
+      {!isPrivate && <JsonLd data={breadcrumbSchema(settings, crumbs)} />}
       <ol className="flex items-center flex-wrap gap-1">
         <li className="flex items-center gap-1">
           <Link to="/" className="hover:text-primary flex items-center gap-1"><Home className="w-3 h-3" /> Home</Link>

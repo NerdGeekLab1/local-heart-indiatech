@@ -1222,3 +1222,38 @@ drop trigger if exists on_auth_user_created on auth.users;
 create trigger on_auth_user_created
   after insert on auth.users
   for each row execute function public.handle_new_user();
+
+-- =====================================================================
+-- Website CMS: shareable draft preview links (added 2026-08)
+-- =====================================================================
+CREATE TABLE IF NOT EXISTS public.cms_preview_tokens (
+  id uuid NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
+  token uuid NOT NULL DEFAULT gen_random_uuid() UNIQUE,
+  label text,
+  expires_at timestamptz NOT NULL DEFAULT (now() + interval '7 days'),
+  revoked boolean NOT NULL DEFAULT false,
+  view_count integer NOT NULL DEFAULT 0,
+  last_viewed_at timestamptz,
+  created_by uuid,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  updated_at timestamptz NOT NULL DEFAULT now()
+);
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.cms_preview_tokens TO authenticated;
+GRANT ALL ON public.cms_preview_tokens TO service_role;
+ALTER TABLE public.cms_preview_tokens ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Admins manage preview tokens" ON public.cms_preview_tokens
+  FOR ALL TO authenticated
+  USING (public.has_role(auth.uid(), 'admin'))
+  WITH CHECK (public.has_role(auth.uid(), 'admin'));
+CREATE TRIGGER update_cms_preview_tokens_updated_at
+  BEFORE UPDATE ON public.cms_preview_tokens
+  FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+
+-- Token-gated resolver returning draft settings + unpublished CMS rows.
+-- Full body: see supabase/migrations (resolve_cms_preview).
+-- SELECT public.resolve_cms_preview('<token-uuid>');
+
+-- Seed data for cms_blogs / cms_stories / cms_tips / cms_channels (6 blogs,
+-- 3 traveler stories, 10 travel tips, 6 community channels) is included in the
+-- corresponding Supabase migration under supabase/migrations and is safe to
+-- re-run against a fresh external project (ON CONFLICT (slug) DO NOTHING).

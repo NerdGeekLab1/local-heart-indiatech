@@ -355,6 +355,45 @@ export type Database = {
         }
         Relationships: []
       }
+      cms_preview_tokens: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          expires_at: string
+          id: string
+          label: string | null
+          last_viewed_at: string | null
+          revoked: boolean
+          token: string
+          updated_at: string
+          view_count: number
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          expires_at?: string
+          id?: string
+          label?: string | null
+          last_viewed_at?: string | null
+          revoked?: boolean
+          token?: string
+          updated_at?: string
+          view_count?: number
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          expires_at?: string
+          id?: string
+          label?: string | null
+          last_viewed_at?: string | null
+          revoked?: boolean
+          token?: string
+          updated_at?: string
+          view_count?: number
+        }
+        Relationships: []
+      }
       cms_stories: {
         Row: {
           author: string | null
@@ -1999,6 +2038,7 @@ export type Database = {
           plan_interest: string
         }[]
       }
+      resolve_cms_preview: { Args: { _token: string }; Returns: Json }
     }
     Enums: {
       app_role: "admin" | "host" | "traveler"
