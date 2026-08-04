@@ -670,7 +670,7 @@ const AdminDashboard = () => {
             <div className="mt-6 grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3">
               {[
                 { label: "Users", value: dbUsers.length, icon: Users, color: "text-primary" },
-                { label: "Bookings", value: mockBookings.length, icon: Calendar, color: "text-accent" },
+                { label: "Bookings", value: dbBookings.length, icon: Calendar, color: "text-accent" },
                 { label: "GMV", value: format(totalRevenue), icon: DollarSign, color: "text-accent" },
                 { label: "Revenue", value: format(platformFee), icon: TrendingUp, color: "text-primary" },
                 { label: "Trips", value: dbTrips.length, icon: Compass, color: "text-accent" },
