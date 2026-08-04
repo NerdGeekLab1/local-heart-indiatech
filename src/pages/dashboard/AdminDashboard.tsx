@@ -1456,28 +1456,34 @@ const AdminDashboard = () => {
         {/* Bookings Tab */}
         {activeTab === "bookings" && (
           <div className="mt-6">
-            <h2 className="text-xl font-bold text-foreground mb-4">All Bookings ({dbBookings.length > 0 ? dbBookings.length : mockBookings.length})</h2>
-            {(() => {
-              const liveRows = dbBookings.map(b => ({
+            <h2 className="text-xl font-bold text-foreground mb-4">All Bookings ({dbBookings.length})</h2>
+            {adminLoading && dbBookings.length === 0 ? (
+              <div data-testid="bookings-loading" className="rounded-2xl border border-border bg-card shadow-card p-4 space-y-3">
+                {[0, 1, 2, 3, 4].map(i => (
+                  <div key={i} className="h-10 rounded-lg bg-secondary/50 animate-pulse" />
+                ))}
+              </div>
+            ) : dbBookings.length === 0 ? (
+              <div data-testid="bookings-empty" className="rounded-2xl border border-border bg-card p-10 text-center shadow-card">
+                <Calendar className="w-10 h-10 text-muted-foreground/40 mx-auto mb-3" />
+                <p className="font-medium text-foreground">No bookings yet</p>
+                <p className="text-sm text-muted-foreground mt-1">Real bookings appear here as soon as travelers confirm a stay, trip or experience.</p>
+                <Button size="sm" variant="outline" className="mt-4 rounded-full text-xs gap-1.5" onClick={() => setDataRefreshKey(k => k + 1)}>
+                  <TrendingUp className="w-3.5 h-3.5" /> Refresh live data
+                </Button>
+              </div>
+            ) : (() => {
+              const rows = dbBookings.map(b => ({
                 id: b.id as string, ref: `#${(b.id as string).slice(0, 8)}`,
                 host: getUserName(b.host_id), traveler: getUserName(b.traveler_id),
                 dates: `${b.start_date} → ${b.end_date}`, guests: b.guests ?? "—",
-                total: Number(b.total_price || 0), status: b.status || "pending", live: true,
+                total: Number(b.total_price || 0), status: b.status || "pending",
               }));
-              const demoRows = liveRows.length === 0 ? mockBookings.map(b => {
-                const h = hosts.find(x => x.id === b.hostId);
-                return {
-                  id: b.id, ref: `#${b.id}`, host: h ? `${h.name}, ${h.city}` : "—", traveler: b.travelerId,
-                  dates: `${b.startDate} → ${b.endDate}`, guests: b.guests,
-                  total: b.totalPrice, status: getBookingStatus(b.id, b.status), live: false,
-                };
-              }) : [];
-              const rows = [...liveRows, ...demoRows];
               const pageCount = Math.max(1, Math.ceil(rows.length / TABLE_PAGE_SIZE));
               const safePage = Math.min(bookingsPage, pageCount - 1);
               const paged = rows.slice(safePage * TABLE_PAGE_SIZE, (safePage + 1) * TABLE_PAGE_SIZE);
               return (
-                <div className="rounded-2xl border border-border bg-card shadow-card overflow-hidden">
+                <div data-testid="bookings-table" className="rounded-2xl border border-border bg-card shadow-card overflow-hidden">
                   <div className="overflow-x-auto">
                     <table className="w-full text-sm">
                       <thead className="bg-secondary/40 text-xs uppercase tracking-wider text-muted-foreground">
@@ -1494,10 +1500,7 @@ const AdminDashboard = () => {
                       <tbody className="divide-y divide-border">
                         {paged.map(r => (
                           <tr key={r.id} className="hover:bg-secondary/20">
-                            <td className="px-4 py-3 font-medium text-foreground whitespace-nowrap">
-                              {r.ref}
-                              {!r.live && <span className="ml-1.5 text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-secondary text-muted-foreground">demo</span>}
-                            </td>
+                            <td className="px-4 py-3 font-medium text-foreground whitespace-nowrap">{r.ref}</td>
                             <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">{r.traveler || "—"}</td>
                             <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">{r.host || "—"}</td>
                             <td className="px-4 py-3 text-xs text-muted-foreground whitespace-nowrap">{r.dates}</td>
@@ -1506,9 +1509,7 @@ const AdminDashboard = () => {
                             <td className="px-4 py-3 text-right">
                               <select className="text-xs rounded-md border border-input bg-background px-2 py-1"
                                 value={r.status}
-                                onChange={e => r.live
-                                  ? updateBookingStatus(r.id, e.target.value)
-                                  : (setBookingOverrides(p => ({ ...p, [r.id]: e.target.value })), toast({ title: `Booking → ${e.target.value}` }))}>
+                                onChange={e => updateBookingStatus(r.id, e.target.value)}>
                                 <option value="pending">Pending</option><option value="confirmed">Confirmed</option>
                                 <option value="completed">Completed</option><option value="cancelled">Cancelled</option>
                               </select>
