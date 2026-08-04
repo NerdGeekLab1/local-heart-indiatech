@@ -187,7 +187,7 @@ const AdminDashboard = () => {
         supabase.from("beta_waitlist").select("*").order("created_at", { ascending: false }),
       ]);
 
-      const [{ data: missions }, { data: invoices }, { data: perms }, { data: subs }, { data: participants }, { data: bookingRows }, { data: posts }, { data: reviewRows }] = await Promise.all([
+      const [{ data: missions }, { data: invoices }, { data: perms }, { data: subs }, { data: participants }, { data: bookingRows }, { data: posts }, { data: reviewRows }, { data: hostProfileApps }] = await Promise.all([
         supabase.from("wanderer_missions").select("*").order("created_at", { ascending: false }),
         supabase.from("invoices").select("*").order("created_at", { ascending: false }),
         supabase.from("user_permissions").select("*").order("granted_at", { ascending: false }),
@@ -196,11 +196,12 @@ const AdminDashboard = () => {
         supabase.from("bookings").select("*").order("created_at", { ascending: false }),
         supabase.from("feed_posts").select("*").order("created_at", { ascending: false }),
         supabase.from("reviews").select("*").order("created_at", { ascending: false }),
+        supabase.from("host_applications").select("*").order("created_at", { ascending: false }),
       ]);
 
       return {
         trips, grievances, expReqs, profiles, roles, wanderers, dbExp, hostApps, betaSignups,
-        missions, invoices, perms, subs, participants, bookingRows, posts, reviewRows,
+        missions, invoices, perms, subs, participants, bookingRows, posts, reviewRows, hostProfileApps,
       };
     },
   });
