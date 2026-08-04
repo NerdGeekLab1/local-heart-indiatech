@@ -167,7 +167,7 @@ const AdminDashboard = () => {
   const [permType, setPermType] = useState(AVAILABLE_PERMISSIONS[0]);
 
   // Cached admin data layer — switching tabs reuses the cache instead of refetching
-  const { data: adminData } = useQuery({
+  const { data: adminData, isLoading: adminLoading } = useQuery({
     queryKey: ["admin-console-data", dataRefreshKey],
     staleTime: 5 * 60 * 1000,
     gcTime: 30 * 60 * 1000,
