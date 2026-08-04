@@ -225,6 +225,7 @@ const AdminDashboard = () => {
     setDbBookings(adminData.bookingRows || []);
     setDbFeedPosts(adminData.posts || []);
     setDbReviews(adminData.reviewRows || []);
+    setDbHostProfileApps(adminData.hostProfileApps || []);
     setLastSynced(new Date());
   }, [adminData]);
 
