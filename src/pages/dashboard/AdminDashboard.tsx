@@ -137,6 +137,7 @@ const AdminDashboard = () => {
   const [dbSubscriptions, setDbSubscriptions] = useState<any[]>([]);
   const [dbTripParticipants, setDbTripParticipants] = useState<any[]>([]);
   const [dbHostApplications, setDbHostApplications] = useState<any[]>([]);
+  const [dbHostProfileApps, setDbHostProfileApps] = useState<any[]>([]);
   const [dbBetaWaitlist, setDbBetaWaitlist] = useState<any[]>([]);
   const [activeAdminChat, setActiveAdminChat] = useState<{ id: string; name: string } | null>(null);
   const [dbBookings, setDbBookings] = useState<any[]>([]);
