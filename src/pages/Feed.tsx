@@ -14,6 +14,7 @@ import { toast } from "@/hooks/use-toast";
 import { formatDistanceToNow } from "date-fns";
 import { CreatePostDialog } from "@/components/CreatePostDialog";
 import { useBookmarks } from "@/hooks/use-bookmarks";
+import FeedComments from "@/components/FeedComments";
 
 interface FeedPost {
   id: string; user_id: string; media_url: string; media_type: string;
@@ -445,7 +446,7 @@ const PostcardItem = ({ post, onLike, onBookmark, bookmarked, index }: { post: F
               <Heart className={`w-4 h-4 ${post.liked ? "fill-pink-500 text-pink-500" : "text-foreground"}`} />
               <span className="text-xs font-bold tabular-nums">{post.likes_count}</span>
             </button>
-            <button className="p-2 rounded-full hover:bg-secondary transition"><MessageCircle className="w-4 h-4 text-foreground" /></button>
+            <FeedComments postId={post.id} />
             <button className="p-2 rounded-full hover:bg-secondary transition"><Send className="w-4 h-4 text-foreground" /></button>
           </div>
           <div className="flex items-center gap-2">
