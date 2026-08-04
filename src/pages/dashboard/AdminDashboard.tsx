@@ -137,6 +137,7 @@ const AdminDashboard = () => {
   const [dbSubscriptions, setDbSubscriptions] = useState<any[]>([]);
   const [dbTripParticipants, setDbTripParticipants] = useState<any[]>([]);
   const [dbHostApplications, setDbHostApplications] = useState<any[]>([]);
+  const [dbHostProfileApps, setDbHostProfileApps] = useState<any[]>([]);
   const [dbBetaWaitlist, setDbBetaWaitlist] = useState<any[]>([]);
   const [activeAdminChat, setActiveAdminChat] = useState<{ id: string; name: string } | null>(null);
   const [dbBookings, setDbBookings] = useState<any[]>([]);
@@ -166,7 +167,7 @@ const AdminDashboard = () => {
   const [permType, setPermType] = useState(AVAILABLE_PERMISSIONS[0]);
 
   // Cached admin data layer — switching tabs reuses the cache instead of refetching
-  const { data: adminData } = useQuery({
+  const { data: adminData, isLoading: adminLoading } = useQuery({
     queryKey: ["admin-console-data", dataRefreshKey],
     staleTime: 5 * 60 * 1000,
     gcTime: 30 * 60 * 1000,
@@ -186,7 +187,7 @@ const AdminDashboard = () => {
         supabase.from("beta_waitlist").select("*").order("created_at", { ascending: false }),
       ]);
 
-      const [{ data: missions }, { data: invoices }, { data: perms }, { data: subs }, { data: participants }, { data: bookingRows }, { data: posts }, { data: reviewRows }] = await Promise.all([
+      const [{ data: missions }, { data: invoices }, { data: perms }, { data: subs }, { data: participants }, { data: bookingRows }, { data: posts }, { data: reviewRows }, { data: hostProfileApps }] = await Promise.all([
         supabase.from("wanderer_missions").select("*").order("created_at", { ascending: false }),
         supabase.from("invoices").select("*").order("created_at", { ascending: false }),
         supabase.from("user_permissions").select("*").order("granted_at", { ascending: false }),
@@ -195,11 +196,12 @@ const AdminDashboard = () => {
         supabase.from("bookings").select("*").order("created_at", { ascending: false }),
         supabase.from("feed_posts").select("*").order("created_at", { ascending: false }),
         supabase.from("reviews").select("*").order("created_at", { ascending: false }),
+        supabase.from("host_applications").select("*").order("created_at", { ascending: false }),
       ]);
 
       return {
         trips, grievances, expReqs, profiles, roles, wanderers, dbExp, hostApps, betaSignups,
-        missions, invoices, perms, subs, participants, bookingRows, posts, reviewRows,
+        missions, invoices, perms, subs, participants, bookingRows, posts, reviewRows, hostProfileApps,
       };
     },
   });
@@ -223,6 +225,7 @@ const AdminDashboard = () => {
     setDbBookings(adminData.bookingRows || []);
     setDbFeedPosts(adminData.posts || []);
     setDbReviews(adminData.reviewRows || []);
+    setDbHostProfileApps(adminData.hostProfileApps || []);
     setLastSynced(new Date());
   }, [adminData]);
 
@@ -414,6 +417,16 @@ const AdminDashboard = () => {
     });
     setAuditLogReloadKey(k => k + 1);
     toast({ title: `${targetUser.email || "User"} marked banned` });
+  };
+
+  const updateHostProfileAppStatus = async (app: any, status: string) => {
+    if (!user) return;
+    const { error } = await supabase.from("host_applications")
+      .update({ status, reviewed_by: user.id, reviewed_at: new Date().toISOString() })
+      .eq("id", app.id);
+    if (error) { toast({ title: "Update failed", description: error.message, variant: "destructive" }); return; }
+    setDbHostProfileApps(p => p.map(a => a.id === app.id ? { ...a, status } : a));
+    toast({ title: `Host profile application → ${status}` });
   };
 
   const updateHostApplicationStatus = async (application: any, status: string) => {
@@ -657,7 +670,7 @@ const AdminDashboard = () => {
             <div className="mt-6 grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3">
               {[
                 { label: "Users", value: dbUsers.length, icon: Users, color: "text-primary" },
-                { label: "Bookings", value: mockBookings.length, icon: Calendar, color: "text-accent" },
+                { label: "Bookings", value: dbBookings.length, icon: Calendar, color: "text-accent" },
                 { label: "GMV", value: format(totalRevenue), icon: DollarSign, color: "text-accent" },
                 { label: "Revenue", value: format(platformFee), icon: TrendingUp, color: "text-primary" },
                 { label: "Trips", value: dbTrips.length, icon: Compass, color: "text-accent" },
@@ -1310,6 +1323,80 @@ const AdminDashboard = () => {
                 </div>
               );
             })()}
+
+            {/* Host profile applications submitted from /become-host */}
+            <div className="mt-8">
+              <div className="flex items-center justify-between gap-3 mb-3 flex-wrap">
+                <div>
+                  <h3 className="text-lg font-bold text-foreground">Host profile applications ({dbHostProfileApps.length})</h3>
+                  <p className="text-sm text-muted-foreground">Submissions from the public “Become a Host” form, including homestay, transport and food details.</p>
+                </div>
+                <Button asChild variant="outline" size="sm"><Link to="/become-host">Open form</Link></Button>
+              </div>
+              {dbHostProfileApps.length === 0 ? (
+                <div data-testid="host-profile-apps-empty" className="rounded-2xl border border-border bg-card p-8 text-center shadow-card">
+                  <UserCheck className="w-9 h-9 text-muted-foreground/40 mx-auto mb-2" />
+                  <p className="font-medium text-foreground">No host profile applications yet</p>
+                  <p className="text-sm text-muted-foreground">New submissions from /become-host land here for verification.</p>
+                </div>
+              ) : (
+                <div data-testid="host-profile-apps-table" className="rounded-2xl border border-border bg-card shadow-card overflow-hidden">
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead className="bg-secondary/40 text-xs uppercase tracking-wider text-muted-foreground">
+                        <tr>
+                          <th className="text-left font-semibold px-3 py-2.5">Applicant</th>
+                          <th className="text-left font-semibold px-3 py-2.5">Location</th>
+                          <th className="text-left font-semibold px-3 py-2.5">Services</th>
+                          <th className="text-left font-semibold px-3 py-2.5">Details</th>
+                          <th className="text-left font-semibold px-3 py-2.5">Photos</th>
+                          <th className="text-right font-semibold px-3 py-2.5">Rate / day</th>
+                          <th className="text-right font-semibold px-3 py-2.5">Status</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-border">
+                        {dbHostProfileApps.map(a => (
+                          <tr key={a.id} className="hover:bg-secondary/20 align-top">
+                            <td className="px-3 py-2.5">
+                              <p className="font-medium text-foreground whitespace-nowrap">{a.full_name}</p>
+                              <p className="text-xs text-muted-foreground">{a.email}</p>
+                              <p className="text-xs text-muted-foreground">{a.phone}</p>
+                            </td>
+                            <td className="px-3 py-2.5 text-muted-foreground whitespace-nowrap">{a.city}, {a.state}</td>
+                            <td className="px-3 py-2.5 text-xs text-muted-foreground">{(a.services || []).join(", ") || "—"}</td>
+                            <td className="px-3 py-2.5 text-xs text-muted-foreground max-w-[260px]">
+                              {a.homestay_details?.rooms && <p>Stay: {a.homestay_details.rooms} rooms · {a.homestay_details.check_in || "—"}–{a.homestay_details.check_out || "—"} · ₹{a.homestay_details.nightly_rate || "—"}/night</p>}
+                              {a.transport_details?.vehicle_type && <p>Transport: {a.transport_details.vehicle_type} · {a.transport_details.capacity || "—"} seats · ₹{a.transport_details.per_km || "—"}/km</p>}
+                              {a.food_details?.cuisines && <p>Food: {a.food_details.cuisines} · ₹{a.food_details.price_per_plate || "—"}/plate</p>}
+                              {!a.homestay_details?.rooms && !a.transport_details?.vehicle_type && !a.food_details?.cuisines && "—"}
+                            </td>
+                            <td className="px-3 py-2.5">
+                              <div className="flex gap-1">
+                                {(a.photos || []).slice(0, 3).map((p: string) => (
+                                  <img key={p} src={p} alt="" className="w-8 h-8 rounded object-cover border border-border" />
+                                ))}
+                                {(a.photos || []).length === 0 && <span className="text-xs text-muted-foreground">—</span>}
+                              </div>
+                            </td>
+                            <td className="px-3 py-2.5 text-right font-semibold text-foreground whitespace-nowrap">{a.price_per_day ? format(Number(a.price_per_day)) : "—"}</td>
+                            <td className="px-3 py-2.5 text-right">
+                              <select className="text-xs rounded-md border border-input bg-background px-2 py-1"
+                                value={a.status}
+                                onChange={e => updateHostProfileAppStatus(a, e.target.value)}>
+                                <option value="pending">Pending</option>
+                                <option value="under_review">Under review</option>
+                                <option value="verified">Verified</option>
+                                <option value="rejected">Rejected</option>
+                              </select>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         )}
 
@@ -1453,28 +1540,34 @@ const AdminDashboard = () => {
         {/* Bookings Tab */}
         {activeTab === "bookings" && (
           <div className="mt-6">
-            <h2 className="text-xl font-bold text-foreground mb-4">All Bookings ({dbBookings.length > 0 ? dbBookings.length : mockBookings.length})</h2>
-            {(() => {
-              const liveRows = dbBookings.map(b => ({
+            <h2 className="text-xl font-bold text-foreground mb-4">All Bookings ({dbBookings.length})</h2>
+            {adminLoading && dbBookings.length === 0 ? (
+              <div data-testid="bookings-loading" className="rounded-2xl border border-border bg-card shadow-card p-4 space-y-3">
+                {[0, 1, 2, 3, 4].map(i => (
+                  <div key={i} className="h-10 rounded-lg bg-secondary/50 animate-pulse" />
+                ))}
+              </div>
+            ) : dbBookings.length === 0 ? (
+              <div data-testid="bookings-empty" className="rounded-2xl border border-border bg-card p-10 text-center shadow-card">
+                <Calendar className="w-10 h-10 text-muted-foreground/40 mx-auto mb-3" />
+                <p className="font-medium text-foreground">No bookings yet</p>
+                <p className="text-sm text-muted-foreground mt-1">Real bookings appear here as soon as travelers confirm a stay, trip or experience.</p>
+                <Button size="sm" variant="outline" className="mt-4 rounded-full text-xs gap-1.5" onClick={() => setDataRefreshKey(k => k + 1)}>
+                  <TrendingUp className="w-3.5 h-3.5" /> Refresh live data
+                </Button>
+              </div>
+            ) : (() => {
+              const rows = dbBookings.map(b => ({
                 id: b.id as string, ref: `#${(b.id as string).slice(0, 8)}`,
                 host: getUserName(b.host_id), traveler: getUserName(b.traveler_id),
                 dates: `${b.start_date} → ${b.end_date}`, guests: b.guests ?? "—",
-                total: Number(b.total_price || 0), status: b.status || "pending", live: true,
+                total: Number(b.total_price || 0), status: b.status || "pending",
               }));
-              const demoRows = liveRows.length === 0 ? mockBookings.map(b => {
-                const h = hosts.find(x => x.id === b.hostId);
-                return {
-                  id: b.id, ref: `#${b.id}`, host: h ? `${h.name}, ${h.city}` : "—", traveler: b.travelerId,
-                  dates: `${b.startDate} → ${b.endDate}`, guests: b.guests,
-                  total: b.totalPrice, status: getBookingStatus(b.id, b.status), live: false,
-                };
-              }) : [];
-              const rows = [...liveRows, ...demoRows];
               const pageCount = Math.max(1, Math.ceil(rows.length / TABLE_PAGE_SIZE));
               const safePage = Math.min(bookingsPage, pageCount - 1);
               const paged = rows.slice(safePage * TABLE_PAGE_SIZE, (safePage + 1) * TABLE_PAGE_SIZE);
               return (
-                <div className="rounded-2xl border border-border bg-card shadow-card overflow-hidden">
+                <div data-testid="bookings-table" className="rounded-2xl border border-border bg-card shadow-card overflow-hidden">
                   <div className="overflow-x-auto">
                     <table className="w-full text-sm">
                       <thead className="bg-secondary/40 text-xs uppercase tracking-wider text-muted-foreground">
@@ -1491,10 +1584,7 @@ const AdminDashboard = () => {
                       <tbody className="divide-y divide-border">
                         {paged.map(r => (
                           <tr key={r.id} className="hover:bg-secondary/20">
-                            <td className="px-4 py-3 font-medium text-foreground whitespace-nowrap">
-                              {r.ref}
-                              {!r.live && <span className="ml-1.5 text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-secondary text-muted-foreground">demo</span>}
-                            </td>
+                            <td className="px-4 py-3 font-medium text-foreground whitespace-nowrap">{r.ref}</td>
                             <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">{r.traveler || "—"}</td>
                             <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">{r.host || "—"}</td>
                             <td className="px-4 py-3 text-xs text-muted-foreground whitespace-nowrap">{r.dates}</td>
@@ -1503,9 +1593,7 @@ const AdminDashboard = () => {
                             <td className="px-4 py-3 text-right">
                               <select className="text-xs rounded-md border border-input bg-background px-2 py-1"
                                 value={r.status}
-                                onChange={e => r.live
-                                  ? updateBookingStatus(r.id, e.target.value)
-                                  : (setBookingOverrides(p => ({ ...p, [r.id]: e.target.value })), toast({ title: `Booking → ${e.target.value}` }))}>
+                                onChange={e => updateBookingStatus(r.id, e.target.value)}>
                                 <option value="pending">Pending</option><option value="confirmed">Confirmed</option>
                                 <option value="completed">Completed</option><option value="cancelled">Cancelled</option>
                               </select>

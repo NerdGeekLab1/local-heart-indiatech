@@ -17,6 +17,8 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Link } from "react-router-dom";
+import PhoneInput from "@/components/PhoneInput";
+import { splitPhone, isValidLocalPhone } from "@/lib/phone";
 
 const LANGS = ["English", "Hindi", "French", "German", "Spanish", "Japanese", "Mandarin", "Italian", "Russian", "Arabic"];
 const SPECIALTIES = ["Cultural", "Spiritual", "Adventure", "Culinary", "Wellness", "Wildlife", "Heritage", "Festival"];
@@ -107,7 +109,7 @@ const shuffle = <T,>(arr: T[]): T[] => {
 const schema = z.object({
   full_name: z.string().trim().min(2).max(100),
   email: z.string().trim().email().max(255),
-  phone: z.string().trim().max(20).optional().or(z.literal("")),
+  phone: z.string().trim().refine(v => isValidLocalPhone(splitPhone(v).number), "Enter a valid 10-digit phone number with country code"),
   city: z.string().trim().min(2).max(80),
   english_proficiency: z.enum(["basic", "conversational", "fluent", "native"]),
   years_hosting: z.number().min(0).max(50),
@@ -206,6 +208,23 @@ const HostEligibility = () => {
     social_links: {} as Record<string, string>,
   });
 
+  const [touched, setTouched] = useState(false);
+  const fieldErrors = useMemo(() => {
+    const errs: Record<string, string> = {};
+    const parsed = schema.safeParse(form);
+    if (!parsed.success) {
+      for (const issue of parsed.error.issues) {
+        const key = String(issue.path[0]);
+        if (!errs[key]) errs[key] = issue.message;
+      }
+    }
+    for (const f of SOCIAL_FIELDS) {
+      const v = form.social_links[f.key];
+      if (v && !urlOk(v)) errs[`social_${f.key}`] = "Use a full https:// link";
+    }
+    return errs;
+  }, [form]);
+
   const score = useMemo(() => calcScore(form), [form]);
   const tier = score >= 80 ? "Elite" : score >= 60 ? "Verified" : score >= 40 ? "Aspiring" : "Newcomer";
   const socialScore = useMemo(() => calcSocialScore(form.social_links), [form.social_links]);
@@ -233,6 +252,7 @@ const HostEligibility = () => {
     setForm({ ...form, social_links: { ...form.social_links, [k]: v } });
 
   const submit = async () => {
+    setTouched(true);
     if (!user) { toast({ title: "Please sign in first", variant: "destructive" }); return; }
     const parsed = schema.safeParse(form);
     if (!parsed.success) {
@@ -382,20 +402,31 @@ const HostEligibility = () => {
 
               <div className="grid sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="text-sm font-medium block mb-1">Full Name *</label>
-                  <Input value={form.full_name} onChange={e => setForm({ ...form, full_name: e.target.value })} maxLength={100} />
+                  <label htmlFor="he-name" className="text-sm font-medium block mb-1">Full Name *</label>
+                  <Input id="he-name" value={form.full_name} onChange={e => setForm({ ...form, full_name: e.target.value })} maxLength={100}
+                    aria-invalid={touched && !!fieldErrors.full_name || undefined}
+                    className={touched && fieldErrors.full_name ? "border-destructive" : ""} />
+                  {touched && fieldErrors.full_name && <p className="text-xs text-destructive mt-1">{fieldErrors.full_name}</p>}
                 </div>
                 <div>
-                  <label className="text-sm font-medium block mb-1">Email *</label>
-                  <Input type="email" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} maxLength={255} />
+                  <label htmlFor="he-email" className="text-sm font-medium block mb-1">Email *</label>
+                  <Input id="he-email" type="email" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} maxLength={255}
+                    placeholder="you@example.com"
+                    aria-invalid={touched && !!fieldErrors.email || undefined}
+                    className={touched && fieldErrors.email ? "border-destructive" : ""} />
+                  {touched && fieldErrors.email && <p className="text-xs text-destructive mt-1">{fieldErrors.email}</p>}
                 </div>
                 <div>
-                  <label className="text-sm font-medium block mb-1">Phone</label>
-                  <Input value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} maxLength={20} />
+                  <label htmlFor="he-phone" className="text-sm font-medium block mb-1">Phone *</label>
+                  <PhoneInput id="he-phone" value={form.phone} onChange={v => setForm({ ...form, phone: v })} showError={touched} />
+                  {touched && fieldErrors.phone && <p className="text-xs text-destructive mt-1">{fieldErrors.phone}</p>}
                 </div>
                 <div>
-                  <label className="text-sm font-medium block mb-1">City *</label>
-                  <Input value={form.city} onChange={e => setForm({ ...form, city: e.target.value })} maxLength={80} />
+                  <label htmlFor="he-city" className="text-sm font-medium block mb-1">City *</label>
+                  <Input id="he-city" value={form.city} onChange={e => setForm({ ...form, city: e.target.value })} maxLength={80}
+                    aria-invalid={touched && !!fieldErrors.city || undefined}
+                    className={touched && fieldErrors.city ? "border-destructive" : ""} />
+                  {touched && fieldErrors.city && <p className="text-xs text-destructive mt-1">{fieldErrors.city}</p>}
                 </div>
                 <div>
                   <label className="text-sm font-medium block mb-1">English Proficiency *</label>
@@ -461,15 +492,22 @@ const HostEligibility = () => {
                 </div>
                 <div className="grid sm:grid-cols-2 gap-3">
                   {SOCIAL_FIELDS.map(f => (
-                    <div key={f.key} className="flex items-center gap-2">
-                      <f.icon className="w-4 h-4 text-muted-foreground shrink-0" />
-                      <Input
-                        value={form.social_links[f.key] || ""}
-                        onChange={e => updateSocial(f.key, e.target.value)}
-                        placeholder={f.placeholder}
-                        maxLength={300}
-                        className={form.social_links[f.key] && !urlOk(form.social_links[f.key]) ? "border-destructive" : ""}
-                      />
+                    <div key={f.key}>
+                      <div className="flex items-center gap-2">
+                        <f.icon className="w-4 h-4 text-muted-foreground shrink-0" />
+                        <Input
+                          value={form.social_links[f.key] || ""}
+                          onChange={e => updateSocial(f.key, e.target.value)}
+                          placeholder={f.placeholder}
+                          maxLength={300}
+                          aria-label={`${f.label} profile URL`}
+                          aria-invalid={!!fieldErrors[`social_${f.key}`] || undefined}
+                          className={fieldErrors[`social_${f.key}`] ? "border-destructive focus-visible:ring-destructive" : ""}
+                        />
+                      </div>
+                      {fieldErrors[`social_${f.key}`] && (
+                        <p className="text-xs text-destructive mt-1 ml-6">{f.label}: {fieldErrors[`social_${f.key}`]}</p>
+                      )}
                     </div>
                   ))}
                 </div>

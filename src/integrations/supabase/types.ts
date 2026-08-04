@@ -840,6 +840,41 @@ export type Database = {
         }
         Relationships: []
       }
+      feed_comments: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          post_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          post_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          post_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "feed_comments_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "feed_posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       feed_likes: {
         Row: {
           created_at: string
@@ -981,6 +1016,84 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      host_applications: {
+        Row: {
+          admin_notes: string | null
+          bio: string | null
+          city: string
+          created_at: string
+          email: string
+          food_details: Json
+          full_name: string
+          homestay_details: Json
+          id: string
+          languages: string[]
+          phone: string
+          photos: string[]
+          price_per_day: number | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          services: string[]
+          specialties: string[]
+          state: string
+          status: string
+          tagline: string | null
+          transport_details: Json
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          admin_notes?: string | null
+          bio?: string | null
+          city: string
+          created_at?: string
+          email: string
+          food_details?: Json
+          full_name: string
+          homestay_details?: Json
+          id?: string
+          languages?: string[]
+          phone: string
+          photos?: string[]
+          price_per_day?: number | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          services?: string[]
+          specialties?: string[]
+          state: string
+          status?: string
+          tagline?: string | null
+          transport_details?: Json
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          admin_notes?: string | null
+          bio?: string | null
+          city?: string
+          created_at?: string
+          email?: string
+          food_details?: Json
+          full_name?: string
+          homestay_details?: Json
+          id?: string
+          languages?: string[]
+          phone?: string
+          photos?: string[]
+          price_per_day?: number | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          services?: string[]
+          specialties?: string[]
+          state?: string
+          status?: string
+          tagline?: string | null
+          transport_details?: Json
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
       }
       host_eligibility: {
         Row: {
