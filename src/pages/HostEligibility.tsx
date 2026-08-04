@@ -382,20 +382,31 @@ const HostEligibility = () => {
 
               <div className="grid sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="text-sm font-medium block mb-1">Full Name *</label>
-                  <Input value={form.full_name} onChange={e => setForm({ ...form, full_name: e.target.value })} maxLength={100} />
+                  <label htmlFor="he-name" className="text-sm font-medium block mb-1">Full Name *</label>
+                  <Input id="he-name" value={form.full_name} onChange={e => setForm({ ...form, full_name: e.target.value })} maxLength={100}
+                    aria-invalid={touched && !!fieldErrors.full_name || undefined}
+                    className={touched && fieldErrors.full_name ? "border-destructive" : ""} />
+                  {touched && fieldErrors.full_name && <p className="text-xs text-destructive mt-1">{fieldErrors.full_name}</p>}
                 </div>
                 <div>
-                  <label className="text-sm font-medium block mb-1">Email *</label>
-                  <Input type="email" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} maxLength={255} />
+                  <label htmlFor="he-email" className="text-sm font-medium block mb-1">Email *</label>
+                  <Input id="he-email" type="email" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} maxLength={255}
+                    placeholder="you@example.com"
+                    aria-invalid={touched && !!fieldErrors.email || undefined}
+                    className={touched && fieldErrors.email ? "border-destructive" : ""} />
+                  {touched && fieldErrors.email && <p className="text-xs text-destructive mt-1">{fieldErrors.email}</p>}
                 </div>
                 <div>
-                  <label className="text-sm font-medium block mb-1">Phone</label>
-                  <Input value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} maxLength={20} />
+                  <label htmlFor="he-phone" className="text-sm font-medium block mb-1">Phone *</label>
+                  <PhoneInput id="he-phone" value={form.phone} onChange={v => setForm({ ...form, phone: v })} showError={touched} />
+                  {touched && fieldErrors.phone && <p className="text-xs text-destructive mt-1">{fieldErrors.phone}</p>}
                 </div>
                 <div>
-                  <label className="text-sm font-medium block mb-1">City *</label>
-                  <Input value={form.city} onChange={e => setForm({ ...form, city: e.target.value })} maxLength={80} />
+                  <label htmlFor="he-city" className="text-sm font-medium block mb-1">City *</label>
+                  <Input id="he-city" value={form.city} onChange={e => setForm({ ...form, city: e.target.value })} maxLength={80}
+                    aria-invalid={touched && !!fieldErrors.city || undefined}
+                    className={touched && fieldErrors.city ? "border-destructive" : ""} />
+                  {touched && fieldErrors.city && <p className="text-xs text-destructive mt-1">{fieldErrors.city}</p>}
                 </div>
                 <div>
                   <label className="text-sm font-medium block mb-1">English Proficiency *</label>
