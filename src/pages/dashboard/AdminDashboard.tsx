@@ -419,6 +419,16 @@ const AdminDashboard = () => {
     toast({ title: `${targetUser.email || "User"} marked banned` });
   };
 
+  const updateHostProfileAppStatus = async (app: any, status: string) => {
+    if (!user) return;
+    const { error } = await supabase.from("host_applications")
+      .update({ status, reviewed_by: user.id, reviewed_at: new Date().toISOString() })
+      .eq("id", app.id);
+    if (error) { toast({ title: "Update failed", description: error.message, variant: "destructive" }); return; }
+    setDbHostProfileApps(p => p.map(a => a.id === app.id ? { ...a, status } : a));
+    toast({ title: `Host profile application → ${status}` });
+  };
+
   const updateHostApplicationStatus = async (application: any, status: string) => {
     if (!user) return;
     if (status === "approved") {
