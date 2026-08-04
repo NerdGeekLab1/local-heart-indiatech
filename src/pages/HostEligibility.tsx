@@ -17,6 +17,8 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Link } from "react-router-dom";
+import PhoneInput from "@/components/PhoneInput";
+import { splitPhone, isValidLocalPhone } from "@/lib/phone";
 
 const LANGS = ["English", "Hindi", "French", "German", "Spanish", "Japanese", "Mandarin", "Italian", "Russian", "Arabic"];
 const SPECIALTIES = ["Cultural", "Spiritual", "Adventure", "Culinary", "Wellness", "Wildlife", "Heritage", "Festival"];
@@ -107,7 +109,7 @@ const shuffle = <T,>(arr: T[]): T[] => {
 const schema = z.object({
   full_name: z.string().trim().min(2).max(100),
   email: z.string().trim().email().max(255),
-  phone: z.string().trim().max(20).optional().or(z.literal("")),
+  phone: z.string().trim().refine(v => isValidLocalPhone(splitPhone(v).number), "Enter a valid 10-digit phone number with country code"),
   city: z.string().trim().min(2).max(80),
   english_proficiency: z.enum(["basic", "conversational", "fluent", "native"]),
   years_hosting: z.number().min(0).max(50),
@@ -206,6 +208,23 @@ const HostEligibility = () => {
     social_links: {} as Record<string, string>,
   });
 
+  const [touched, setTouched] = useState(false);
+  const fieldErrors = useMemo(() => {
+    const errs: Record<string, string> = {};
+    const parsed = schema.safeParse(form);
+    if (!parsed.success) {
+      for (const issue of parsed.error.issues) {
+        const key = String(issue.path[0]);
+        if (!errs[key]) errs[key] = issue.message;
+      }
+    }
+    for (const f of SOCIAL_FIELDS) {
+      const v = form.social_links[f.key];
+      if (v && !urlOk(v)) errs[`social_${f.key}`] = "Use a full https:// link";
+    }
+    return errs;
+  }, [form]);
+
   const score = useMemo(() => calcScore(form), [form]);
   const tier = score >= 80 ? "Elite" : score >= 60 ? "Verified" : score >= 40 ? "Aspiring" : "Newcomer";
   const socialScore = useMemo(() => calcSocialScore(form.social_links), [form.social_links]);
@@ -233,6 +252,7 @@ const HostEligibility = () => {
     setForm({ ...form, social_links: { ...form.social_links, [k]: v } });
 
   const submit = async () => {
+    setTouched(true);
     if (!user) { toast({ title: "Please sign in first", variant: "destructive" }); return; }
     const parsed = schema.safeParse(form);
     if (!parsed.success) {
