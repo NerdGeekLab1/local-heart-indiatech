@@ -492,15 +492,22 @@ const HostEligibility = () => {
                 </div>
                 <div className="grid sm:grid-cols-2 gap-3">
                   {SOCIAL_FIELDS.map(f => (
-                    <div key={f.key} className="flex items-center gap-2">
-                      <f.icon className="w-4 h-4 text-muted-foreground shrink-0" />
-                      <Input
-                        value={form.social_links[f.key] || ""}
-                        onChange={e => updateSocial(f.key, e.target.value)}
-                        placeholder={f.placeholder}
-                        maxLength={300}
-                        className={form.social_links[f.key] && !urlOk(form.social_links[f.key]) ? "border-destructive" : ""}
-                      />
+                    <div key={f.key}>
+                      <div className="flex items-center gap-2">
+                        <f.icon className="w-4 h-4 text-muted-foreground shrink-0" />
+                        <Input
+                          value={form.social_links[f.key] || ""}
+                          onChange={e => updateSocial(f.key, e.target.value)}
+                          placeholder={f.placeholder}
+                          maxLength={300}
+                          aria-label={`${f.label} profile URL`}
+                          aria-invalid={!!fieldErrors[`social_${f.key}`] || undefined}
+                          className={fieldErrors[`social_${f.key}`] ? "border-destructive focus-visible:ring-destructive" : ""}
+                        />
+                      </div>
+                      {fieldErrors[`social_${f.key}`] && (
+                        <p className="text-xs text-destructive mt-1 ml-6">{f.label}: {fieldErrors[`social_${f.key}`]}</p>
+                      )}
                     </div>
                   ))}
                 </div>
