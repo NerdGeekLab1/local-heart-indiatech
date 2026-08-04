@@ -1323,6 +1323,80 @@ const AdminDashboard = () => {
                 </div>
               );
             })()}
+
+            {/* Host profile applications submitted from /become-host */}
+            <div className="mt-8">
+              <div className="flex items-center justify-between gap-3 mb-3 flex-wrap">
+                <div>
+                  <h3 className="text-lg font-bold text-foreground">Host profile applications ({dbHostProfileApps.length})</h3>
+                  <p className="text-sm text-muted-foreground">Submissions from the public “Become a Host” form, including homestay, transport and food details.</p>
+                </div>
+                <Button asChild variant="outline" size="sm"><Link to="/become-host">Open form</Link></Button>
+              </div>
+              {dbHostProfileApps.length === 0 ? (
+                <div data-testid="host-profile-apps-empty" className="rounded-2xl border border-border bg-card p-8 text-center shadow-card">
+                  <UserCheck className="w-9 h-9 text-muted-foreground/40 mx-auto mb-2" />
+                  <p className="font-medium text-foreground">No host profile applications yet</p>
+                  <p className="text-sm text-muted-foreground">New submissions from /become-host land here for verification.</p>
+                </div>
+              ) : (
+                <div data-testid="host-profile-apps-table" className="rounded-2xl border border-border bg-card shadow-card overflow-hidden">
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead className="bg-secondary/40 text-xs uppercase tracking-wider text-muted-foreground">
+                        <tr>
+                          <th className="text-left font-semibold px-3 py-2.5">Applicant</th>
+                          <th className="text-left font-semibold px-3 py-2.5">Location</th>
+                          <th className="text-left font-semibold px-3 py-2.5">Services</th>
+                          <th className="text-left font-semibold px-3 py-2.5">Details</th>
+                          <th className="text-left font-semibold px-3 py-2.5">Photos</th>
+                          <th className="text-right font-semibold px-3 py-2.5">Rate / day</th>
+                          <th className="text-right font-semibold px-3 py-2.5">Status</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-border">
+                        {dbHostProfileApps.map(a => (
+                          <tr key={a.id} className="hover:bg-secondary/20 align-top">
+                            <td className="px-3 py-2.5">
+                              <p className="font-medium text-foreground whitespace-nowrap">{a.full_name}</p>
+                              <p className="text-xs text-muted-foreground">{a.email}</p>
+                              <p className="text-xs text-muted-foreground">{a.phone}</p>
+                            </td>
+                            <td className="px-3 py-2.5 text-muted-foreground whitespace-nowrap">{a.city}, {a.state}</td>
+                            <td className="px-3 py-2.5 text-xs text-muted-foreground">{(a.services || []).join(", ") || "—"}</td>
+                            <td className="px-3 py-2.5 text-xs text-muted-foreground max-w-[260px]">
+                              {a.homestay_details?.rooms && <p>Stay: {a.homestay_details.rooms} rooms · {a.homestay_details.check_in || "—"}–{a.homestay_details.check_out || "—"} · ₹{a.homestay_details.nightly_rate || "—"}/night</p>}
+                              {a.transport_details?.vehicle_type && <p>Transport: {a.transport_details.vehicle_type} · {a.transport_details.capacity || "—"} seats · ₹{a.transport_details.per_km || "—"}/km</p>}
+                              {a.food_details?.cuisines && <p>Food: {a.food_details.cuisines} · ₹{a.food_details.price_per_plate || "—"}/plate</p>}
+                              {!a.homestay_details?.rooms && !a.transport_details?.vehicle_type && !a.food_details?.cuisines && "—"}
+                            </td>
+                            <td className="px-3 py-2.5">
+                              <div className="flex gap-1">
+                                {(a.photos || []).slice(0, 3).map((p: string) => (
+                                  <img key={p} src={p} alt="" className="w-8 h-8 rounded object-cover border border-border" />
+                                ))}
+                                {(a.photos || []).length === 0 && <span className="text-xs text-muted-foreground">—</span>}
+                              </div>
+                            </td>
+                            <td className="px-3 py-2.5 text-right font-semibold text-foreground whitespace-nowrap">{a.price_per_day ? format(Number(a.price_per_day)) : "—"}</td>
+                            <td className="px-3 py-2.5 text-right">
+                              <select className="text-xs rounded-md border border-input bg-background px-2 py-1"
+                                value={a.status}
+                                onChange={e => updateHostProfileAppStatus(a, e.target.value)}>
+                                <option value="pending">Pending</option>
+                                <option value="under_review">Under review</option>
+                                <option value="verified">Verified</option>
+                                <option value="rejected">Rejected</option>
+                              </select>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         )}
 
