@@ -89,6 +89,15 @@ const AdminDashboard = () => {
     || (typeof localStorage !== "undefined" ? (localStorage.getItem(ADMIN_TAB_KEY) as Tab | null) : null)
     || "overview";
   const [activeTab, setActiveTabState] = useState<Tab>(initialTab);
+  const [navCollapsed, setNavCollapsed] = useState<boolean>(() => {
+    try { return localStorage.getItem(ADMIN_NAV_KEY) === "1"; } catch { return false; }
+  });
+  const toggleNav = () => setNavCollapsed(c => {
+    try { localStorage.setItem(ADMIN_NAV_KEY, c ? "0" : "1"); } catch { /* storage unavailable */ }
+    return !c;
+  });
+  const [detailApp, setDetailApp] = useState<{ kind: "eligibility" | "profile"; row: any } | null>(null);
+
 
   // Controlled + persisted: survives tab switches, visibility changes and reloads
   const setActiveTab = (tab: Tab) => {
