@@ -16,7 +16,7 @@ interface Props {
   statuses?: { value: string; label: string; icon?: "approve" | "review" | "wait" | "reject" }[];
 }
 
-const HIDDEN = new Set(["id", "user_id", "created_at", "updated_at", "reviewed_by", "reviewed_at", "admin_notes"]);
+const HIDDEN = new Set(["id", "user_id", "created_at", "updated_at", "reviewed_by", "reviewed_at", "admin_notes", "questionnaire_answers"]);
 
 const prettyKey = (k: string) =>
   k.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
