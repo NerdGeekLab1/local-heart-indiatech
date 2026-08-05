@@ -633,26 +633,34 @@ const AdminDashboard = () => {
         <BetaModerationTools scope="admin" />
         <div className="flex flex-col lg:flex-row gap-6">
           {/* Sidebar */}
-          <aside className="lg:w-64 lg:shrink-0">
+          <aside className={`lg:shrink-0 transition-all duration-200 ${navCollapsed ? "lg:w-16" : "lg:w-64"}`}>
             <div className="lg:sticky lg:top-24 rounded-2xl bg-card shadow-card p-3 max-h-[80vh] overflow-y-auto">
-              <div className="px-2 py-2 mb-2 border-b border-border">
-                <h1 className="text-lg font-bold text-foreground">Admin Console</h1>
-                <p className="text-[11px] text-muted-foreground">Commission: {platformSettings.commissionRate}%</p>
+              <div className={`py-2 mb-2 border-b border-border flex items-center gap-2 ${navCollapsed ? "justify-center px-0" : "justify-between px-2"}`}>
+                {!navCollapsed && (
+                  <div className="min-w-0">
+                    <h1 className="text-lg font-bold text-foreground">Admin Console</h1>
+                    <p className="text-[11px] text-muted-foreground">Commission: {platformSettings.commissionRate}%</p>
+                  </div>
+                )}
+                <button onClick={toggleNav} aria-label={navCollapsed ? "Expand admin menu" : "Collapse admin menu"} title={navCollapsed ? "Expand menu" : "Collapse menu"}
+                  className="shrink-0 rounded-lg p-1.5 text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors">
+                  {navCollapsed ? <PanelLeftOpen className="w-4 h-4" /> : <PanelLeftClose className="w-4 h-4" />}
+                </button>
               </div>
               <nav className="space-y-3">
                 {Object.entries(groupedTabs).map(([group, items]) => (
                   <div key={group}>
-                    <p className="px-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-1">{group}</p>
+                    {!navCollapsed && <p className="px-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-1">{group}</p>}
                     <div className="space-y-0.5">
                       {items.map(t => (
-                        <button key={t.id} onClick={() => setActiveTab(t.id)}
-                          className={`w-full flex items-center justify-between gap-2 px-2.5 py-2 text-sm rounded-lg transition-colors ${activeTab === t.id ? "bg-primary text-primary-foreground font-medium" : "text-foreground hover:bg-secondary"}`}>
-                          <span className="flex items-center gap-2 min-w-0">
+                        <button key={t.id} onClick={() => setActiveTab(t.id)} title={t.label}
+                          className={`w-full flex items-center gap-2 py-2 text-sm rounded-lg transition-colors ${navCollapsed ? "justify-center px-0 relative" : "justify-between px-2.5"} ${activeTab === t.id ? "bg-primary text-primary-foreground font-medium" : "text-foreground hover:bg-secondary"}`}>
+                          <span className={`flex items-center gap-2 min-w-0 ${navCollapsed ? "justify-center" : ""}`}>
                             <t.icon className="w-4 h-4 shrink-0" />
-                            <span className="truncate">{t.label}</span>
+                            {!navCollapsed && <span className="truncate">{t.label}</span>}
                           </span>
                           {(t.badge || 0) > 0 && (
-                            <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${activeTab === t.id ? "bg-primary-foreground text-primary" : "bg-destructive text-destructive-foreground"}`}>
+                            <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${navCollapsed ? "absolute -top-0.5 -right-0.5" : ""} ${activeTab === t.id && !navCollapsed ? "bg-primary-foreground text-primary" : "bg-destructive text-destructive-foreground"}`}>
                               {t.badge}
                             </span>
                           )}
@@ -663,6 +671,7 @@ const AdminDashboard = () => {
                 ))}
               </nav>
             </div>
+
           </aside>
 
           {/* Content */}
