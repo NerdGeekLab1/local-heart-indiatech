@@ -1320,6 +1320,10 @@ const AdminDashboard = () => {
                             </td>
                             <td className="px-3 py-2.5 text-right whitespace-nowrap">
                               <div className="flex gap-1.5 justify-end flex-wrap">
+                                <Button size="sm" variant="secondary" className="rounded-full text-xs" onClick={() => setDetailApp({ kind: "eligibility", row: app })}>
+                                  <FileText className="w-3 h-3 mr-1" /> View full
+                                </Button>
+
                                 <Button size="sm" className="rounded-full text-xs bg-accent text-accent-foreground hover:bg-accent/90" onClick={() => updateHostApplicationStatus(app, "approved")}>
                                   <CheckCircle className="w-3 h-3 mr-1" /> Approve
                                 </Button>
