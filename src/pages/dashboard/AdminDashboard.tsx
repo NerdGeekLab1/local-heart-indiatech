@@ -34,11 +34,15 @@ import DocsTab from "@/components/admin/DocsTab";
 import WebsiteCMSTab from "@/components/admin/WebsiteCMSTab";
 import ContentManagerTab from "@/components/admin/ContentManagerTab";
 import ChatPanel from "@/components/ChatPanel";
-import { Heart, Menu, BookOpen } from "lucide-react";
+import { Heart, Menu, BookOpen, PanelLeftClose, PanelLeftOpen } from "lucide-react";
+import ApplicationDetailDialog from "@/components/admin/ApplicationDetailDialog";
+
 
 type Tab = "overview" | "hosts" | "hostWaitlist" | "bookings" | "experiences" | "destinations" | "trips" | "grievances" | "users" | "wanderers" | "missions" | "leaderboard" | "invoices" | "feedModeration" | "reviewModeration" | "analytics" | "settings" | "configuration" | "emails" | "plans" | "weddings" | "audit" | "testmode" | "docs" | "websiteCms" | "content";
 
 const ADMIN_TAB_KEY = "travelista.admin.activeTab";
+const ADMIN_NAV_KEY = "travelista.admin.navCollapsed";
+
 
 
 const destinationFields: FieldConfig[] = [
@@ -89,6 +93,15 @@ const AdminDashboard = () => {
     || (typeof localStorage !== "undefined" ? (localStorage.getItem(ADMIN_TAB_KEY) as Tab | null) : null)
     || "overview";
   const [activeTab, setActiveTabState] = useState<Tab>(initialTab);
+  const [navCollapsed, setNavCollapsed] = useState<boolean>(() => {
+    try { return localStorage.getItem(ADMIN_NAV_KEY) === "1"; } catch { return false; }
+  });
+  const toggleNav = () => setNavCollapsed(c => {
+    try { localStorage.setItem(ADMIN_NAV_KEY, c ? "0" : "1"); } catch { /* storage unavailable */ }
+    return !c;
+  });
+  const [detailApp, setDetailApp] = useState<{ kind: "eligibility" | "profile"; row: any } | null>(null);
+
 
   // Controlled + persisted: survives tab switches, visibility changes and reloads
   const setActiveTab = (tab: Tab) => {
@@ -622,26 +635,34 @@ const AdminDashboard = () => {
         <BetaModerationTools scope="admin" />
         <div className="flex flex-col lg:flex-row gap-6">
           {/* Sidebar */}
-          <aside className="lg:w-64 lg:shrink-0">
+          <aside className={`lg:shrink-0 transition-all duration-200 ${navCollapsed ? "lg:w-16" : "lg:w-64"}`}>
             <div className="lg:sticky lg:top-24 rounded-2xl bg-card shadow-card p-3 max-h-[80vh] overflow-y-auto">
-              <div className="px-2 py-2 mb-2 border-b border-border">
-                <h1 className="text-lg font-bold text-foreground">Admin Console</h1>
-                <p className="text-[11px] text-muted-foreground">Commission: {platformSettings.commissionRate}%</p>
+              <div className={`py-2 mb-2 border-b border-border flex items-center gap-2 ${navCollapsed ? "justify-center px-0" : "justify-between px-2"}`}>
+                {!navCollapsed && (
+                  <div className="min-w-0">
+                    <h1 className="text-lg font-bold text-foreground">Admin Console</h1>
+                    <p className="text-[11px] text-muted-foreground">Commission: {platformSettings.commissionRate}%</p>
+                  </div>
+                )}
+                <button onClick={toggleNav} aria-label={navCollapsed ? "Expand admin menu" : "Collapse admin menu"} title={navCollapsed ? "Expand menu" : "Collapse menu"}
+                  className="shrink-0 rounded-lg p-1.5 text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors">
+                  {navCollapsed ? <PanelLeftOpen className="w-4 h-4" /> : <PanelLeftClose className="w-4 h-4" />}
+                </button>
               </div>
               <nav className="space-y-3">
                 {Object.entries(groupedTabs).map(([group, items]) => (
                   <div key={group}>
-                    <p className="px-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-1">{group}</p>
+                    {!navCollapsed && <p className="px-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-1">{group}</p>}
                     <div className="space-y-0.5">
                       {items.map(t => (
-                        <button key={t.id} onClick={() => setActiveTab(t.id)}
-                          className={`w-full flex items-center justify-between gap-2 px-2.5 py-2 text-sm rounded-lg transition-colors ${activeTab === t.id ? "bg-primary text-primary-foreground font-medium" : "text-foreground hover:bg-secondary"}`}>
-                          <span className="flex items-center gap-2 min-w-0">
+                        <button key={t.id} onClick={() => setActiveTab(t.id)} title={t.label}
+                          className={`w-full flex items-center gap-2 py-2 text-sm rounded-lg transition-colors ${navCollapsed ? "justify-center px-0 relative" : "justify-between px-2.5"} ${activeTab === t.id ? "bg-primary text-primary-foreground font-medium" : "text-foreground hover:bg-secondary"}`}>
+                          <span className={`flex items-center gap-2 min-w-0 ${navCollapsed ? "justify-center" : ""}`}>
                             <t.icon className="w-4 h-4 shrink-0" />
-                            <span className="truncate">{t.label}</span>
+                            {!navCollapsed && <span className="truncate">{t.label}</span>}
                           </span>
                           {(t.badge || 0) > 0 && (
-                            <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${activeTab === t.id ? "bg-primary-foreground text-primary" : "bg-destructive text-destructive-foreground"}`}>
+                            <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${navCollapsed ? "absolute -top-0.5 -right-0.5" : ""} ${activeTab === t.id && !navCollapsed ? "bg-primary-foreground text-primary" : "bg-destructive text-destructive-foreground"}`}>
                               {t.badge}
                             </span>
                           )}
@@ -652,6 +673,7 @@ const AdminDashboard = () => {
                 ))}
               </nav>
             </div>
+
           </aside>
 
           {/* Content */}
@@ -1298,6 +1320,10 @@ const AdminDashboard = () => {
                             </td>
                             <td className="px-3 py-2.5 text-right whitespace-nowrap">
                               <div className="flex gap-1.5 justify-end flex-wrap">
+                                <Button size="sm" variant="secondary" className="rounded-full text-xs" onClick={() => setDetailApp({ kind: "eligibility", row: app })}>
+                                  <FileText className="w-3 h-3 mr-1" /> View full
+                                </Button>
+
                                 <Button size="sm" className="rounded-full text-xs bg-accent text-accent-foreground hover:bg-accent/90" onClick={() => updateHostApplicationStatus(app, "approved")}>
                                   <CheckCircle className="w-3 h-3 mr-1" /> Approve
                                 </Button>
@@ -1380,15 +1406,21 @@ const AdminDashboard = () => {
                             </td>
                             <td className="px-3 py-2.5 text-right font-semibold text-foreground whitespace-nowrap">{a.price_per_day ? format(Number(a.price_per_day)) : "—"}</td>
                             <td className="px-3 py-2.5 text-right">
-                              <select className="text-xs rounded-md border border-input bg-background px-2 py-1"
-                                value={a.status}
-                                onChange={e => updateHostProfileAppStatus(a, e.target.value)}>
-                                <option value="pending">Pending</option>
-                                <option value="under_review">Under review</option>
-                                <option value="verified">Verified</option>
-                                <option value="rejected">Rejected</option>
-                              </select>
+                              <div className="flex items-center justify-end gap-1.5">
+                                <Button size="sm" variant="secondary" className="rounded-full text-xs" onClick={() => setDetailApp({ kind: "profile", row: a })}>
+                                  <FileText className="w-3 h-3 mr-1" /> View full
+                                </Button>
+                                <select className="text-xs rounded-md border border-input bg-background px-2 py-1"
+                                  value={a.status}
+                                  onChange={e => updateHostProfileAppStatus(a, e.target.value)}>
+                                  <option value="pending">Pending</option>
+                                  <option value="under_review">Under review</option>
+                                  <option value="verified">Verified</option>
+                                  <option value="rejected">Rejected</option>
+                                </select>
+                              </div>
                             </td>
+
                           </tr>
                         ))}
                       </tbody>
@@ -2317,6 +2349,38 @@ const AdminDashboard = () => {
           onClose={() => setActiveAdminChat(null)}
         />
       )}
+      <ApplicationDetailDialog
+        open={!!detailApp}
+        onClose={() => setDetailApp(null)}
+        record={detailApp?.row ?? null}
+        title={detailApp?.kind === "profile" ? `Host profile — ${detailApp?.row?.full_name ?? ""}` : `Host application — ${detailApp?.row?.full_name ?? ""}`}
+        groups={detailApp?.kind === "profile" ? [
+          { label: "Applicant", keys: ["full_name", "email", "phone", "city", "state", "tagline", "bio"] },
+          { label: "Services & pricing", keys: ["services", "languages", "specialties", "price_per_day"] },
+          { label: "Homestay", keys: ["homestay_details"] },
+          { label: "Transport", keys: ["transport_details"] },
+          { label: "Food", keys: ["food_details"] },
+        ] : [
+          { label: "Applicant", keys: ["full_name", "email", "phone", "city", "emergency_contact"] },
+          { label: "Experience", keys: ["years_hosting", "foreign_guests_hosted", "references_count", "english_proficiency", "languages", "country_focus", "hosting_specialties"] },
+          { label: "Credibility", keys: ["has_kyc", "has_passport", "cultural_training", "eligibility_score", "social_score", "questionnaire_score", "badge", "waitlist_position"] },
+          { label: "Motivation", keys: ["why_host"] },
+        ]}
+        onStatus={s => detailApp && (detailApp.kind === "profile"
+          ? updateHostProfileAppStatus(detailApp.row, s)
+          : updateHostApplicationStatus(detailApp.row, s))}
+        statuses={detailApp?.kind === "profile" ? [
+          { value: "verified", label: "Verify profile", icon: "approve" },
+          { value: "under_review", label: "Mark under review", icon: "review" },
+          { value: "rejected", label: "Reject", icon: "reject" },
+        ] : [
+          { value: "approved", label: "Approve host", icon: "approve" },
+          { value: "under_review", label: "Mark under review", icon: "review" },
+          { value: "waitlisted", label: "Waitlist", icon: "wait" },
+          { value: "rejected", label: "Reject", icon: "reject" },
+        ]}
+      />
+
       <Footer />
     </div>
   );

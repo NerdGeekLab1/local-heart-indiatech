@@ -272,11 +272,16 @@ const HostEligibility = () => {
     const status: Status = eligibility_score >= 70 ? "under_review" : "waitlisted";
     const waitlist_position = status === "waitlisted" ? waitlistCount + 1 : null;
     const badge = badgeFor(eligibility_score);
-    const { data, error } = await supabase.from("host_eligibility").insert({
+    const { data, error } = await supabase.from("host_eligibility").upsert({
       user_id: user.id, ...form, eligibility_score, social_score, badge, status, waitlist_position,
-    }).select("id").single();
+    }, { onConflict: "user_id" }).select("id").single();
     setSubmitting(false);
-    if (error) { toast({ title: "Submission failed", description: error.message, variant: "destructive" }); return; }
+    if (error) {
+      console.error("[host-eligibility] submission failed", error);
+      toast({ title: "Submission failed", description: `${error.message}${error.code ? ` (${error.code})` : ""}`, variant: "destructive" });
+      return;
+    }
+
     setExisting({ id: data!.id, status, eligibility_score, waitlist_position, social_score, badge });
     toast({ title: status === "under_review" ? "🎉 You qualify for fast-track review!" : `You're #${waitlist_position} on the waitlist`, description: "Now take the credibility quiz to boost your score." });
     setTimeout(() => openQuiz(), 600);
@@ -340,6 +345,22 @@ const HostEligibility = () => {
             <div className="rounded-full border border-border bg-card px-4 py-2 text-sm flex items-center gap-2"><Clock className="w-4 h-4 text-muted-foreground" /> <span className="text-muted-foreground">Cohort closes in</span><span className="font-semibold text-foreground">14 days</span></div>
           </div>
         </motion.div>
+
+        {!user && !loading && (
+          <div className="mb-8 rounded-2xl border border-primary/30 bg-primary/5 p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="flex gap-3">
+              <AlertTriangle className="w-5 h-5 text-primary shrink-0 mt-0.5" />
+              <div>
+                <p className="font-semibold text-foreground">Sign in to submit your application</p>
+                <p className="text-sm text-muted-foreground">Applications are tied to your host account so we can verify you and track your review status.</p>
+              </div>
+            </div>
+            <div className="flex gap-2 shrink-0">
+              <Button asChild className="rounded-full"><Link to="/login/host?redirect=/host-eligibility">Host sign in</Link></Button>
+              <Button asChild variant="outline" className="rounded-full"><Link to="/signup?role=host&redirect=/host-eligibility">Create account</Link></Button>
+            </div>
+          </div>
+        )}
 
         {existing && (
           <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}>
@@ -541,11 +562,17 @@ const HostEligibility = () => {
 
               <div className="flex items-center justify-between flex-wrap gap-3 pt-2">
                 <p className="text-xs text-muted-foreground flex items-center gap-1.5"><Lock className="w-3 h-3" /> Verified by our trust team within 48 hours</p>
-                <Button onClick={submit} disabled={submitting || !user} size="lg" className="rounded-full gap-2">
-                  {submitting ? "Submitting..." : "Submit Application"} <ArrowRight className="w-4 h-4" />
-                </Button>
+                {user ? (
+                  <Button onClick={submit} disabled={submitting} size="lg" className="rounded-full gap-2">
+                    {submitting ? "Submitting..." : "Submit Application"} <ArrowRight className="w-4 h-4" />
+                  </Button>
+                ) : (
+                  <Button asChild size="lg" className="rounded-full gap-2">
+                    <Link to="/login/host?redirect=/host-eligibility">Sign in to submit <ArrowRight className="w-4 h-4" /></Link>
+                  </Button>
+                )}
               </div>
-              {!user && <p className="text-xs text-destructive text-right">Sign in to submit your application.</p>}
+
             </CardContent>
           </Card>
         )}
