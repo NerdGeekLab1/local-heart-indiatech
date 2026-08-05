@@ -1406,15 +1406,21 @@ const AdminDashboard = () => {
                             </td>
                             <td className="px-3 py-2.5 text-right font-semibold text-foreground whitespace-nowrap">{a.price_per_day ? format(Number(a.price_per_day)) : "—"}</td>
                             <td className="px-3 py-2.5 text-right">
-                              <select className="text-xs rounded-md border border-input bg-background px-2 py-1"
-                                value={a.status}
-                                onChange={e => updateHostProfileAppStatus(a, e.target.value)}>
-                                <option value="pending">Pending</option>
-                                <option value="under_review">Under review</option>
-                                <option value="verified">Verified</option>
-                                <option value="rejected">Rejected</option>
-                              </select>
+                              <div className="flex items-center justify-end gap-1.5">
+                                <Button size="sm" variant="secondary" className="rounded-full text-xs" onClick={() => setDetailApp({ kind: "profile", row: a })}>
+                                  <FileText className="w-3 h-3 mr-1" /> View full
+                                </Button>
+                                <select className="text-xs rounded-md border border-input bg-background px-2 py-1"
+                                  value={a.status}
+                                  onChange={e => updateHostProfileAppStatus(a, e.target.value)}>
+                                  <option value="pending">Pending</option>
+                                  <option value="under_review">Under review</option>
+                                  <option value="verified">Verified</option>
+                                  <option value="rejected">Rejected</option>
+                                </select>
+                              </div>
                             </td>
+
                           </tr>
                         ))}
                       </tbody>
