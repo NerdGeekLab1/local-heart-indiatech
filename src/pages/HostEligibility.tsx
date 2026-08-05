@@ -272,11 +272,16 @@ const HostEligibility = () => {
     const status: Status = eligibility_score >= 70 ? "under_review" : "waitlisted";
     const waitlist_position = status === "waitlisted" ? waitlistCount + 1 : null;
     const badge = badgeFor(eligibility_score);
-    const { data, error } = await supabase.from("host_eligibility").insert({
+    const { data, error } = await supabase.from("host_eligibility").upsert({
       user_id: user.id, ...form, eligibility_score, social_score, badge, status, waitlist_position,
-    }).select("id").single();
+    }, { onConflict: "user_id" }).select("id").single();
     setSubmitting(false);
-    if (error) { toast({ title: "Submission failed", description: error.message, variant: "destructive" }); return; }
+    if (error) {
+      console.error("[host-eligibility] submission failed", error);
+      toast({ title: "Submission failed", description: `${error.message}${error.code ? ` (${error.code})` : ""}`, variant: "destructive" });
+      return;
+    }
+
     setExisting({ id: data!.id, status, eligibility_score, waitlist_position, social_score, badge });
     toast({ title: status === "under_review" ? "🎉 You qualify for fast-track review!" : `You're #${waitlist_position} on the waitlist`, description: "Now take the credibility quiz to boost your score." });
     setTimeout(() => openQuiz(), 600);
