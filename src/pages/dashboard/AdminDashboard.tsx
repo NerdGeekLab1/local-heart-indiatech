@@ -34,7 +34,9 @@ import DocsTab from "@/components/admin/DocsTab";
 import WebsiteCMSTab from "@/components/admin/WebsiteCMSTab";
 import ContentManagerTab from "@/components/admin/ContentManagerTab";
 import ChatPanel from "@/components/ChatPanel";
-import { Heart, Menu, BookOpen } from "lucide-react";
+import { Heart, Menu, BookOpen, PanelLeftClose, PanelLeftOpen } from "lucide-react";
+import ApplicationDetailDialog from "@/components/admin/ApplicationDetailDialog";
+
 
 type Tab = "overview" | "hosts" | "hostWaitlist" | "bookings" | "experiences" | "destinations" | "trips" | "grievances" | "users" | "wanderers" | "missions" | "leaderboard" | "invoices" | "feedModeration" | "reviewModeration" | "analytics" | "settings" | "configuration" | "emails" | "plans" | "weddings" | "audit" | "testmode" | "docs" | "websiteCms" | "content";
 
