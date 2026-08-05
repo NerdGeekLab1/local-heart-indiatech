@@ -341,6 +341,22 @@ const HostEligibility = () => {
           </div>
         </motion.div>
 
+        {!user && !loading && (
+          <div className="mb-8 rounded-2xl border border-primary/30 bg-primary/5 p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="flex gap-3">
+              <AlertTriangle className="w-5 h-5 text-primary shrink-0 mt-0.5" />
+              <div>
+                <p className="font-semibold text-foreground">Sign in to submit your application</p>
+                <p className="text-sm text-muted-foreground">Applications are tied to your host account so we can verify you and track your review status.</p>
+              </div>
+            </div>
+            <div className="flex gap-2 shrink-0">
+              <Button asChild className="rounded-full"><Link to="/login/host?redirect=/host-eligibility">Host sign in</Link></Button>
+              <Button asChild variant="outline" className="rounded-full"><Link to="/signup?role=host&redirect=/host-eligibility">Create account</Link></Button>
+            </div>
+          </div>
+        )}
+
         {existing && (
           <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}>
             <Card className="border-primary/30 bg-gradient-to-br from-primary/5 to-accent/5">
