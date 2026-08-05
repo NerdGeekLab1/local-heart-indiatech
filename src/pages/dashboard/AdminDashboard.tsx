@@ -2349,6 +2349,38 @@ const AdminDashboard = () => {
           onClose={() => setActiveAdminChat(null)}
         />
       )}
+      <ApplicationDetailDialog
+        open={!!detailApp}
+        onClose={() => setDetailApp(null)}
+        record={detailApp?.row ?? null}
+        title={detailApp?.kind === "profile" ? `Host profile — ${detailApp?.row?.full_name ?? ""}` : `Host application — ${detailApp?.row?.full_name ?? ""}`}
+        groups={detailApp?.kind === "profile" ? [
+          { label: "Applicant", keys: ["full_name", "email", "phone", "city", "state", "tagline", "bio"] },
+          { label: "Services & pricing", keys: ["services", "languages", "specialties", "price_per_day"] },
+          { label: "Homestay", keys: ["homestay_details"] },
+          { label: "Transport", keys: ["transport_details"] },
+          { label: "Food", keys: ["food_details"] },
+        ] : [
+          { label: "Applicant", keys: ["full_name", "email", "phone", "city", "emergency_contact"] },
+          { label: "Experience", keys: ["years_hosting", "foreign_guests_hosted", "references_count", "english_proficiency", "languages", "country_focus", "hosting_specialties"] },
+          { label: "Credibility", keys: ["has_kyc", "has_passport", "cultural_training", "eligibility_score", "social_score", "questionnaire_score", "badge", "waitlist_position"] },
+          { label: "Motivation", keys: ["why_host"] },
+        ]}
+        onStatus={s => detailApp && (detailApp.kind === "profile"
+          ? updateHostProfileAppStatus(detailApp.row, s)
+          : updateHostApplicationStatus(detailApp.row, s))}
+        statuses={detailApp?.kind === "profile" ? [
+          { value: "verified", label: "Verify profile", icon: "approve" },
+          { value: "under_review", label: "Mark under review", icon: "review" },
+          { value: "rejected", label: "Reject", icon: "reject" },
+        ] : [
+          { value: "approved", label: "Approve host", icon: "approve" },
+          { value: "under_review", label: "Mark under review", icon: "review" },
+          { value: "waitlisted", label: "Waitlist", icon: "wait" },
+          { value: "rejected", label: "Reject", icon: "reject" },
+        ]}
+      />
+
       <Footer />
     </div>
   );
