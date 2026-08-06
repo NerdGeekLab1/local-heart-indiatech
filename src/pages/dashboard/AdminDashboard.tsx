@@ -30,6 +30,7 @@ import BetaModerationTools from "@/components/admin/BetaModerationTools";
 import FeedModerationPanel from "@/components/admin/FeedModerationPanel";
 import ReviewModerationPanel from "@/components/admin/ReviewModerationPanel";
 import AdminPagination from "@/components/admin/AdminPagination";
+import BookingsPanel from "@/components/admin/BookingsPanel";
 import DocsTab from "@/components/admin/DocsTab";
 import WebsiteCMSTab from "@/components/admin/WebsiteCMSTab";
 import ContentManagerTab from "@/components/admin/ContentManagerTab";
@@ -1660,74 +1661,22 @@ const AdminDashboard = () => {
         {activeTab === "bookings" && (
           <div className="mt-6">
             <h2 className="text-xl font-bold text-foreground mb-4">All Bookings ({dbBookings.length})</h2>
-            {adminLoading && dbBookings.length === 0 ? (
-              <div data-testid="bookings-loading" className="rounded-2xl border border-border bg-card shadow-card p-4 space-y-3">
-                {[0, 1, 2, 3, 4].map(i => (
-                  <div key={i} className="h-10 rounded-lg bg-secondary/50 animate-pulse" />
-                ))}
-              </div>
-            ) : dbBookings.length === 0 ? (
-              <div data-testid="bookings-empty" className="rounded-2xl border border-border bg-card p-10 text-center shadow-card">
-                <Calendar className="w-10 h-10 text-muted-foreground/40 mx-auto mb-3" />
-                <p className="font-medium text-foreground">No bookings yet</p>
-                <p className="text-sm text-muted-foreground mt-1">Real bookings appear here as soon as travelers confirm a stay, trip or experience.</p>
-                <Button size="sm" variant="outline" className="mt-4 rounded-full text-xs gap-1.5" onClick={() => setDataRefreshKey(k => k + 1)}>
-                  <TrendingUp className="w-3.5 h-3.5" /> Refresh live data
-                </Button>
-              </div>
-            ) : (() => {
-              const rows = dbBookings.map(b => ({
+            <BookingsPanel
+              rows={dbBookings.map(b => ({
                 id: b.id as string, ref: `#${(b.id as string).slice(0, 8)}`,
                 host: getUserName(b.host_id), traveler: getUserName(b.traveler_id),
                 dates: `${b.start_date} → ${b.end_date}`, guests: b.guests ?? "—",
                 total: Number(b.total_price || 0), status: b.status || "pending",
-              }));
-              const pageCount = Math.max(1, Math.ceil(rows.length / TABLE_PAGE_SIZE));
-              const safePage = Math.min(bookingsPage, pageCount - 1);
-              const paged = rows.slice(safePage * TABLE_PAGE_SIZE, (safePage + 1) * TABLE_PAGE_SIZE);
-              return (
-                <div data-testid="bookings-table" className="rounded-2xl border border-border bg-card shadow-card overflow-hidden">
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-sm">
-                      <thead className="bg-secondary/40 text-xs uppercase tracking-wider text-muted-foreground">
-                        <tr>
-                          <th className="text-left font-semibold px-4 py-3">Booking</th>
-                          <th className="text-left font-semibold px-4 py-3">Traveler</th>
-                          <th className="text-left font-semibold px-4 py-3">Host</th>
-                          <th className="text-left font-semibold px-4 py-3">Dates</th>
-                          <th className="text-left font-semibold px-4 py-3">Guests</th>
-                          <th className="text-right font-semibold px-4 py-3">Total</th>
-                          <th className="text-right font-semibold px-4 py-3">Status</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-border">
-                        {paged.map(r => (
-                          <tr key={r.id} className="hover:bg-secondary/20">
-                            <td className="px-4 py-3 font-medium text-foreground whitespace-nowrap">{r.ref}</td>
-                            <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">{r.traveler || "—"}</td>
-                            <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">{r.host || "—"}</td>
-                            <td className="px-4 py-3 text-xs text-muted-foreground whitespace-nowrap">{r.dates}</td>
-                            <td className="px-4 py-3 text-muted-foreground">{r.guests}</td>
-                            <td className="px-4 py-3 text-right font-bold text-foreground whitespace-nowrap">{format(r.total)}</td>
-                            <td className="px-4 py-3 text-right">
-                              <select className="text-xs rounded-md border border-input bg-background px-2 py-1"
-                                value={r.status}
-                                onChange={e => updateBookingStatus(r.id, e.target.value)}>
-                                <option value="pending">Pending</option><option value="confirmed">Confirmed</option>
-                                <option value="completed">Completed</option><option value="cancelled">Cancelled</option>
-                              </select>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                  <div className="px-4 pb-3">
-                    <AdminPagination page={safePage} total={rows.length} pageSize={TABLE_PAGE_SIZE} onPage={setBookingsPage} />
-                  </div>
-                </div>
-              );
-            })()}
+              }))}
+              loading={adminLoading}
+              page={bookingsPage}
+              pageSize={bookingsPageSize}
+              onPage={setBookingsPage}
+              onPageSize={setBookingsPageSize}
+              formatCurrency={format}
+              onStatusChange={updateBookingStatus}
+              onRefresh={() => setDataRefreshKey(k => k + 1)}
+            />
           </div>
         )}
 
