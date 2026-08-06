@@ -58,7 +58,7 @@ const renderValue = (v: any) => {
 const icons = { approve: CheckCircle, review: Eye, wait: Clock, reject: Ban };
 
 /** Full read-only view of a host application with inline verification actions. */
-const ApplicationDetailDialog = ({ open, onClose, record, title, groups, photosKey = "photos", socialKey = "social_links", onStatus, statuses = [] }: Props) => {
+const ApplicationDetailDialog = ({ open, onClose, record, title, groups, photosKey = "photos", socialKey = "social_links", onStatus, statuses = [], auditEntries = [] }: Props) => {
   if (!record) return null;
   const photos: string[] = Array.isArray(record[photosKey]) ? record[photosKey] : [];
   const socials: Record<string, string> = record[socialKey] && typeof record[socialKey] === "object" ? record[socialKey] : {};
