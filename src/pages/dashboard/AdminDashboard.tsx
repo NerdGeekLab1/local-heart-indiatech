@@ -537,8 +537,16 @@ const AdminDashboard = () => {
   const [bookingsPage, setBookingsPage] = useState(0);
   const [usersPage, setUsersPage] = useState(0);
   const [hostQueuePage, setHostQueuePage] = useState(0);
+  const [hostProfilePage, setHostProfilePage] = useState(0);
   const [wanderersPage, setWanderersPage] = useState(0);
   const TABLE_PAGE_SIZE = 10;
+  const [bookingsPageSize, setBookingsPageSize] = useState(10);
+
+  // Host application filters & sorting
+  const [hostAppSearch, setHostAppSearch] = useState("");
+  const [hostAppStatus, setHostAppStatus] = useState<string>("all");
+  const [hostAppProgram, setHostAppProgram] = useState<"all" | "foreign" | "profile">("all");
+  const [hostAppSort, setHostAppSort] = useState<"newest" | "oldest" | "score" | "name">("newest");
 
   const updateBookingStatus = async (id: string, status: string) => {
     const { error } = await supabase.from("bookings").update({ status }).eq("id", id);
@@ -548,7 +556,36 @@ const AdminDashboard = () => {
   };
   const approvedWanderers = dbWanderers.filter(w => w.status === "approved");
   const leaderboard = [...dbWanderers].filter(w => w.status === "approved").sort((a, b) => (b.score || 0) - (a.score || 0));
-  const hostQueue = dbHostApplications.filter(a => a.status !== "approved");
+  const matchesHostSearch = (a: any) =>
+    !hostAppSearch.trim() ||
+    `${a.full_name ?? ""} ${a.email ?? ""} ${a.city ?? ""} ${a.state ?? ""}`.toLowerCase().includes(hostAppSearch.trim().toLowerCase());
+
+  const sortHostApps = (list: any[]) => [...list].sort((a, b) => {
+    if (hostAppSort === "oldest") return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+    if (hostAppSort === "score") return (b.eligibility_score || 0) - (a.eligibility_score || 0);
+    if (hostAppSort === "name") return String(a.full_name || "").localeCompare(String(b.full_name || ""));
+    return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+  });
+
+  const hostQueue = useMemo(() => sortHostApps(
+    dbHostApplications
+      .filter(a => a.status !== "approved")
+      .filter(a => hostAppProgram !== "profile")
+      .filter(a => hostAppStatus === "all" || a.status === hostAppStatus)
+      .filter(matchesHostSearch)
+  ), [dbHostApplications, hostAppStatus, hostAppProgram, hostAppSearch, hostAppSort]);
+
+  const hostProfileQueue = useMemo(() => sortHostApps(
+    dbHostProfileApps
+      .filter(() => hostAppProgram !== "foreign")
+      .filter(a => hostAppStatus === "all" || a.status === hostAppStatus)
+      .filter(matchesHostSearch)
+  ), [dbHostProfileApps, hostAppStatus, hostAppProgram, hostAppSearch, hostAppSort]);
+
+  const auditEntriesFor = (entityId: string) => auditLog.filter(l => l.entity_id === entityId).map(l => ({
+    id: l.id, action: l.action, previous_status: l.previous_status, new_status: l.new_status,
+    notes: l.notes, created_at: l.created_at, metadata: l.metadata,
+  }));
   const approvedHostApplications = dbHostApplications.filter(a => a.status === "approved");
   // Live registered hosts = profiles that hold the host role in the database
   const registeredHosts = useMemo(() => {
