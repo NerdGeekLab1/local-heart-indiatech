@@ -30,6 +30,7 @@ import BetaModerationTools from "@/components/admin/BetaModerationTools";
 import FeedModerationPanel from "@/components/admin/FeedModerationPanel";
 import ReviewModerationPanel from "@/components/admin/ReviewModerationPanel";
 import AdminPagination from "@/components/admin/AdminPagination";
+import BookingsPanel from "@/components/admin/BookingsPanel";
 import DocsTab from "@/components/admin/DocsTab";
 import WebsiteCMSTab from "@/components/admin/WebsiteCMSTab";
 import ContentManagerTab from "@/components/admin/ContentManagerTab";
@@ -438,6 +439,16 @@ const AdminDashboard = () => {
       .update({ status, reviewed_by: user.id, reviewed_at: new Date().toISOString() })
       .eq("id", app.id);
     if (error) { toast({ title: "Update failed", description: error.message, variant: "destructive" }); return; }
+    await supabase.from("admin_audit_log").insert({
+      admin_id: user.id,
+      entity_type: "host_application",
+      entity_id: app.id,
+      action: status,
+      previous_status: app.status,
+      new_status: status,
+      metadata: { email: app.email, city: app.city },
+    });
+    setAuditLogReloadKey(k => k + 1);
     setDbHostProfileApps(p => p.map(a => a.id === app.id ? { ...a, status } : a));
     toast({ title: `Host profile application → ${status}` });
   };
@@ -537,8 +548,16 @@ const AdminDashboard = () => {
   const [bookingsPage, setBookingsPage] = useState(0);
   const [usersPage, setUsersPage] = useState(0);
   const [hostQueuePage, setHostQueuePage] = useState(0);
+  const [hostProfilePage, setHostProfilePage] = useState(0);
   const [wanderersPage, setWanderersPage] = useState(0);
   const TABLE_PAGE_SIZE = 10;
+  const [bookingsPageSize, setBookingsPageSize] = useState(10);
+
+  // Host application filters & sorting
+  const [hostAppSearch, setHostAppSearch] = useState("");
+  const [hostAppStatus, setHostAppStatus] = useState<string>("all");
+  const [hostAppProgram, setHostAppProgram] = useState<"all" | "foreign" | "profile">("all");
+  const [hostAppSort, setHostAppSort] = useState<"newest" | "oldest" | "score" | "name">("newest");
 
   const updateBookingStatus = async (id: string, status: string) => {
     const { error } = await supabase.from("bookings").update({ status }).eq("id", id);
@@ -548,7 +567,36 @@ const AdminDashboard = () => {
   };
   const approvedWanderers = dbWanderers.filter(w => w.status === "approved");
   const leaderboard = [...dbWanderers].filter(w => w.status === "approved").sort((a, b) => (b.score || 0) - (a.score || 0));
-  const hostQueue = dbHostApplications.filter(a => a.status !== "approved");
+  const matchesHostSearch = (a: any) =>
+    !hostAppSearch.trim() ||
+    `${a.full_name ?? ""} ${a.email ?? ""} ${a.city ?? ""} ${a.state ?? ""}`.toLowerCase().includes(hostAppSearch.trim().toLowerCase());
+
+  const sortHostApps = (list: any[]) => [...list].sort((a, b) => {
+    if (hostAppSort === "oldest") return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+    if (hostAppSort === "score") return (b.eligibility_score || 0) - (a.eligibility_score || 0);
+    if (hostAppSort === "name") return String(a.full_name || "").localeCompare(String(b.full_name || ""));
+    return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+  });
+
+  const hostQueue = useMemo(() => sortHostApps(
+    dbHostApplications
+      .filter(a => a.status !== "approved")
+      .filter(a => hostAppProgram !== "profile")
+      .filter(a => hostAppStatus === "all" || a.status === hostAppStatus)
+      .filter(matchesHostSearch)
+  ), [dbHostApplications, hostAppStatus, hostAppProgram, hostAppSearch, hostAppSort]);
+
+  const hostProfileQueue = useMemo(() => sortHostApps(
+    dbHostProfileApps
+      .filter(() => hostAppProgram !== "foreign")
+      .filter(a => hostAppStatus === "all" || a.status === hostAppStatus)
+      .filter(matchesHostSearch)
+  ), [dbHostProfileApps, hostAppStatus, hostAppProgram, hostAppSearch, hostAppSort]);
+
+  const auditEntriesFor = (entityId: string) => auditLog.filter(l => l.entity_id === entityId).map(l => ({
+    id: l.id, action: l.action, previous_status: l.previous_status, new_status: l.new_status,
+    notes: l.notes, created_at: l.created_at, metadata: l.metadata,
+  }));
   const approvedHostApplications = dbHostApplications.filter(a => a.status === "approved");
   // Live registered hosts = profiles that hold the host role in the database
   const registeredHosts = useMemo(() => {
@@ -1274,11 +1322,46 @@ const AdminDashboard = () => {
               <Button asChild variant="outline" size="sm"><Link to="/host-eligibility">Public host application</Link></Button>
             </div>
 
+            <div className="flex flex-wrap items-center gap-2 mb-4">
+              <div className="relative flex-1 min-w-[200px]">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input className="pl-9 h-9" placeholder="Search name, email or city…" value={hostAppSearch}
+                  onChange={e => { setHostAppSearch(e.target.value); setHostQueuePage(0); setHostProfilePage(0); }} />
+              </div>
+              <select aria-label="Filter by program" className="h-9 rounded-md border border-input bg-background px-2 text-sm text-foreground"
+                value={hostAppProgram} onChange={e => { setHostAppProgram(e.target.value as any); setHostQueuePage(0); setHostProfilePage(0); }}>
+                <option value="all">All programs</option>
+                <option value="foreign">Host foreign travelers</option>
+                <option value="profile">Host profiles (Become a Host)</option>
+              </select>
+              <select aria-label="Filter by status" className="h-9 rounded-md border border-input bg-background px-2 text-sm text-foreground"
+                value={hostAppStatus} onChange={e => { setHostAppStatus(e.target.value); setHostQueuePage(0); setHostProfilePage(0); }}>
+                <option value="all">All statuses</option>
+                <option value="pending">Pending</option>
+                <option value="under_review">Under review</option>
+                <option value="waitlisted">Waitlisted</option>
+                <option value="verified">Verified</option>
+                <option value="rejected">Rejected</option>
+              </select>
+              <select aria-label="Sort applications" className="h-9 rounded-md border border-input bg-background px-2 text-sm text-foreground"
+                value={hostAppSort} onChange={e => setHostAppSort(e.target.value as any)}>
+                <option value="newest">Newest first</option>
+                <option value="oldest">Oldest first</option>
+                <option value="score">Highest score</option>
+                <option value="name">Name A–Z</option>
+              </select>
+              {(hostAppSearch || hostAppStatus !== "all" || hostAppProgram !== "all" || hostAppSort !== "newest") && (
+                <Button size="sm" variant="ghost" className="text-xs" onClick={() => { setHostAppSearch(""); setHostAppStatus("all"); setHostAppProgram("all"); setHostAppSort("newest"); }}>
+                  Clear filters
+                </Button>
+              )}
+            </div>
+
             {hostQueue.length === 0 ? (
               <div className="rounded-lg bg-card p-8 text-center shadow-card">
                 <UserCheck className="w-10 h-10 text-muted-foreground/40 mx-auto mb-3" />
-                <p className="font-medium text-foreground">No pending host applications</p>
-                <p className="text-sm text-muted-foreground">New applications from /host-eligibility will appear here until approved.</p>
+                <p className="font-medium text-foreground">No matching host applications</p>
+                <p className="text-sm text-muted-foreground">Adjust the filters above, or wait for new applications from /host-eligibility.</p>
               </div>
             ) : (() => {
               const pageCount = Math.max(1, Math.ceil(hostQueue.length / TABLE_PAGE_SIZE));
@@ -1354,15 +1437,15 @@ const AdminDashboard = () => {
             <div className="mt-8">
               <div className="flex items-center justify-between gap-3 mb-3 flex-wrap">
                 <div>
-                  <h3 className="text-lg font-bold text-foreground">Host profile applications ({dbHostProfileApps.length})</h3>
+                  <h3 className="text-lg font-bold text-foreground">Host profile applications ({hostProfileQueue.length} of {dbHostProfileApps.length})</h3>
                   <p className="text-sm text-muted-foreground">Submissions from the public “Become a Host” form, including homestay, transport and food details.</p>
                 </div>
                 <Button asChild variant="outline" size="sm"><Link to="/become-host">Open form</Link></Button>
               </div>
-              {dbHostProfileApps.length === 0 ? (
+              {hostProfileQueue.length === 0 ? (
                 <div data-testid="host-profile-apps-empty" className="rounded-2xl border border-border bg-card p-8 text-center shadow-card">
                   <UserCheck className="w-9 h-9 text-muted-foreground/40 mx-auto mb-2" />
-                  <p className="font-medium text-foreground">No host profile applications yet</p>
+                  <p className="font-medium text-foreground">No matching host profile applications</p>
                   <p className="text-sm text-muted-foreground">New submissions from /become-host land here for verification.</p>
                 </div>
               ) : (
@@ -1381,7 +1464,7 @@ const AdminDashboard = () => {
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-border">
-                        {dbHostProfileApps.map(a => (
+                        {hostProfileQueue.slice(Math.min(hostProfilePage, Math.max(0, Math.ceil(hostProfileQueue.length / TABLE_PAGE_SIZE) - 1)) * TABLE_PAGE_SIZE, (Math.min(hostProfilePage, Math.max(0, Math.ceil(hostProfileQueue.length / TABLE_PAGE_SIZE) - 1)) + 1) * TABLE_PAGE_SIZE).map(a => (
                           <tr key={a.id} className="hover:bg-secondary/20 align-top">
                             <td className="px-3 py-2.5">
                               <p className="font-medium text-foreground whitespace-nowrap">{a.full_name}</p>
@@ -1426,7 +1509,12 @@ const AdminDashboard = () => {
                       </tbody>
                     </table>
                   </div>
+                  <div className="px-3 pb-3">
+                    <AdminPagination alwaysShow page={Math.min(hostProfilePage, Math.max(0, Math.ceil(hostProfileQueue.length / TABLE_PAGE_SIZE) - 1))}
+                      total={hostProfileQueue.length} pageSize={TABLE_PAGE_SIZE} onPage={setHostProfilePage} />
+                  </div>
                 </div>
+
               )}
             </div>
           </div>
@@ -1573,74 +1661,22 @@ const AdminDashboard = () => {
         {activeTab === "bookings" && (
           <div className="mt-6">
             <h2 className="text-xl font-bold text-foreground mb-4">All Bookings ({dbBookings.length})</h2>
-            {adminLoading && dbBookings.length === 0 ? (
-              <div data-testid="bookings-loading" className="rounded-2xl border border-border bg-card shadow-card p-4 space-y-3">
-                {[0, 1, 2, 3, 4].map(i => (
-                  <div key={i} className="h-10 rounded-lg bg-secondary/50 animate-pulse" />
-                ))}
-              </div>
-            ) : dbBookings.length === 0 ? (
-              <div data-testid="bookings-empty" className="rounded-2xl border border-border bg-card p-10 text-center shadow-card">
-                <Calendar className="w-10 h-10 text-muted-foreground/40 mx-auto mb-3" />
-                <p className="font-medium text-foreground">No bookings yet</p>
-                <p className="text-sm text-muted-foreground mt-1">Real bookings appear here as soon as travelers confirm a stay, trip or experience.</p>
-                <Button size="sm" variant="outline" className="mt-4 rounded-full text-xs gap-1.5" onClick={() => setDataRefreshKey(k => k + 1)}>
-                  <TrendingUp className="w-3.5 h-3.5" /> Refresh live data
-                </Button>
-              </div>
-            ) : (() => {
-              const rows = dbBookings.map(b => ({
+            <BookingsPanel
+              rows={dbBookings.map(b => ({
                 id: b.id as string, ref: `#${(b.id as string).slice(0, 8)}`,
                 host: getUserName(b.host_id), traveler: getUserName(b.traveler_id),
                 dates: `${b.start_date} → ${b.end_date}`, guests: b.guests ?? "—",
                 total: Number(b.total_price || 0), status: b.status || "pending",
-              }));
-              const pageCount = Math.max(1, Math.ceil(rows.length / TABLE_PAGE_SIZE));
-              const safePage = Math.min(bookingsPage, pageCount - 1);
-              const paged = rows.slice(safePage * TABLE_PAGE_SIZE, (safePage + 1) * TABLE_PAGE_SIZE);
-              return (
-                <div data-testid="bookings-table" className="rounded-2xl border border-border bg-card shadow-card overflow-hidden">
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-sm">
-                      <thead className="bg-secondary/40 text-xs uppercase tracking-wider text-muted-foreground">
-                        <tr>
-                          <th className="text-left font-semibold px-4 py-3">Booking</th>
-                          <th className="text-left font-semibold px-4 py-3">Traveler</th>
-                          <th className="text-left font-semibold px-4 py-3">Host</th>
-                          <th className="text-left font-semibold px-4 py-3">Dates</th>
-                          <th className="text-left font-semibold px-4 py-3">Guests</th>
-                          <th className="text-right font-semibold px-4 py-3">Total</th>
-                          <th className="text-right font-semibold px-4 py-3">Status</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-border">
-                        {paged.map(r => (
-                          <tr key={r.id} className="hover:bg-secondary/20">
-                            <td className="px-4 py-3 font-medium text-foreground whitespace-nowrap">{r.ref}</td>
-                            <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">{r.traveler || "—"}</td>
-                            <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">{r.host || "—"}</td>
-                            <td className="px-4 py-3 text-xs text-muted-foreground whitespace-nowrap">{r.dates}</td>
-                            <td className="px-4 py-3 text-muted-foreground">{r.guests}</td>
-                            <td className="px-4 py-3 text-right font-bold text-foreground whitespace-nowrap">{format(r.total)}</td>
-                            <td className="px-4 py-3 text-right">
-                              <select className="text-xs rounded-md border border-input bg-background px-2 py-1"
-                                value={r.status}
-                                onChange={e => updateBookingStatus(r.id, e.target.value)}>
-                                <option value="pending">Pending</option><option value="confirmed">Confirmed</option>
-                                <option value="completed">Completed</option><option value="cancelled">Cancelled</option>
-                              </select>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                  <div className="px-4 pb-3">
-                    <AdminPagination page={safePage} total={rows.length} pageSize={TABLE_PAGE_SIZE} onPage={setBookingsPage} />
-                  </div>
-                </div>
-              );
-            })()}
+              }))}
+              loading={adminLoading}
+              page={bookingsPage}
+              pageSize={bookingsPageSize}
+              onPage={setBookingsPage}
+              onPageSize={setBookingsPageSize}
+              formatCurrency={format}
+              onStatusChange={updateBookingStatus}
+              onRefresh={() => setDataRefreshKey(k => k + 1)}
+            />
           </div>
         )}
 
@@ -2379,7 +2415,9 @@ const AdminDashboard = () => {
           { value: "waitlisted", label: "Waitlist", icon: "wait" },
           { value: "rejected", label: "Reject", icon: "reject" },
         ]}
+        auditEntries={detailApp?.row?.id ? auditEntriesFor(detailApp.row.id) : []}
       />
+
 
       <Footer />
     </div>

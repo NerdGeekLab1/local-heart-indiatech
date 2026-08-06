@@ -3,6 +3,16 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { CheckCircle, Ban, Clock, Eye, ExternalLink } from "lucide-react";
 
+export interface AuditEntry {
+  id: string;
+  action: string;
+  previous_status: string | null;
+  new_status: string | null;
+  notes: string | null;
+  created_at: string;
+  metadata?: Record<string, any> | null;
+}
+
 interface Props {
   open: boolean;
   onClose: () => void;
@@ -14,7 +24,10 @@ interface Props {
   socialKey?: string;
   onStatus?: (status: string) => void;
   statuses?: { value: string; label: string; icon?: "approve" | "review" | "wait" | "reject" }[];
+  /** Admin actions recorded for this application, newest first. */
+  auditEntries?: AuditEntry[];
 }
+
 
 const HIDDEN = new Set(["id", "user_id", "created_at", "updated_at", "reviewed_by", "reviewed_at", "admin_notes", "questionnaire_answers"]);
 
@@ -45,7 +58,7 @@ const renderValue = (v: any) => {
 const icons = { approve: CheckCircle, review: Eye, wait: Clock, reject: Ban };
 
 /** Full read-only view of a host application with inline verification actions. */
-const ApplicationDetailDialog = ({ open, onClose, record, title, groups, photosKey = "photos", socialKey = "social_links", onStatus, statuses = [] }: Props) => {
+const ApplicationDetailDialog = ({ open, onClose, record, title, groups, photosKey = "photos", socialKey = "social_links", onStatus, statuses = [], auditEntries = [] }: Props) => {
   if (!record) return null;
   const photos: string[] = Array.isArray(record[photosKey]) ? record[photosKey] : [];
   const socials: Record<string, string> = record[socialKey] && typeof record[socialKey] === "object" ? record[socialKey] : {};
@@ -115,6 +128,41 @@ const ApplicationDetailDialog = ({ open, onClose, record, title, groups, photosK
               <p className="text-sm text-foreground mt-1">{record.admin_notes}</p>
             </div>
           )}
+
+          <div>
+            <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-2">
+              Admin activity timeline ({auditEntries.length})
+            </p>
+            {auditEntries.length === 0 ? (
+              <p className="text-sm text-muted-foreground rounded-lg border border-dashed border-border p-3">
+                No admin actions recorded yet. Review, waitlist, verify or approve actions will show up here with timestamps.
+              </p>
+            ) : (
+              <ol className="relative border-l border-border ml-2 space-y-3">
+                {auditEntries.map(entry => (
+                  <li key={entry.id} className="ml-4">
+                    <span className="absolute -left-[5px] mt-1.5 h-2.5 w-2.5 rounded-full bg-primary" />
+                    <div className="rounded-lg border border-border bg-card/50 p-3">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <Badge variant="outline" className="capitalize text-[11px]">{entry.action.replace(/_/g, " ")}</Badge>
+                        {(entry.previous_status || entry.new_status) && (
+                          <span className="text-xs text-muted-foreground capitalize">
+                            {(entry.previous_status || "—").replace(/_/g, " ")} → {(entry.new_status || "—").replace(/_/g, " ")}
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-[11px] text-muted-foreground mt-1">
+                        {new Date(entry.created_at).toLocaleString()}
+                      </p>
+                      {entry.notes && <p className="text-sm text-foreground mt-1">{entry.notes}</p>}
+                    </div>
+                  </li>
+                ))}
+              </ol>
+            )}
+          </div>
+
+
 
           {onStatus && statuses.length > 0 && (
             <div className="flex flex-wrap gap-2 border-t border-border pt-4">

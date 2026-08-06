@@ -101,7 +101,7 @@ const CONFIGS: EntityConfig[] = [
   },
 ];
 
-const PAGE_SIZE = 10;
+const PAGE_SIZE_OPTIONS = [10, 25, 50, 100];
 
 const ContentManagerTab = () => {
   const { user } = useAuth();
@@ -110,6 +110,7 @@ const ContentManagerTab = () => {
   const [rows, setRows] = useState<Record<string, any>[]>([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(0);
+  const [pageSize, setPageSize] = useState(10);
   const [q, setQ] = useState("");
   const [editing, setEditing] = useState<Record<string, any> | null>(null);
   const [open, setOpen] = useState(false);
@@ -136,9 +137,9 @@ const ContentManagerTab = () => {
     return rows.filter(r => JSON.stringify(r).toLowerCase().includes(term));
   }, [rows, q]);
 
-  const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const pageCount = Math.max(1, Math.ceil(filtered.length / pageSize));
   const safePage = Math.min(page, pageCount - 1);
-  const paged = filtered.slice(safePage * PAGE_SIZE, (safePage + 1) * PAGE_SIZE);
+  const paged = filtered.slice(safePage * pageSize, (safePage + 1) * pageSize);
   const publishedCount = rows.filter(r => r.is_published).length;
 
   const save = async (data: Record<string, any>) => {
@@ -272,9 +273,8 @@ const ContentManagerTab = () => {
         )}
       </div>
 
-      {filtered.length > PAGE_SIZE && (
-        <AdminPagination page={safePage} total={filtered.length} pageSize={PAGE_SIZE} onPage={setPage} />
-      )}
+      <AdminPagination alwaysShow page={safePage} total={filtered.length} pageSize={pageSize}
+        pageSizeOptions={PAGE_SIZE_OPTIONS} onPage={setPage} onPageSize={setPageSize} />
 
       <EditDialog
         wide
