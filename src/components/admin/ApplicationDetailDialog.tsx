@@ -3,6 +3,16 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { CheckCircle, Ban, Clock, Eye, ExternalLink } from "lucide-react";
 
+export interface AuditEntry {
+  id: string;
+  action: string;
+  previous_status: string | null;
+  new_status: string | null;
+  notes: string | null;
+  created_at: string;
+  metadata?: Record<string, any> | null;
+}
+
 interface Props {
   open: boolean;
   onClose: () => void;
@@ -14,7 +24,10 @@ interface Props {
   socialKey?: string;
   onStatus?: (status: string) => void;
   statuses?: { value: string; label: string; icon?: "approve" | "review" | "wait" | "reject" }[];
+  /** Admin actions recorded for this application, newest first. */
+  auditEntries?: AuditEntry[];
 }
+
 
 const HIDDEN = new Set(["id", "user_id", "created_at", "updated_at", "reviewed_by", "reviewed_at", "admin_notes", "questionnaire_answers"]);
 
