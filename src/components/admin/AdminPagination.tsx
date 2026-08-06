@@ -6,13 +6,18 @@ interface Props {
   total: number;           // total rows
   pageSize: number;
   onPage: (page: number) => void;
+  /** When provided, renders a rows-per-page selector. */
+  onPageSize?: (size: number) => void;
+  pageSizeOptions?: number[];
+  /** Keep the summary line visible even when everything fits on one page. */
+  alwaysShow?: boolean;
 }
 
-/** Compact pager for admin tables: « 1 2 3 » with result summary. */
-const AdminPagination = ({ page, total, pageSize, onPage }: Props) => {
+/** Compact pager for admin tables: « 1 2 3 » with result summary and page size. */
+const AdminPagination = ({ page, total, pageSize, onPage, onPageSize, pageSizeOptions = [10, 25, 50, 100], alwaysShow }: Props) => {
   const pageCount = Math.max(1, Math.ceil(total / pageSize));
-  if (total <= pageSize) return null;
-  const from = page * pageSize + 1;
+  if (total <= pageSize && !alwaysShow && !onPageSize) return null;
+  const from = total === 0 ? 0 : page * pageSize + 1;
   const to = Math.min(total, (page + 1) * pageSize);
 
   const pages: number[] = [];
@@ -21,7 +26,20 @@ const AdminPagination = ({ page, total, pageSize, onPage }: Props) => {
 
   return (
     <div className="flex items-center justify-between gap-3 mt-4 flex-wrap">
-      <p className="text-xs text-muted-foreground">Showing <span className="font-medium text-foreground">{from}–{to}</span> of <span className="font-medium text-foreground">{total}</span></p>
+      <div className="flex items-center gap-3 flex-wrap">
+        <p className="text-xs text-muted-foreground">Showing <span className="font-medium text-foreground">{from}–{to}</span> of <span className="font-medium text-foreground">{total}</span></p>
+        {onPageSize && (
+          <label className="text-xs text-muted-foreground flex items-center gap-1.5">
+            Rows
+            <select aria-label="Rows per page" value={pageSize}
+              onChange={e => { onPageSize(Number(e.target.value)); onPage(0); }}
+              className="h-7 rounded-md border border-input bg-background px-1.5 text-xs text-foreground">
+              {pageSizeOptions.map(o => <option key={o} value={o}>{o}</option>)}
+            </select>
+          </label>
+        )}
+        <p className="text-xs text-muted-foreground">Page <span className="font-medium text-foreground">{Math.min(page, pageCount - 1) + 1}</span> of <span className="font-medium text-foreground">{pageCount}</span></p>
+      </div>
       <div className="flex items-center gap-1">
         <Button variant="outline" size="icon" className="h-8 w-8" disabled={page === 0} onClick={() => onPage(page - 1)} aria-label="Previous page">
           <ChevronLeft className="w-4 h-4" />
