@@ -438,6 +438,16 @@ const AdminDashboard = () => {
       .update({ status, reviewed_by: user.id, reviewed_at: new Date().toISOString() })
       .eq("id", app.id);
     if (error) { toast({ title: "Update failed", description: error.message, variant: "destructive" }); return; }
+    await supabase.from("admin_audit_log").insert({
+      admin_id: user.id,
+      entity_type: "host_application",
+      entity_id: app.id,
+      action: status,
+      previous_status: app.status,
+      new_status: status,
+      metadata: { email: app.email, city: app.city },
+    });
+    setAuditLogReloadKey(k => k + 1);
     setDbHostProfileApps(p => p.map(a => a.id === app.id ? { ...a, status } : a));
     toast({ title: `Host profile application → ${status}` });
   };
@@ -1311,11 +1321,46 @@ const AdminDashboard = () => {
               <Button asChild variant="outline" size="sm"><Link to="/host-eligibility">Public host application</Link></Button>
             </div>
 
+            <div className="flex flex-wrap items-center gap-2 mb-4">
+              <div className="relative flex-1 min-w-[200px]">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input className="pl-9 h-9" placeholder="Search name, email or city…" value={hostAppSearch}
+                  onChange={e => { setHostAppSearch(e.target.value); setHostQueuePage(0); setHostProfilePage(0); }} />
+              </div>
+              <select aria-label="Filter by program" className="h-9 rounded-md border border-input bg-background px-2 text-sm text-foreground"
+                value={hostAppProgram} onChange={e => { setHostAppProgram(e.target.value as any); setHostQueuePage(0); setHostProfilePage(0); }}>
+                <option value="all">All programs</option>
+                <option value="foreign">Host foreign travelers</option>
+                <option value="profile">Host profiles (Become a Host)</option>
+              </select>
+              <select aria-label="Filter by status" className="h-9 rounded-md border border-input bg-background px-2 text-sm text-foreground"
+                value={hostAppStatus} onChange={e => { setHostAppStatus(e.target.value); setHostQueuePage(0); setHostProfilePage(0); }}>
+                <option value="all">All statuses</option>
+                <option value="pending">Pending</option>
+                <option value="under_review">Under review</option>
+                <option value="waitlisted">Waitlisted</option>
+                <option value="verified">Verified</option>
+                <option value="rejected">Rejected</option>
+              </select>
+              <select aria-label="Sort applications" className="h-9 rounded-md border border-input bg-background px-2 text-sm text-foreground"
+                value={hostAppSort} onChange={e => setHostAppSort(e.target.value as any)}>
+                <option value="newest">Newest first</option>
+                <option value="oldest">Oldest first</option>
+                <option value="score">Highest score</option>
+                <option value="name">Name A–Z</option>
+              </select>
+              {(hostAppSearch || hostAppStatus !== "all" || hostAppProgram !== "all" || hostAppSort !== "newest") && (
+                <Button size="sm" variant="ghost" className="text-xs" onClick={() => { setHostAppSearch(""); setHostAppStatus("all"); setHostAppProgram("all"); setHostAppSort("newest"); }}>
+                  Clear filters
+                </Button>
+              )}
+            </div>
+
             {hostQueue.length === 0 ? (
               <div className="rounded-lg bg-card p-8 text-center shadow-card">
                 <UserCheck className="w-10 h-10 text-muted-foreground/40 mx-auto mb-3" />
-                <p className="font-medium text-foreground">No pending host applications</p>
-                <p className="text-sm text-muted-foreground">New applications from /host-eligibility will appear here until approved.</p>
+                <p className="font-medium text-foreground">No matching host applications</p>
+                <p className="text-sm text-muted-foreground">Adjust the filters above, or wait for new applications from /host-eligibility.</p>
               </div>
             ) : (() => {
               const pageCount = Math.max(1, Math.ceil(hostQueue.length / TABLE_PAGE_SIZE));
@@ -1391,15 +1436,15 @@ const AdminDashboard = () => {
             <div className="mt-8">
               <div className="flex items-center justify-between gap-3 mb-3 flex-wrap">
                 <div>
-                  <h3 className="text-lg font-bold text-foreground">Host profile applications ({dbHostProfileApps.length})</h3>
+                  <h3 className="text-lg font-bold text-foreground">Host profile applications ({hostProfileQueue.length} of {dbHostProfileApps.length})</h3>
                   <p className="text-sm text-muted-foreground">Submissions from the public “Become a Host” form, including homestay, transport and food details.</p>
                 </div>
                 <Button asChild variant="outline" size="sm"><Link to="/become-host">Open form</Link></Button>
               </div>
-              {dbHostProfileApps.length === 0 ? (
+              {hostProfileQueue.length === 0 ? (
                 <div data-testid="host-profile-apps-empty" className="rounded-2xl border border-border bg-card p-8 text-center shadow-card">
                   <UserCheck className="w-9 h-9 text-muted-foreground/40 mx-auto mb-2" />
-                  <p className="font-medium text-foreground">No host profile applications yet</p>
+                  <p className="font-medium text-foreground">No matching host profile applications</p>
                   <p className="text-sm text-muted-foreground">New submissions from /become-host land here for verification.</p>
                 </div>
               ) : (
@@ -1418,7 +1463,7 @@ const AdminDashboard = () => {
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-border">
-                        {dbHostProfileApps.map(a => (
+                        {hostProfileQueue.slice(Math.min(hostProfilePage, Math.max(0, Math.ceil(hostProfileQueue.length / TABLE_PAGE_SIZE) - 1)) * TABLE_PAGE_SIZE, (Math.min(hostProfilePage, Math.max(0, Math.ceil(hostProfileQueue.length / TABLE_PAGE_SIZE) - 1)) + 1) * TABLE_PAGE_SIZE).map(a => (
                           <tr key={a.id} className="hover:bg-secondary/20 align-top">
                             <td className="px-3 py-2.5">
                               <p className="font-medium text-foreground whitespace-nowrap">{a.full_name}</p>
