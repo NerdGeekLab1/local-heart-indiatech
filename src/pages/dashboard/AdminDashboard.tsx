@@ -1508,7 +1508,12 @@ const AdminDashboard = () => {
                       </tbody>
                     </table>
                   </div>
+                  <div className="px-3 pb-3">
+                    <AdminPagination alwaysShow page={Math.min(hostProfilePage, Math.max(0, Math.ceil(hostProfileQueue.length / TABLE_PAGE_SIZE) - 1))}
+                      total={hostProfileQueue.length} pageSize={TABLE_PAGE_SIZE} onPage={setHostProfilePage} />
+                  </div>
                 </div>
+
               )}
             </div>
           </div>
