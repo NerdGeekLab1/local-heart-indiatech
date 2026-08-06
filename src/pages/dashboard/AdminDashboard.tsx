@@ -2416,7 +2416,9 @@ const AdminDashboard = () => {
           { value: "waitlisted", label: "Waitlist", icon: "wait" },
           { value: "rejected", label: "Reject", icon: "reject" },
         ]}
+        auditEntries={detailApp?.row?.id ? auditEntriesFor(detailApp.row.id) : []}
       />
+
 
       <Footer />
     </div>
