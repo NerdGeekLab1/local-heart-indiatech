@@ -958,6 +958,51 @@ export type Database = {
         }
         Relationships: []
       }
+      form_controls: {
+        Row: {
+          audience: string
+          category: string
+          created_at: string
+          description: string | null
+          disabled_message: string
+          enabled: boolean
+          form_key: string
+          id: string
+          label: string
+          route: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          audience: string
+          category: string
+          created_at?: string
+          description?: string | null
+          disabled_message?: string
+          enabled?: boolean
+          form_key: string
+          id?: string
+          label: string
+          route: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          audience?: string
+          category?: string
+          created_at?: string
+          description?: string | null
+          disabled_message?: string
+          enabled?: boolean
+          form_key?: string
+          id?: string
+          label?: string
+          route?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       grievances: {
         Row: {
           admin_notes: string | null
@@ -2044,6 +2089,40 @@ export type Database = {
         SetofOptions: {
           from: "*"
           to: "host_eligibility"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      approve_host_profile_application: {
+        Args: { _application_id: string }
+        Returns: {
+          admin_notes: string | null
+          bio: string | null
+          city: string
+          created_at: string
+          email: string
+          food_details: Json
+          full_name: string
+          homestay_details: Json
+          id: string
+          languages: string[]
+          phone: string
+          photos: string[]
+          price_per_day: number | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          services: string[]
+          specialties: string[]
+          state: string
+          status: string
+          tagline: string | null
+          transport_details: Json
+          updated_at: string
+          user_id: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "host_applications"
           isOneToOne: true
           isSetofReturn: false
         }
