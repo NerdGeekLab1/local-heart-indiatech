@@ -14,6 +14,7 @@ const OnboardingChecklist = lazy(() => import("@/components/OnboardingChecklist.
 import AdminGuard from "@/components/AdminGuard.tsx";
 import RequireAuth from "@/components/RequireAuth.tsx";
 import FormAvailabilityGate from "@/components/FormAvailabilityGate.tsx";
+import FeatureGate from "@/components/FeatureGate.tsx";
 
 import Breadcrumbs from "@/components/Breadcrumbs.tsx";
 import { useLocation } from "react-router-dom";
@@ -118,7 +119,7 @@ const App = () => (
             <Route path="/experiences" element={<Experiences />} />
             <Route path="/experience/:id" element={<ExperienceDetail />} />
             <Route path="/host/:id" element={<HostProfile />} />
-            <Route path="/book/:id" element={<Booking />} />
+            <Route path="/book/:id" element={<FormAvailabilityGate formKey="booking"><Booking /></FormAvailabilityGate>} />
             <Route path="/become-host" element={<FormAvailabilityGate formKey="become_host"><BecomeHost /></FormAvailabilityGate>} />
             <Route path="/signup" element={<FormAvailabilityGate formKey="account_signup"><Signup /></FormAvailabilityGate>} />
             <Route path="/login/traveler" element={<FormAvailabilityGate formKey="traveler_login"><Signup /></FormAvailabilityGate>} />
@@ -141,14 +142,14 @@ const App = () => (
             <Route path="/privacy" element={<Privacy />} />
             <Route path="/cookies" element={<Cookies />} />
             <Route path="/docs" element={<Docs />} />
-            <Route path="/host-trip" element={<HostTrip />} />
-            <Route path="/grievances" element={<Grievances />} />
+            <Route path="/host-trip" element={<FormAvailabilityGate formKey="host_trip"><HostTrip /></FormAvailabilityGate>} />
+            <Route path="/grievances" element={<FormAvailabilityGate formKey="grievance"><Grievances /></FormAvailabilityGate>} />
             <Route path="/bike-tours" element={<BikeToursDetail />} />
             <Route path="/trips" element={<Trips />} />
             <Route path="/trip/:id" element={<TripDetail />} />
             <Route path="/trip-leader/:id" element={<TripLeaderProfile />} />
             <Route path="/beta-wanderers" element={<BetaWanderers />} />
-            <Route path="/beta-wanderer-apply" element={<BetaWandererApply />} />
+            <Route path="/beta-wanderer-apply" element={<FormAvailabilityGate formKey="beta_wanderer"><BetaWandererApply /></FormAvailabilityGate>} />
             <Route path="/beta-wanderer/:id" element={<BetaWandererProfile />} />
             <Route path="/leaderboard" element={<Leaderboard />} />
             <Route path="/rewards" element={<Rewards />} />
@@ -156,8 +157,8 @@ const App = () => (
             <Route path="/membership" element={<Membership />} />
             <Route path="/auth/callback" element={<AuthCallback />} />
             <Route path="/referrals" element={<Referrals />} />
-            <Route path="/host-eligibility" element={<FormAvailabilityGate formKey="host_eligibility_beta"><HostEligibility /></FormAvailabilityGate>} />
-            <Route path="/beta-waitlist" element={<BetaWaitlist />} />
+            <Route path="/host-eligibility" element={<FormAvailabilityGate formKey="host_eligibility_beta"><FeatureGate flag="host_eligibility_beta" fallback={<main className="min-h-screen bg-background flex items-center justify-center px-4"><section className="max-w-lg rounded-lg border border-border bg-card p-8 text-center shadow-card"><h1 className="text-2xl font-bold">Beta applications are closed</h1><p className="mt-2 text-muted-foreground">The Host Foreign Travelers beta is not accepting applications right now.</p></section></main>}><HostEligibility /></FeatureGate></FormAvailabilityGate>} />
+            <Route path="/beta-waitlist" element={<FormAvailabilityGate formKey="beta_waitlist"><BetaWaitlist /></FormAvailabilityGate>} />
             <Route path="/beta-waitlist/confirm" element={<BetaWaitlistConfirm />} />
             <Route path="/admin/feature-flags" element={<AdminGuard><FeatureFlagsAdmin /></AdminGuard>} />
             <Route path="/admin/waitlist" element={<AdminGuard><WaitlistAdmin /></AdminGuard>} />
