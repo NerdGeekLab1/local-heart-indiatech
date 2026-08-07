@@ -19,6 +19,7 @@
 8. [Project layout](#project-layout)
 9. [Local development](#local-development)
 10. [Roadmap](#roadmap)
+11. [Complete platform reference](#complete-platform-reference)
 
 ---
 
@@ -61,6 +62,19 @@ HSL tokens with full light/dark support.
 
 All API keys for AI and managed Google OAuth are provisioned by Lovable
 Cloud — no manual `.env` setup is required.
+
+## Complete platform reference
+
+See [`PLATFORM_DOCUMENTATION.md`](PLATFORM_DOCUMENTATION.md) for the current route catalog, form inventory and controls, role-by-role feature map, host application lifecycles, technical architecture, entity relationship diagram, feature mind map, security guidance, and administration runbook.
+
+Key authentication routes now include separate traveler and host portals plus password recovery:
+
+- `/login/traveler`
+- `/login/host`
+- `/forgot-password`
+- `/reset-password`
+
+The standard `/become-host` registration and the feature-gated `/host-eligibility` beta program are separate workflows and separate admin queues.
 
 ---
 
