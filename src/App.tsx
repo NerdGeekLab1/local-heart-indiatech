@@ -1,3 +1,4 @@
+import { lazy, Suspense } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -5,48 +6,100 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { CurrencyProvider } from "@/contexts/CurrencyContext";
-import Index from "./pages/Index.tsx";
-import Explore from "./pages/Explore.tsx";
-import Experiences from "./pages/Experiences.tsx";
-import ExperienceDetail from "./pages/ExperienceDetail.tsx";
-import HostProfile from "./pages/HostProfile.tsx";
-import Booking from "./pages/Booking.tsx";
-import BecomeHost from "./pages/BecomeHost.tsx";
-import Signup from "./pages/Signup.tsx";
-import Destinations from "./pages/Destinations.tsx";
-import DestinationDetail from "./pages/DestinationDetail.tsx";
-import Community from "./pages/Community.tsx";
-import Resources from "./pages/Resources.tsx";
-import ResourceGuide from "./pages/ResourceGuide.tsx";
-import TravelerDashboard from "./pages/dashboard/TravelerDashboard.tsx";
-import HostDashboard from "./pages/dashboard/HostDashboard.tsx";
-import AdminDashboard from "./pages/dashboard/AdminDashboard.tsx";
-import HelpCenter from "./pages/HelpCenter.tsx";
-import Safety from "./pages/Safety.tsx";
-import Terms from "./pages/Terms.tsx";
-import Docs from "./pages/Docs.tsx";
-import HostTrip from "./pages/HostTrip.tsx";
-import Grievances from "./pages/Grievances.tsx";
-import BikeToursDetail from "./pages/BikeToursDetail.tsx";
-import Trips from "./pages/Trips.tsx";
-import TripDetail from "./pages/TripDetail.tsx";
-import TripLeaderProfile from "./pages/TripLeaderProfile.tsx";
-import BetaWanderers from "./pages/BetaWanderers.tsx";
-import BetaWandererApply from "./pages/BetaWandererApply.tsx";
-import BetaWandererProfile from "./pages/BetaWandererProfile.tsx";
-import Leaderboard from "./pages/Leaderboard.tsx";
-import Rewards from "./pages/Rewards.tsx";
-import BlogDetail from "./pages/BlogDetail.tsx";
-import Membership from "./pages/Membership.tsx";
-import AuthCallback from "./pages/AuthCallback.tsx";
-import Referrals from "./pages/Referrals.tsx";
-import HostEligibility from "./pages/HostEligibility.tsx";
-import MobileBottomNav from "./components/MobileBottomNav.tsx";
-import AIChatRecommender from "./components/AIChatRecommender.tsx";
-import HeaderScripts from "./components/HeaderScripts.tsx";
-import NotFound from "./pages/NotFound.tsx";
+import MobileBottomNav from "@/components/MobileBottomNav.tsx";
+const AIChatRecommender = lazy(() => import("@/components/AIChatRecommender.tsx"));
+import HeaderScripts from "@/components/HeaderScripts.tsx";
+import SiteHead from "@/components/SiteHead";
+const OnboardingChecklist = lazy(() => import("@/components/OnboardingChecklist.tsx"));
+import AdminGuard from "@/components/AdminGuard.tsx";
+import RequireAuth from "@/components/RequireAuth.tsx";
+import FormAvailabilityGate from "@/components/FormAvailabilityGate.tsx";
+import FeatureGate from "@/components/FeatureGate.tsx";
 
-const queryClient = new QueryClient();
+import Breadcrumbs from "@/components/Breadcrumbs.tsx";
+import { useLocation } from "react-router-dom";
+import Index from "./pages/Index.tsx";
+
+// Lazy-loaded route components for code-splitting / perf
+const Explore = lazy(() => import("./pages/Explore.tsx"));
+const Experiences = lazy(() => import("./pages/Experiences.tsx"));
+const ExperienceDetail = lazy(() => import("./pages/ExperienceDetail.tsx"));
+const HostProfile = lazy(() => import("./pages/HostProfile.tsx"));
+const Booking = lazy(() => import("./pages/Booking.tsx"));
+const BecomeHost = lazy(() => import("./pages/BecomeHost.tsx"));
+const Signup = lazy(() => import("./pages/Signup.tsx"));
+const AdminLogin = lazy(() => import("./pages/AdminLogin.tsx"));
+const Destinations = lazy(() => import("./pages/Destinations.tsx"));
+const DestinationDetail = lazy(() => import("./pages/DestinationDetail.tsx"));
+const Community = lazy(() => import("./pages/Community.tsx"));
+const Resources = lazy(() => import("./pages/Resources.tsx"));
+const ResourceGuide = lazy(() => import("./pages/ResourceGuide.tsx"));
+const TravelerDashboard = lazy(() => import("./pages/dashboard/TravelerDashboard.tsx"));
+const HostDashboard = lazy(() => import("./pages/dashboard/HostDashboard.tsx"));
+const AdminDashboard = lazy(() => import("./pages/dashboard/AdminDashboard.tsx"));
+const HelpCenter = lazy(() => import("./pages/HelpCenter.tsx"));
+const Safety = lazy(() => import("./pages/Safety.tsx"));
+const Terms = lazy(() => import("./pages/Terms.tsx"));
+const Privacy = lazy(() => import("./pages/Privacy.tsx"));
+const Cookies = lazy(() => import("./pages/Cookies.tsx"));
+const Docs = lazy(() => import("./pages/Docs.tsx"));
+const HostTrip = lazy(() => import("./pages/HostTrip.tsx"));
+const Grievances = lazy(() => import("./pages/Grievances.tsx"));
+const BikeToursDetail = lazy(() => import("./pages/BikeToursDetail.tsx"));
+const Trips = lazy(() => import("./pages/Trips.tsx"));
+const TripDetail = lazy(() => import("./pages/TripDetail.tsx"));
+const TripLeaderProfile = lazy(() => import("./pages/TripLeaderProfile.tsx"));
+const BetaWanderers = lazy(() => import("./pages/BetaWanderers.tsx"));
+const BetaWandererApply = lazy(() => import("./pages/BetaWandererApply.tsx"));
+const BetaWandererProfile = lazy(() => import("./pages/BetaWandererProfile.tsx"));
+const Leaderboard = lazy(() => import("./pages/Leaderboard.tsx"));
+const Rewards = lazy(() => import("./pages/Rewards.tsx"));
+const BlogDetail = lazy(() => import("./pages/BlogDetail.tsx"));
+const Membership = lazy(() => import("./pages/Membership.tsx"));
+const AuthCallback = lazy(() => import("./pages/AuthCallback.tsx"));
+const Referrals = lazy(() => import("./pages/Referrals.tsx"));
+const HostEligibility = lazy(() => import("./pages/HostEligibility.tsx"));
+const BetaWaitlist = lazy(() => import("./pages/BetaWaitlist.tsx"));
+const BetaWaitlistConfirm = lazy(() => import("./pages/BetaWaitlistConfirm.tsx"));
+const FeatureFlagsAdmin = lazy(() => import("./pages/admin/FeatureFlagsAdmin.tsx"));
+const WaitlistAdmin = lazy(() => import("./pages/admin/WaitlistAdmin.tsx"));
+const AuditLogAdmin = lazy(() => import("./pages/admin/AuditLogAdmin.tsx"));
+const PerformanceAdmin = lazy(() => import("./pages/admin/PerformanceAdmin.tsx"));
+const FeaturesHub = lazy(() => import("./pages/FeaturesHub.tsx"));
+const Feed = lazy(() => import("./pages/Feed.tsx"));
+const TravelerProfile = lazy(() => import("./pages/TravelerProfile.tsx"));
+const NotFound = lazy(() => import("./pages/NotFound.tsx"));
+const PasswordRecovery = lazy(() => import("./pages/PasswordRecovery.tsx"));
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5 * 60 * 1000,
+      gcTime: 30 * 60 * 1000,
+      refetchOnWindowFocus: false,
+      refetchOnMount: false,
+      refetchOnReconnect: false,
+      retry: 1,
+    },
+  },
+});
+
+const RouteFallback = () => (
+  <div className="min-h-screen flex items-center justify-center bg-background">
+    <div className="w-10 h-10 rounded-full border-2 border-primary/30 border-t-primary animate-spin" />
+  </div>
+);
+
+const HIDE_CRUMBS = new Set(["/", "/signup", "/login/traveler", "/login/host", "/admin-login", "/auth/callback"]);
+const BreadcrumbsBar = () => {
+  const { pathname } = useLocation();
+  if (HIDE_CRUMBS.has(pathname)) return null;
+  return (
+    <div className="pt-20 pb-2 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+      <Breadcrumbs />
+    </div>
+  );
+};
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -56,36 +109,47 @@ const App = () => (
         <Toaster />
         <Sonner />
         <BrowserRouter>
+          <SiteHead />
           <HeaderScripts />
+          <BreadcrumbsBar />
+          <Suspense fallback={<RouteFallback />}>
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/explore" element={<Explore />} />
             <Route path="/experiences" element={<Experiences />} />
             <Route path="/experience/:id" element={<ExperienceDetail />} />
             <Route path="/host/:id" element={<HostProfile />} />
-            <Route path="/book/:id" element={<Booking />} />
-            <Route path="/become-host" element={<BecomeHost />} />
-            <Route path="/signup" element={<Signup />} />
+            <Route path="/book/:id" element={<FormAvailabilityGate formKey="booking"><Booking /></FormAvailabilityGate>} />
+            <Route path="/become-host" element={<FormAvailabilityGate formKey="become_host"><BecomeHost /></FormAvailabilityGate>} />
+            <Route path="/signup" element={<FormAvailabilityGate formKey="account_signup"><Signup /></FormAvailabilityGate>} />
+            <Route path="/login/traveler" element={<FormAvailabilityGate formKey="traveler_login"><Signup /></FormAvailabilityGate>} />
+            <Route path="/login/host" element={<FormAvailabilityGate formKey="host_login"><Signup /></FormAvailabilityGate>} />
+            <Route path="/admin-login" element={<FormAvailabilityGate formKey="admin_login"><AdminLogin /></FormAvailabilityGate>} />
+            <Route path="/forgot-password" element={<FormAvailabilityGate formKey="password_recovery"><PasswordRecovery /></FormAvailabilityGate>} />
+            <Route path="/reset-password" element={<PasswordRecovery />} />
             <Route path="/destinations" element={<Destinations />} />
             <Route path="/destination/:name" element={<DestinationDetail />} />
             <Route path="/community" element={<Community />} />
             <Route path="/resources" element={<Resources />} />
             <Route path="/resource/:slug" element={<ResourceGuide />} />
-            <Route path="/dashboard/traveler" element={<TravelerDashboard />} />
-            <Route path="/dashboard/host" element={<HostDashboard />} />
-            <Route path="/dashboard/admin" element={<AdminDashboard />} />
+            <Route path="/dashboard/traveler" element={<RequireAuth role="traveler"><TravelerDashboard /></RequireAuth>} />
+            <Route path="/dashboard/host" element={<RequireAuth role="host"><HostDashboard /></RequireAuth>} />
+
+            <Route path="/dashboard/admin" element={<AdminGuard><AdminDashboard /></AdminGuard>} />
             <Route path="/help" element={<HelpCenter />} />
             <Route path="/safety" element={<Safety />} />
             <Route path="/terms" element={<Terms />} />
+            <Route path="/privacy" element={<Privacy />} />
+            <Route path="/cookies" element={<Cookies />} />
             <Route path="/docs" element={<Docs />} />
-            <Route path="/host-trip" element={<HostTrip />} />
-            <Route path="/grievances" element={<Grievances />} />
+            <Route path="/host-trip" element={<FormAvailabilityGate formKey="host_trip"><HostTrip /></FormAvailabilityGate>} />
+            <Route path="/grievances" element={<FormAvailabilityGate formKey="grievance"><Grievances /></FormAvailabilityGate>} />
             <Route path="/bike-tours" element={<BikeToursDetail />} />
             <Route path="/trips" element={<Trips />} />
             <Route path="/trip/:id" element={<TripDetail />} />
             <Route path="/trip-leader/:id" element={<TripLeaderProfile />} />
             <Route path="/beta-wanderers" element={<BetaWanderers />} />
-            <Route path="/beta-wanderer-apply" element={<BetaWandererApply />} />
+            <Route path="/beta-wanderer-apply" element={<FormAvailabilityGate formKey="beta_wanderer"><BetaWandererApply /></FormAvailabilityGate>} />
             <Route path="/beta-wanderer/:id" element={<BetaWandererProfile />} />
             <Route path="/leaderboard" element={<Leaderboard />} />
             <Route path="/rewards" element={<Rewards />} />
@@ -93,11 +157,24 @@ const App = () => (
             <Route path="/membership" element={<Membership />} />
             <Route path="/auth/callback" element={<AuthCallback />} />
             <Route path="/referrals" element={<Referrals />} />
-            <Route path="/host-eligibility" element={<HostEligibility />} />
+            <Route path="/host-eligibility" element={<FormAvailabilityGate formKey="host_eligibility_beta"><FeatureGate flag="host_eligibility_beta" fallback={<main className="min-h-screen bg-background flex items-center justify-center px-4"><section className="max-w-lg rounded-lg border border-border bg-card p-8 text-center shadow-card"><h1 className="text-2xl font-bold">Beta applications are closed</h1><p className="mt-2 text-muted-foreground">The Host Foreign Travelers beta is not accepting applications right now.</p></section></main>}><HostEligibility /></FeatureGate></FormAvailabilityGate>} />
+            <Route path="/beta-waitlist" element={<FormAvailabilityGate formKey="beta_waitlist"><BetaWaitlist /></FormAvailabilityGate>} />
+            <Route path="/beta-waitlist/confirm" element={<BetaWaitlistConfirm />} />
+            <Route path="/admin/feature-flags" element={<AdminGuard><FeatureFlagsAdmin /></AdminGuard>} />
+            <Route path="/admin/waitlist" element={<AdminGuard><WaitlistAdmin /></AdminGuard>} />
+            <Route path="/admin/audit-log" element={<AdminGuard><AuditLogAdmin /></AdminGuard>} />
+            <Route path="/admin/performance" element={<AdminGuard><PerformanceAdmin /></AdminGuard>} />
+            <Route path="/features" element={<FeaturesHub />} />
+            <Route path="/feed" element={<Feed />} />
+            <Route path="/traveler/:id" element={<TravelerProfile />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
+          </Suspense>
           <MobileBottomNav />
-          <AIChatRecommender />
+          <Suspense fallback={null}>
+            <AIChatRecommender />
+            <OnboardingChecklist />
+          </Suspense>
         </BrowserRouter>
       </TooltipProvider>
       </CurrencyProvider>

@@ -1,11 +1,12 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Eye, EyeOff, ArrowLeft, LogIn } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Signup = () => {
   const [mode, setMode] = useState<"signup" | "login">("signup");
@@ -18,7 +19,13 @@ const Signup = () => {
     travelStyle: [] as string[], interests: [] as string[], agreeTerms: false,
   });
   const { toast } = useToast();
+  const { signIn } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const { pathname } = useLocation();
+  const portalRole = pathname === "/login/host" ? "host" : pathname === "/login/traveler" ? "traveler" : null;
+  const expectedDashboard = portalRole === "host" ? "/dashboard/host" : "/dashboard/traveler";
+  const nextPath = searchParams.get("next") || "/dashboard/traveler";
 
   const update = (field: string, value: any) => setForm(prev => ({ ...prev, [field]: value }));
   const toggleArray = (field: "travelStyle" | "interests", val: string) => {
@@ -49,6 +56,7 @@ const Signup = () => {
         data: {
           first_name: form.firstName,
           last_name: form.lastName,
+          role: portalRole || "traveler",
           phone: form.phone,
           nationality: form.nationality,
           travel_styles: form.travelStyle,
@@ -65,19 +73,33 @@ const Signup = () => {
     }
   };
 
+  /** Land users on the dashboard matching their actual role, never a stale `next` path. */
+  const resolveLanding = (role: string | null | undefined) => {
+    const home =
+      role === "admin" ? "/dashboard/admin" : role === "host" ? "/dashboard/host" : "/dashboard/traveler";
+    const isDashboard = nextPath.startsWith("/dashboard/");
+    // Only honour `next` when it matches the signed-in role (or isn't a dashboard route).
+    if (!isDashboard) return nextPath;
+    return nextPath === home ? nextPath : home;
+  };
+
   const handleLogin = async () => {
     if (!form.email || !form.password) {
       toast({ title: "Please enter email and password", variant: "destructive" });
       return;
     }
     setLoading(true);
-    const { error } = await supabase.auth.signInWithPassword({ email: form.email, password: form.password });
+    const { error, role } = await signIn(form.email, form.password);
     setLoading(false);
     if (error) {
       toast({ title: error.message, variant: "destructive" });
+    } else if (portalRole && role !== portalRole) {
+      await supabase.auth.signOut();
+      toast({ title: `This is the ${portalRole} sign-in`, description: `Use the ${role || "correct"} portal for this account.`, variant: "destructive" });
     } else {
       toast({ title: "Welcome back! 🎉" });
-      navigate("/dashboard/traveler");
+      try { window.localStorage.setItem("travelista.lastDashboard", resolveLanding(role)); } catch {}
+      navigate(portalRole ? expectedDashboard : resolveLanding(role), { replace: true });
     }
   };
 
@@ -92,7 +114,7 @@ const Signup = () => {
       }
       if (result.redirected) return;
       toast({ title: "Welcome! 🎉" });
-      navigate("/dashboard/traveler");
+      navigate(nextPath);
     } catch (e: any) {
       toast({ title: "Google sign-in error", description: e?.message ?? String(e), variant: "destructive" });
     } finally {
@@ -108,14 +130,14 @@ const Signup = () => {
             <ArrowLeft className="w-4 h-4" /> Back to Home
           </Link>
 
-          <h1 className="text-3xl font-bold text-foreground">{mode === "signup" ? "Join Travelista" : "Welcome Back"}</h1>
-          <p className="mt-1 text-muted-foreground">{mode === "signup" ? "Create your traveler account" : "Sign in to your account"}</p>
+          <h1 className="text-3xl font-bold text-foreground">{portalRole ? `${portalRole === "host" ? "Host" : "Traveler"} sign in` : mode === "signup" ? "Join Travelista" : "Welcome Back"}</h1>
+          <p className="mt-1 text-muted-foreground">{portalRole ? `Access your ${portalRole} workspace` : mode === "signup" ? "Create your traveler account" : "Sign in to your account"}</p>
 
           {/* Mode Toggle */}
-          <div className="mt-4 flex gap-1 bg-secondary rounded-lg p-1">
+          {!portalRole && <div className="mt-4 flex gap-1 bg-secondary rounded-lg p-1">
             <button onClick={() => setMode("signup")} className={`flex-1 py-2 text-sm font-medium rounded-md transition-all ${mode === "signup" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground"}`}>Sign Up</button>
             <button onClick={() => setMode("login")} className={`flex-1 py-2 text-sm font-medium rounded-md transition-all ${mode === "login" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground"}`}>Log In</button>
-          </div>
+          </div>}
 
           {/* Google sign-in */}
           <button onClick={handleGoogle} disabled={loading}
@@ -128,7 +150,7 @@ const Signup = () => {
             <div className="flex-1 h-px bg-border" /> or <div className="flex-1 h-px bg-border" />
           </div>
 
-          {mode === "login" ? (
+          {mode === "login" || portalRole ? (
             <div className="mt-6 space-y-4">
               <div>
                 <label className="text-xs font-medium text-muted-foreground">Email *</label>
@@ -140,6 +162,9 @@ const Signup = () => {
                 <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-8 text-muted-foreground">
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
+              </div>
+              <div className="flex justify-end">
+                <Link to="/forgot-password" className="text-sm font-medium text-primary hover:underline">Forgot password?</Link>
               </div>
               <Button onClick={handleLogin} disabled={loading} className="w-full rounded-full bg-primary text-primary-foreground">
                 {loading ? "Signing in..." : "Sign In"}
@@ -243,13 +268,14 @@ const Signup = () => {
             </>
           )}
 
-          <p className="mt-6 text-center text-sm text-muted-foreground">
+          {!portalRole && <p className="mt-6 text-center text-sm text-muted-foreground">
             {mode === "signup" ? (
               <>Already have an account? <button onClick={() => setMode("login")} className="text-primary font-medium hover:underline">Log in</button></>
             ) : (
               <>Don't have an account? <button onClick={() => setMode("signup")} className="text-primary font-medium hover:underline">Sign up</button></>
             )}
-          </p>
+          </p>}
+          {portalRole && <p className="mt-6 text-center text-sm text-muted-foreground">Wrong portal? <Link className="font-medium text-primary hover:underline" to={portalRole === "host" ? "/login/traveler" : "/login/host"}>Sign in as {portalRole === "host" ? "traveler" : "host"}</Link></p>}
 
           {/* Demo Accounts */}
           <div className="mt-6 rounded-xl bg-secondary/50 border border-border p-4">
@@ -264,13 +290,13 @@ const Signup = () => {
                   key={demo.label}
                   onClick={async () => {
                     setLoading(true);
-                    const { error } = await supabase.auth.signInWithPassword({ email: demo.email, password: demo.password });
+                    const { error, role } = await signIn(demo.email, demo.password);
                     setLoading(false);
                     if (error) {
                       toast({ title: `Demo ${demo.label} not set up yet`, description: "Please sign up first with this email", variant: "destructive" });
                     } else {
                       toast({ title: `Welcome, Demo ${demo.label}! 🎉` });
-                      navigate(demo.label === "Admin" ? "/dashboard/admin" : demo.label === "Host" ? "/dashboard/host" : "/dashboard/traveler");
+                      navigate(resolveLanding(role), { replace: true });
                     }
                   }}
                   disabled={loading}

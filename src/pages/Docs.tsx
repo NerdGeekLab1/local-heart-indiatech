@@ -2,7 +2,7 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import {
   BookOpen, Code, Database, Users, Shield, Globe, Zap, Layers, ChevronRight,
-  Server, Key, FileText, GitBranch, Terminal, Cpu, Clock, Activity
+  Server, Key, FileText, GitBranch, Terminal, Cpu, Clock, Activity, Map, Package
 } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -207,27 +207,33 @@ supabase/functions/
 - [x] Trip listings with creator info and participant tracking
 - [x] Grievance management with admin mediation
 - [x] Granular ACL (Access Control List) for feature permissions
-- [x] AI-powered destination recommendations (widget + chat)
+- [x] **AI Travel Recommender** — prompt input + multi-turn refinement via Lovable AI Gateway
+- [x] **AI Travel Guide** — floating chat companion with streaming responses
 - [x] Role-based notifications (traveler/host/admin specific)
 - [x] Mobile sticky bottom nav
 - [x] Dark/light theme with system preference detection
 - [x] Multi-currency support (INR, USD, EUR, GBP)
 - [x] Video review recording with camera integration
 - [x] Trip hosting and listing management
-- [x] Real-time data from Lovable Cloud (bookings, invoices, streaks, trips, grievances)
+- [x] **Onboarding Checklist** — per-role guided steps mapped to roadmap phases, persisted in DB
+- [x] **Beta Waitlist** — public landing + plan tiers + email-confirmation flow
+- [x] **Feature Flags** — global or per-user flag rollout with admin UI
+- [x] **Admin Audit Log** — automated tracking of flag changes & waitlist confirmations
+- [x] **Beta Moderation Tools** — flag-gated fast-track & shadow-hide
+- [x] **Traveler Stamp Collection** — 27 tiered badges across cities, activities, terrain, seasons
+- [x] **Features Hub** at \`/features\` — discoverability + route hierarchy
 
 **🔄 In Progress**:
 - [ ] Real-time chat via WebSockets
-- [ ] File storage for host images/videos
-- [ ] Email notifications for booking updates
+- [ ] Email notifications for booking updates (queue infra ready)
 - [ ] Payment gateway integration (Razorpay/Stripe)
 
 **📋 Planned**:
+- [ ] **Luggage Companion programme** — host adds 1 complementary "Luggage" seat per trip; eligibility via Luggage Quest (KYC, bookings, stamps, video review, etiquette quiz, intro chat); Nomad subscribers get 1 guaranteed Luggage trip per month
 - [ ] Push notifications
 - [ ] Mobile app (React Native)
-- [ ] Multi-language support
-- [ ] Advanced analytics dashboard
-- [ ] Host subscription tiers`
+- [ ] Multi-language support (Hindi, Tamil, Bengali, Marathi)`
+
   },
   {
     id: "setup", icon: Terminal, title: "Setup Guide",
@@ -303,14 +309,65 @@ All colors use HSL via CSS variables defined in \`index.css\`:
 - Deploy after every change`
   },
   {
+    id: "roadmap", icon: Map, title: "Roadmap",
+    content: `**Phase 1–4 ✅** Foundations, marketplace, gamification, AI + beta operations are live (see Changelog).
+
+**Phase 5 — Luggage Companion programme 📋** *(next)*
+
+> Every traveler who hosts a trip can offer **one unreserved seat** called a **Luggage** spot — a complementary place for a free traveler-mate. The free rider is called the **Luggage** because they're a complimentary offering by the trip host.
+
+- **Per trip**: host toggles "Add a Luggage spot" on \`/host-trip\` (max 1 per trip), picks the audience (free / Explorer / Adventurer / Nomad).
+- **Eligibility (Luggage Quest)** — automatic checks compute a \`luggage_score\`:
+  - Verified profile (email + phone + KYC light)
+  - ≥ 1 completed booking with a 4★+ review
+  - ≥ 3 stamps earned
+  - 1 video review in last 90 days
+  - ≥ 70% on the Luggage etiquette mini-quiz
+  - Intro chat with the host
+- **Subscription perks**:
+  - **Free** — may apply only when the host opens the spot to free tier
+  - **Explorer** — eligible for any open Luggage spot
+  - **Adventurer** — priority queue + matching push notifications
+  - **Nomad** — **1 guaranteed Luggage trip every month** (\`luggage_party\` benefit), plus Beta Wanderer fast-track
+- **Host incentive**: hosting a Luggage rider unlocks the new **Luggage Patron** badge family and waives the next listing fee on successful 4★+ pairing.
+- **Data (planned)**: \`trip_listings.has_luggage_spot\`, \`luggage_eligibility\`, \`luggage_claims\`, \`luggage_redemptions\` (enforces Nomad monthly entitlement). Everything gated behind a \`luggage_program\` feature flag for staged rollout.
+- **UI surfaces**: trip card Luggage badge, \`/dashboard/traveler\` Luggage Quest progress widget, \`/dashboard/host\` ranked applicant inbox, \`/membership\` highlight of monthly Nomad benefit.
+- **Safety**: rider KYC + last 3 reviews exposed to host; mandatory post-trip review for both parties; grievances auto-prioritised.
+
+**Phase 6 — Beyond Luggage 📋**
+- [ ] Payment gateway (Razorpay / Stripe)
+- [ ] Push notifications (web + mobile)
+- [ ] React Native mobile app
+- [ ] Wedding RSVP + ticketed guest list
+- [ ] AI-driven dynamic pricing & host matching
+- [ ] Multi-language (Hindi, Tamil, Bengali, Marathi)`
+  },
+  {
     id: "changelog", icon: Clock, title: "Changelog",
-    content: `**v1.0 — April 2026** (Current)
+    content: `**v1.3 — May 2026** (Current)
+- [x] **Project documentation refreshed** — \`PROJECT_DOCUMENTATION.md\` rewritten with full URL map, feature × role flow, and DB index
+- [x] **Roadmap published** — \`Travelista_Roadmap.md\` adds the new **Luggage Companion programme** for Phase 5
+- [x] **README.md** updated with Luggage highlights + doc links
+- [x] New **Roadmap** tab in this Developer Portal
+
+**v1.2 — May 2026**
+
+- [x] **Onboarding journeys** for admin/host/traveler mapped to roadmap phases (DB-persisted)
+- [x] **Beta waitlist** landing page \`/beta-waitlist\` + email confirmation flow \`/beta-waitlist/confirm\`
+- [x] **Feature flags** — admin UI at \`/admin/feature-flags\` (global + per-user grants)
+- [x] **Admin audit log** with automated triggers on flag + waitlist changes
+- [x] **Beta moderation tools** gated by \`advanced_moderation\` flag
+- [x] **Traveler stamp collection** — 27 tiered badges (Bronze→Legend) across 5 categories
+- [x] **Features Hub** at \`/features\` with route hierarchy + relational flow
+- [x] **AI Travel Recommender** upgraded: prompt input + multi-turn follow-up refinement
+- [x] **AI Travel Guide** fixed — migrated to \`google/gemini-2.5-flash\` with tool-calling for structured output
+- [x] Security hardening: storage bucket lockdown, RLS tightening on \`beta_waitlist\`, function search_path fixes
+
+**v1.0 — April 2026**
 - [x] Unified User & ACL management tab with search, ban, notify, chat
 - [x] Subscription/membership system (4 tiers: Free → Nomad)
 - [x] Trip participant tracking (who's joining)
 - [x] Admin experience edit/update/approve/suspend
-- [x] Trip creator info visible in admin
-- [x] Developer documentation optimization
 
 **v0.9 — April 2026**
 - [x] AI-powered destination recommendations (Lovable AI Gateway)
@@ -372,10 +429,10 @@ const Docs = () => {
         {/* Quick stats */}
         <div className="mt-6 grid grid-cols-2 sm:grid-cols-4 gap-3">
           {[
-            { label: "Tables", value: "15", icon: Database },
-            { label: "Routes", value: "30+", icon: Globe },
-            { label: "Edge Functions", value: "2", icon: Server },
-            { label: "Features", value: "23+", icon: Zap },
+            { label: "Tables", value: "28+", icon: Database },
+            { label: "Routes", value: "40+", icon: Globe },
+            { label: "Edge Functions", value: "3", icon: Server },
+            { label: "Features", value: "30+", icon: Zap },
           ].map(s => (
             <div key={s.label} className="rounded-lg bg-card p-3 shadow-card flex items-center gap-3">
               <s.icon className="w-5 h-5 text-primary" />

@@ -1,26 +1,62 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Check, Upload, MapPin, Globe, Camera, ArrowRight } from "lucide-react";
+import { Check, MapPin, Camera, ArrowRight, Loader2 } from "lucide-react";
+import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import Breadcrumbs from "@/components/Breadcrumbs";
+import PhoneInput from "@/components/PhoneInput";
+import ImageUpload from "@/components/ImageUpload";
+import { splitPhone, isValidLocalPhone } from "@/lib/phone";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
+import { Link } from "react-router-dom";
 
 const steps = ["Personal Info", "Services", "About You", "Pricing & Availability"];
+
+const LANGUAGES = ["English", "Hindi", "Tamil", "Malayalam", "Marathi", "Bengali", "Gujarati", "Punjabi", "Kannada", "Telugu", "Urdu", "Sanskrit", "French", "German", "Spanish"];
+const SPECIALTIES = ["Spiritual", "Adventure", "Cultural", "Wedding", "Village", "Food", "Festival", "Wellness"];
+const CUISINES = ["North Indian", "South Indian", "Rajasthani", "Bengali", "Gujarati", "Kerala", "Goan", "Mughlai", "Street Food", "Fusion"];
+const MEAL_TYPES = ["Breakfast", "Lunch", "Dinner", "Snacks", "Cooking class", "Full-day meals"];
+const DIETARY = ["Vegetarian", "Vegan", "Jain", "Halal", "Gluten-free", "No onion/garlic"];
+const AMENITIES = ["Wi-Fi", "AC", "Hot water", "Breakfast included", "Private bathroom", "Laundry", "Parking", "Pet friendly", "Workspace"];
+const VEHICLE_TYPES = ["Hatchback", "Sedan", "SUV", "Tempo Traveller", "Motorbike", "Scooter", "Auto rickshaw", "Mini bus"];
+
+const step0Schema = z.object({
+  name: z.string().trim().min(2, "Enter your full name").max(100),
+  email: z.string().trim().email("Enter a valid email address").max(255),
+  phone: z.string().trim().refine(v => isValidLocalPhone(splitPhone(v).number), "Enter a 10-digit phone number"),
+  city: z.string().trim().min(2, "Enter your city").max(80),
+  state: z.string().trim().min(2, "Enter your state").max(80),
+});
 
 const BecomeHost = () => {
   const [step, setStep] = useState(0);
   const [submitted, setSubmitted] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [touched, setTouched] = useState(false);
   const { toast } = useToast();
+  const { user } = useAuth();
 
   const [form, setForm] = useState({
     name: "", email: "", phone: "", city: "", state: "",
     services: [] as string[], languages: [] as string[],
     bio: "", tagline: "", specialties: [] as string[],
-    pricePerDay: "", hasHomestay: false, hasTransport: false,
-    homestayRooms: "", vehicleType: "",
+    pricePerDay: "",
+    photos: [] as string[],
+    // Homestay
+    homestayRooms: "", homestayGuests: "", nightlyRate: "", weeklyRate: "",
+    checkIn: "14:00", checkOut: "11:00", amenities: [] as string[], houseRules: "",
+    // Transport
+    vehicleType: "", vehicleModel: "", vehicleCapacity: "", perDayRate: "", perKmRate: "", serviceRadius: "",
+    // Food
+    cuisines: [] as string[], mealTypes: [] as string[], dietary: [] as string[],
+    serves: "", prepTime: "", pricePerPlate: "", allergenNotes: "",
   });
 
   const update = (key: string, value: any) => setForm(prev => ({ ...prev, [key]: value }));
@@ -29,10 +65,95 @@ const BecomeHost = () => {
     update(key, arr.includes(val) ? arr.filter(x => x !== val) : [...arr, val]);
   };
 
-  const handleSubmit = () => {
+  const step0Errors = (() => {
+    const parsed = step0Schema.safeParse(form);
+    const errs: Record<string, string> = {};
+    if (!parsed.success) for (const i of parsed.error.issues) {
+      const k = String(i.path[0]);
+      if (!errs[k]) errs[k] = i.message;
+    }
+    return errs;
+  })();
+
+  const continueStep = () => {
+    if (step === 0) {
+      setTouched(true);
+      if (Object.keys(step0Errors).length) {
+        toast({ title: "Check your details", description: Object.values(step0Errors)[0], variant: "destructive" });
+        return;
+      }
+    }
+    if (step === 1 && form.services.length === 0) {
+      toast({ title: "Pick at least one service", variant: "destructive" });
+      return;
+    }
+    if (step === 2 && (form.tagline.trim().length < 5 || form.bio.trim().length < 20)) {
+      toast({ title: "Tell us a bit more", description: "Add a tagline and at least 20 characters of bio.", variant: "destructive" });
+      return;
+    }
+    setTouched(false);
+    setStep(step + 1);
+  };
+
+  const handleSubmit = async () => {
+    const price = Number(form.pricePerDay);
+    if (!form.pricePerDay || Number.isNaN(price) || price <= 0) {
+      toast({ title: "Add your day rate", description: "Enter a price per day in ₹.", variant: "destructive" });
+      return;
+    }
+    setSubmitting(true);
+    const { error } = await supabase.from("host_applications").insert({
+      user_id: user?.id ?? null,
+      full_name: form.name.trim(),
+      email: form.email.trim(),
+      phone: form.phone.trim(),
+      city: form.city.trim(),
+      state: form.state.trim(),
+      services: form.services,
+      languages: form.languages,
+      specialties: form.specialties,
+      tagline: form.tagline.trim(),
+      bio: form.bio.trim(),
+      price_per_day: price,
+      photos: form.photos,
+      homestay_details: form.services.includes("Stay") ? {
+        rooms: form.homestayRooms, max_guests: form.homestayGuests,
+        nightly_rate: form.nightlyRate, weekly_rate: form.weeklyRate,
+        check_in: form.checkIn, check_out: form.checkOut,
+        amenities: form.amenities, house_rules: form.houseRules,
+      } : {},
+      transport_details: form.services.includes("Transport") ? {
+        vehicle_type: form.vehicleType, model: form.vehicleModel, capacity: form.vehicleCapacity,
+        per_day: form.perDayRate, per_km: form.perKmRate, service_radius_km: form.serviceRadius,
+      } : {},
+      food_details: form.services.includes("Food") ? {
+        cuisines: form.cuisines.join(", "), meal_types: form.mealTypes, dietary: form.dietary,
+        serves: form.serves, prep_time: form.prepTime,
+        price_per_plate: form.pricePerPlate, allergen_notes: form.allergenNotes,
+      } : {},
+    });
+    setSubmitting(false);
+    if (error) {
+      toast({ title: "Submission failed", description: error.message, variant: "destructive" });
+      return;
+    }
     setSubmitted(true);
     toast({ title: "Application Submitted!", description: "We'll review your profile and get back to you within 48 hours." });
   };
+
+  const Chips = ({ items, field }: { items: string[]; field: string }) => (
+    <div className="flex flex-wrap gap-2">
+      {items.map(l => {
+        const active = (form[field as keyof typeof form] as string[]).includes(l);
+        return (
+          <button type="button" key={l} onClick={() => toggleArray(field, l)}
+            className={`rounded-full px-3 py-1.5 text-xs font-medium transition-all ${active ? "bg-primary text-primary-foreground" : "bg-secondary text-secondary-foreground hover:bg-secondary/80"}`}>
+            {l}
+          </button>
+        );
+      })}
+    </div>
+  );
 
   if (submitted) {
     return (
@@ -44,8 +165,9 @@ const BecomeHost = () => {
               <Check className="w-8 h-8 text-accent" />
             </div>
             <h1 className="text-3xl font-bold text-foreground">Application Submitted!</h1>
-            <p className="mt-3 text-muted-foreground">Thank you, {form.name}! We'll review your application and get back to you within 48 hours.</p>
+            <p className="mt-3 text-muted-foreground">Thank you, {form.name}! Our team reviews every host profile within 48 hours.</p>
             <p className="mt-2 text-sm text-muted-foreground">Next steps: KYC verification → Profile review → Go live!</p>
+            <Button asChild variant="outline" className="mt-6 rounded-full"><Link to="/">Back to home</Link></Button>
           </motion.div>
         </div>
         <Footer />
@@ -57,6 +179,7 @@ const BecomeHost = () => {
     <div className="min-h-screen bg-background">
       <Navbar />
       <div className="pt-24 pb-16 px-4 sm:px-6 lg:px-8 mx-auto max-w-3xl">
+        <Breadcrumbs />
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
           <h1 className="text-3xl sm:text-4xl font-bold text-foreground">Become a Host</h1>
           <p className="mt-2 text-muted-foreground">Share your India with the world. Monetize your knowledge, hospitality, and local expertise.</p>
@@ -78,35 +201,37 @@ const BecomeHost = () => {
               <h2 className="text-xl font-bold text-foreground">Personal Information</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="text-sm font-medium text-foreground mb-1 block">Full Name *</label>
-                  <Input value={form.name} onChange={e => update("name", e.target.value)} placeholder="Your full name" />
+                  <label htmlFor="bh-name" className="text-sm font-medium text-foreground mb-1 block">Full Name *</label>
+                  <Input id="bh-name" value={form.name} onChange={e => update("name", e.target.value)} placeholder="Your full name" maxLength={100}
+                    className={touched && step0Errors.name ? "border-destructive" : ""} />
+                  {touched && step0Errors.name && <p className="text-xs text-destructive mt-1">{step0Errors.name}</p>}
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-foreground mb-1 block">Email *</label>
-                  <Input type="email" value={form.email} onChange={e => update("email", e.target.value)} placeholder="you@example.com" />
+                  <label htmlFor="bh-email" className="text-sm font-medium text-foreground mb-1 block">Email *</label>
+                  <Input id="bh-email" type="email" value={form.email} onChange={e => update("email", e.target.value)} placeholder="you@example.com" maxLength={255}
+                    className={touched && step0Errors.email ? "border-destructive" : ""} />
+                  {touched && step0Errors.email && <p className="text-xs text-destructive mt-1">{step0Errors.email}</p>}
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-foreground mb-1 block">Phone *</label>
-                  <Input value={form.phone} onChange={e => update("phone", e.target.value)} placeholder="+91 98765 43210" />
+                  <label htmlFor="bh-phone" className="text-sm font-medium text-foreground mb-1 block">Phone *</label>
+                  <PhoneInput id="bh-phone" value={form.phone} onChange={v => update("phone", v)} showError={touched} />
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-foreground mb-1 block">City *</label>
-                  <Input value={form.city} onChange={e => update("city", e.target.value)} placeholder="e.g. Jaipur" />
+                  <label htmlFor="bh-city" className="text-sm font-medium text-foreground mb-1 block">City *</label>
+                  <Input id="bh-city" value={form.city} onChange={e => update("city", e.target.value)} placeholder="e.g. Jaipur" maxLength={80}
+                    className={touched && step0Errors.city ? "border-destructive" : ""} />
+                  {touched && step0Errors.city && <p className="text-xs text-destructive mt-1">{step0Errors.city}</p>}
                 </div>
               </div>
               <div>
-                <label className="text-sm font-medium text-foreground mb-1 block">State *</label>
-                <Input value={form.state} onChange={e => update("state", e.target.value)} placeholder="e.g. Rajasthan" />
+                <label htmlFor="bh-state" className="text-sm font-medium text-foreground mb-1 block">State *</label>
+                <Input id="bh-state" value={form.state} onChange={e => update("state", e.target.value)} placeholder="e.g. Rajasthan" maxLength={80}
+                  className={touched && step0Errors.state ? "border-destructive" : ""} />
+                {touched && step0Errors.state && <p className="text-xs text-destructive mt-1">{step0Errors.state}</p>}
               </div>
               <div>
                 <label className="text-sm font-medium text-foreground mb-2 block">Languages Spoken</label>
-                <div className="flex flex-wrap gap-2">
-                  {["English", "Hindi", "Tamil", "Malayalam", "Marathi", "Bengali", "Gujarati", "Punjabi", "Kannada", "Telugu", "Urdu", "Sanskrit", "French", "German", "Spanish"].map(l => (
-                    <button key={l} onClick={() => toggleArray("languages", l)} className={`rounded-full px-3 py-1.5 text-xs font-medium transition-all ${form.languages.includes(l) ? "bg-primary text-primary-foreground" : "bg-secondary text-secondary-foreground hover:bg-secondary/80"}`}>
-                      {l}
-                    </button>
-                  ))}
-                </div>
+                <Chips items={LANGUAGES} field="languages" />
               </div>
             </div>
           )}
@@ -119,8 +244,9 @@ const BecomeHost = () => {
                   { key: "Guide", icon: "🧭", title: "Local Guide", desc: "Lead personalized tours, show hidden spots, share local culture" },
                   { key: "Stay", icon: "🏡", title: "Homestay", desc: "Host travelers in your home with authentic local experience" },
                   { key: "Transport", icon: "🚗", title: "Transportation", desc: "Provide vehicle and driving services for travel within your region" },
+                  { key: "Food", icon: "🍛", title: "Food & Dining", desc: "Serve home-cooked meals, run cooking classes and food walks" },
                 ].map(s => (
-                  <button key={s.key} onClick={() => toggleArray("services", s.key)} className={`w-full flex items-center gap-4 rounded-lg p-4 text-left transition-all border ${form.services.includes(s.key) ? "border-primary bg-primary/5" : "border-border bg-card hover:border-primary/30"}`}>
+                  <button type="button" key={s.key} onClick={() => toggleArray("services", s.key)} className={`w-full flex items-center gap-4 rounded-lg p-4 text-left transition-all border ${form.services.includes(s.key) ? "border-primary bg-primary/5" : "border-border bg-card hover:border-primary/30"}`}>
                     <span className="text-2xl">{s.icon}</span>
                     <div className="flex-1">
                       <p className="font-semibold text-foreground">{s.title}</p>
@@ -132,18 +258,68 @@ const BecomeHost = () => {
               </div>
 
               {form.services.includes("Stay") && (
-                <div className="p-4 rounded-lg bg-secondary">
-                  <h3 className="text-sm font-semibold text-foreground mb-2">Homestay Details</h3>
+                <div className="p-4 rounded-lg bg-secondary space-y-3">
+                  <h3 className="text-sm font-semibold text-foreground">Homestay details</h3>
                   <div className="grid grid-cols-2 gap-3">
-                    <Input value={form.homestayRooms} onChange={e => update("homestayRooms", e.target.value)} placeholder="Number of rooms" />
+                    <Input type="number" min={1} value={form.homestayRooms} onChange={e => update("homestayRooms", e.target.value)} placeholder="Number of rooms" aria-label="Number of rooms" />
+                    <Input type="number" min={1} value={form.homestayGuests} onChange={e => update("homestayGuests", e.target.value)} placeholder="Max guests" aria-label="Max guests" />
+                    <Input type="number" min={0} value={form.nightlyRate} onChange={e => update("nightlyRate", e.target.value)} placeholder="Nightly rate (₹)" aria-label="Nightly rate in rupees" />
+                    <Input type="number" min={0} value={form.weeklyRate} onChange={e => update("weeklyRate", e.target.value)} placeholder="Weekly rate (₹)" aria-label="Weekly rate in rupees" />
+                    <div>
+                      <label className="text-xs text-muted-foreground mb-1 block">Check-in</label>
+                      <Input type="time" value={form.checkIn} onChange={e => update("checkIn", e.target.value)} aria-label="Check-in time" />
+                    </div>
+                    <div>
+                      <label className="text-xs text-muted-foreground mb-1 block">Check-out</label>
+                      <Input type="time" value={form.checkOut} onChange={e => update("checkOut", e.target.value)} aria-label="Check-out time" />
+                    </div>
                   </div>
+                  <div>
+                    <p className="text-xs font-medium text-foreground mb-2">Amenities</p>
+                    <Chips items={AMENITIES} field="amenities" />
+                  </div>
+                  <Textarea value={form.houseRules} onChange={e => update("houseRules", e.target.value)} rows={3} maxLength={500} placeholder="House rules — quiet hours, smoking, shoes, guests…" aria-label="House rules" />
                 </div>
               )}
 
               {form.services.includes("Transport") && (
-                <div className="p-4 rounded-lg bg-secondary">
-                  <h3 className="text-sm font-semibold text-foreground mb-2">Vehicle Details</h3>
-                  <Input value={form.vehicleType} onChange={e => update("vehicleType", e.target.value)} placeholder="e.g. Maruti Swift, Toyota Innova" />
+                <div className="p-4 rounded-lg bg-secondary space-y-3">
+                  <h3 className="text-sm font-semibold text-foreground">Transport details</h3>
+                  <div className="grid grid-cols-2 gap-3">
+                    <Select value={form.vehicleType} onValueChange={v => update("vehicleType", v)}>
+                      <SelectTrigger aria-label="Vehicle type"><SelectValue placeholder="Vehicle type" /></SelectTrigger>
+                      <SelectContent>{VEHICLE_TYPES.map(v => <SelectItem key={v} value={v}>{v}</SelectItem>)}</SelectContent>
+                    </Select>
+                    <Input value={form.vehicleModel} onChange={e => update("vehicleModel", e.target.value)} placeholder="Model e.g. Toyota Innova" aria-label="Vehicle model" maxLength={80} />
+                    <Input type="number" min={1} value={form.vehicleCapacity} onChange={e => update("vehicleCapacity", e.target.value)} placeholder="Seating capacity" aria-label="Seating capacity" />
+                    <Input type="number" min={0} value={form.serviceRadius} onChange={e => update("serviceRadius", e.target.value)} placeholder="Service radius (km)" aria-label="Service radius in km" />
+                    <Input type="number" min={0} value={form.perDayRate} onChange={e => update("perDayRate", e.target.value)} placeholder="Per day (₹)" aria-label="Per day rate" />
+                    <Input type="number" min={0} value={form.perKmRate} onChange={e => update("perKmRate", e.target.value)} placeholder="Per km (₹)" aria-label="Per km rate" />
+                  </div>
+                </div>
+              )}
+
+              {form.services.includes("Food") && (
+                <div className="p-4 rounded-lg bg-secondary space-y-3">
+                  <h3 className="text-sm font-semibold text-foreground">Food & dining details</h3>
+                  <div>
+                    <p className="text-xs font-medium text-foreground mb-2">Cuisines</p>
+                    <Chips items={CUISINES} field="cuisines" />
+                  </div>
+                  <div>
+                    <p className="text-xs font-medium text-foreground mb-2">Meal types</p>
+                    <Chips items={MEAL_TYPES} field="mealTypes" />
+                  </div>
+                  <div>
+                    <p className="text-xs font-medium text-foreground mb-2">Dietary options</p>
+                    <Chips items={DIETARY} field="dietary" />
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <Input type="number" min={1} value={form.serves} onChange={e => update("serves", e.target.value)} placeholder="Serves (people)" aria-label="Serves how many people" />
+                    <Input value={form.prepTime} onChange={e => update("prepTime", e.target.value)} placeholder="Prep time e.g. 45 min" aria-label="Prep time" maxLength={40} />
+                    <Input type="number" min={0} value={form.pricePerPlate} onChange={e => update("pricePerPlate", e.target.value)} placeholder="Price per plate (₹)" aria-label="Price per plate" />
+                  </div>
+                  <Textarea value={form.allergenNotes} onChange={e => update("allergenNotes", e.target.value)} rows={2} maxLength={300} placeholder="Allergen notes — nuts, dairy, gluten…" aria-label="Allergen notes" />
                 </div>
               )}
             </div>
@@ -153,30 +329,49 @@ const BecomeHost = () => {
             <div className="space-y-4">
               <h2 className="text-xl font-bold text-foreground">Tell Your Story</h2>
               <div>
-                <label className="text-sm font-medium text-foreground mb-1 block">Tagline *</label>
-                <Input value={form.tagline} onChange={e => update("tagline", e.target.value)} placeholder="e.g. Your gateway to the Pink City's hidden gems" maxLength={80} />
+                <label htmlFor="bh-tagline" className="text-sm font-medium text-foreground mb-1 block">Tagline *</label>
+                <Input id="bh-tagline" value={form.tagline} onChange={e => update("tagline", e.target.value)} placeholder="e.g. Your gateway to the Pink City's hidden gems" maxLength={80} />
                 <p className="text-xs text-muted-foreground mt-1">{form.tagline.length}/80 characters</p>
               </div>
               <div>
-                <label className="text-sm font-medium text-foreground mb-1 block">Bio *</label>
-                <Textarea value={form.bio} onChange={e => update("bio", e.target.value)} placeholder="Share your story — what makes your region special, your background, and why you love hosting..." rows={5} maxLength={500} />
+                <label htmlFor="bh-bio" className="text-sm font-medium text-foreground mb-1 block">Bio *</label>
+                <Textarea id="bh-bio" value={form.bio} onChange={e => update("bio", e.target.value)} placeholder="Share your story — what makes your region special, your background, and why you love hosting..." rows={5} maxLength={500} />
                 <p className="text-xs text-muted-foreground mt-1">{form.bio.length}/500 characters</p>
               </div>
               <div>
                 <label className="text-sm font-medium text-foreground mb-2 block">Specialties</label>
-                <div className="flex flex-wrap gap-2">
-                  {["Spiritual", "Adventure", "Cultural", "Wedding", "Village", "Food", "Festival", "Wellness"].map(s => (
-                    <button key={s} onClick={() => toggleArray("specialties", s)} className={`rounded-full px-3 py-1.5 text-xs font-medium transition-all ${form.specialties.includes(s) ? "bg-primary text-primary-foreground" : "bg-secondary text-secondary-foreground hover:bg-secondary/80"}`}>
-                      {s}
-                    </button>
-                  ))}
-                </div>
+                <Chips items={SPECIALTIES} field="specialties" />
               </div>
-              <div className="p-4 rounded-lg border border-dashed border-border bg-secondary/50 text-center">
-                <Camera className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
-                <p className="text-sm font-medium text-foreground">Upload Profile Photos</p>
-                <p className="text-xs text-muted-foreground">Add up to 5 photos that showcase you and your experiences</p>
-                <Button variant="outline" size="sm" className="mt-3 rounded-full gap-2"><Upload className="w-3 h-3" /> Choose Files</Button>
+
+              <div className="p-4 rounded-lg border border-dashed border-border bg-secondary/50">
+                <div className="text-center">
+                  <Camera className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
+                  <p className="text-sm font-medium text-foreground">Upload Profile Photos</p>
+                  <p className="text-xs text-muted-foreground">Add up to 5 photos that showcase you and your experiences</p>
+                </div>
+                {user ? (
+                  <div className="mt-4 flex flex-wrap gap-3 justify-center">
+                    {form.photos.map(url => (
+                      <div key={url} className="relative">
+                        <img src={url} alt="Host profile photo" className="w-20 h-20 rounded-lg object-cover border border-border" />
+                        <button type="button" aria-label="Remove photo" onClick={() => update("photos", form.photos.filter(p => p !== url))}
+                          className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-destructive text-destructive-foreground text-xs">×</button>
+                      </div>
+                    ))}
+                    {form.photos.length < 5 && (
+                      <ImageUpload
+                        bucket="experience-images"
+                        folder={user.id}
+                        onUpload={url => update("photos", [...form.photos, url])}
+                        className="w-20 h-20"
+                      />
+                    )}
+                  </div>
+                ) : (
+                  <p className="mt-3 text-xs text-center text-muted-foreground">
+                    <Link to="/signup" className="text-primary font-semibold hover:underline">Create an account</Link> to attach photos — you can still submit the application without them.
+                  </p>
+                )}
               </div>
             </div>
           )}
@@ -185,9 +380,9 @@ const BecomeHost = () => {
             <div className="space-y-4">
               <h2 className="text-xl font-bold text-foreground">Pricing & Availability</h2>
               <div>
-                <label className="text-sm font-medium text-foreground mb-1 block">Price per Day (USD) *</label>
-                <Input type="number" value={form.pricePerDay} onChange={e => update("pricePerDay", e.target.value)} placeholder="e.g. 45" />
-                <p className="text-xs text-muted-foreground mt-1">Average hosts in India charge $30–$60/day</p>
+                <label htmlFor="bh-price" className="text-sm font-medium text-foreground mb-1 block">Price per Day (₹) *</label>
+                <Input id="bh-price" type="number" min={0} value={form.pricePerDay} onChange={e => update("pricePerDay", e.target.value)} placeholder="e.g. 3500" />
+                <p className="text-xs text-muted-foreground mt-1">Average hosts in India charge ₹2,500–₹5,000/day</p>
               </div>
               <div className="p-4 rounded-lg bg-secondary">
                 <h3 className="text-sm font-semibold text-foreground mb-2">What's Included</h3>
@@ -199,7 +394,7 @@ const BecomeHost = () => {
                 </ul>
               </div>
               <div className="p-4 rounded-lg bg-primary/5 border border-primary/20">
-                <h3 className="text-sm font-semibold text-foreground mb-1">Next Steps After Submission</h3>
+                <h3 className="text-sm font-semibold text-foreground mb-1 flex items-center gap-1.5"><MapPin className="w-3.5 h-3.5 text-primary" /> Next Steps After Submission</h3>
                 <ol className="text-sm text-muted-foreground space-y-1 list-decimal list-inside">
                   <li>We review your application (24-48 hours)</li>
                   <li>KYC verification (ID + address proof)</li>
@@ -214,12 +409,12 @@ const BecomeHost = () => {
         <div className="mt-6 flex gap-3">
           {step > 0 && <Button variant="outline" onClick={() => setStep(step - 1)} className="rounded-full px-6">Back</Button>}
           {step < steps.length - 1 ? (
-            <Button onClick={() => setStep(step + 1)} className="rounded-full bg-primary text-primary-foreground hover:bg-primary/90 px-8 gap-2">
+            <Button onClick={continueStep} className="rounded-full bg-primary text-primary-foreground hover:bg-primary/90 px-8 gap-2">
               Continue <ArrowRight className="w-4 h-4" />
             </Button>
           ) : (
-            <Button onClick={handleSubmit} className="rounded-full bg-primary text-primary-foreground hover:bg-primary/90 px-8 gap-2">
-              Submit Application <Check className="w-4 h-4" />
+            <Button onClick={handleSubmit} disabled={submitting} className="rounded-full bg-primary text-primary-foreground hover:bg-primary/90 px-8 gap-2">
+              {submitting ? <><Loader2 className="w-4 h-4 animate-spin" /> Submitting…</> : <>Submit Application <Check className="w-4 h-4" /></>}
             </Button>
           )}
         </div>

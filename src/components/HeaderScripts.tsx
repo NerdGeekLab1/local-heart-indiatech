@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { sanitizeHeadScripts } from "@/lib/sanitizeHeadScripts";
 
 /**
  * Reads tracking-category app_configuration entries and injects the
@@ -55,7 +56,13 @@ const HeaderScripts = () => {
         addScript("", `!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');fbq('init','${fbp}');fbq('track','PageView');`);
       }
       const custom = map.CUSTOM_HEAD_SCRIPTS;
-      if (custom && custom.trim()) addRaw(custom);
+      if (custom && custom.trim()) {
+        const { html, warnings } = sanitizeHeadScripts(custom);
+        if (warnings.length) {
+          console.warn("[HeaderScripts] sanitizer warnings:", warnings);
+        }
+        if (html) addRaw(html);
+      }
 
       return () => {
         cancelled = true;

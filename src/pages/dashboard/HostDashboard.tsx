@@ -17,6 +17,9 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import ImageUpload from "@/components/ImageUpload";
+import BetaModerationTools from "@/components/admin/BetaModerationTools";
+import ListingForm, { ListingModule } from "@/components/ListingForm";
+import type { TablesInsert } from "@/integrations/supabase/types";
 
 const host = hosts[0];
 const hostReviews = reviews.filter(r => r.hostId === host.id);
@@ -91,6 +94,7 @@ const HostDashboard = () => {
   const [customDishes, setCustomDishes] = useLocalStorage<any[]>("host_custom_dishes", host.foodInfo?.dishes || []);
   const [customProperties, setCustomProperties] = useLocalStorage<any[]>("host_custom_properties", host.stayInfo ? [host.stayInfo] : []);
   const [customRooms, setCustomRooms] = useLocalStorage<any[]>("host_custom_rooms", host.stayInfo?.rooms || []);
+  const [listingEditor, setListingEditor] = useState<{ module: ListingModule; index?: number } | null>(null);
 
   const [expForm, setExpForm] = useState({
     title: "", description: "", category: "Cultural", location: "", price: 0, duration: "",
@@ -266,6 +270,40 @@ const HostDashboard = () => {
     setShowExpForm(false);
   };
 
+  const saveUnifiedExperience = async (listing: Record<string, any>) => {
+    if (!user) return;
+    const tags = (value: unknown) => typeof value === "string" ? value.split(",").map(item => item.trim()).filter(Boolean) : [];
+    const { data, error } = await supabase.from("experiences").insert({
+      host_id: user.id,
+      host_name: hostProfile.name,
+      host_city: hostProfile.city,
+      title: listing.title,
+      description: listing.description,
+      category: listing.category,
+      location: listing.location,
+      price: Number(listing.price) || 0,
+      duration: listing.duration,
+      max_guests: Number(listing.maxGuests) || null,
+      highlights: tags(listing.highlights),
+      includes: tags(listing.includes),
+      image_url: listing.imageUrl || null,
+      is_year_round: true,
+      template_data: {
+        gallery: listing.images,
+        price_type: listing.priceType,
+        languages: tags(listing.languages),
+        meeting_point: listing.meetingPoint,
+        cancellation_policy: listing.cancellationPolicy,
+        availability: listing.availability,
+      },
+      status: "pending",
+    }).select().single();
+    if (error) { toast({ title: "Unable to save experience", description: error.message, variant: "destructive" }); return; }
+    if (data) setHostDbExperiences(current => [data, ...current]);
+    setShowExpForm(false);
+    toast({ title: "Experience submitted", description: "It is pending admin approval." });
+  };
+
   const submitNewTypeRequest = async () => {
     if (!user || !reqForm.title || !reqForm.category) { toast({ title: "Title and category required", variant: "destructive" }); return; }
     setSubmittingReq(true);
@@ -336,6 +374,7 @@ const HostDashboard = () => {
     <div className="min-h-screen bg-background">
       <Navbar />
       <div className="pt-24 pb-16 px-4 sm:px-6 lg:px-8 mx-auto max-w-6xl">
+        <BetaModerationTools scope="host" />
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="flex items-center gap-4">
           <img src={host.image} alt={hostProfile.name} className="w-16 h-16 rounded-full object-cover shadow-card" />
           <div>
@@ -532,7 +571,8 @@ const HostDashboard = () => {
                 </Button>
               </div>
 
-              {showExpForm && <>
+              {showExpForm && user && <ListingForm module="experience" userId={user.id} onCancel={() => setShowExpForm(false)} onSave={saveUnifiedExperience} />}
+              {false && <>
               <div className="mt-5 mb-4">
                 <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">Quick-start templates</p>
                 <div className="flex flex-wrap gap-2">
@@ -590,13 +630,58 @@ const HostDashboard = () => {
               </div>
 
               {expForm.category === "Wedding" && (
-                <div className="mt-4 rounded-lg border border-primary/30 bg-primary/5 p-4 space-y-3">
-                  <p className="text-sm font-bold text-foreground">💍 Wedding details</p>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div><label className="text-xs font-medium text-muted-foreground">Couple Names</label><Input className="mt-1" value={expForm.coupleNames} onChange={e => setExpForm(p => ({ ...p, coupleNames: e.target.value }))} placeholder="Aarav & Diya" /></div>
-                    <div><label className="text-xs font-medium text-muted-foreground">Wedding Date</label><Input type="date" className="mt-1" value={expForm.weddingDate} onChange={e => setExpForm(p => ({ ...p, weddingDate: e.target.value }))} /></div>
-                    <div className="sm:col-span-2"><label className="text-xs font-medium text-muted-foreground">Venue</label><Input className="mt-1" value={expForm.venue} onChange={e => setExpForm(p => ({ ...p, venue: e.target.value }))} placeholder="e.g. Umaid Bhawan Palace, Jodhpur" /></div>
-                    <div className="sm:col-span-2"><label className="text-xs font-medium text-muted-foreground">Wedding Highlights (comma-separated)</label><Input className="mt-1" value={expForm.weddingHighlights} onChange={e => setExpForm(p => ({ ...p, weddingHighlights: e.target.value }))} placeholder="Mehendi, Sangeet, Baraat, Reception" /></div>
+                <div className="mt-4 grid grid-cols-1 lg:grid-cols-2 gap-4">
+                  <div className="rounded-lg border border-primary/30 bg-primary/5 p-4 space-y-3">
+                    <p className="text-sm font-bold text-foreground">💍 Wedding details</p>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div><label className="text-xs font-medium text-muted-foreground">Couple Names</label><Input className="mt-1" value={expForm.coupleNames} onChange={e => setExpForm(p => ({ ...p, coupleNames: e.target.value }))} placeholder="Aarav & Diya" /></div>
+                      <div><label className="text-xs font-medium text-muted-foreground">Wedding Date</label><Input type="date" className="mt-1" value={expForm.weddingDate} onChange={e => setExpForm(p => ({ ...p, weddingDate: e.target.value }))} /></div>
+                      <div className="sm:col-span-2"><label className="text-xs font-medium text-muted-foreground">Venue</label><Input className="mt-1" value={expForm.venue} onChange={e => setExpForm(p => ({ ...p, venue: e.target.value }))} placeholder="e.g. Umaid Bhawan Palace, Jodhpur" /></div>
+                      <div className="sm:col-span-2"><label className="text-xs font-medium text-muted-foreground">Wedding Highlights (comma-separated)</label><Input className="mt-1" value={expForm.weddingHighlights} onChange={e => setExpForm(p => ({ ...p, weddingHighlights: e.target.value }))} placeholder="Mehendi, Sangeet, Baraat, Reception" /></div>
+                    </div>
+                  </div>
+
+                  {/* Live preview card — mirrors traveler-facing ExperienceCard */}
+                  <div className="rounded-lg border border-dashed border-primary/40 bg-card p-4">
+                    <p className="text-xs uppercase tracking-wider font-bold text-muted-foreground mb-2">👁 Traveler preview</p>
+                    <div className="relative overflow-hidden rounded-lg shadow-card">
+                      <div className="aspect-[4/3] overflow-hidden bg-secondary">
+                        {expForm.imageUrl
+                          ? <img src={expForm.imageUrl} alt="preview" className="h-full w-full object-cover" />
+                          : <div className="h-full w-full flex items-center justify-center text-muted-foreground text-xs">Add an image to preview</div>}
+                      </div>
+                      <div className="absolute inset-0 bg-gradient-to-t from-foreground/80 via-foreground/20 to-transparent" />
+                      <div className="absolute bottom-0 left-0 right-0 p-3">
+                        <span className="inline-block text-[10px] uppercase tracking-wider font-bold text-primary-foreground bg-primary/80 px-2 py-0.5 rounded-sm mb-1">
+                          💍 Wedding
+                        </span>
+                        <h3 className="text-base font-semibold text-primary-foreground line-clamp-1">
+                          {expForm.title || "Wedding Experience Title"}
+                        </h3>
+                        {expForm.coupleNames && (
+                          <p className="text-xs text-primary-foreground/90 mt-0.5">{expForm.coupleNames}</p>
+                        )}
+                        <div className="flex items-center justify-between text-[11px] text-primary-foreground/80 mt-1 gap-2">
+                          {expForm.weddingDate && (
+                            <span>📅 {new Date(expForm.weddingDate).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}</span>
+                          )}
+                          {expForm.venue && <span className="truncate">📍 {expForm.venue}</span>}
+                        </div>
+                      </div>
+                    </div>
+                    {expForm.weddingHighlights && (
+                      <div className="mt-3">
+                        <p className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground">Highlights</p>
+                        <div className="flex flex-wrap gap-1 mt-1">
+                          {expForm.weddingHighlights.split(",").map(s => s.trim()).filter(Boolean).map(h => (
+                            <span key={h} className="text-[10px] bg-primary/10 text-primary px-2 py-0.5 rounded-full">{h}</span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    <p className="mt-3 text-[11px] text-muted-foreground">
+                      Updates live as you edit — this is exactly how travelers will see your wedding card.
+                    </p>
                   </div>
                 </div>
               )}
@@ -634,8 +719,20 @@ const HostDashboard = () => {
                 </Button>
               </div>
 
-              {showReqForm && (
+              {showReqForm && user && (
                 <div className="mt-5 space-y-4">
+                  <ListingForm module="specialRequest" userId={user.id} onCancel={() => setShowReqForm(false)} onSave={async (listing) => {
+                    const payload: TablesInsert<"experience_requests"> = {
+                      host_id: user.id, title: String(listing.title), category: String(listing.category),
+                      description: String(listing.description), location: hostProfile.city || "TBD",
+                      price: Number(listing.price) || 0, image_url: String(listing.imageUrl || "") || null,
+                      template_data: JSON.parse(JSON.stringify({ gallery: listing.images, price_type: listing.priceType, includes: listing.includes, availability: listing.availability })),
+                    };
+                    const { error } = await supabase.from("experience_requests").insert(payload);
+                    if (error) { toast({ title: "Unable to send request", description: error.message, variant: "destructive" }); return; }
+                    setShowReqForm(false); toast({ title: "Request sent to admin" });
+                  }} />
+                  {false && <>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div><label className="text-sm font-medium text-foreground">Proposed Name *</label><Input className="mt-1" value={reqForm.title} onChange={e => setReqForm(p => ({ ...p, title: e.target.value }))} placeholder="e.g. Spiritual Retreat Tour" /></div>
                     <div><label className="text-sm font-medium text-foreground">Suggested Category *</label><Input className="mt-1" value={reqForm.category} onChange={e => setReqForm(p => ({ ...p, category: e.target.value }))} placeholder="e.g. Spiritual" /></div>
@@ -650,7 +747,7 @@ const HostDashboard = () => {
                   </div>
                   <Button onClick={submitNewTypeRequest} disabled={submittingReq} className="rounded-full gap-2">
                     {submittingReq ? "Sending..." : <><FileText className="w-4 h-4" /> Send to Admin</>}
-                  </Button>
+                  </Button></>}
                 </div>
               )}
             </div>
@@ -682,13 +779,20 @@ const HostDashboard = () => {
         {activeTab === "listings" && (
           <div className="mt-6 space-y-6">
             <div className="flex items-center justify-between"><h2 className="text-xl font-bold text-foreground">Properties & Vehicles</h2></div>
+            {listingEditor && user && (listingEditor.module === "property" || listingEditor.module === "transport") && (
+              <ListingForm module={listingEditor.module} userId={user.id}
+                initialData={listingEditor.index === undefined ? undefined : listingEditor.module === "property" ? customProperties[listingEditor.index] : customVehicles[listingEditor.index]}
+                onCancel={() => setListingEditor(null)} onSave={(listing) => {
+                  const target = listingEditor;
+                  if (target.module === "property") setCustomProperties(current => target.index === undefined ? [...current, listing] : current.map((item, index) => index === target.index ? listing : item));
+                  else setCustomVehicles(current => target.index === undefined ? [...current, listing] : current.map((item, index) => index === target.index ? listing : item));
+                  setListingEditor(null); toast({ title: `${target.module === "property" ? "Property" : "Transport"} saved` });
+                }} />
+            )}
             <div>
               <div className="flex items-center justify-between mb-3">
                 <h3 className="font-bold text-foreground flex items-center gap-2"><Home className="w-4 h-4 text-primary" /> Properties</h3>
-                <Button size="sm" className="rounded-full gap-1 text-xs" onClick={() => setEditDialog({
-                  open: true, title: "Add Property", fields: propertyFields,
-                  onSave: (d) => { setCustomProperties(p => [...p, d]); toast({ title: "Property added!" }); },
-                })}><Plus className="w-3 h-3" /> Add</Button>
+                <Button size="sm" className="rounded-full gap-1 text-xs" onClick={() => setListingEditor({ module: "property" })}><Plus className="w-3 h-3" /> Add</Button>
               </div>
               {customProperties.map((prop, i) => (
                 <div key={i} className="rounded-lg bg-card p-5 shadow-card mb-3">
@@ -698,10 +802,7 @@ const HostDashboard = () => {
                       <h4 className="font-bold text-foreground">{prop.propertyName}</h4>
                       <span className="text-xs bg-accent/10 text-accent px-2 py-0.5 rounded-full">{prop.propertyType}</span>
                     </div>
-                    <Button variant="outline" size="sm" className="rounded-full text-xs" onClick={() => setEditDialog({
-                      open: true, title: "Edit", fields: propertyFields, data: prop,
-                      onSave: (d) => { setCustomProperties(p => p.map((x, j) => j === i ? { ...x, ...d } : x)); toast({ title: "Updated!" }); },
-                    })}>Edit</Button>
+                    <Button variant="outline" size="sm" className="rounded-full text-xs" onClick={() => setListingEditor({ module: "property", index: i })}>Edit</Button>
                   </div>
                   <p className="text-sm text-muted-foreground mt-1">{prop.description}</p>
                 </div>
@@ -710,10 +811,7 @@ const HostDashboard = () => {
             <div>
               <div className="flex items-center justify-between mb-3">
                 <h3 className="font-bold text-foreground flex items-center gap-2"><Car className="w-4 h-4 text-primary" /> Vehicles</h3>
-                <Button size="sm" className="rounded-full gap-1 text-xs" onClick={() => setEditDialog({
-                  open: true, title: "Add Vehicle", fields: vehicleFields,
-                  onSave: (d) => { setCustomVehicles(p => [...p, d]); toast({ title: "Vehicle added!" }); },
-                })}><Plus className="w-3 h-3" /> Add</Button>
+                <Button size="sm" className="rounded-full gap-1 text-xs" onClick={() => setListingEditor({ module: "transport" })}><Plus className="w-3 h-3" /> Add</Button>
               </div>
               {allVehicles.map((v, i) => (
                 <div key={i} className="rounded-lg bg-card p-4 shadow-card mb-2 flex justify-between items-center">
@@ -721,10 +819,7 @@ const HostDashboard = () => {
                     <p className="font-medium text-foreground">{v.model} <span className="text-xs bg-secondary text-muted-foreground px-2 py-0.5 rounded-full ml-1">{v.type}</span></p>
                     <p className="text-xs text-muted-foreground">{v.capacity} pax · ${v.pricePerDay}/day</p>
                   </div>
-                  <Button variant="outline" size="sm" className="rounded-full text-xs" onClick={() => setEditDialog({
-                    open: true, title: "Edit Vehicle", fields: vehicleFields, data: v,
-                    onSave: (d) => { const ci = i - (host.transportInfo?.vehicles?.length || 0); if (ci >= 0) setCustomVehicles(p => p.map((x, j) => j === ci ? { ...x, ...d } : x)); toast({ title: "Updated!" }); },
-                  })}>Edit</Button>
+                  <Button variant="outline" size="sm" className="rounded-full text-xs" onClick={() => { const index = i - (host.transportInfo?.vehicles?.length || 0); if (index >= 0) setListingEditor({ module: "transport", index }); }}>Edit</Button>
                 </div>
               ))}
             </div>
@@ -735,22 +830,16 @@ const HostDashboard = () => {
           <div className="mt-6 space-y-6">
             <div className="flex items-center justify-between">
               <h2 className="text-xl font-bold text-foreground">Food Menu</h2>
-              <Button size="sm" className="rounded-full gap-1 text-xs" onClick={() => setEditDialog({
-                open: true, title: "Add Dish", fields: dishFields,
-                onSave: (d) => { setCustomDishes(p => [...p, d]); toast({ title: "Dish added!" }); },
-              })}><Plus className="w-3 h-3" /> Add Dish</Button>
+              <Button size="sm" className="rounded-full gap-1 text-xs" onClick={() => setListingEditor({ module: "dish" })}><Plus className="w-3 h-3" /> Add Dish</Button>
             </div>
+            {listingEditor?.module === "dish" && user && <ListingForm module="dish" userId={user.id} initialData={listingEditor.index === undefined ? undefined : customDishes[listingEditor.index]} onCancel={() => setListingEditor(null)} onSave={(listing) => { setCustomDishes(current => listingEditor.index === undefined ? [...current, listing] : current.map((item, index) => index === listingEditor.index ? listing : item)); setListingEditor(null); toast({ title: "Dish saved" }); }} />}
             {customDishes.map((dish, i) => (
               <div key={i} className="rounded-lg bg-card p-4 shadow-card flex justify-between items-center">
                 <div>
                   <h4 className="font-semibold text-foreground">{dish.name}</h4>
                   <p className="text-sm text-muted-foreground">{dish.cuisine} · ${dish.price}/person</p>
                 </div>
-                <Button variant="outline" size="sm" className="rounded-full text-xs" onClick={() => setEditDialog({
-                  open: true, title: "Edit Dish", fields: dishFields, data: dish,
-                  onSave: (d) => { setCustomDishes(p => p.map((x, j) => j === i ? { ...x, ...d } : x)); toast({ title: "Updated!" }); },
-                  onDelete: () => { setCustomDishes(p => p.filter((_, j) => j !== i)); toast({ title: "Removed" }); },
-                })}>Edit</Button>
+                <Button variant="outline" size="sm" className="rounded-full text-xs" onClick={() => setListingEditor({ module: "dish", index: i })}>Edit</Button>
               </div>
             ))}
             {customDishes.length === 0 && <p className="text-muted-foreground text-center py-8">No dishes yet.</p>}
@@ -779,15 +868,81 @@ const HostDashboard = () => {
           </div>
         )}
 
-        {activeTab === "earnings" && (
-          <div className="mt-6 space-y-6">
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <div className="rounded-lg bg-card p-5 shadow-card"><p className="text-xs text-muted-foreground uppercase">Total Earned</p><p className="text-3xl font-bold text-foreground mt-1">${totalEarnings}</p></div>
-              <div className="rounded-lg bg-card p-5 shadow-card"><p className="text-xs text-muted-foreground uppercase">This Month</p><p className="text-3xl font-bold text-accent mt-1">$270</p></div>
-              <div className="rounded-lg bg-card p-5 shadow-card"><p className="text-xs text-muted-foreground uppercase">Pending</p><p className="text-3xl font-bold text-primary mt-1">$80</p></div>
+        {activeTab === "earnings" && (() => {
+          const commissionRate = 0.15;
+          const now = new Date();
+          const thisMonth = hostBookings.filter((b: any) => {
+            const d = new Date(b.created_at); return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+          });
+          const paidBookings = hostBookings.filter((b: any) => b.status === "confirmed" || b.status === "completed");
+          const pendingBookings = hostBookings.filter((b: any) => b.status === "pending");
+          const monthTotal = thisMonth.reduce((s: number, b: any) => s + Number(b.total_price || 0), 0);
+          const pendingTotal = pendingBookings.reduce((s: number, b: any) => s + Number(b.total_price || 0), 0);
+          const netEarnings = totalEarnings * (1 - commissionRate);
+          const commissionTotal = totalEarnings * commissionRate;
+          return (
+            <div className="mt-6 space-y-6">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="rounded-lg bg-card p-5 shadow-card"><p className="text-xs text-muted-foreground uppercase">Gross Earned</p><p className="text-2xl font-bold text-foreground mt-1">₹{totalEarnings.toLocaleString()}</p></div>
+                <div className="rounded-lg bg-card p-5 shadow-card"><p className="text-xs text-muted-foreground uppercase">Net Payout (85%)</p><p className="text-2xl font-bold text-accent mt-1">₹{Math.round(netEarnings).toLocaleString()}</p></div>
+                <div className="rounded-lg bg-card p-5 shadow-card"><p className="text-xs text-muted-foreground uppercase">Platform Fee (15%)</p><p className="text-2xl font-bold text-primary mt-1">₹{Math.round(commissionTotal).toLocaleString()}</p></div>
+                <div className="rounded-lg bg-card p-5 shadow-card"><p className="text-xs text-muted-foreground uppercase">Pending</p><p className="text-2xl font-bold text-muted-foreground mt-1">₹{Math.round(pendingTotal).toLocaleString()}</p></div>
+              </div>
+
+              <div className="rounded-lg bg-card shadow-card overflow-hidden">
+                <div className="px-5 py-3 border-b border-border flex items-center justify-between">
+                  <h3 className="font-bold text-foreground">Payout History</h3>
+                  <span className="text-xs text-muted-foreground">{paidBookings.length} bookings · This month: ₹{Math.round(monthTotal).toLocaleString()}</span>
+                </div>
+                {hostBookings.length === 0 ? (
+                  <div className="text-center py-12 text-sm text-muted-foreground">No booking earnings yet.</div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead className="bg-secondary/40 text-xs uppercase text-muted-foreground">
+                        <tr>
+                          <th className="text-left px-4 py-2">Booking Ref</th>
+                          <th className="text-left px-4 py-2">Date</th>
+                          <th className="text-left px-4 py-2">Status</th>
+                          <th className="text-right px-4 py-2">Gross</th>
+                          <th className="text-right px-4 py-2">Fee (15%)</th>
+                          <th className="text-right px-4 py-2">Net Payout</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {hostBookings.map((b: any) => {
+                          const gross = Number(b.total_price || 0);
+                          const fee = gross * commissionRate;
+                          const net = gross - fee;
+                          return (
+                            <tr key={b.id} className="border-t border-border">
+                              <td className="px-4 py-2 font-mono text-xs">#{b.id.slice(0, 8)}</td>
+                              <td className="px-4 py-2 text-muted-foreground">{new Date(b.created_at).toLocaleDateString()}</td>
+                              <td className="px-4 py-2">
+                                <span className={`text-xs px-2 py-0.5 rounded-full ${statusColors[b.status] || "bg-secondary text-muted-foreground"}`}>{b.status}</span>
+                              </td>
+                              <td className="px-4 py-2 text-right">₹{gross.toLocaleString()}</td>
+                              <td className="px-4 py-2 text-right text-muted-foreground">-₹{Math.round(fee).toLocaleString()}</td>
+                              <td className="px-4 py-2 text-right font-semibold text-accent">₹{Math.round(net).toLocaleString()}</td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                      <tfoot className="bg-secondary/20 font-semibold">
+                        <tr>
+                          <td className="px-4 py-2" colSpan={3}>Total</td>
+                          <td className="px-4 py-2 text-right">₹{totalEarnings.toLocaleString()}</td>
+                          <td className="px-4 py-2 text-right text-muted-foreground">-₹{Math.round(commissionTotal).toLocaleString()}</td>
+                          <td className="px-4 py-2 text-right text-accent">₹{Math.round(netEarnings).toLocaleString()}</td>
+                        </tr>
+                      </tfoot>
+                    </table>
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
-        )}
+          );
+        })()}
 
         {/* Invoices */}
         {activeTab === "invoices" && (
@@ -857,13 +1012,20 @@ const HostDashboard = () => {
               <div className="flex items-center gap-4 mb-2">
                 <ImageUpload
                   bucket="avatars"
+                  crop
                   folder={user?.id || "anon"}
                   currentUrl={hostDbProfile?.avatar_url}
                   onUpload={async (url) => {
-                    if (user) {
-                      await supabase.from("profiles").update({ avatar_url: url }).eq("id", user.id);
-                      setHostDbProfile((p: any) => ({ ...p, avatar_url: url }));
+                    if (!user) return;
+                    const { error } = await supabase.from("profiles").upsert(
+                      { id: user.id, avatar_url: url },
+                      { onConflict: "id" }
+                    );
+                    if (error) {
+                      toast({ title: "Couldn't save avatar", description: error.message, variant: "destructive" });
+                      return;
                     }
+                    setHostDbProfile((p: any) => ({ ...(p || {}), avatar_url: url }));
                   }}
                   className="w-20 h-20"
                   shape="circle"

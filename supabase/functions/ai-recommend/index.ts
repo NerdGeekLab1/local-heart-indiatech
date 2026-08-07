@@ -1,10 +1,12 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
+  "Access-Control-Allow-Headers":
+    "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
+
+const MODEL = "google/gemini-2.5-flash";
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
@@ -15,93 +17,94 @@ serve(async (req) => {
 
     const { messages, mode, preferences } = await req.json();
 
-    // Build system prompt based on mode
-    let systemPrompt = "";
-    if (mode === "suggest") {
-      systemPrompt = `You are Travelista AI, a travel recommendation assistant for travelers visiting India. 
-Based on the user's preferences and travel history, suggest personalized destinations and experiences.
-Always respond with a JSON object containing:
-{
-  "recommendations": [
-    {
-      "destination": "City name",
-      "reason": "Why this is perfect for them",
-      "experiences": ["Experience 1", "Experience 2"],
-      "bestSeason": "Oct-Mar",
-      "estimatedBudget": "₹15,000-25,000",
-      "vibe": "Cultural/Adventure/Spiritual/etc"
-    }
-  ],
-  "tip": "A personalized travel tip"
-}
-Provide 3-5 recommendations. Consider user interests: ${JSON.stringify(preferences || {})}.
-Focus on authentic Indian experiences - homestays, local cuisine, heritage, adventure sports, spiritual journeys.`;
-    } else {
-      systemPrompt = `You are Travelista AI, a friendly and knowledgeable travel assistant specializing in Indian destinations and experiences.
-Help travelers discover amazing places in India. Be enthusiastic, culturally sensitive, and practical.
-Suggest specific destinations, experiences, local food, and hidden gems.
-Keep responses concise but vivid. Use emojis sparingly for warmth.
-If asked about preferences, help narrow down based on: budget, travel style, duration, interests, season.`;
-    }
+    const chatSystem = `You are Travelista AI, a friendly travel companion for India. 
+Curate authentic experiences — homestays, heritage, cuisine, adventure, spiritual journeys, hidden gems.
+Use the conversation as context: follow up on prior questions, refine suggestions when the traveler narrows their preferences (budget, days, season, vibe), and ask one clarifying question only when essential.
+Keep replies vivid but concise. Use light markdown (bold, bullets) and sparing emojis.`;
+
+    const suggestSystem = `You are Travelista AI. Based on the traveler's stated preferences and conversation history, suggest 3-5 personalized Indian destinations.
+Always call the return_recommendations tool with structured results. Consider these stored preferences: ${JSON.stringify(preferences || {})}.`;
 
     const aiMessages = [
-      { role: "system", content: systemPrompt },
-      ...(messages || [{ role: "user", content: "Suggest destinations based on my preferences" }]),
+      { role: "system", content: mode === "suggest" ? suggestSystem : chatSystem },
+      ...(messages || []),
     ];
 
     if (mode === "suggest") {
-      // Non-streaming for structured suggestions
       const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
         method: "POST",
-        headers: {
-          Authorization: `Bearer ${LOVABLE_API_KEY}`,
-          "Content-Type": "application/json",
-        },
+        headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
         body: JSON.stringify({
-          model: "google/gemini-3-flash-preview",
+          model: MODEL,
           messages: aiMessages,
-          response_format: { type: "json_object" },
+          tools: [{
+            type: "function",
+            function: {
+              name: "return_recommendations",
+              description: "Return personalized Indian travel destination recommendations.",
+              parameters: {
+                type: "object",
+                properties: {
+                  recommendations: {
+                    type: "array",
+                    items: {
+                      type: "object",
+                      properties: {
+                        destination: { type: "string" },
+                        reason: { type: "string" },
+                        experiences: { type: "array", items: { type: "string" } },
+                        bestSeason: { type: "string" },
+                        estimatedBudget: { type: "string" },
+                        vibe: { type: "string", enum: ["Cultural", "Adventure", "Spiritual", "Food", "Wellness", "Nature"] },
+                      },
+                      required: ["destination", "reason", "experiences", "bestSeason", "estimatedBudget", "vibe"],
+                      additionalProperties: false,
+                    },
+                  },
+                  tip: { type: "string" },
+                },
+                required: ["recommendations", "tip"],
+                additionalProperties: false,
+              },
+            },
+          }],
+          tool_choice: { type: "function", function: { name: "return_recommendations" } },
         }),
       });
 
       if (!response.ok) {
         const status = response.status;
+        const text = await response.text().catch(() => "");
+        console.error("AI gateway error (suggest):", status, text);
         if (status === 429) return new Response(JSON.stringify({ error: "Rate limited. Please try again shortly." }), { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-        if (status === 402) return new Response(JSON.stringify({ error: "AI credits exhausted. Please add funds." }), { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-        throw new Error(`AI gateway error: ${status}`);
+        if (status === 402) return new Response(JSON.stringify({ error: "AI credits exhausted. Please add credits in Settings → Workspace → Usage." }), { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        return new Response(JSON.stringify({ error: `AI gateway error: ${status}` }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
       }
 
       const data = await response.json();
-      const content = data.choices?.[0]?.message?.content || "{}";
-      return new Response(JSON.stringify({ result: JSON.parse(content) }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    } else {
-      // Streaming for chat
-      const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${LOVABLE_API_KEY}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          model: "google/gemini-3-flash-preview",
-          messages: aiMessages,
-          stream: true,
-        }),
-      });
-
-      if (!response.ok) {
-        const status = response.status;
-        if (status === 429) return new Response(JSON.stringify({ error: "Rate limited." }), { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-        if (status === 402) return new Response(JSON.stringify({ error: "AI credits exhausted." }), { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-        throw new Error(`AI gateway error: ${status}`);
-      }
-
-      return new Response(response.body, {
-        headers: { ...corsHeaders, "Content-Type": "text/event-stream" },
-      });
+      const toolCall = data.choices?.[0]?.message?.tool_calls?.[0];
+      const args = toolCall?.function?.arguments;
+      const result = args ? JSON.parse(args) : { recommendations: [], tip: "" };
+      return new Response(JSON.stringify({ result }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
+
+    // Streaming chat
+    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ model: MODEL, messages: aiMessages, stream: true }),
+    });
+
+    if (!response.ok) {
+      const status = response.status;
+      const text = await response.text().catch(() => "");
+      console.error("AI gateway error (chat):", status, text);
+      if (status === 429) return new Response(JSON.stringify({ error: "Rate limited. Please try again shortly." }), { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      if (status === 402) return new Response(JSON.stringify({ error: "AI credits exhausted. Add credits in Settings → Workspace → Usage." }), { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      return new Response(JSON.stringify({ error: `AI gateway error: ${status}` }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+
+    return new Response(response.body, { headers: { ...corsHeaders, "Content-Type": "text/event-stream" } });
   } catch (e) {
     console.error("ai-recommend error:", e);
     return new Response(JSON.stringify({ error: e instanceof Error ? e.message : "Unknown error" }), {
