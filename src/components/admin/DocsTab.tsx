@@ -4,9 +4,10 @@ import { Button } from "@/components/ui/button";
 import { FEATURE_REGISTRY } from "@/lib/featureRegistry";
 
 /** Current documentation bundle version — bump whenever docs change. */
-const DOC_VERSION = "1.4";
+const DOC_VERSION = "2.0";
 
 const docVersionHistory = [
+  { version: "2.0", date: "2026-08-07", summary: "Complete platform, forms, roles and architecture reference", changes: ["Full URL catalog with access descriptions", "Form inventory and admin availability controls", "Separate standard-host and global-host beta lifecycles", "Architecture, relationship and user-feature diagrams", "Password recovery flow"] },
   { version: "1.4", date: "2026-07-28", summary: "Docs hub migrated from public footer into Admin Console", changes: ["Admin-only Docs tab", "Split moderation docs (feed vs reviews)", "Tabular admin views documented", "Legal pages: Terms, Privacy, Cookie policies separated"] },
   { version: "1.3", date: "2026-07-27", summary: "API package & portable database schema export", changes: ["Postman collection for mobile-app development", "docs/db/schema.sql for external Supabase migration", "Test Mode + feature version registry"] },
   { version: "1.2", date: "2026-04-01", summary: "Live analytics & performance tooling", changes: ["Real-time admin analytics", "React Query cached tabs", "/admin/performance profiler", "SPA rewrite rules for Apache/Hostinger"] },
@@ -20,6 +21,7 @@ const inAppDocSections = [
 ];
 
 const repoFiles = [
+  { icon: BookOpen, name: "PLATFORM_DOCUMENTATION.md", path: "PLATFORM_DOCUMENTATION.md", desc: "Complete routes, forms, role features, architecture, relationships, security and admin guide" },
   { icon: FileCode2, name: "PROJECT_DOCUMENTATION.md", path: "PROJECT_DOCUMENTATION.md", desc: "Full feature list, 40+ routes, tech stack reference" },
   { icon: Map, name: "Travelista_Roadmap.md", path: "Travelista_Roadmap.md", desc: "Phased roadmap incl. Phase 5 — Luggage Companion programme" },
   { icon: Package, name: "API Package (Postman)", path: "docs/api/travelista.postman_collection.json", desc: "33 tables, RPCs, edge functions & storage — import into Postman for the mobile app" },

@@ -435,22 +435,26 @@ const AdminDashboard = () => {
 
   const updateHostProfileAppStatus = async (app: any, status: string) => {
     if (!user) return;
-    const { error } = await supabase.from("host_applications")
-      .update({ status, reviewed_by: user.id, reviewed_at: new Date().toISOString() })
-      .eq("id", app.id);
+    const previousStatus = app.status;
+    const { data: approved, error } = status === "approved"
+      ? await supabase.rpc("approve_host_profile_application", { _application_id: app.id })
+      : await supabase.from("host_applications")
+        .update({ status, reviewed_by: user.id, reviewed_at: new Date().toISOString() })
+        .eq("id", app.id)
+        .select()
+        .single();
     if (error) { toast({ title: "Update failed", description: error.message, variant: "destructive" }); return; }
-    await supabase.from("admin_audit_log").insert({
-      admin_id: user.id,
-      entity_type: "host_application",
-      entity_id: app.id,
-      action: status,
-      previous_status: app.status,
-      new_status: status,
+    if (status !== "approved") await supabase.from("admin_audit_log").insert({
+      admin_id: user.id, entity_type: "host_application", entity_id: app.id,
+      action: status, previous_status: previousStatus, new_status: status,
       metadata: { email: app.email, city: app.city },
     });
     setAuditLogReloadKey(k => k + 1);
-    setDbHostProfileApps(p => p.map(a => a.id === app.id ? { ...a, status } : a));
-    toast({ title: `Host profile application → ${status}` });
+    setDbHostProfileApps(p => p.map(a => a.id === app.id ? { ...a, ...(approved || {}), status } : a));
+    if (status === "approved" && app.user_id && !userRoles.some(r => r.user_id === app.user_id && r.role === "host")) {
+      setUserRoles(p => [...p, { id: `host-${app.user_id}`, user_id: app.user_id, role: "host" }]);
+    }
+    toast({ title: status === "approved" ? "Host approved and activated" : `Host profile application → ${status}` });
   };
 
   const updateHostApplicationStatus = async (application: any, status: string) => {
@@ -1341,6 +1345,7 @@ const AdminDashboard = () => {
                 <option value="under_review">Under review</option>
                 <option value="waitlisted">Waitlisted</option>
                 <option value="verified">Verified</option>
+                                   <option value="approved">Approved</option>
                 <option value="rejected">Rejected</option>
               </select>
               <select aria-label="Sort applications" className="h-9 rounded-md border border-input bg-background px-2 text-sm text-foreground"

@@ -104,6 +104,9 @@ const AdminLogin = () => {
                 {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
               </button>
             </div>
+            <div className="flex justify-end">
+              <Link to="/forgot-password" className="text-sm font-medium text-primary hover:underline">Forgot password?</Link>
+            </div>
             <Button onClick={handleLogin} disabled={submitting || loading} className="w-full rounded-full">
               {submitting || loading ? "Checking access..." : "Sign in to Admin"}
             </Button>
