@@ -18,20 +18,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import AIRecommendWidget from "@/components/AIRecommendWidget";
 import ImageUpload from "@/components/ImageUpload";
-import StampCollection from "@/components/StampCollection";
-import { Award } from "lucide-react";
-import { Dialog, DialogTrigger } from "@/components/ui/dialog";
-import { CreatePostDialog } from "@/components/CreatePostDialog";
-import ChangePasswordDialog from "@/components/ChangePasswordDialog";
-import PhoneInput from "@/components/PhoneInput";
-import { isValidLocalPhone, splitPhone } from "@/lib/phone";
 
 const statusColors: Record<string, string> = {
   pending: "bg-primary/10 text-primary", confirmed: "bg-accent/10 text-accent",
   completed: "bg-secondary text-muted-foreground", cancelled: "bg-destructive/10 text-destructive",
 };
 
-type Tab = "overview" | "bookings" | "trips" | "saved" | "wanderer" | "grievances" | "messages" | "reviews" | "invoices" | "rewards" | "stamps" | "settings";
+type Tab = "overview" | "bookings" | "trips" | "saved" | "wanderer" | "grievances" | "messages" | "reviews" | "invoices" | "rewards" | "settings";
 
 const TravelerDashboard = () => {
   const [searchParams] = useSearchParams();
@@ -53,7 +46,7 @@ const TravelerDashboard = () => {
     name: "Alex Traveler", email: "alex@example.com", phone: "+1 555-0123", bio: "Love exploring!",
     currency: "USD", language: "English",
   });
-  const [socialMedia, setSocialMedia] = useState({ instagram: "", facebook: "", twitter: "", youtube: "", snapchat: "", tiktok: "", website: "" });
+  const [socialMedia, setSocialMedia] = useLocalStorage("traveler_social_media", { instagram: "", facebook: "", twitter: "", website: "" });
   const [notifSettings, setNotifSettings] = useLocalStorage("traveler_notifications", { bookings: true, messages: true, deals: true, reviews: true });
   const [savedHostIds, setSavedHostIds] = useLocalStorage<string[]>("traveler_saved_hosts", hosts.slice(0, 4).map(h => h.id));
   const [reviewingBooking, setReviewingBooking] = useState<string | null>(null);
@@ -67,19 +60,6 @@ const TravelerDashboard = () => {
   const [myGrievances, setMyGrievances] = useState<any[]>([]);
   const [myInvoices, setMyInvoices] = useState<any[]>([]);
   const [myStreaks, setMyStreaks] = useState<any[]>([]);
-  const [myPosts, setMyPosts] = useState<any[]>([]);
-  const [myBookmarks, setMyBookmarks] = useState<any[]>([]);
-  const [createOpen, setCreateOpen] = useState(false);
-
-  const loadPosts = async () => {
-    if (!user) return;
-    const [{ data: posts }, { data: bms }] = await Promise.all([
-      supabase.from("feed_posts").select("*").eq("user_id", user.id).order("created_at", { ascending: false }),
-      supabase.from("feed_bookmarks").select("*, feed_posts(*)").eq("user_id", user.id).order("created_at", { ascending: false }),
-    ]);
-    setMyPosts(posts || []);
-    setMyBookmarks(bms || []);
-  };
 
   useEffect(() => {
     if (!user) return;
@@ -103,12 +83,8 @@ const TravelerDashboard = () => {
       if (prof) {
         setDbProfile(prof);
         setProfile(p => ({ ...p, name: `${prof.first_name} ${prof.last_name || ""}`.trim(), email: prof.email || p.email, phone: prof.phone || p.phone, bio: prof.bio || p.bio }));
-        const sl = (prof.social_links || {}) as Record<string, string>;
-        setSocialMedia(s => ({ ...s, ...sl }));
       }
     });
-    loadPosts();
-    // eslint-disable-next-line
   }, [user]);
 
   const toggleSaveHost = (hostId: string) => {
@@ -142,7 +118,6 @@ const TravelerDashboard = () => {
     { id: "trips", label: "My Trips", icon: Compass },
     { id: "invoices", label: "Invoices", icon: Receipt },
     { id: "rewards", label: "Rewards", icon: Trophy },
-    { id: "stamps", label: "Stamps", icon: Award },
     { id: "saved", label: "Saved", icon: Heart },
     { id: "wanderer", label: "🧭 Wanderer", icon: Target },
     { id: "grievances", label: "Grievances", icon: AlertTriangle },
@@ -172,37 +147,6 @@ const TravelerDashboard = () => {
         {/* Overview */}
         {activeTab === "overview" && (
           <>
-            {(() => {
-              const totalLikes = myPosts.reduce((s, p) => s + (p.likes_count || 0), 0);
-              const totalEngagement = totalLikes + myBookmarks.length;
-              return (
-                <div className="mt-6 rounded-2xl p-5 bg-gradient-to-br from-primary via-orange-500 to-pink-500 text-primary-foreground shadow-lg shadow-primary/30 relative overflow-hidden">
-                  <div className="absolute -right-6 -top-6 w-32 h-32 rounded-full bg-primary-foreground/15 blur-2xl" />
-                  <div className="relative flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                    <div>
-                      <p className="text-xs font-semibold uppercase tracking-widest opacity-90">Traveler Feed · Live Atlas</p>
-                      <h3 className="text-xl font-bold mt-1">Share your road stories</h3>
-                      <div className="flex flex-wrap gap-3 mt-2 text-xs">
-                        <span className="px-2 py-0.5 rounded-full bg-background/25 backdrop-blur font-semibold">📸 {myPosts.length} posts</span>
-                        <span className="px-2 py-0.5 rounded-full bg-background/25 backdrop-blur font-semibold">❤ {totalLikes} likes</span>
-                        <span className="px-2 py-0.5 rounded-full bg-background/25 backdrop-blur font-semibold">🔖 {myBookmarks.length} saved</span>
-                        <span className="px-2 py-0.5 rounded-full bg-background/25 backdrop-blur font-semibold">✨ {totalEngagement} engagements</span>
-                      </div>
-                    </div>
-                    <div className="flex gap-2 shrink-0">
-                      <Dialog open={createOpen} onOpenChange={setCreateOpen}>
-                        <DialogTrigger asChild>
-                          <Button size="sm" variant="secondary" className="rounded-full font-semibold">📮 One-tap Post</Button>
-                        </DialogTrigger>
-                        <CreatePostDialog onClose={() => { setCreateOpen(false); loadPosts(); }} />
-                      </Dialog>
-                      <Link to="/feed"><Button size="sm" variant="secondary" className="rounded-full font-semibold">Open Feed →</Button></Link>
-                      {user && <Link to={`/traveler/${user.id}`}><Button size="sm" variant="secondary" className="rounded-full font-semibold">My Profile</Button></Link>}
-                    </div>
-                  </div>
-                </div>
-              );
-            })()}
             <div className="mt-6 grid grid-cols-2 sm:grid-cols-4 gap-4">
               {[
                 { label: "Total Trips", value: myTrips.length || "3", icon: MapPin },
@@ -545,13 +489,6 @@ const TravelerDashboard = () => {
           </div>
         )}
 
-        {/* Stamps */}
-        {activeTab === "stamps" && (
-          <div className="mt-6">
-            <StampCollection />
-          </div>
-        )}
-
         {/* Messages */}
         {activeTab === "messages" && (
           <div className="mt-6">
@@ -610,20 +547,12 @@ const TravelerDashboard = () => {
               <div className="flex items-center gap-4 mb-2">
                 <ImageUpload
                   bucket="avatars"
-                  crop
                   folder={user?.id || "anon"}
                   currentUrl={dbProfile?.avatar_url}
                   onUpload={async (url) => {
                     if (user) {
-                      const { error } = await supabase.from("profiles").upsert(
-                        { id: user.id, avatar_url: url },
-                        { onConflict: "id" }
-                      );
-                      if (error) {
-                        toast({ title: "Couldn't save avatar", description: error.message, variant: "destructive" });
-                        return;
-                      }
-                      setDbProfile((p: any) => ({ ...(p || {}), avatar_url: url }));
+                      await supabase.from("profiles").update({ avatar_url: url }).eq("id", user.id);
+                      setDbProfile((p: any) => ({ ...p, avatar_url: url }));
                     }
                   }}
                   className="w-20 h-20"
@@ -637,54 +566,31 @@ const TravelerDashboard = () => {
               <div className="space-y-3">
                 <div><label className="text-sm font-medium text-foreground">Name</label><Input value={profile.name} onChange={e => setProfile(p => ({ ...p, name: e.target.value }))} /></div>
                 <div><label className="text-sm font-medium text-foreground">Email</label><Input type="email" value={profile.email} onChange={e => setProfile(p => ({ ...p, email: e.target.value }))} /></div>
-                <div>
-                  <label className="text-sm font-medium text-foreground">Phone</label>
-                  <PhoneInput value={profile.phone} onChange={(val) => setProfile(p => ({ ...p, phone: val }))} showError />
-                </div>
+                <div><label className="text-sm font-medium text-foreground">Phone</label><Input value={profile.phone} onChange={e => setProfile(p => ({ ...p, phone: e.target.value }))} /></div>
                 <div><label className="text-sm font-medium text-foreground">Bio</label>
                   <textarea className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm min-h-[80px]"
                     value={profile.bio} onChange={e => setProfile(p => ({ ...p, bio: e.target.value }))} /></div>
               </div>
               <Button size="sm" className="rounded-full gap-2" onClick={async () => {
                 if (!user) return;
-                const { number } = splitPhone(profile.phone);
-                if (number && !isValidLocalPhone(number)) {
-                  toast({ title: "Invalid phone", description: "Enter a 10-digit phone number", variant: "destructive" });
-                  return;
-                }
                 const names = profile.name.split(" ");
-                const { error } = await supabase.from("profiles").upsert({
-                  id: user.id,
+                await supabase.from("profiles").update({
                   first_name: names[0] || "",
                   last_name: names.slice(1).join(" ") || "",
                   email: profile.email,
                   phone: profile.phone,
                   bio: profile.bio,
-                }, { onConflict: "id" });
-                if (error) {
-                  toast({ title: "Couldn't save profile", description: error.message, variant: "destructive" });
-                  return;
-                }
+                }).eq("id", user.id);
                 toast({ title: "Profile saved! ✅" });
               }}><Save className="w-4 h-4" /> Save</Button>
             </div>
             <div className="rounded-lg bg-card p-5 shadow-card space-y-4">
-              <h3 className="font-bold text-foreground flex items-center gap-2"><Globe className="w-4 h-4 text-primary" /> Social Links</h3>
+              <h3 className="font-bold text-foreground flex items-center gap-2"><Globe className="w-4 h-4 text-primary" /> Social</h3>
               <div className="space-y-3">
-                <div className="flex items-center gap-2"><Instagram className="w-4 h-4 text-muted-foreground" /><Input placeholder="Instagram username or URL" value={socialMedia.instagram} onChange={e => setSocialMedia(p => ({ ...p, instagram: e.target.value }))} /></div>
+                <div className="flex items-center gap-2"><Instagram className="w-4 h-4 text-muted-foreground" /><Input placeholder="Instagram" value={socialMedia.instagram} onChange={e => setSocialMedia(p => ({ ...p, instagram: e.target.value }))} /></div>
                 <div className="flex items-center gap-2"><Facebook className="w-4 h-4 text-muted-foreground" /><Input placeholder="Facebook" value={socialMedia.facebook} onChange={e => setSocialMedia(p => ({ ...p, facebook: e.target.value }))} /></div>
-                <div className="flex items-center gap-2"><Twitter className="w-4 h-4 text-muted-foreground" /><Input placeholder="X / Twitter" value={socialMedia.twitter} onChange={e => setSocialMedia(p => ({ ...p, twitter: e.target.value }))} /></div>
-                <div className="flex items-center gap-2"><Video className="w-4 h-4 text-muted-foreground" /><Input placeholder="YouTube channel URL" value={socialMedia.youtube} onChange={e => setSocialMedia(p => ({ ...p, youtube: e.target.value }))} /></div>
-                <div className="flex items-center gap-2"><span className="text-xs w-4 text-center">👻</span><Input placeholder="Snapchat username" value={socialMedia.snapchat} onChange={e => setSocialMedia(p => ({ ...p, snapchat: e.target.value }))} /></div>
-                <div className="flex items-center gap-2"><span className="text-xs w-4 text-center">🎵</span><Input placeholder="TikTok username" value={socialMedia.tiktok} onChange={e => setSocialMedia(p => ({ ...p, tiktok: e.target.value }))} /></div>
-                <div className="flex items-center gap-2"><Globe className="w-4 h-4 text-muted-foreground" /><Input placeholder="Website" value={socialMedia.website} onChange={e => setSocialMedia(p => ({ ...p, website: e.target.value }))} /></div>
               </div>
-              <Button size="sm" className="rounded-full gap-2" onClick={async () => {
-                if (!user) return;
-                const { error } = await supabase.from("profiles").upsert({ id: user.id, social_links: socialMedia as any }, { onConflict: "id" });
-                if (error) { toast({ title: "Couldn't save socials", description: error.message, variant: "destructive" }); return; }
-                toast({ title: "Social links saved! ✅" });
-              }}><Save className="w-4 h-4" /> Save</Button>
+              <Button size="sm" className="rounded-full gap-2" onClick={() => toast({ title: "Saved!" })}><Save className="w-4 h-4" /> Save</Button>
             </div>
             <div className="rounded-lg bg-card p-5 shadow-card space-y-3">
               <h3 className="font-bold text-foreground flex items-center gap-2"><Bell className="w-4 h-4 text-primary" /> Notifications</h3>
@@ -698,7 +604,7 @@ const TravelerDashboard = () => {
             </div>
             <div className="rounded-lg bg-card p-5 shadow-card space-y-3">
               <h3 className="font-bold text-foreground flex items-center gap-2"><Shield className="w-4 h-4 text-primary" /> Security</h3>
-              <ChangePasswordDialog />
+              <Button variant="outline" size="sm" className="rounded-full text-xs" onClick={() => toast({ title: "Password reset sent" })}>Change Password</Button>
             </div>
             <div className="rounded-lg bg-card p-5 shadow-card space-y-3">
               <h3 className="font-bold text-foreground flex items-center gap-2"><CreditCard className="w-4 h-4 text-primary" /> Payment</h3>

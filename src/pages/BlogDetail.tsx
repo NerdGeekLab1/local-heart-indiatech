@@ -1,70 +1,36 @@
 import { useParams, Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Helmet } from "react-helmet-async";
 import { ArrowLeft, Calendar, Clock, Tag, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import Breadcrumbs from "@/components/Breadcrumbs";
-import JsonLd from "@/components/JsonLd";
-import { useCmsContent } from "@/hooks/useCmsContent";
-import { useSiteSettings } from "@/hooks/useSiteSettings";
-import { articleSchema, stripHtml } from "@/lib/structuredData";
+import { blogPosts } from "@/lib/data";
 
 const BlogDetail = () => {
   const { id } = useParams();
-  const { blogs, loading } = useCmsContent();
-  const { settings } = useSiteSettings();
-  const post = blogs.find(p => p.id === id);
+  const post = blogPosts.find(p => p.id === id);
 
   if (!post) {
     return (
       <div className="min-h-screen bg-background">
         <Navbar />
         <div className="pt-24 text-center">
-          <p className="text-muted-foreground text-lg">{loading ? "Loading article…" : "Blog post not found"}</p>
+          <p className="text-muted-foreground text-lg">Blog post not found</p>
           <Link to="/community?tab=blog" className="text-primary hover:underline text-sm mt-2 inline-block">Back to Blog</Link>
         </div>
       </div>
     );
   }
 
-  const relatedPosts = blogs.filter(p => p.id !== post.id && p.category === post.category).slice(0, 3);
-  const canonical = `${(settings.base_url || "").replace(/\/$/, "")}/blog/${post.id}`;
-  const description = post.excerpt || stripHtml(post.content).slice(0, 155);
-  const isHtml = /<[a-z][\s\S]*>/i.test(post.content);
-
+  const relatedPosts = blogPosts.filter(p => p.id !== post.id && p.category === post.category).slice(0, 3);
 
   return (
     <div className="min-h-screen bg-background">
-      <Helmet>
-        <title>{`${post.title} | Travelista`}</title>
-        <meta name="description" content={description} />
-        <link rel="canonical" href={canonical} />
-        <meta property="og:type" content="article" />
-        <meta property="og:title" content={post.title} />
-        <meta property="og:description" content={description} />
-        <meta property="og:url" content={canonical} />
-      </Helmet>
-      <JsonLd data={articleSchema(settings, {
-        title: post.title,
-        description: post.excerpt,
-        body: post.content,
-        image: post.image,
-        author: post.author,
-        category: post.category,
-        tags: post.tags,
-        datePublished: post.date,
-        path: `/blog/${post.id}`,
-      })} />
       <Navbar />
       <div className="pt-20 pb-16 px-4 sm:px-6 lg:px-8 mx-auto max-w-4xl">
-        <Breadcrumbs className="mb-4" items={[{ label: "Community", href: "/community" }, { label: post.title }]} />
         <Link to="/community?tab=blog" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-6">
           <ArrowLeft className="w-4 h-4" /> Back to Blog
         </Link>
-
-
 
         <motion.article initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
           {/* Hero Image */}
@@ -94,11 +60,7 @@ const BlogDetail = () => {
           {/* Content */}
           <div className="mt-8 prose prose-sm max-w-none text-foreground/90 leading-relaxed space-y-4">
             <p className="text-lg text-muted-foreground font-medium">{post.excerpt}</p>
-            {isHtml ? (
-              <div className="text-base leading-7 [&_h2]:text-xl [&_h2]:font-bold [&_h3]:font-semibold [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_a]:text-primary" dangerouslySetInnerHTML={{ __html: post.content }} />
-            ) : (
-              <div className="whitespace-pre-line text-base leading-7">{post.content}</div>
-            )}
+            <div className="whitespace-pre-line text-base leading-7">{post.content}</div>
           </div>
 
           {/* Tags */}

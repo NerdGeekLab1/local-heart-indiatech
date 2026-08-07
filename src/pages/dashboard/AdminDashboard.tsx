@@ -1,15 +1,12 @@
 import { BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer } from "recharts";
-import { useState, useEffect, useMemo, Fragment } from "react";
-import { useQuery } from "@tanstack/react-query";
-import TestModePanel from "@/components/admin/TestModePanel";
-
-import { Link, useSearchParams } from "react-router-dom";
+import { useState, useEffect, useMemo } from "react";
+import { useSearchParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Users, DollarSign, TrendingUp, Shield, AlertTriangle, Star, MapPin, Calendar, Settings, FileText,
   BarChart3, Globe, Flag, Eye, Plus, Trash2, UtensilsCrossed, Video, ChevronDown, Ban, CheckCircle,
   Edit, Compass, MessageSquare, Target, Lock, Receipt, Trophy, Crosshair, Search, Bell, Mail,
-  Crown, Gem, Sparkles, UserX, UserCheck, Filter, Key, Clock, Beaker
+  Crown, Gem, Sparkles, UserX, UserCheck, Filter, Key
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -26,25 +23,9 @@ import ConfigurationTab from "@/components/admin/ConfigurationTab";
 import EmailTemplatesTab from "@/components/admin/EmailTemplatesTab";
 import SubscriptionPlansTab from "@/components/admin/SubscriptionPlansTab";
 import WeddingsTab from "@/components/admin/WeddingsTab";
-import BetaModerationTools from "@/components/admin/BetaModerationTools";
-import FeedModerationPanel from "@/components/admin/FeedModerationPanel";
-import ReviewModerationPanel from "@/components/admin/ReviewModerationPanel";
-import AdminPagination from "@/components/admin/AdminPagination";
-import BookingsPanel from "@/components/admin/BookingsPanel";
-import DocsTab from "@/components/admin/DocsTab";
-import WebsiteCMSTab from "@/components/admin/WebsiteCMSTab";
-import ContentManagerTab from "@/components/admin/ContentManagerTab";
-import ChatPanel from "@/components/ChatPanel";
-import { Heart, Menu, BookOpen, PanelLeftClose, PanelLeftOpen } from "lucide-react";
-import ApplicationDetailDialog from "@/components/admin/ApplicationDetailDialog";
+import { Heart, Menu } from "lucide-react";
 
-
-type Tab = "overview" | "hosts" | "hostWaitlist" | "bookings" | "experiences" | "destinations" | "trips" | "grievances" | "users" | "wanderers" | "missions" | "leaderboard" | "invoices" | "feedModeration" | "reviewModeration" | "analytics" | "settings" | "configuration" | "emails" | "plans" | "weddings" | "audit" | "testmode" | "docs" | "websiteCms" | "content";
-
-const ADMIN_TAB_KEY = "travelista.admin.activeTab";
-const ADMIN_NAV_KEY = "travelista.admin.navCollapsed";
-
-
+type Tab = "overview" | "hosts" | "bookings" | "experiences" | "destinations" | "trips" | "grievances" | "users" | "wanderers" | "missions" | "leaderboard" | "invoices" | "moderation" | "analytics" | "settings" | "configuration" | "emails" | "plans" | "weddings" | "audit";
 
 const destinationFields: FieldConfig[] = [
   { key: "name", label: "City Name", required: true },
@@ -89,30 +70,9 @@ const SUBSCRIPTION_TIERS = [
 ];
 
 const AdminDashboard = () => {
-  const [searchParams, setSearchParams] = useSearchParams();
-  const initialTab = (searchParams.get("tab") as Tab)
-    || (typeof localStorage !== "undefined" ? (localStorage.getItem(ADMIN_TAB_KEY) as Tab | null) : null)
-    || "overview";
-  const [activeTab, setActiveTabState] = useState<Tab>(initialTab);
-  const [navCollapsed, setNavCollapsed] = useState<boolean>(() => {
-    try { return localStorage.getItem(ADMIN_NAV_KEY) === "1"; } catch { return false; }
-  });
-  const toggleNav = () => setNavCollapsed(c => {
-    try { localStorage.setItem(ADMIN_NAV_KEY, c ? "0" : "1"); } catch { /* storage unavailable */ }
-    return !c;
-  });
-  const [detailApp, setDetailApp] = useState<{ kind: "eligibility" | "profile"; row: any } | null>(null);
-
-
-  // Controlled + persisted: survives tab switches, visibility changes and reloads
-  const setActiveTab = (tab: Tab) => {
-    setActiveTabState(tab);
-    try { localStorage.setItem(ADMIN_TAB_KEY, tab); } catch { /* storage unavailable */ }
-    const next = new URLSearchParams(searchParams);
-    next.set("tab", tab);
-    setSearchParams(next, { replace: true });
-  };
-
+  const [searchParams] = useSearchParams();
+  const initialTab = (searchParams.get("tab") as Tab) || "overview";
+  const [activeTab, setActiveTab] = useState<Tab>(initialTab);
   const { toast } = useToast();
   const { user } = useAuth();
   const { format } = useCurrency();
@@ -150,17 +110,6 @@ const AdminDashboard = () => {
   const [dbPermissions, setDbPermissions] = useState<any[]>([]);
   const [dbSubscriptions, setDbSubscriptions] = useState<any[]>([]);
   const [dbTripParticipants, setDbTripParticipants] = useState<any[]>([]);
-  const [dbHostApplications, setDbHostApplications] = useState<any[]>([]);
-  const [dbHostProfileApps, setDbHostProfileApps] = useState<any[]>([]);
-  const [dbBetaWaitlist, setDbBetaWaitlist] = useState<any[]>([]);
-  const [activeAdminChat, setActiveAdminChat] = useState<{ id: string; name: string } | null>(null);
-  const [dbBookings, setDbBookings] = useState<any[]>([]);
-  const [dbFeedPosts, setDbFeedPosts] = useState<any[]>([]);
-  const [dbReviews, setDbReviews] = useState<any[]>([]);
-  const [dataRefreshKey, setDataRefreshKey] = useState(0);
-  const [lastSynced, setLastSynced] = useState<Date | null>(null);
-
-
 
   // Search & filters
   const [userSearch, setUserSearch] = useState("");
@@ -180,16 +129,9 @@ const AdminDashboard = () => {
   const [permUserId, setPermUserId] = useState("");
   const [permType, setPermType] = useState(AVAILABLE_PERMISSIONS[0]);
 
-  // Cached admin data layer — switching tabs reuses the cache instead of refetching
-  const { data: adminData, isLoading: adminLoading } = useQuery({
-    queryKey: ["admin-console-data", dataRefreshKey],
-    staleTime: 5 * 60 * 1000,
-    gcTime: 30 * 60 * 1000,
-    refetchOnWindowFocus: false,
-    refetchOnMount: false,
-    placeholderData: (prev: any) => prev,
-    queryFn: async () => {
-      const [{ data: trips }, { data: grievances }, { data: expReqs }, { data: profiles }, { data: roles }, { data: wanderers }, { data: dbExp }, { data: hostApps }, { data: betaSignups }] = await Promise.all([
+  useEffect(() => {
+    const fetchData = async () => {
+      const [{ data: trips }, { data: grievances }, { data: expReqs }, { data: profiles }, { data: roles }, { data: wanderers }, { data: dbExp }] = await Promise.all([
         supabase.from("trip_listings").select("*").order("created_at", { ascending: false }),
         supabase.from("grievances").select("*").order("created_at", { ascending: false }),
         supabase.from("experience_requests").select("*").order("created_at", { ascending: false }),
@@ -197,59 +139,30 @@ const AdminDashboard = () => {
         supabase.from("user_roles").select("*"),
         supabase.from("beta_wanderers").select("*").order("created_at", { ascending: false }),
         supabase.from("experiences").select("*").order("created_at", { ascending: false }),
-        supabase.from("host_eligibility").select("*").order("created_at", { ascending: false }),
-        supabase.from("beta_waitlist").select("*").order("created_at", { ascending: false }),
       ]);
+      setDbTrips(trips || []);
+      setDbGrievances(grievances || []);
+      setDbExperienceRequests(expReqs || []);
+      setDbUsers(profiles || []);
+      setUserRoles(roles || []);
+      setDbWanderers(wanderers || []);
+      setDbExperiences(dbExp || []);
 
-      const [{ data: missions }, { data: invoices }, { data: perms }, { data: subs }, { data: participants }, { data: bookingRows }, { data: posts }, { data: reviewRows }, { data: hostProfileApps }] = await Promise.all([
+      const [{ data: missions }, { data: invoices }, { data: perms }, { data: subs }, { data: participants }] = await Promise.all([
         supabase.from("wanderer_missions").select("*").order("created_at", { ascending: false }),
         supabase.from("invoices").select("*").order("created_at", { ascending: false }),
         supabase.from("user_permissions").select("*").order("granted_at", { ascending: false }),
         supabase.from("subscriptions").select("*"),
         supabase.from("trip_participants").select("*"),
-        supabase.from("bookings").select("*").order("created_at", { ascending: false }),
-        supabase.from("feed_posts").select("*").order("created_at", { ascending: false }),
-        supabase.from("reviews").select("*").order("created_at", { ascending: false }),
-        supabase.from("host_applications").select("*").order("created_at", { ascending: false }),
       ]);
-
-      return {
-        trips, grievances, expReqs, profiles, roles, wanderers, dbExp, hostApps, betaSignups,
-        missions, invoices, perms, subs, participants, bookingRows, posts, reviewRows, hostProfileApps,
-      };
-    },
-  });
-
-  useEffect(() => {
-    if (!adminData) return;
-    setDbTrips(adminData.trips || []);
-    setDbGrievances(adminData.grievances || []);
-    setDbExperienceRequests(adminData.expReqs || []);
-    setDbUsers(adminData.profiles || []);
-    setUserRoles(adminData.roles || []);
-    setDbWanderers(adminData.wanderers || []);
-    setDbExperiences(adminData.dbExp || []);
-    setDbHostApplications(adminData.hostApps || []);
-    setDbBetaWaitlist(adminData.betaSignups || []);
-    setDbMissions(adminData.missions || []);
-    setDbInvoices(adminData.invoices || []);
-    setDbPermissions(adminData.perms || []);
-    setDbSubscriptions(adminData.subs || []);
-    setDbTripParticipants(adminData.participants || []);
-    setDbBookings(adminData.bookingRows || []);
-    setDbFeedPosts(adminData.posts || []);
-    setDbReviews(adminData.reviewRows || []);
-    setDbHostProfileApps(adminData.hostProfileApps || []);
-    setLastSynced(new Date());
-  }, [adminData]);
-
-
-  // Live analytics: re-pull platform data every 60s while the console is open
-  useEffect(() => {
-    const id = setInterval(() => setDataRefreshKey(k => k + 1), 60000);
-    return () => clearInterval(id);
+      setDbMissions(missions || []);
+      setDbInvoices(invoices || []);
+      setDbPermissions(perms || []);
+      setDbSubscriptions(subs || []);
+      setDbTripParticipants(participants || []);
+    };
+    fetchData();
   }, []);
-
 
   // Audit log loader — refreshes when an admin action bumps the reload key
   useEffect(() => {
@@ -382,110 +295,6 @@ const AdminDashboard = () => {
     toast({ title: "Permission revoked" });
   };
 
-  const sendUserEmail = async (targetUser: any) => {
-    if (!user || !targetUser.email) { toast({ title: "No email on this profile", variant: "destructive" }); return; }
-    const { error } = await supabase.from("email_notifications").insert({
-      recipient_user_id: targetUser.id,
-      recipient_email: targetUser.email,
-      subject: "Travelista account update",
-      template_name: "admin_user_email",
-      trigger_event: "admin_user_management",
-      body_html: `<p>Hi ${targetUser.first_name || "traveler"},</p><p>Your Travelista account has an update from the admin team. Please sign in to review your latest status and messages.</p>`,
-      payload: { user_id: targetUser.id, action: "send_email" },
-      sent_by: user.id,
-    });
-    if (error) { toast({ title: "Email failed", description: error.message, variant: "destructive" }); return; }
-    toast({ title: "Email queued" });
-  };
-
-  const notifyUser = async (targetUser: any) => {
-    if (!user) return;
-    const { error } = await supabase.from("messages").insert({
-      sender_id: user.id,
-      receiver_id: targetUser.id,
-      content: "Travelista admin notification: please review your dashboard for the latest account updates.",
-    });
-    if (error) { toast({ title: "Notification failed", description: error.message, variant: "destructive" }); return; }
-    toast({ title: "Notification sent" });
-  };
-
-  const banUser = async (targetUser: any) => {
-    if (!user) return;
-    const alreadyBanned = dbPermissions.some(p => p.user_id === targetUser.id && p.permission === "account_banned");
-    if (!alreadyBanned) {
-      const { data, error } = await supabase.from("user_permissions").insert({
-        user_id: targetUser.id,
-        permission: "account_banned",
-        granted_by: user.id,
-      }).select().single();
-      if (error && !error.message.includes("duplicate")) { toast({ title: "Ban failed", description: error.message, variant: "destructive" }); return; }
-      if (data) setDbPermissions(p => [data, ...p]);
-    }
-    await supabase.from("admin_audit_log").insert({
-      admin_id: user.id,
-      entity_type: "profile",
-      entity_id: targetUser.id,
-      action: "ban",
-      new_status: "banned",
-      metadata: { email: targetUser.email },
-    });
-    setAuditLogReloadKey(k => k + 1);
-    toast({ title: `${targetUser.email || "User"} marked banned` });
-  };
-
-  const updateHostProfileAppStatus = async (app: any, status: string) => {
-    if (!user) return;
-    const previousStatus = app.status;
-    const { data: approved, error } = status === "approved"
-      ? await supabase.rpc("approve_host_profile_application", { _application_id: app.id })
-      : await supabase.from("host_applications")
-        .update({ status, reviewed_by: user.id, reviewed_at: new Date().toISOString() })
-        .eq("id", app.id)
-        .select()
-        .single();
-    if (error) { toast({ title: "Update failed", description: error.message, variant: "destructive" }); return; }
-    if (status !== "approved") await supabase.from("admin_audit_log").insert({
-      admin_id: user.id, entity_type: "host_application", entity_id: app.id,
-      action: status, previous_status: previousStatus, new_status: status,
-      metadata: { email: app.email, city: app.city },
-    });
-    setAuditLogReloadKey(k => k + 1);
-    setDbHostProfileApps(p => p.map(a => a.id === app.id ? { ...a, ...(approved || {}), status } : a));
-    if (status === "approved" && app.user_id && !userRoles.some(r => r.user_id === app.user_id && r.role === "host")) {
-      setUserRoles(p => [...p, { id: `host-${app.user_id}`, user_id: app.user_id, role: "host" }]);
-    }
-    toast({ title: status === "approved" ? "Host approved and activated" : `Host profile application → ${status}` });
-  };
-
-  const updateHostApplicationStatus = async (application: any, status: string) => {
-    if (!user) return;
-    if (status === "approved") {
-      const { data, error } = await supabase.rpc("approve_host_application", { _application_id: application.id });
-      if (error) { toast({ title: "Approval failed", description: error.message, variant: "destructive" }); return; }
-      setDbHostApplications(p => p.map(a => a.id === application.id ? data : a));
-      if (!userRoles.some(r => r.user_id === application.user_id && r.role === "host")) {
-        setUserRoles(p => [...p, { id: `host-${application.user_id}`, user_id: application.user_id, role: "host" }]);
-      }
-      toast({ title: "Host approved and moved to People" });
-      return;
-    }
-    const update = { status, reviewed_by: user.id, reviewed_at: new Date().toISOString(), updated_at: new Date().toISOString() };
-    const { error } = await supabase.from("host_eligibility").update(update).eq("id", application.id);
-    if (error) { toast({ title: "Update failed", description: error.message, variant: "destructive" }); return; }
-    await supabase.from("admin_audit_log").insert({
-      admin_id: user.id,
-      entity_type: "host_eligibility",
-      entity_id: application.id,
-      action: status,
-      previous_status: application.status,
-      new_status: status,
-      metadata: { user_id: application.user_id, email: application.email },
-    });
-    setDbHostApplications(p => p.map(a => a.id === application.id ? { ...a, ...update } : a));
-    setAuditLogReloadKey(k => k + 1);
-    toast({ title: `Host application ${status.replace("_", " ")}` });
-  };
-
   const updateInvoiceStatus = async (id: string, status: string) => {
     const update: any = { status };
     if (status === "paid") update.paid_at = new Date().toISOString();
@@ -547,82 +356,9 @@ const AdminDashboard = () => {
   const allDestinations = [...destinations, ...customDestinations];
   const getHostStatus = (id: string) => hostStatuses[id] || "verified";
   const getBookingStatus = (id: string, orig: string) => bookingOverrides[id] || orig;
-
-  // Pagination for tabular views
-  const [bookingsPage, setBookingsPage] = useState(0);
-  const [usersPage, setUsersPage] = useState(0);
-  const [hostQueuePage, setHostQueuePage] = useState(0);
-  const [hostProfilePage, setHostProfilePage] = useState(0);
-  const [wanderersPage, setWanderersPage] = useState(0);
-  const TABLE_PAGE_SIZE = 10;
-  const [bookingsPageSize, setBookingsPageSize] = useState(10);
-
-  // Host application filters & sorting
-  const [hostAppSearch, setHostAppSearch] = useState("");
-  const [hostAppStatus, setHostAppStatus] = useState<string>("all");
-  const [hostAppProgram, setHostAppProgram] = useState<"all" | "foreign" | "profile">("all");
-  const [hostAppSort, setHostAppSort] = useState<"newest" | "oldest" | "score" | "name">("newest");
-
-  const updateBookingStatus = async (id: string, status: string) => {
-    const { error } = await supabase.from("bookings").update({ status }).eq("id", id);
-    if (error) { toast({ title: "Update failed", description: error.message, variant: "destructive" }); return; }
-    setDbBookings(p => p.map(b => b.id === id ? { ...b, status } : b));
-    toast({ title: `Booking → ${status}` });
-  };
+  const activeReviews = reviews.filter(r => !removedReviews.includes(r.id));
   const approvedWanderers = dbWanderers.filter(w => w.status === "approved");
   const leaderboard = [...dbWanderers].filter(w => w.status === "approved").sort((a, b) => (b.score || 0) - (a.score || 0));
-  const matchesHostSearch = (a: any) =>
-    !hostAppSearch.trim() ||
-    `${a.full_name ?? ""} ${a.email ?? ""} ${a.city ?? ""} ${a.state ?? ""}`.toLowerCase().includes(hostAppSearch.trim().toLowerCase());
-
-  const sortHostApps = (list: any[]) => [...list].sort((a, b) => {
-    if (hostAppSort === "oldest") return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
-    if (hostAppSort === "score") return (b.eligibility_score || 0) - (a.eligibility_score || 0);
-    if (hostAppSort === "name") return String(a.full_name || "").localeCompare(String(b.full_name || ""));
-    return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
-  });
-
-  const hostQueue = useMemo(() => sortHostApps(
-    dbHostApplications
-      .filter(a => a.status !== "approved")
-      .filter(a => hostAppProgram !== "profile")
-      .filter(a => hostAppStatus === "all" || a.status === hostAppStatus)
-      .filter(matchesHostSearch)
-  ), [dbHostApplications, hostAppStatus, hostAppProgram, hostAppSearch, hostAppSort]);
-
-  const hostProfileQueue = useMemo(() => sortHostApps(
-    dbHostProfileApps
-      .filter(() => hostAppProgram !== "foreign")
-      .filter(a => hostAppStatus === "all" || a.status === hostAppStatus)
-      .filter(matchesHostSearch)
-  ), [dbHostProfileApps, hostAppStatus, hostAppProgram, hostAppSearch, hostAppSort]);
-
-  const auditEntriesFor = (entityId: string) => auditLog.filter(l => l.entity_id === entityId).map(l => ({
-    id: l.id, action: l.action, previous_status: l.previous_status, new_status: l.new_status,
-    notes: l.notes, created_at: l.created_at, metadata: l.metadata,
-  }));
-  const approvedHostApplications = dbHostApplications.filter(a => a.status === "approved");
-  // Live registered hosts = profiles that hold the host role in the database
-  const registeredHosts = useMemo(() => {
-    const hostIds = new Set(userRoles.filter(r => r.role === "host").map(r => r.user_id));
-    return dbUsers
-      .filter(u => hostIds.has(u.id))
-      .map(u => {
-        const app = dbHostApplications.find(a => a.user_id === u.id);
-        return {
-          ...u,
-          full_name: `${u.first_name || ""} ${u.last_name || ""}`.trim() || u.email || "Host",
-          city: u.city || app?.city || "—",
-          application: app || null,
-          listings: dbExperiences.filter((e: any) => e.host_id === u.id).length,
-          tripsHosted: dbTrips.filter((t: any) => t.creator_id === u.id).length,
-          bookingsCount: dbBookings.filter((b: any) => b.host_id === u.id).length,
-          revenue: dbInvoices.filter((i: any) => i.host_id === u.id).reduce((s: number, i: any) => s + Number(i.total_amount || 0), 0),
-        };
-      });
-  }, [dbUsers, userRoles, dbHostApplications, dbExperiences, dbTrips, dbBookings, dbInvoices]);
-
-  const bannedUserIds = new Set(dbPermissions.filter(p => p.permission === "account_banned").map(p => p.user_id));
 
   const statusBadge = (status: string) => {
     const colors: Record<string, string> = {
@@ -643,8 +379,7 @@ const AdminDashboard = () => {
     { id: "overview", label: "Overview", icon: BarChart3, group: "Insights" },
     { id: "analytics", label: "Analytics", icon: TrendingUp, group: "Insights" },
 
-    { id: "users", label: "User Management", icon: Users, group: "People" },
-    { id: "hostWaitlist", label: "Host Waitlist", icon: UserCheck, badge: hostQueue.length, group: "People" },
+    { id: "users", label: "Users & ACL", icon: Users, group: "People" },
     { id: "hosts", label: "Hosts", icon: Users, group: "People" },
     { id: "wanderers", label: "Wanderers", icon: Target, group: "People" },
     { id: "leaderboard", label: "Leaderboard", icon: Trophy, group: "People" },
@@ -658,21 +393,13 @@ const AdminDashboard = () => {
     { id: "invoices", label: "Invoices", icon: Receipt, group: "Operations" },
     { id: "missions", label: "Missions", icon: Crosshair, group: "Operations" },
     { id: "grievances", label: "Grievances", icon: MessageSquare, badge: dbGrievances.filter(g => g.status === "open").length, group: "Operations" },
-    { id: "feedModeration", label: "Feed Moderation", icon: Shield, badge: dbFeedPosts.filter(p => p.status === "pending").length, group: "Moderation" },
-    { id: "reviewModeration", label: "Review Moderation", icon: Star, badge: flaggedReviews.length, group: "Moderation" },
+    { id: "moderation", label: "Moderation", icon: Shield, group: "Operations" },
     { id: "audit", label: "Audit Log", icon: FileText, group: "Operations" },
 
     { id: "plans", label: "Subscription Plans", icon: Crown, group: "Settings" },
     { id: "emails", label: "Emails", icon: Mail, group: "Settings" },
     { id: "configuration", label: "Configuration", icon: Key, group: "Settings" },
     { id: "settings", label: "General", icon: Settings, group: "Settings" },
-    { id: "testmode", label: "Test Mode", icon: Beaker, group: "Settings" },
-
-    { id: "websiteCms", label: "Website CMS", icon: Globe, group: "Content" },
-    { id: "content", label: "Content Manager", icon: BookOpen, group: "Content" },
-
-    { id: "docs", label: "Docs", icon: BookOpen, group: "Docs" },
-
   ];
 
   const groupedTabs = tabs.reduce<Record<string, typeof tabs>>((acc, t) => {
@@ -684,37 +411,28 @@ const AdminDashboard = () => {
     <div className="min-h-screen bg-background">
       <Navbar />
       <div className="pt-20 pb-16 px-4 sm:px-6 lg:px-8 mx-auto max-w-[1500px]">
-        <BetaModerationTools scope="admin" />
         <div className="flex flex-col lg:flex-row gap-6">
           {/* Sidebar */}
-          <aside className={`lg:shrink-0 transition-all duration-200 ${navCollapsed ? "lg:w-16" : "lg:w-64"}`}>
+          <aside className="lg:w-64 lg:shrink-0">
             <div className="lg:sticky lg:top-24 rounded-2xl bg-card shadow-card p-3 max-h-[80vh] overflow-y-auto">
-              <div className={`py-2 mb-2 border-b border-border flex items-center gap-2 ${navCollapsed ? "justify-center px-0" : "justify-between px-2"}`}>
-                {!navCollapsed && (
-                  <div className="min-w-0">
-                    <h1 className="text-lg font-bold text-foreground">Admin Console</h1>
-                    <p className="text-[11px] text-muted-foreground">Commission: {platformSettings.commissionRate}%</p>
-                  </div>
-                )}
-                <button onClick={toggleNav} aria-label={navCollapsed ? "Expand admin menu" : "Collapse admin menu"} title={navCollapsed ? "Expand menu" : "Collapse menu"}
-                  className="shrink-0 rounded-lg p-1.5 text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors">
-                  {navCollapsed ? <PanelLeftOpen className="w-4 h-4" /> : <PanelLeftClose className="w-4 h-4" />}
-                </button>
+              <div className="px-2 py-2 mb-2 border-b border-border">
+                <h1 className="text-lg font-bold text-foreground">Admin Console</h1>
+                <p className="text-[11px] text-muted-foreground">Commission: {platformSettings.commissionRate}%</p>
               </div>
               <nav className="space-y-3">
                 {Object.entries(groupedTabs).map(([group, items]) => (
                   <div key={group}>
-                    {!navCollapsed && <p className="px-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-1">{group}</p>}
+                    <p className="px-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-1">{group}</p>
                     <div className="space-y-0.5">
                       {items.map(t => (
-                        <button key={t.id} onClick={() => setActiveTab(t.id)} title={t.label}
-                          className={`w-full flex items-center gap-2 py-2 text-sm rounded-lg transition-colors ${navCollapsed ? "justify-center px-0 relative" : "justify-between px-2.5"} ${activeTab === t.id ? "bg-primary text-primary-foreground font-medium" : "text-foreground hover:bg-secondary"}`}>
-                          <span className={`flex items-center gap-2 min-w-0 ${navCollapsed ? "justify-center" : ""}`}>
+                        <button key={t.id} onClick={() => setActiveTab(t.id)}
+                          className={`w-full flex items-center justify-between gap-2 px-2.5 py-2 text-sm rounded-lg transition-colors ${activeTab === t.id ? "bg-primary text-primary-foreground font-medium" : "text-foreground hover:bg-secondary"}`}>
+                          <span className="flex items-center gap-2 min-w-0">
                             <t.icon className="w-4 h-4 shrink-0" />
-                            {!navCollapsed && <span className="truncate">{t.label}</span>}
+                            <span className="truncate">{t.label}</span>
                           </span>
                           {(t.badge || 0) > 0 && (
-                            <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${navCollapsed ? "absolute -top-0.5 -right-0.5" : ""} ${activeTab === t.id && !navCollapsed ? "bg-primary-foreground text-primary" : "bg-destructive text-destructive-foreground"}`}>
+                            <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${activeTab === t.id ? "bg-primary-foreground text-primary" : "bg-destructive text-destructive-foreground"}`}>
                               {t.badge}
                             </span>
                           )}
@@ -725,7 +443,6 @@ const AdminDashboard = () => {
                 ))}
               </nav>
             </div>
-
           </aside>
 
           {/* Content */}
@@ -744,7 +461,7 @@ const AdminDashboard = () => {
             <div className="mt-6 grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3">
               {[
                 { label: "Users", value: dbUsers.length, icon: Users, color: "text-primary" },
-                { label: "Bookings", value: dbBookings.length, icon: Calendar, color: "text-accent" },
+                { label: "Bookings", value: mockBookings.length, icon: Calendar, color: "text-accent" },
                 { label: "GMV", value: format(totalRevenue), icon: DollarSign, color: "text-accent" },
                 { label: "Revenue", value: format(platformFee), icon: TrendingUp, color: "text-primary" },
                 { label: "Trips", value: dbTrips.length, icon: Compass, color: "text-accent" },
@@ -760,23 +477,6 @@ const AdminDashboard = () => {
               ))}
             </div>
             <div className="mt-8 grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <div className="lg:col-span-2 rounded-lg bg-card p-4 shadow-card">
-                <h2 className="text-lg font-bold text-foreground mb-2">Beta Operations</h2>
-                <p className="text-sm text-muted-foreground mb-3">Use these controls for rollout flags, public beta signups, host review queues, and audit history.</p>
-                <div className="grid sm:grid-cols-4 gap-3 mb-3">
-                  <div className="rounded-lg bg-secondary/40 p-3"><p className="text-lg font-bold text-foreground">{dbBetaWaitlist.length}</p><p className="text-[10px] text-muted-foreground">Beta signups</p></div>
-                  <div className="rounded-lg bg-secondary/40 p-3"><p className="text-lg font-bold text-foreground">{dbBetaWaitlist.filter(w => w.status === "confirmed").length}</p><p className="text-[10px] text-muted-foreground">Confirmed</p></div>
-                  <div className="rounded-lg bg-secondary/40 p-3"><p className="text-lg font-bold text-foreground">{hostQueue.length}</p><p className="text-[10px] text-muted-foreground">Host queue</p></div>
-                  <div className="rounded-lg bg-secondary/40 p-3"><p className="text-lg font-bold text-foreground">{approvedHostApplications.length}</p><p className="text-[10px] text-muted-foreground">Approved hosts</p></div>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  <Button asChild variant="outline" size="sm"><Link to="/admin/feature-flags"><Flag className="w-4 h-4 mr-1" /> Feature Flags</Link></Button>
-                  <Button asChild variant="outline" size="sm"><Link to="/admin/waitlist"><Mail className="w-4 h-4 mr-1" /> Beta Waitlist</Link></Button>
-                  <Button variant="outline" size="sm" onClick={() => setActiveTab("hostWaitlist")}><UserCheck className="w-4 h-4 mr-1" /> Host Waitlist</Button>
-                  <Button asChild variant="outline" size="sm"><Link to="/admin/audit-log"><FileText className="w-4 h-4 mr-1" /> Audit Log</Link></Button>
-                  <Button asChild variant="outline" size="sm"><Link to="/feed"><Sparkles className="w-4 h-4 mr-1" /> Traveler Feed</Link></Button>
-                </div>
-              </div>
               <div>
                 <h2 className="text-lg font-bold text-foreground mb-3">Pending Actions</h2>
                 <div className="space-y-2">
@@ -865,165 +565,125 @@ const AdminDashboard = () => {
             {/* User List */}
             {filteredUsers.length === 0 ? (
               <p className="text-muted-foreground text-center py-8">No users found.</p>
-            ) : (() => {
-              const pageCount = Math.max(1, Math.ceil(filteredUsers.length / TABLE_PAGE_SIZE));
-              const safePage = Math.min(usersPage, pageCount - 1);
-              const paged = filteredUsers.slice(safePage * TABLE_PAGE_SIZE, (safePage + 1) * TABLE_PAGE_SIZE);
-              return (
-                <div className="rounded-2xl border border-border bg-card shadow-card overflow-hidden">
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-sm">
-                      <thead className="bg-secondary/40 text-xs uppercase tracking-wider text-muted-foreground">
-                        <tr>
-                          <th className="text-left font-semibold px-3 py-2.5">User</th>
-                          <th className="text-left font-semibold px-3 py-2.5">Role</th>
-                          <th className="text-left font-semibold px-3 py-2.5">Plan</th>
-                          <th className="text-left font-semibold px-3 py-2.5">Phone</th>
-                          <th className="text-left font-semibold px-3 py-2.5">Permissions</th>
-                          <th className="text-left font-semibold px-3 py-2.5">Joined</th>
-                          <th className="text-right font-semibold px-3 py-2.5">Manage</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-border">
-                        {paged.map(u => {
-                          const roles = userRoles.filter(r => r.user_id === u.id);
-                          const perms = dbPermissions.filter(p => p.user_id === u.id);
-                          const sub = dbSubscriptions.find(s => s.user_id === u.id);
-                          const isExpanded = expandedUser === u.id;
+            ) : (
+              <div className="space-y-2">
+                {filteredUsers.map(u => {
+                  const roles = userRoles.filter(r => r.user_id === u.id);
+                  const perms = dbPermissions.filter(p => p.user_id === u.id);
+                  const sub = dbSubscriptions.find(s => s.user_id === u.id);
+                  const isExpanded = expandedUser === u.id;
 
-                          return (
-                            <Fragment key={u.id}>
-                              <tr className={isExpanded ? "bg-primary/5" : "hover:bg-secondary/20"}>
-                                <td className="px-3 py-2.5">
-                                  <div className="flex items-center gap-2.5">
-                                    <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-xs font-bold text-primary shrink-0">
-                                      {(u.first_name || "U")[0]}
-                                    </div>
-                                    <div className="min-w-0">
-                                      <p className="font-medium text-foreground whitespace-nowrap">{u.first_name} {u.last_name || ""}</p>
-                                      <p className="text-xs text-muted-foreground truncate max-w-[200px]">{u.email || "No email"}</p>
-                                    </div>
-                                  </div>
-                                </td>
-                                <td className="px-3 py-2.5">
-                                  <div className="flex gap-1 flex-wrap">
-                                    {roles.length === 0 && <span className="text-xs text-muted-foreground">—</span>}
-                                    {roles.map(r => (
-                                      <span key={r.id} className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${r.role === "admin" ? "bg-destructive/10 text-destructive" : r.role === "host" ? "bg-primary/10 text-primary" : "bg-accent/10 text-accent"}`}>
-                                        {r.role}
+                  return (
+                    <div key={u.id} className={`rounded-xl bg-card shadow-card overflow-hidden ${isExpanded ? "ring-2 ring-primary/20" : ""}`}>
+                      <div className="p-4 flex items-center gap-3 cursor-pointer" onClick={() => setExpandedUser(isExpanded ? null : u.id)}>
+                        <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-sm font-bold text-primary shrink-0">
+                          {(u.first_name || "U")[0]}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <p className="font-semibold text-foreground">{u.first_name} {u.last_name || ""}</p>
+                            {roles.map(r => (
+                              <span key={r.id} className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${r.role === "admin" ? "bg-destructive/10 text-destructive" : r.role === "host" ? "bg-primary/10 text-primary" : "bg-accent/10 text-accent"}`}>
+                                {r.role}
+                              </span>
+                            ))}
+                            {sub && sub.tier !== "free" && (
+                              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-primary/10 text-primary flex items-center gap-0.5">
+                                <Crown className="w-2.5 h-2.5" /> {sub.tier}
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-xs text-muted-foreground">{u.email || "No email"} · Joined {new Date(u.created_at).toLocaleDateString()}</p>
+                        </div>
+                        <ChevronDown className={`w-4 h-4 text-muted-foreground transition-transform shrink-0 ${isExpanded ? "rotate-180" : ""}`} />
+                      </div>
+
+                      <AnimatePresence>
+                        {isExpanded && (
+                          <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
+                            <div className="px-4 pb-4 border-t border-border pt-4 space-y-4">
+                              {/* Quick Actions */}
+                              <div className="flex flex-wrap gap-2">
+                                <Button size="sm" variant="outline" className="rounded-full text-xs gap-1">
+                                  <Mail className="w-3 h-3" /> Send Email
+                                </Button>
+                                <Button size="sm" variant="outline" className="rounded-full text-xs gap-1">
+                                  <Bell className="w-3 h-3" /> Notify
+                                </Button>
+                                <Button size="sm" variant="outline" className="rounded-full text-xs gap-1">
+                                  <MessageSquare className="w-3 h-3" /> Chat
+                                </Button>
+                                <Button size="sm" variant="outline" className="rounded-full text-xs gap-1 text-destructive">
+                                  <UserX className="w-3 h-3" /> Ban
+                                </Button>
+                              </div>
+
+                              {/* Subscription Management */}
+                              <div className="rounded-lg bg-secondary/30 p-3">
+                                <p className="text-xs font-bold text-foreground mb-2 flex items-center gap-1"><Crown className="w-3 h-3 text-primary" /> Subscription Tier</p>
+                                <div className="flex gap-2 flex-wrap">
+                                  {SUBSCRIPTION_TIERS.map(tier => (
+                                    <button key={tier.id}
+                                      onClick={() => updateSubscription(u.id, tier.id)}
+                                      className={`text-xs px-3 py-1.5 rounded-full border transition-colors ${(sub?.tier || "free") === tier.id ? "bg-primary text-primary-foreground border-primary" : "border-border text-muted-foreground hover:text-foreground hover:border-foreground/30"}`}>
+                                      {tier.label} {tier.price > 0 && `₹${tier.price}`}
+                                    </button>
+                                  ))}
+                                </div>
+                              </div>
+
+                              {/* ACL - Inline Permission Management */}
+                              <div className="rounded-lg bg-secondary/30 p-3">
+                                <p className="text-xs font-bold text-foreground mb-2 flex items-center gap-1"><Lock className="w-3 h-3 text-primary" /> Permissions (ACL)</p>
+                                {perms.length > 0 && (
+                                  <div className="flex flex-wrap gap-1 mb-2">
+                                    {perms.map(p => (
+                                      <span key={p.id} className="text-[10px] bg-primary/10 text-primary px-2 py-1 rounded-full flex items-center gap-1">
+                                        {p.permission.replace(/_/g, " ")}
+                                        <button onClick={(e) => { e.stopPropagation(); revokePermission(p.id); }} className="ml-0.5 hover:text-destructive">×</button>
                                       </span>
                                     ))}
                                   </div>
-                                </td>
-                                <td className="px-3 py-2.5">
-                                  <span className="text-xs capitalize text-muted-foreground flex items-center gap-1">
-                                    {sub && sub.tier !== "free" && <Crown className="w-3 h-3 text-primary" />}
-                                    {sub?.tier || "free"}
-                                  </span>
-                                </td>
-                                <td className="px-3 py-2.5 text-xs text-muted-foreground whitespace-nowrap">{u.phone || "—"}</td>
-                                <td className="px-3 py-2.5 text-xs text-muted-foreground">{perms.length}</td>
-                                <td className="px-3 py-2.5 text-xs text-muted-foreground whitespace-nowrap">{new Date(u.created_at).toLocaleDateString()}</td>
-                                <td className="px-3 py-2.5 text-right">
-                                  <Button variant="outline" size="sm" className="rounded-full text-xs gap-1" onClick={() => setExpandedUser(isExpanded ? null : u.id)}>
-                                    {isExpanded ? "Close" : "Manage"}
-                                    <ChevronDown className={`w-3 h-3 transition-transform ${isExpanded ? "rotate-180" : ""}`} />
+                                )}
+                                <div className="flex gap-2">
+                                  <select className="text-xs h-8 rounded-md border border-input bg-background px-2 flex-1"
+                                    value={permType} onChange={e => setPermType(e.target.value)}>
+                                    {AVAILABLE_PERMISSIONS.map(p => <option key={p} value={p}>{p.replace(/_/g, " ")}</option>)}
+                                  </select>
+                                  <Button size="sm" className="rounded-full text-xs h-8" onClick={() => grantPermission(u.id)}>
+                                    <Plus className="w-3 h-3 mr-1" /> Grant
                                   </Button>
-                                </td>
-                              </tr>
-                              {isExpanded && (
-                                <tr className="bg-secondary/10">
-                                  <td colSpan={7} className="px-4 pb-4 pt-3">
-                                    <div className="space-y-4">
-                                      {/* Quick Actions */}
-                                      <div className="flex flex-wrap gap-2">
-                                        <Button size="sm" variant="outline" className="rounded-full text-xs gap-1" onClick={() => sendUserEmail(u)}>
-                                          <Mail className="w-3 h-3" /> Send Email
-                                        </Button>
-                                        <Button size="sm" variant="outline" className="rounded-full text-xs gap-1" onClick={() => notifyUser(u)}>
-                                          <Bell className="w-3 h-3" /> Notify
-                                        </Button>
-                                        <Button size="sm" variant="outline" className="rounded-full text-xs gap-1" onClick={() => setActiveAdminChat({ id: u.id, name: `${u.first_name || "User"} ${u.last_name || ""}`.trim() })}>
-                                          <MessageSquare className="w-3 h-3" /> Chat
-                                        </Button>
-                                        <Button size="sm" variant="outline" className="rounded-full text-xs gap-1 text-destructive" onClick={() => banUser(u)} disabled={bannedUserIds.has(u.id)}>
-                                          <UserX className="w-3 h-3" /> {bannedUserIds.has(u.id) ? "Banned" : "Ban"}
-                                        </Button>
-                                      </div>
+                                </div>
+                              </div>
 
-                                      {/* Subscription Management */}
-                                      <div className="rounded-lg bg-card p-3 border border-border">
-                                        <p className="text-xs font-bold text-foreground mb-2 flex items-center gap-1"><Crown className="w-3 h-3 text-primary" /> Subscription Tier</p>
-                                        <div className="flex gap-2 flex-wrap">
-                                          {SUBSCRIPTION_TIERS.map(tier => (
-                                            <button key={tier.id}
-                                              onClick={() => updateSubscription(u.id, tier.id)}
-                                              className={`text-xs px-3 py-1.5 rounded-full border transition-colors ${(sub?.tier || "free") === tier.id ? "bg-primary text-primary-foreground border-primary" : "border-border text-muted-foreground hover:text-foreground hover:border-foreground/30"}`}>
-                                              {tier.label} {tier.price > 0 && `₹${tier.price}`}
-                                            </button>
-                                          ))}
-                                        </div>
-                                      </div>
-
-                                      {/* ACL */}
-                                      <div className="rounded-lg bg-card p-3 border border-border">
-                                        <p className="text-xs font-bold text-foreground mb-2 flex items-center gap-1"><Lock className="w-3 h-3 text-primary" /> Permissions (ACL)</p>
-                                        {perms.length > 0 && (
-                                          <div className="flex flex-wrap gap-1 mb-2">
-                                            {perms.map(p => (
-                                              <span key={p.id} className="text-[10px] bg-primary/10 text-primary px-2 py-1 rounded-full flex items-center gap-1">
-                                                {p.permission.replace(/_/g, " ")}
-                                                <button onClick={(e) => { e.stopPropagation(); revokePermission(p.id); }} className="ml-0.5 hover:text-destructive">×</button>
-                                              </span>
-                                            ))}
-                                          </div>
-                                        )}
-                                        <div className="flex gap-2">
-                                          <select className="text-xs h-8 rounded-md border border-input bg-background px-2 flex-1"
-                                            value={permType} onChange={e => setPermType(e.target.value)}>
-                                            {AVAILABLE_PERMISSIONS.map(p => <option key={p} value={p}>{p.replace(/_/g, " ")}</option>)}
-                                          </select>
-                                          <Button size="sm" className="rounded-full text-xs h-8" onClick={() => grantPermission(u.id)}>
-                                            <Plus className="w-3 h-3 mr-1" /> Grant
-                                          </Button>
-                                        </div>
-                                      </div>
-
-                                      {/* Details */}
-                                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
-                                        <div className="rounded-lg bg-card p-2 border border-border">
-                                          <p className="text-muted-foreground">Phone</p>
-                                          <p className="font-medium text-foreground">{u.phone || "N/A"}</p>
-                                        </div>
-                                        <div className="rounded-lg bg-card p-2 border border-border">
-                                          <p className="text-muted-foreground">Nationality</p>
-                                          <p className="font-medium text-foreground">{u.nationality || "N/A"}</p>
-                                        </div>
-                                        <div className="rounded-lg bg-card p-2 border border-border">
-                                          <p className="text-muted-foreground">Interests</p>
-                                          <p className="font-medium text-foreground">{u.interests?.join(", ") || "N/A"}</p>
-                                        </div>
-                                        <div className="rounded-lg bg-card p-2 border border-border">
-                                          <p className="text-muted-foreground">Travel Styles</p>
-                                          <p className="font-medium text-foreground">{u.travel_styles?.join(", ") || "N/A"}</p>
-                                        </div>
-                                      </div>
-                                    </div>
-                                  </td>
-                                </tr>
-                              )}
-                            </Fragment>
-                          );
-                        })}
-                      </tbody>
-                    </table>
-                  </div>
-                  <div className="px-3 pb-3">
-                    <AdminPagination page={safePage} total={filteredUsers.length} pageSize={TABLE_PAGE_SIZE} onPage={setUsersPage} />
-                  </div>
-                </div>
-              );
-            })()}
+                              {/* User Details */}
+                              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+                                <div className="rounded-lg bg-secondary/30 p-2">
+                                  <p className="text-muted-foreground">Phone</p>
+                                  <p className="font-medium text-foreground">{u.phone || "N/A"}</p>
+                                </div>
+                                <div className="rounded-lg bg-secondary/30 p-2">
+                                  <p className="text-muted-foreground">Nationality</p>
+                                  <p className="font-medium text-foreground">{u.nationality || "N/A"}</p>
+                                </div>
+                                <div className="rounded-lg bg-secondary/30 p-2">
+                                  <p className="text-muted-foreground">Interests</p>
+                                  <p className="font-medium text-foreground">{u.interests?.join(", ") || "N/A"}</p>
+                                </div>
+                                <div className="rounded-lg bg-secondary/30 p-2">
+                                  <p className="text-muted-foreground">Travel Styles</p>
+                                  <p className="font-medium text-foreground">{u.travel_styles?.join(", ") || "N/A"}</p>
+                                </div>
+                              </div>
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
         )}
 
@@ -1315,300 +975,10 @@ const AdminDashboard = () => {
           </div>
         )}
 
-        {/* Host Waitlist Tab */}
-        {activeTab === "hostWaitlist" && (
-          <div className="mt-6">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
-              <div>
-                <h2 className="text-xl font-bold text-foreground">Host Waitlist ({hostQueue.length})</h2>
-                <p className="text-sm text-muted-foreground">Review host applications before approval. Approved hosts are assigned the host role and appear under People → User Management.</p>
-              </div>
-              <Button asChild variant="outline" size="sm"><Link to="/host-eligibility">Public host application</Link></Button>
-            </div>
-
-            <div className="flex flex-wrap items-center gap-2 mb-4">
-              <div className="relative flex-1 min-w-[200px]">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input className="pl-9 h-9" placeholder="Search name, email or city…" value={hostAppSearch}
-                  onChange={e => { setHostAppSearch(e.target.value); setHostQueuePage(0); setHostProfilePage(0); }} />
-              </div>
-              <select aria-label="Filter by program" className="h-9 rounded-md border border-input bg-background px-2 text-sm text-foreground"
-                value={hostAppProgram} onChange={e => { setHostAppProgram(e.target.value as any); setHostQueuePage(0); setHostProfilePage(0); }}>
-                <option value="all">All programs</option>
-                <option value="foreign">Host foreign travelers</option>
-                <option value="profile">Host profiles (Become a Host)</option>
-              </select>
-              <select aria-label="Filter by status" className="h-9 rounded-md border border-input bg-background px-2 text-sm text-foreground"
-                value={hostAppStatus} onChange={e => { setHostAppStatus(e.target.value); setHostQueuePage(0); setHostProfilePage(0); }}>
-                <option value="all">All statuses</option>
-                <option value="pending">Pending</option>
-                <option value="under_review">Under review</option>
-                <option value="waitlisted">Waitlisted</option>
-                <option value="verified">Verified</option>
-                                   <option value="approved">Approved</option>
-                <option value="rejected">Rejected</option>
-              </select>
-              <select aria-label="Sort applications" className="h-9 rounded-md border border-input bg-background px-2 text-sm text-foreground"
-                value={hostAppSort} onChange={e => setHostAppSort(e.target.value as any)}>
-                <option value="newest">Newest first</option>
-                <option value="oldest">Oldest first</option>
-                <option value="score">Highest score</option>
-                <option value="name">Name A–Z</option>
-              </select>
-              {(hostAppSearch || hostAppStatus !== "all" || hostAppProgram !== "all" || hostAppSort !== "newest") && (
-                <Button size="sm" variant="ghost" className="text-xs" onClick={() => { setHostAppSearch(""); setHostAppStatus("all"); setHostAppProgram("all"); setHostAppSort("newest"); }}>
-                  Clear filters
-                </Button>
-              )}
-            </div>
-
-            {hostQueue.length === 0 ? (
-              <div className="rounded-lg bg-card p-8 text-center shadow-card">
-                <UserCheck className="w-10 h-10 text-muted-foreground/40 mx-auto mb-3" />
-                <p className="font-medium text-foreground">No matching host applications</p>
-                <p className="text-sm text-muted-foreground">Adjust the filters above, or wait for new applications from /host-eligibility.</p>
-              </div>
-            ) : (() => {
-              const pageCount = Math.max(1, Math.ceil(hostQueue.length / TABLE_PAGE_SIZE));
-              const safePage = Math.min(hostQueuePage, pageCount - 1);
-              const paged = hostQueue.slice(safePage * TABLE_PAGE_SIZE, (safePage + 1) * TABLE_PAGE_SIZE);
-              return (
-                <div className="rounded-2xl border border-border bg-card shadow-card overflow-hidden">
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-sm">
-                      <thead className="bg-secondary/40 text-xs uppercase tracking-wider text-muted-foreground">
-                        <tr>
-                          <th className="text-left font-semibold px-3 py-2.5">Applicant</th>
-                          <th className="text-left font-semibold px-3 py-2.5">City</th>
-                          <th className="text-left font-semibold px-3 py-2.5">Score</th>
-                          <th className="text-left font-semibold px-3 py-2.5">Quiz</th>
-                          <th className="text-left font-semibold px-3 py-2.5">Languages</th>
-                          <th className="text-left font-semibold px-3 py-2.5">KYC</th>
-                          <th className="text-left font-semibold px-3 py-2.5">Status</th>
-                          <th className="text-right font-semibold px-3 py-2.5">Actions</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-border">
-                        {paged.map(app => (
-                          <tr key={app.id} className="hover:bg-secondary/20 align-top">
-                            <td className="px-3 py-2.5">
-                              <p className="font-medium text-foreground whitespace-nowrap">{app.full_name}</p>
-                              <p className="text-xs text-muted-foreground">{app.email}</p>
-                              <p className="text-xs text-muted-foreground capitalize">{app.badge} · {app.english_proficiency} English</p>
-                            </td>
-                            <td className="px-3 py-2.5 text-muted-foreground whitespace-nowrap">{app.city}</td>
-                            <td className="px-3 py-2.5 font-semibold text-primary whitespace-nowrap">{app.eligibility_score}/100</td>
-                            <td className="px-3 py-2.5 text-muted-foreground whitespace-nowrap">{app.questionnaire_score || 0}/100</td>
-                            <td className="px-3 py-2.5 text-xs text-muted-foreground max-w-[180px]">
-                              <span className="line-clamp-2">{app.languages?.join(", ") || "—"}</span>
-                            </td>
-                            <td className="px-3 py-2.5 text-xs text-muted-foreground">{app.has_kyc ? "Provided" : "Missing"}</td>
-                            <td className="px-3 py-2.5">
-                              <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${statusBadge(app.status)}`}>{app.status.replace("_", " ")}</span>
-                            </td>
-                            <td className="px-3 py-2.5 text-right whitespace-nowrap">
-                              <div className="flex gap-1.5 justify-end flex-wrap">
-                                <Button size="sm" variant="secondary" className="rounded-full text-xs" onClick={() => setDetailApp({ kind: "eligibility", row: app })}>
-                                  <FileText className="w-3 h-3 mr-1" /> View full
-                                </Button>
-
-                                <Button size="sm" className="rounded-full text-xs bg-accent text-accent-foreground hover:bg-accent/90" onClick={() => updateHostApplicationStatus(app, "approved")}>
-                                  <CheckCircle className="w-3 h-3 mr-1" /> Approve
-                                </Button>
-                                <Button size="sm" variant="outline" className="rounded-full text-xs" onClick={() => updateHostApplicationStatus(app, "under_review")}>
-                                  <Eye className="w-3 h-3 mr-1" /> Review
-                                </Button>
-                                <Button size="sm" variant="outline" className="rounded-full text-xs" onClick={() => updateHostApplicationStatus(app, "waitlisted")}>
-                                  <Clock className="w-3 h-3 mr-1" /> Waitlist
-                                </Button>
-                                <Button size="sm" variant="outline" className="rounded-full text-xs text-destructive" onClick={() => updateHostApplicationStatus(app, "rejected")}>
-                                  <Ban className="w-3 h-3 mr-1" /> Reject
-                                </Button>
-                              </div>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                  <div className="px-3 pb-3">
-                    <AdminPagination page={safePage} total={hostQueue.length} pageSize={TABLE_PAGE_SIZE} onPage={setHostQueuePage} />
-                  </div>
-                </div>
-              );
-            })()}
-
-            {/* Host profile applications submitted from /become-host */}
-            <div className="mt-8">
-              <div className="flex items-center justify-between gap-3 mb-3 flex-wrap">
-                <div>
-                  <h3 className="text-lg font-bold text-foreground">Host profile applications ({hostProfileQueue.length} of {dbHostProfileApps.length})</h3>
-                  <p className="text-sm text-muted-foreground">Submissions from the public “Become a Host” form, including homestay, transport and food details.</p>
-                </div>
-                <Button asChild variant="outline" size="sm"><Link to="/become-host">Open form</Link></Button>
-              </div>
-              {hostProfileQueue.length === 0 ? (
-                <div data-testid="host-profile-apps-empty" className="rounded-2xl border border-border bg-card p-8 text-center shadow-card">
-                  <UserCheck className="w-9 h-9 text-muted-foreground/40 mx-auto mb-2" />
-                  <p className="font-medium text-foreground">No matching host profile applications</p>
-                  <p className="text-sm text-muted-foreground">New submissions from /become-host land here for verification.</p>
-                </div>
-              ) : (
-                <div data-testid="host-profile-apps-table" className="rounded-2xl border border-border bg-card shadow-card overflow-hidden">
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-sm">
-                      <thead className="bg-secondary/40 text-xs uppercase tracking-wider text-muted-foreground">
-                        <tr>
-                          <th className="text-left font-semibold px-3 py-2.5">Applicant</th>
-                          <th className="text-left font-semibold px-3 py-2.5">Location</th>
-                          <th className="text-left font-semibold px-3 py-2.5">Services</th>
-                          <th className="text-left font-semibold px-3 py-2.5">Details</th>
-                          <th className="text-left font-semibold px-3 py-2.5">Photos</th>
-                          <th className="text-right font-semibold px-3 py-2.5">Rate / day</th>
-                          <th className="text-right font-semibold px-3 py-2.5">Status</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-border">
-                        {hostProfileQueue.slice(Math.min(hostProfilePage, Math.max(0, Math.ceil(hostProfileQueue.length / TABLE_PAGE_SIZE) - 1)) * TABLE_PAGE_SIZE, (Math.min(hostProfilePage, Math.max(0, Math.ceil(hostProfileQueue.length / TABLE_PAGE_SIZE) - 1)) + 1) * TABLE_PAGE_SIZE).map(a => (
-                          <tr key={a.id} className="hover:bg-secondary/20 align-top">
-                            <td className="px-3 py-2.5">
-                              <p className="font-medium text-foreground whitespace-nowrap">{a.full_name}</p>
-                              <p className="text-xs text-muted-foreground">{a.email}</p>
-                              <p className="text-xs text-muted-foreground">{a.phone}</p>
-                            </td>
-                            <td className="px-3 py-2.5 text-muted-foreground whitespace-nowrap">{a.city}, {a.state}</td>
-                            <td className="px-3 py-2.5 text-xs text-muted-foreground">{(a.services || []).join(", ") || "—"}</td>
-                            <td className="px-3 py-2.5 text-xs text-muted-foreground max-w-[260px]">
-                              {a.homestay_details?.rooms && <p>Stay: {a.homestay_details.rooms} rooms · {a.homestay_details.check_in || "—"}–{a.homestay_details.check_out || "—"} · ₹{a.homestay_details.nightly_rate || "—"}/night</p>}
-                              {a.transport_details?.vehicle_type && <p>Transport: {a.transport_details.vehicle_type} · {a.transport_details.capacity || "—"} seats · ₹{a.transport_details.per_km || "—"}/km</p>}
-                              {a.food_details?.cuisines && <p>Food: {a.food_details.cuisines} · ₹{a.food_details.price_per_plate || "—"}/plate</p>}
-                              {!a.homestay_details?.rooms && !a.transport_details?.vehicle_type && !a.food_details?.cuisines && "—"}
-                            </td>
-                            <td className="px-3 py-2.5">
-                              <div className="flex gap-1">
-                                {(a.photos || []).slice(0, 3).map((p: string) => (
-                                  <img key={p} src={p} alt="" className="w-8 h-8 rounded object-cover border border-border" />
-                                ))}
-                                {(a.photos || []).length === 0 && <span className="text-xs text-muted-foreground">—</span>}
-                              </div>
-                            </td>
-                            <td className="px-3 py-2.5 text-right font-semibold text-foreground whitespace-nowrap">{a.price_per_day ? format(Number(a.price_per_day)) : "—"}</td>
-                            <td className="px-3 py-2.5 text-right">
-                              <div className="flex items-center justify-end gap-1.5">
-                                <Button size="sm" variant="secondary" className="rounded-full text-xs" onClick={() => setDetailApp({ kind: "profile", row: a })}>
-                                  <FileText className="w-3 h-3 mr-1" /> View full
-                                </Button>
-                                <select className="text-xs rounded-md border border-input bg-background px-2 py-1"
-                                  value={a.status}
-                                  onChange={e => updateHostProfileAppStatus(a, e.target.value)}>
-                                  <option value="pending">Pending</option>
-                                  <option value="under_review">Under review</option>
-                                  <option value="verified">Verified</option>
-                                  <option value="rejected">Rejected</option>
-                                </select>
-                              </div>
-                            </td>
-
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                  <div className="px-3 pb-3">
-                    <AdminPagination alwaysShow page={Math.min(hostProfilePage, Math.max(0, Math.ceil(hostProfileQueue.length / TABLE_PAGE_SIZE) - 1))}
-                      total={hostProfileQueue.length} pageSize={TABLE_PAGE_SIZE} onPage={setHostProfilePage} />
-                  </div>
-                </div>
-
-              )}
-            </div>
-          </div>
-        )}
-
         {/* Hosts Tab */}
         {activeTab === "hosts" && (
           <div className="mt-6">
-            <div className="flex items-center justify-between mb-4 gap-3 flex-wrap">
-              <h2 className="text-xl font-bold text-foreground">
-                Hosts ({registeredHosts.length} registered · {hosts.length} showcase)
-              </h2>
-              <Button size="sm" variant="outline" className="rounded-full text-xs gap-1.5" onClick={() => setDataRefreshKey(k => k + 1)}>
-                <TrendingUp className="w-3.5 h-3.5" /> Refresh live data
-              </Button>
-            </div>
-
-            {/* Live registered hosts pulled from the database */}
-            <div className="mb-6 rounded-xl bg-card p-4 shadow-card">
-              <h3 className="font-bold text-foreground mb-1">Registered hosts (live)</h3>
-              <p className="text-xs text-muted-foreground mb-3">
-                Every account carrying the host role, with their real listings, trips, bookings and revenue.
-              </p>
-              {registeredHosts.length === 0 ? (
-                <p className="text-sm text-muted-foreground">No hosts registered yet. Approve a host application to add one.</p>
-              ) : (
-                <div className="overflow-x-auto">
-                  <table className="w-full text-xs">
-                    <thead className="text-muted-foreground">
-                      <tr className="border-b border-border">
-                        <th className="text-left py-2">Host</th>
-                        <th className="text-left">City</th>
-                        <th className="text-right">Listings</th>
-                        <th className="text-right">Trips</th>
-                        <th className="text-right">Bookings</th>
-                        <th className="text-right">Revenue</th>
-                        <th className="text-right">Joined</th>
-                        <th className="text-right">Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {registeredHosts.map(h => (
-                        <tr key={h.id} className="border-b border-border last:border-0">
-                          <td className="py-2">
-                            <p className="font-semibold text-foreground">{h.full_name}</p>
-                            <p className="text-[11px] text-muted-foreground">{h.email}</p>
-                          </td>
-                          <td>{h.city}</td>
-                          <td className="text-right">{h.listings}</td>
-                          <td className="text-right">{h.tripsHosted}</td>
-                          <td className="text-right">{h.bookingsCount}</td>
-                          <td className="text-right">{format(h.revenue)}</td>
-                          <td className="text-right">{h.created_at ? new Date(h.created_at).toLocaleDateString() : "—"}</td>
-                          <td className="text-right">
-                            <div className="inline-flex gap-1">
-                              <Button size="sm" variant="outline" className="rounded-full text-[11px] h-7 px-2 gap-1"
-                                onClick={() => setActiveAdminChat({ id: h.id, name: h.full_name })}>
-                                <MessageSquare className="w-3 h-3" /> Chat
-                              </Button>
-                              <Button size="sm" variant="outline" className="rounded-full text-[11px] h-7 px-2 gap-1 text-destructive"
-                                onClick={() => banUser(h)} disabled={bannedUserIds.has(h.id)}>
-                                <Ban className="w-3 h-3" /> {bannedUserIds.has(h.id) ? "Banned" : "Ban"}
-                              </Button>
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </div>
-
-            {approvedHostApplications.length > 0 && (
-              <div className="mb-5 rounded-lg bg-card p-4 shadow-card">
-                <h3 className="font-bold text-foreground mb-2">Approved host applications</h3>
-                <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-2">
-                  {approvedHostApplications.map(app => (
-                    <div key={app.id} className="rounded-lg border border-border p-3 text-sm">
-                      <p className="font-semibold text-foreground">{app.full_name}</p>
-                      <p className="text-xs text-muted-foreground">{app.city} · {app.email}</p>
-                      <span className="mt-2 inline-flex text-[10px] bg-accent/10 text-accent px-2 py-0.5 rounded-full">In People as host</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-            <h3 className="font-bold text-foreground mb-2">Showcase hosts (catalog)</h3>
-
+            <h2 className="text-xl font-bold text-foreground mb-4">All Hosts ({hosts.length})</h2>
             <div className="space-y-3">
               {hosts.map(h => {
                 const status = getHostStatus(h.id);
@@ -1664,24 +1034,27 @@ const AdminDashboard = () => {
 
         {/* Bookings Tab */}
         {activeTab === "bookings" && (
-          <div className="mt-6">
-            <h2 className="text-xl font-bold text-foreground mb-4">All Bookings ({dbBookings.length})</h2>
-            <BookingsPanel
-              rows={dbBookings.map(b => ({
-                id: b.id as string, ref: `#${(b.id as string).slice(0, 8)}`,
-                host: getUserName(b.host_id), traveler: getUserName(b.traveler_id),
-                dates: `${b.start_date} → ${b.end_date}`, guests: b.guests ?? "—",
-                total: Number(b.total_price || 0), status: b.status || "pending",
-              }))}
-              loading={adminLoading}
-              page={bookingsPage}
-              pageSize={bookingsPageSize}
-              onPage={setBookingsPage}
-              onPageSize={setBookingsPageSize}
-              formatCurrency={format}
-              onStatusChange={updateBookingStatus}
-              onRefresh={() => setDataRefreshKey(k => k + 1)}
-            />
+          <div className="mt-6 space-y-3">
+            <h2 className="text-xl font-bold text-foreground mb-4">All Bookings ({mockBookings.length})</h2>
+            {mockBookings.map(b => {
+              const h = hosts.find(x => x.id === b.hostId);
+              const status = getBookingStatus(b.id, b.status);
+              return (
+                <div key={b.id} className="rounded-lg bg-card p-4 shadow-card flex justify-between items-center">
+                  <div>
+                    <p className="font-medium text-foreground">#{b.id} · {h?.name}, {h?.city}</p>
+                    <p className="text-xs text-muted-foreground">{b.startDate} → {b.endDate} · {b.services.join(", ")}</p>
+                  </div>
+                  <div className="text-right flex items-center gap-3">
+                    <p className="font-bold text-foreground">{format(b.totalPrice)}</p>
+                    <select className="text-xs rounded-md border border-input bg-background px-2 py-1"
+                      value={status} onChange={e => { setBookingOverrides(p => ({ ...p, [b.id]: e.target.value })); toast({ title: `Booking → ${e.target.value}` }); }}>
+                      <option value="pending">Pending</option><option value="confirmed">Confirmed</option><option value="completed">Completed</option><option value="cancelled">Cancelled</option>
+                    </select>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         )}
 
@@ -1791,72 +1164,51 @@ const AdminDashboard = () => {
             </div>
             {dbWanderers.length === 0 ? (
               <p className="text-muted-foreground text-center py-8">No wanderer applications yet.</p>
-            ) : (() => {
-              const pageCount = Math.max(1, Math.ceil(dbWanderers.length / TABLE_PAGE_SIZE));
-              const safePage = Math.min(wanderersPage, pageCount - 1);
-              const paged = dbWanderers.slice(safePage * TABLE_PAGE_SIZE, (safePage + 1) * TABLE_PAGE_SIZE);
-              return (
-                <div className="rounded-2xl border border-border bg-card shadow-card overflow-hidden">
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-sm">
-                      <thead className="bg-secondary/40 text-xs uppercase tracking-wider text-muted-foreground">
-                        <tr>
-                          <th className="text-left font-semibold px-3 py-2.5">Wanderer</th>
-                          <th className="text-left font-semibold px-3 py-2.5">City</th>
-                          <th className="text-left font-semibold px-3 py-2.5">Styles</th>
-                          <th className="text-left font-semibold px-3 py-2.5">Badge</th>
-                          <th className="text-left font-semibold px-3 py-2.5">Score</th>
-                          <th className="text-left font-semibold px-3 py-2.5">Status</th>
-                          <th className="text-right font-semibold px-3 py-2.5">Actions</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-border">
-                        {paged.map(w => (
-                          <tr key={w.id} className={w.status === "pending" ? "bg-primary/5" : "hover:bg-secondary/20"}>
-                            <td className="px-3 py-2.5">
-                              <p className="font-medium text-foreground whitespace-nowrap">{w.full_name}</p>
-                              <p className="text-xs text-muted-foreground">{w.email}</p>
-                            </td>
-                            <td className="px-3 py-2.5 text-muted-foreground whitespace-nowrap">{w.city}</td>
-                            <td className="px-3 py-2.5 text-xs text-muted-foreground max-w-[200px]">
-                              <span className="line-clamp-2">{w.travel_styles?.join(", ") || "—"}</span>
-                            </td>
-                            <td className="px-3 py-2.5 text-xs capitalize text-muted-foreground">{w.badge || "—"}</td>
-                            <td className="px-3 py-2.5 font-semibold text-foreground">{w.score || 0}</td>
-                            <td className="px-3 py-2.5">
-                              <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${statusBadge(w.status)}`}>{w.status}</span>
-                            </td>
-                            <td className="px-3 py-2.5 text-right whitespace-nowrap">
-                              <div className="flex gap-1.5 justify-end flex-wrap">
-                                {w.status === "pending" && (
-                                  <>
-                                    <Button size="sm" className="rounded-full text-xs bg-accent text-accent-foreground" onClick={() => updateWandererStatus(w.id, "approved")}>
-                                      <CheckCircle className="w-3 h-3 mr-1" /> Approve
-                                    </Button>
-                                    <Button size="sm" variant="outline" className="rounded-full text-xs text-destructive" onClick={() => updateWandererStatus(w.id, "rejected")}>
-                                      <Ban className="w-3 h-3 mr-1" /> Reject
-                                    </Button>
-                                  </>
-                                )}
-                                {w.status === "approved" && (
-                                  <Button size="sm" variant="outline" className="rounded-full text-xs text-destructive" onClick={() => updateWandererStatus(w.id, "suspended")}>Suspend</Button>
-                                )}
-                                {(w.status === "rejected" || w.status === "suspended") && (
-                                  <Button size="sm" variant="outline" className="rounded-full text-xs" onClick={() => updateWandererStatus(w.id, "approved")}>Reactivate</Button>
-                                )}
-                              </div>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
+            ) : (
+              <div className="space-y-3">
+                {dbWanderers.map(w => (
+                  <div key={w.id} className={`rounded-xl bg-card p-5 shadow-card ${w.status === "pending" ? "ring-2 ring-primary/20" : ""}`}>
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                      <div className="flex items-center gap-3 flex-1">
+                        <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-sm font-bold text-primary">{w.full_name[0]}</div>
+                        <div>
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <h3 className="font-bold text-foreground">{w.full_name}</h3>
+                            <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${statusBadge(w.status)}`}>{w.status}</span>
+                            <span className="text-xs bg-secondary text-muted-foreground px-2 py-0.5 rounded-full">{w.badge}</span>
+                            <span className="text-xs text-muted-foreground">Score: {w.score || 0}</span>
+                          </div>
+                          <p className="text-xs text-muted-foreground mt-0.5">{w.city} · {w.email}</p>
+                          <div className="flex gap-1 mt-1 flex-wrap">
+                            {w.travel_styles?.map((s: string) => (
+                              <span key={s} className="text-[10px] bg-primary/5 text-primary px-2 py-0.5 rounded-full">{s}</span>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex gap-2 shrink-0">
+                        {w.status === "pending" && (
+                          <>
+                            <Button size="sm" className="rounded-full text-xs bg-accent text-accent-foreground" onClick={() => updateWandererStatus(w.id, "approved")}>
+                              <CheckCircle className="w-3 h-3 mr-1" /> Approve
+                            </Button>
+                            <Button size="sm" variant="outline" className="rounded-full text-xs text-destructive" onClick={() => updateWandererStatus(w.id, "rejected")}>
+                              <Ban className="w-3 h-3 mr-1" /> Reject
+                            </Button>
+                          </>
+                        )}
+                        {w.status === "approved" && (
+                          <Button size="sm" variant="outline" className="rounded-full text-xs text-destructive" onClick={() => updateWandererStatus(w.id, "suspended")}>Suspend</Button>
+                        )}
+                        {(w.status === "rejected" || w.status === "suspended") && (
+                          <Button size="sm" variant="outline" className="rounded-full text-xs" onClick={() => updateWandererStatus(w.id, "approved")}>Reactivate</Button>
+                        )}
+                      </div>
+                    </div>
                   </div>
-                  <div className="px-3 pb-3">
-                    <AdminPagination page={safePage} total={dbWanderers.length} pageSize={TABLE_PAGE_SIZE} onPage={setWanderersPage} />
-                  </div>
-                </div>
-              );
-            })()}
+                ))}
+              </div>
+            )}
           </div>
         )}
 
@@ -1995,44 +1347,15 @@ const AdminDashboard = () => {
         )}
 
         {/* Moderation */}
-        {/* ===== FEED MODERATION TAB ===== */}
-        {activeTab === "feedModeration" && (
+        {activeTab === "moderation" && (
           <div className="mt-6 space-y-6">
-            <div>
-              <h2 className="text-xl font-bold text-foreground">Feed Moderation</h2>
-              <p className="text-sm text-muted-foreground mt-1">Approve, remove, and restore Traveler Feed posts. All actions are written to the audit log.</p>
-            </div>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            <h2 className="text-xl font-bold text-foreground mb-4">Content Moderation</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
               {[
-                { label: "Active Posts", value: dbFeedPosts.filter(p => p.status === "active").length, icon: Shield },
-                { label: "Pending", value: dbFeedPosts.filter(p => p.status === "pending").length, icon: Clock },
-                { label: "Removed", value: dbFeedPosts.filter(p => p.status === "removed").length, icon: Ban },
-                { label: "Total Posts", value: dbFeedPosts.length, icon: FileText },
-              ].map(s => (
-                <div key={s.label} className="rounded-lg bg-card p-5 shadow-card text-center">
-                  <s.icon className="w-8 h-8 text-primary mx-auto mb-2" />
-                  <p className="text-2xl font-bold text-foreground">{s.value}</p>
-                  <p className="text-xs text-muted-foreground">{s.label}</p>
-                </div>
-              ))}
-            </div>
-            <FeedModerationPanel />
-          </div>
-        )}
-
-        {/* ===== REVIEW MODERATION TAB ===== */}
-        {activeTab === "reviewModeration" && (
-          <div className="mt-6 space-y-6">
-            <div>
-              <h2 className="text-xl font-bold text-foreground">Review Moderation</h2>
-              <p className="text-sm text-muted-foreground mt-1">Flag and remove traveler reviews. Live database reviews are shown first; demo reviews appear when the database has none.</p>
-            </div>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-              {[
-                { label: "Live Reviews", value: dbReviews.length, icon: Star },
                 { label: "Verified Hosts", value: hosts.filter(h => getHostStatus(h.id) === "verified").length, icon: Shield },
                 { label: "Flagged Reviews", value: flaggedReviews.length, icon: Flag },
                 { label: "Removed Reviews", value: removedReviews.length, icon: Ban },
+                { label: "Pending Reports", value: 0, icon: AlertTriangle },
               ].map(s => (
                 <div key={s.label} className="rounded-lg bg-card p-5 shadow-card text-center">
                   <s.icon className="w-8 h-8 text-primary mx-auto mb-2" />
@@ -2041,50 +1364,49 @@ const AdminDashboard = () => {
                 </div>
               ))}
             </div>
-            <ReviewModerationPanel
-              dbReviews={dbReviews}
-              mockReviews={reviews}
-              getUserName={getUserName}
-              getMockHostName={(hostId) => hosts.find(h => h.id === hostId)?.name || "Unknown host"}
-            />
+            <div>
+              <h3 className="font-bold text-foreground mb-3">Reviews to Moderate</h3>
+              <div className="space-y-3">
+                {activeReviews.map(r => {
+                  const isFlagged = flaggedReviews.includes(r.id);
+                  return (
+                    <div key={r.id} className={`rounded-lg bg-card p-4 shadow-card flex justify-between items-start ${isFlagged ? "border-2 border-destructive/30" : ""}`}>
+                      <div>
+                        <p className="text-sm font-medium text-foreground">{r.travelerName} → {hosts.find(h => h.id === r.hostId)?.name}</p>
+                        <div className="flex gap-0.5 mt-0.5">{Array.from({ length: r.rating }).map((_, j) => <Star key={j} className="w-3 h-3 fill-primary text-primary" />)}</div>
+                        <p className="text-xs text-muted-foreground mt-1">{r.text}</p>
+                      </div>
+                      <div className="flex gap-2 shrink-0">
+                        {!isFlagged ? (
+                          <Button variant="outline" size="sm" className="text-xs rounded-full" onClick={() => { setFlaggedReviews(p => [...p, r.id]); toast({ title: "Flagged" }); }}>
+                            <Flag className="w-3 h-3 mr-1" /> Flag
+                          </Button>
+                        ) : (
+                          <>
+                            <Button variant="outline" size="sm" className="text-xs rounded-full" onClick={() => { setFlaggedReviews(p => p.filter(id => id !== r.id)); }}>Unflag</Button>
+                            <Button variant="outline" size="sm" className="text-xs rounded-full text-destructive" onClick={() => {
+                              setRemovedReviews(p => [...p, r.id]); setFlaggedReviews(p => p.filter(id => id !== r.id)); toast({ title: "Removed", variant: "destructive" });
+                            }}><Trash2 className="w-3 h-3 mr-1" /> Remove</Button>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
           </div>
         )}
 
         {activeTab === "analytics" && (
           <div className="mt-6 space-y-6">
-            <div className="flex items-center justify-between gap-3 flex-wrap mb-4">
-              <div>
-                <h2 className="text-xl font-bold text-foreground">Platform Analytics</h2>
-                <p className="text-xs text-muted-foreground">
-                  Live database metrics · auto-refresh every 60s
-                  {lastSynced ? ` · last synced ${lastSynced.toLocaleTimeString()}` : ""}
-                </p>
-              </div>
-              <div className="flex gap-2">
-                <Button size="sm" variant="outline" className="rounded-full text-xs gap-1.5" onClick={() => setDataRefreshKey(k => k + 1)}>
-                  <TrendingUp className="w-3.5 h-3.5" /> Refresh now
-                </Button>
-                <Link to="/admin/performance">
-                  <Button size="sm" variant="outline" className="rounded-full text-xs gap-1.5">
-                    <BarChart3 className="w-3.5 h-3.5" /> Performance profiler
-                  </Button>
-                </Link>
-              </div>
-            </div>
+            <h2 className="text-xl font-bold text-foreground mb-4">Platform Analytics</h2>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
               {[
                 { label: "Total Users", value: dbUsers.length },
-                { label: "Hosts", value: userRoles.filter(r => r.role === "host").length },
-                { label: "Travelers", value: userRoles.filter(r => r.role === "traveler").length },
                 { label: "Active Subscriptions", value: dbSubscriptions.filter(s => s.is_active && s.tier !== "free").length },
-                { label: "Bookings", value: dbBookings.length },
-                { label: "Booking Value", value: format(dbBookings.reduce((s, b) => s + Number(b.total_price || 0), 0)) },
-                { label: "Invoiced Revenue", value: format(dbInvoices.reduce((s, i) => s + Number(i.total_amount || 0), 0)) },
-                { label: "Trips Listed", value: dbTrips.length },
-                { label: "Experiences", value: dbExperiences.length },
-                { label: "Feed Posts", value: dbFeedPosts.length },
-                { label: "Reviews", value: dbReviews.length },
-                { label: "Open Grievances", value: dbGrievances.filter(g => g.status === "open").length },
+                { label: "Total Invoices", value: dbInvoices.length },
+                { label: "Total Revenue", value: format(dbInvoices.reduce((s, i) => s + Number(i.total_amount || 0), 0)) },
               ].map(s => (
                 <div key={s.label} className="rounded-lg bg-card p-4 shadow-card">
                   <p className="text-2xl font-bold text-foreground">{s.value}</p>
@@ -2092,63 +1414,6 @@ const AdminDashboard = () => {
                 </div>
               ))}
             </div>
-
-            {/* Bookings & revenue trend (real data) */}
-            <div className="rounded-xl bg-card p-5 shadow-card">
-              <h3 className="font-bold text-foreground mb-4">Bookings &amp; Revenue by Month</h3>
-              {dbBookings.length === 0 && (
-                <p className="text-sm text-muted-foreground mb-2">No bookings recorded yet — this chart fills automatically as travelers book.</p>
-              )}
-              <ResponsiveContainer width="100%" height={250}>
-
-                <BarChart data={(() => {
-                  const months: Record<string, { month: string; bookings: number; revenue: number }> = {};
-                  dbBookings.forEach(b => {
-                    const m = new Date(b.created_at).toLocaleDateString("en", { month: "short", year: "2-digit" });
-                    months[m] ||= { month: m, bookings: 0, revenue: 0 };
-                    months[m].bookings += 1;
-                    months[m].revenue += Number(b.total_price || 0);
-                  });
-                  return Object.values(months);
-                })()}>
-                  <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
-                  <XAxis dataKey="month" className="text-xs fill-muted-foreground" />
-                  <YAxis className="text-xs fill-muted-foreground" />
-                  <RechartsTooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 8 }} />
-                  <Bar dataKey="bookings" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
-                  <Bar dataKey="revenue" fill="hsl(var(--accent))" radius={[4, 4, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-
-            {/* Top destinations from real trip listings */}
-            <div className="rounded-xl bg-card p-5 shadow-card">
-              <h3 className="font-bold text-foreground mb-4">Top Destinations (live trips)</h3>
-              {dbTrips.length === 0 ? (
-                <p className="text-sm text-muted-foreground">No trips listed yet.</p>
-              ) : (
-                <ResponsiveContainer width="100%" height={220}>
-                  <BarChart data={(() => {
-                    const counts: Record<string, number> = {};
-                    dbTrips.forEach((t: any) => {
-                      const d = t.destination || "Unspecified";
-                      counts[d] = (counts[d] || 0) + 1;
-                    });
-                    return Object.entries(counts)
-                      .map(([destination, trips]) => ({ destination, trips }))
-                      .sort((a, b) => b.trips - a.trips)
-                      .slice(0, 8);
-                  })()}>
-                    <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
-                    <XAxis dataKey="destination" className="text-xs fill-muted-foreground" />
-                    <YAxis allowDecimals={false} className="text-xs fill-muted-foreground" />
-                    <RechartsTooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 8 }} />
-                    <Bar dataKey="trips" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
-                  </BarChart>
-                </ResponsiveContainer>
-              )}
-            </div>
-
 
             {/* User Growth Chart */}
             <div className="rounded-xl bg-card p-5 shadow-card">
@@ -2284,11 +1549,6 @@ const AdminDashboard = () => {
 
         {activeTab === "plans" && <SubscriptionPlansTab />}
         {activeTab === "weddings" && <WeddingsTab admin />}
-        {activeTab === "testmode" && <div className="mt-2"><TestModePanel /></div>}
-        {activeTab === "docs" && <DocsTab />}
-        {activeTab === "websiteCms" && <WebsiteCMSTab />}
-        {activeTab === "content" && <ContentManagerTab />}
-
 
         {activeTab === "audit" && (
           <div className="space-y-4 mt-2">
@@ -2382,48 +1642,6 @@ const AdminDashboard = () => {
         initialData={editDialog.data} onSave={(d) => { editDialog.onSave(d); setEditDialog(p => ({ ...p, open: false })); }}
         onDelete={editDialog.onDelete ? () => { editDialog.onDelete!(); setEditDialog(p => ({ ...p, open: false })); } : undefined}
         onClose={() => setEditDialog(p => ({ ...p, open: false }))} />
-      {activeAdminChat && (
-        <ChatPanel
-          receiverId={activeAdminChat.id}
-          receiverName={activeAdminChat.name}
-          isOpen={!!activeAdminChat}
-          onClose={() => setActiveAdminChat(null)}
-        />
-      )}
-      <ApplicationDetailDialog
-        open={!!detailApp}
-        onClose={() => setDetailApp(null)}
-        record={detailApp?.row ?? null}
-        title={detailApp?.kind === "profile" ? `Host profile — ${detailApp?.row?.full_name ?? ""}` : `Host application — ${detailApp?.row?.full_name ?? ""}`}
-        groups={detailApp?.kind === "profile" ? [
-          { label: "Applicant", keys: ["full_name", "email", "phone", "city", "state", "tagline", "bio"] },
-          { label: "Services & pricing", keys: ["services", "languages", "specialties", "price_per_day"] },
-          { label: "Homestay", keys: ["homestay_details"] },
-          { label: "Transport", keys: ["transport_details"] },
-          { label: "Food", keys: ["food_details"] },
-        ] : [
-          { label: "Applicant", keys: ["full_name", "email", "phone", "city", "emergency_contact"] },
-          { label: "Experience", keys: ["years_hosting", "foreign_guests_hosted", "references_count", "english_proficiency", "languages", "country_focus", "hosting_specialties"] },
-          { label: "Credibility", keys: ["has_kyc", "has_passport", "cultural_training", "eligibility_score", "social_score", "questionnaire_score", "badge", "waitlist_position"] },
-          { label: "Motivation", keys: ["why_host"] },
-        ]}
-        onStatus={s => detailApp && (detailApp.kind === "profile"
-          ? updateHostProfileAppStatus(detailApp.row, s)
-          : updateHostApplicationStatus(detailApp.row, s))}
-        statuses={detailApp?.kind === "profile" ? [
-          { value: "verified", label: "Verify profile", icon: "approve" },
-          { value: "under_review", label: "Mark under review", icon: "review" },
-          { value: "rejected", label: "Reject", icon: "reject" },
-        ] : [
-          { value: "approved", label: "Approve host", icon: "approve" },
-          { value: "under_review", label: "Mark under review", icon: "review" },
-          { value: "waitlisted", label: "Waitlist", icon: "wait" },
-          { value: "rejected", label: "Reject", icon: "reject" },
-        ]}
-        auditEntries={detailApp?.row?.id ? auditEntriesFor(detailApp.row.id) : []}
-      />
-
-
       <Footer />
     </div>
   );

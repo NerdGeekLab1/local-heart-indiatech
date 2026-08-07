@@ -1,8 +1,8 @@
-import { useState, useEffect, lazy, Suspense } from "react";
+import { useState, lazy, Suspense } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 
 const GlobalSearch = lazy(() => import("@/components/GlobalSearch"));
-import { Search, Menu, X, Compass, User, LogOut, Settings, LayoutDashboard, HelpCircle, FileText, ChevronDown, Heart, Receipt, MessageCircle, Star, AlertTriangle } from "lucide-react";
+import { Search, Menu, X, Compass, User, LogOut, Settings, LayoutDashboard, HelpCircle, FileText, ChevronDown, Bell } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
@@ -31,35 +31,13 @@ const navLinks = [
 const Navbar = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
-  const [scrolled, setScrolled] = useState(false);
-
-  // Keep nav text legible: transparent only over the hero, solid once scrolled.
-  useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 24);
-    onScroll();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
   const location = useLocation();
   const navigate = useNavigate();
   const isHome = location.pathname === "/";
   const { user, userRole, signOut } = useAuth();
   const { toast } = useToast();
 
-  // Single-role enforced by DB (unique constraint on user_roles.user_id).
-  // Persist last visited dashboard so refreshes/back-navigation land on the same view.
-  const dashboardPath =
-    userRole === "admin"
-      ? "/dashboard/admin"
-      : userRole === "host"
-        ? "/dashboard/host"
-        : "/dashboard/traveler";
-
-  if (typeof window !== "undefined" && userRole) {
-    try {
-      window.localStorage.setItem("travelista.lastDashboard", dashboardPath);
-    } catch {}
-  }
+  const dashboardPath = userRole === "admin" ? "/dashboard/admin" : userRole === "host" ? "/dashboard/host" : "/dashboard/traveler";
 
   const userInitials = user?.user_metadata?.first_name
     ? `${user.user_metadata.first_name[0]}${user.user_metadata.last_name?.[0] || ""}`.toUpperCase()
@@ -73,43 +51,8 @@ const Navbar = () => {
 
   const isActive = (path: string) => location.pathname === path;
 
-  // Admin console runs chrome-free: replace the public site nav with a slim admin bar
-  const isAdminArea =
-    location.pathname.startsWith("/admin") || location.pathname.startsWith("/dashboard/admin");
-
-  if (isAdminArea) {
-    return (
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-card/90 backdrop-blur-xl shadow-card">
-        <div className="mx-auto max-w-[1500px] px-4 sm:px-6 lg:px-8">
-          <div className="flex h-14 items-center justify-between gap-3">
-            <div className="flex items-center gap-3 min-w-0">
-              <Link to="/dashboard/admin" className="text-lg font-bold text-primary shrink-0">
-                Travelista <span className="text-foreground/70 font-medium">Admin</span>
-              </Link>
-            </div>
-            <div className="flex items-center gap-2">
-              <ThemeToggle />
-              <Link to="/">
-                <Button variant="ghost" size="sm" className="rounded-full text-xs gap-1.5">
-                  <Compass className="w-3.5 h-3.5" /> View site
-                </Button>
-              </Link>
-              {user && (
-                <Button variant="outline" size="sm" className="rounded-full text-xs gap-1.5" onClick={handleSignOut}>
-                  <LogOut className="w-3.5 h-3.5" /> Sign out
-                </Button>
-              )}
-            </div>
-          </div>
-        </div>
-      </nav>
-    );
-  }
-
-
-
   return (
-    <nav className={`fixed top-0 left-0 right-0 z-50 transition-colors duration-300 ${isHome && !scrolled && !mobileOpen ? "bg-gradient-to-b from-background/70 to-transparent backdrop-blur-sm" : "bg-card/95 backdrop-blur-xl shadow-card"}`}>
+    <nav className={`fixed top-0 left-0 right-0 z-50 transition-colors duration-300 ${isHome ? "bg-transparent" : "bg-card/80 backdrop-blur-xl shadow-card"}`}>
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 items-center justify-between">
           {/* Logo */}
@@ -185,43 +128,12 @@ const Navbar = () => {
                       </div>
                     </DropdownMenuLabel>
                     <DropdownMenuSeparator />
-                    {userRole === "admin" && (
-                      <DropdownMenuItem onClick={() => navigate("/dashboard/admin")} className="cursor-pointer">
-                        <LayoutDashboard className="mr-2 h-4 w-4" /> Admin Dashboard
-                      </DropdownMenuItem>
-                    )}
-                    {userRole === "traveler" && (
-                      <DropdownMenuItem onClick={() => navigate("/dashboard/traveler")} className="cursor-pointer">
-                        <LayoutDashboard className="mr-2 h-4 w-4" /> Traveler Dashboard
-                      </DropdownMenuItem>
-                    )}
-                    {userRole === "host" && (
-                      <DropdownMenuItem onClick={() => navigate("/dashboard/host")} className="cursor-pointer">
-                        <LayoutDashboard className="mr-2 h-4 w-4" /> Host Dashboard
-                      </DropdownMenuItem>
-                    )}
+                    <DropdownMenuItem onClick={() => navigate(dashboardPath)} className="cursor-pointer">
+                      <LayoutDashboard className="mr-2 h-4 w-4" /> Dashboard
+                    </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => navigate(`${dashboardPath}?tab=overview`)} className="cursor-pointer">
                       <User className="mr-2 h-4 w-4" /> My Profile
                     </DropdownMenuItem>
-                    {userRole !== "admin" && (
-                      <>
-                        <DropdownMenuItem onClick={() => navigate(`${dashboardPath}?tab=saved`)} className="cursor-pointer">
-                          <Heart className="mr-2 h-4 w-4" /> Saved
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => navigate(`${dashboardPath}?tab=invoices`)} className="cursor-pointer">
-                          <Receipt className="mr-2 h-4 w-4" /> Invoices
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => navigate(`${dashboardPath}?tab=messages`)} className="cursor-pointer">
-                          <MessageCircle className="mr-2 h-4 w-4" /> Messages
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => navigate(`${dashboardPath}?tab=reviews`)} className="cursor-pointer">
-                          <Star className="mr-2 h-4 w-4" /> Reviews
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => navigate(`${dashboardPath}?tab=grievances`)} className="cursor-pointer">
-                          <AlertTriangle className="mr-2 h-4 w-4" /> Grievances
-                        </DropdownMenuItem>
-                      </>
-                    )}
                     <DropdownMenuItem onClick={() => navigate(`${dashboardPath}?tab=settings`)} className="cursor-pointer">
                       <Settings className="mr-2 h-4 w-4" /> Settings
                     </DropdownMenuItem>
@@ -241,7 +153,7 @@ const Navbar = () => {
               </div>
             ) : (
               <div className="flex items-center gap-2">
-                <Link to="/login/traveler">
+                <Link to="/signup">
                   <Button variant="ghost" className="rounded-full px-4 text-sm">Log In</Button>
                 </Link>
                 <Link to="/signup">
@@ -268,11 +180,6 @@ const Navbar = () => {
                   <DropdownMenuLabel className="font-normal text-xs text-muted-foreground">{user.email}</DropdownMenuLabel>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={() => navigate(dashboardPath)}><LayoutDashboard className="mr-2 h-4 w-4" /> Dashboard</DropdownMenuItem>
-                  {userRole !== "admin" && <DropdownMenuItem onClick={() => navigate(`${dashboardPath}?tab=saved`)}><Heart className="mr-2 h-4 w-4" /> Saved</DropdownMenuItem>}
-                  {userRole !== "admin" && <DropdownMenuItem onClick={() => navigate(`${dashboardPath}?tab=invoices`)}><Receipt className="mr-2 h-4 w-4" /> Invoices</DropdownMenuItem>}
-                  {userRole !== "admin" && <DropdownMenuItem onClick={() => navigate(`${dashboardPath}?tab=messages`)}><MessageCircle className="mr-2 h-4 w-4" /> Messages</DropdownMenuItem>}
-                  {userRole !== "admin" && <DropdownMenuItem onClick={() => navigate(`${dashboardPath}?tab=reviews`)}><Star className="mr-2 h-4 w-4" /> Reviews</DropdownMenuItem>}
-                  {userRole !== "admin" && <DropdownMenuItem onClick={() => navigate(`${dashboardPath}?tab=grievances`)}><AlertTriangle className="mr-2 h-4 w-4" /> Grievances</DropdownMenuItem>}
                   <DropdownMenuItem onClick={() => navigate("/help")}><HelpCircle className="mr-2 h-4 w-4" /> Help</DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={handleSignOut} className="text-destructive focus:text-destructive"><LogOut className="mr-2 h-4 w-4" /> Sign Out</DropdownMenuItem>
@@ -310,7 +217,7 @@ const Navbar = () => {
               <Link to="/grievances" className="block py-2.5 px-3 text-sm font-medium rounded-lg" onClick={() => setMobileOpen(false)}>Grievances</Link>
               <div className="pt-2 border-t border-border mt-2">
                 {!user && (
-                  <Link to="/login/traveler" onClick={() => setMobileOpen(false)}>
+                  <Link to="/signup" onClick={() => setMobileOpen(false)}>
                     <Button className="w-full rounded-full bg-primary text-primary-foreground">Sign Up / Log In</Button>
                   </Link>
                 )}

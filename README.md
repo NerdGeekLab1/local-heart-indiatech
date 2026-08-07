@@ -19,7 +19,6 @@
 8. [Project layout](#project-layout)
 9. [Local development](#local-development)
 10. [Roadmap](#roadmap)
-11. [Complete platform reference](#complete-platform-reference)
 
 ---
 
@@ -62,19 +61,6 @@ HSL tokens with full light/dark support.
 
 All API keys for AI and managed Google OAuth are provisioned by Lovable
 Cloud — no manual `.env` setup is required.
-
-## Complete platform reference
-
-See [`PLATFORM_DOCUMENTATION.md`](PLATFORM_DOCUMENTATION.md) for the current route catalog, form inventory and controls, role-by-role feature map, host application lifecycles, technical architecture, entity relationship diagram, feature mind map, security guidance, and administration runbook.
-
-Key authentication routes now include separate traveler and host portals plus password recovery:
-
-- `/login/traveler`
-- `/login/host`
-- `/forgot-password`
-- `/reset-password`
-
-The standard `/become-host` registration and the feature-gated `/host-eligibility` beta program are separate workflows and separate admin queues.
 
 ---
 
@@ -259,43 +245,8 @@ bunx vitest run      # Unit tests
 
 ## Roadmap
 
-See **`Travelista_Roadmap.md`** for the full phased plan and
-**`PROJECT_DOCUMENTATION.md`** for the complete URL / feature reference.
-The in-app developer portal lives at `/docs`.
-
-Highlights of what's next:
-
-- **Luggage Companion programme** — every trip host can offer one
-  complementary "Luggage" seat to a vetted free traveler-mate.
-  Eligibility via the Luggage Quest (KYC, bookings, stamps, video
-  review, etiquette quiz, intro chat). Nomad subscribers get one
-  **guaranteed Luggage trip per month**; Adventurer gets priority
-  queue; hosts earn a **Luggage Patron** badge.
-- Payment gateway integration (Razorpay / Stripe).
+- Payment gateway integration (Razorpay / Stripe) for self-serve
+  subscription billing.
 - Wedding RSVP and ticketed guest list.
-- Push notifications + React Native mobile app.
+- Push notifications for mobile.
 - More AI-driven personalisation (host matching, dynamic pricing).
-- Multi-language support (Hindi, Tamil, Bengali, Marathi).
-
-
-## API package & external database setup
-
-| File | Purpose |
-| --- | --- |
-| `docs/api/travelista.postman_collection.json` | Importable Postman collection — Auth, all tables (CRUD), RPCs, storage, edge functions. Base for the mobile app. |
-| `docs/api/README.md` | API guide: auth flow, PostgREST filters, RLS rules, storage upload contract. |
-| `docs/db/schema.sql` | Full portable schema (types, tables, grants, RLS, functions, triggers, buckets, auth trigger) for a new external Supabase project. |
-
-## Route protection
-
-- `/dashboard/admin`, `/admin/*` → `AdminGuard` (admin role, redirects to `/admin-login`).
-- `/dashboard/traveler`, `/dashboard/host` → `RequireAuth` with role (redirects to `/signup?next=…`).
-- Both guards keep the subtree mounted after the first successful authorization, so background
-  token/role refreshes never reset the dashboard.
-
-## Admin Test Mode
-
-`Admin Console → Settings → Test Mode` exposes the feature registry (`src/lib/featureRegistry.ts`)
-with semantic versions per capability (e.g. Trip 1.0 → 1.1 → 2.0). Admins can pin a version,
-choose the audiences it is exposed to (admin / host / traveler / guest), preview the product as a
-role, and read each version's changelog. State is persisted in localStorage via `useTestMode`.

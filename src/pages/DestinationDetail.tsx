@@ -137,11 +137,6 @@ const DestinationDetail = () => {
                   <Heart className={`w-5 h-5 ${liked ? "fill-destructive text-destructive" : ""}`} />
                 </Button>
                 <Button size="icon" variant="ghost"
-                  onClick={() => {
-                    const url = window.location.href;
-                    if (navigator.share) { navigator.share({ title: destination.name, url }).catch(() => {}); }
-                    else { navigator.clipboard.writeText(url); }
-                  }}
                   className="rounded-full bg-primary-foreground/10 backdrop-blur-md text-primary-foreground hover:bg-primary-foreground/20">
                   <Share2 className="w-5 h-5" />
                 </Button>
@@ -380,51 +375,34 @@ const DestinationDetail = () => {
 
         <motion.section initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
           className="mb-14">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-bold text-foreground flex items-center gap-2">
-              <Star className="w-6 h-6 text-primary" /> Reviews from Travelers in {destination.name}
-            </h2>
-            {cityReviews.length > 0 && (
-              <span className="text-xs text-muted-foreground">{cityReviews.length} verified review{cityReviews.length !== 1 ? "s" : ""}</span>
-            )}
-          </div>
-          {cityReviews.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {cityReviews.slice(0, 6).map(r => {
-                const reviewedHost = cityHosts.find(h => h.id === r.hostId);
-                return (
-                  <div key={r.id} className="rounded-2xl bg-card shadow-card p-5 hover:shadow-elevated transition-shadow">
-                    <div className="flex items-center gap-3 mb-3">
-                      <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center font-bold text-primary">
-                        {r.travelerName?.[0] || "T"}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="font-semibold text-foreground text-sm">{r.travelerName}</p>
-                        {reviewedHost && (
-                          <Link to={`/host/${reviewedHost.id}`} className="text-xs text-muted-foreground hover:text-primary">
-                            about <span className="font-medium">{reviewedHost.name}</span>
-                          </Link>
-                        )}
-                      </div>
-                      <div className="flex items-center gap-0.5">
-                        {Array.from({ length: 5 }).map((_, j) => (
-                          <Star key={j} className={`w-3 h-3 ${j < (r.rating || 5) ? "fill-primary text-primary" : "text-muted"}`} />
-                        ))}
-                      </div>
-                    </div>
-                    <p className="text-sm text-foreground/90 line-clamp-4">{r.text}</p>
-                    {r.date && <p className="text-[10px] text-muted-foreground mt-3">{r.date}</p>}
+          <h2 className="text-2xl font-bold text-foreground mb-6 flex items-center gap-2">
+            <Play className="w-6 h-6 text-primary" /> Video Reviews from Travelers
+          </h2>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+            {[1, 2, 3, 4, 5].map(i => (
+              <motion.div key={i}
+                whileHover={{ scale: 1.03, y: -4 }}
+                className="relative aspect-[9/16] rounded-2xl overflow-hidden bg-secondary group cursor-pointer shadow-card hover:shadow-elevated transition-shadow"
+              >
+                <img src={heroImages[i % heroImages.length]} alt={`Review ${i}`} className="w-full h-full object-cover" />
+                <div className="absolute inset-0 bg-gradient-to-t from-foreground/70 via-transparent to-foreground/10" />
+                <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                  <div className="w-12 h-12 rounded-full bg-primary/90 flex items-center justify-center backdrop-blur-sm">
+                    <Play className="w-5 h-5 text-primary-foreground ml-0.5" />
                   </div>
-                );
-              })}
-            </div>
-          ) : (
-            <div className="rounded-2xl bg-card shadow-card p-8 text-center border-2 border-dashed border-border">
-              <Star className="w-10 h-10 text-muted-foreground/40 mx-auto mb-3" />
-              <p className="text-foreground font-semibold">Be the first to review {destination.name}</p>
-              <p className="text-sm text-muted-foreground mt-1">Complete a trip with a verified host to share your story.</p>
-            </div>
-          )}
+                </div>
+                <div className="absolute bottom-3 left-3 right-3">
+                  <div className="flex items-center gap-1 mb-1">
+                    {Array.from({ length: 5 }).map((_, j) => (
+                      <Star key={j} className="w-3 h-3 fill-primary text-primary" />
+                    ))}
+                  </div>
+                  <p className="text-primary-foreground text-xs font-semibold">Traveler #{i}</p>
+                  <p className="text-primary-foreground/70 text-[10px]">2 weeks ago</p>
+                </div>
+              </motion.div>
+            ))}
+          </div>
         </motion.section>
 
         {/* Local Hosts */}
@@ -450,7 +428,7 @@ const DestinationDetail = () => {
                           <span className="text-xs text-muted-foreground flex items-center gap-0.5">
                             <Star className="w-3 h-3 fill-primary text-primary" /> {host.rating}
                           </span>
-                          <span className="text-xs text-muted-foreground">₹{host.pricePerDay.toLocaleString("en-IN")}/day</span>
+                          <span className="text-xs text-muted-foreground">${host.pricePerDay}/day</span>
                           <span className="text-xs text-muted-foreground">{host.services.length} services</span>
                         </div>
                       </div>
@@ -582,7 +560,7 @@ const DestinationDetail = () => {
               </Button>
             </Link>
             <Link to="/experiences">
-              <Button size="lg" variant="outline" className="rounded-full bg-transparent border-2 border-primary-foreground text-primary-foreground hover:bg-primary-foreground hover:text-primary px-8 font-semibold">
+              <Button size="lg" variant="outline" className="rounded-full border-primary-foreground/30 text-primary-foreground hover:bg-primary-foreground/10 px-8">
                 Browse Experiences
               </Button>
             </Link>

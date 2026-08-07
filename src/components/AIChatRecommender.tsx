@@ -21,12 +21,6 @@ const AIChatRecommender = () => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  useEffect(() => {
-    const handler = () => setOpen(true);
-    window.addEventListener("open-ai-chat", handler);
-    return () => window.removeEventListener("open-ai-chat", handler);
-  }, []);
-
   const send = async () => {
     if (!input.trim() || isLoading) return;
     const userMsg: Msg = { role: "user", content: input };
@@ -106,7 +100,6 @@ const AIChatRecommender = () => {
             animate={{ scale: 1 }}
             exit={{ scale: 0 }}
             onClick={() => setOpen(true)}
-            aria-label="Open AI Travel Guide"
             className="fixed bottom-20 right-4 z-50 w-14 h-14 rounded-full bg-primary text-primary-foreground shadow-lg flex items-center justify-center hover:bg-primary/90 transition-colors md:bottom-6"
           >
             <Sparkles className="w-6 h-6" />

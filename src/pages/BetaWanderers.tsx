@@ -32,7 +32,7 @@ const BetaWanderers = () => {
   const [search, setSearch] = useState("");
 
   useEffect(() => {
-    supabase.rpc("get_public_wanderers")
+    supabase.from("beta_wanderers").select("*").eq("status", "approved").order("score", { ascending: false })
       .then(({ data }) => { if (data && data.length > 0) setWanderers([...demoWanderers, ...data]); });
   }, []);
 

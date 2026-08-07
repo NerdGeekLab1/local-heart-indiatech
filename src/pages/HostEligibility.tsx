@@ -17,8 +17,6 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Link } from "react-router-dom";
-import PhoneInput from "@/components/PhoneInput";
-import { splitPhone, isValidLocalPhone } from "@/lib/phone";
 
 const LANGS = ["English", "Hindi", "French", "German", "Spanish", "Japanese", "Mandarin", "Italian", "Russian", "Arabic"];
 const SPECIALTIES = ["Cultural", "Spiritual", "Adventure", "Culinary", "Wellness", "Wildlife", "Heritage", "Festival"];
@@ -109,7 +107,7 @@ const shuffle = <T,>(arr: T[]): T[] => {
 const schema = z.object({
   full_name: z.string().trim().min(2).max(100),
   email: z.string().trim().email().max(255),
-  phone: z.string().trim().refine(v => isValidLocalPhone(splitPhone(v).number), "Enter a valid 10-digit phone number with country code"),
+  phone: z.string().trim().max(20).optional().or(z.literal("")),
   city: z.string().trim().min(2).max(80),
   english_proficiency: z.enum(["basic", "conversational", "fluent", "native"]),
   years_hosting: z.number().min(0).max(50),
@@ -208,23 +206,6 @@ const HostEligibility = () => {
     social_links: {} as Record<string, string>,
   });
 
-  const [touched, setTouched] = useState(false);
-  const fieldErrors = useMemo(() => {
-    const errs: Record<string, string> = {};
-    const parsed = schema.safeParse(form);
-    if (!parsed.success) {
-      for (const issue of parsed.error.issues) {
-        const key = String(issue.path[0]);
-        if (!errs[key]) errs[key] = issue.message;
-      }
-    }
-    for (const f of SOCIAL_FIELDS) {
-      const v = form.social_links[f.key];
-      if (v && !urlOk(v)) errs[`social_${f.key}`] = "Use a full https:// link";
-    }
-    return errs;
-  }, [form]);
-
   const score = useMemo(() => calcScore(form), [form]);
   const tier = score >= 80 ? "Elite" : score >= 60 ? "Verified" : score >= 40 ? "Aspiring" : "Newcomer";
   const socialScore = useMemo(() => calcSocialScore(form.social_links), [form.social_links]);
@@ -252,7 +233,6 @@ const HostEligibility = () => {
     setForm({ ...form, social_links: { ...form.social_links, [k]: v } });
 
   const submit = async () => {
-    setTouched(true);
     if (!user) { toast({ title: "Please sign in first", variant: "destructive" }); return; }
     const parsed = schema.safeParse(form);
     if (!parsed.success) {
@@ -272,16 +252,11 @@ const HostEligibility = () => {
     const status: Status = eligibility_score >= 70 ? "under_review" : "waitlisted";
     const waitlist_position = status === "waitlisted" ? waitlistCount + 1 : null;
     const badge = badgeFor(eligibility_score);
-    const { data, error } = await supabase.from("host_eligibility").upsert({
+    const { data, error } = await supabase.from("host_eligibility").insert({
       user_id: user.id, ...form, eligibility_score, social_score, badge, status, waitlist_position,
-    }, { onConflict: "user_id" }).select("id").single();
+    }).select("id").single();
     setSubmitting(false);
-    if (error) {
-      console.error("[host-eligibility] submission failed", error);
-      toast({ title: "Submission failed", description: `${error.message}${error.code ? ` (${error.code})` : ""}`, variant: "destructive" });
-      return;
-    }
-
+    if (error) { toast({ title: "Submission failed", description: error.message, variant: "destructive" }); return; }
     setExisting({ id: data!.id, status, eligibility_score, waitlist_position, social_score, badge });
     toast({ title: status === "under_review" ? "🎉 You qualify for fast-track review!" : `You're #${waitlist_position} on the waitlist`, description: "Now take the credibility quiz to boost your score." });
     setTimeout(() => openQuiz(), 600);
@@ -346,22 +321,6 @@ const HostEligibility = () => {
           </div>
         </motion.div>
 
-        {!user && !loading && (
-          <div className="mb-8 rounded-2xl border border-primary/30 bg-primary/5 p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div className="flex gap-3">
-              <AlertTriangle className="w-5 h-5 text-primary shrink-0 mt-0.5" />
-              <div>
-                <p className="font-semibold text-foreground">Sign in to submit your application</p>
-                <p className="text-sm text-muted-foreground">Applications are tied to your host account so we can verify you and track your review status.</p>
-              </div>
-            </div>
-            <div className="flex gap-2 shrink-0">
-              <Button asChild className="rounded-full"><Link to="/login/host?redirect=/host-eligibility">Host sign in</Link></Button>
-              <Button asChild variant="outline" className="rounded-full"><Link to="/signup?role=host&redirect=/host-eligibility">Create account</Link></Button>
-            </div>
-          </div>
-        )}
-
         {existing && (
           <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}>
             <Card className="border-primary/30 bg-gradient-to-br from-primary/5 to-accent/5">
@@ -423,31 +382,20 @@ const HostEligibility = () => {
 
               <div className="grid sm:grid-cols-2 gap-4">
                 <div>
-                  <label htmlFor="he-name" className="text-sm font-medium block mb-1">Full Name *</label>
-                  <Input id="he-name" value={form.full_name} onChange={e => setForm({ ...form, full_name: e.target.value })} maxLength={100}
-                    aria-invalid={touched && !!fieldErrors.full_name || undefined}
-                    className={touched && fieldErrors.full_name ? "border-destructive" : ""} />
-                  {touched && fieldErrors.full_name && <p className="text-xs text-destructive mt-1">{fieldErrors.full_name}</p>}
+                  <label className="text-sm font-medium block mb-1">Full Name *</label>
+                  <Input value={form.full_name} onChange={e => setForm({ ...form, full_name: e.target.value })} maxLength={100} />
                 </div>
                 <div>
-                  <label htmlFor="he-email" className="text-sm font-medium block mb-1">Email *</label>
-                  <Input id="he-email" type="email" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} maxLength={255}
-                    placeholder="you@example.com"
-                    aria-invalid={touched && !!fieldErrors.email || undefined}
-                    className={touched && fieldErrors.email ? "border-destructive" : ""} />
-                  {touched && fieldErrors.email && <p className="text-xs text-destructive mt-1">{fieldErrors.email}</p>}
+                  <label className="text-sm font-medium block mb-1">Email *</label>
+                  <Input type="email" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} maxLength={255} />
                 </div>
                 <div>
-                  <label htmlFor="he-phone" className="text-sm font-medium block mb-1">Phone *</label>
-                  <PhoneInput id="he-phone" value={form.phone} onChange={v => setForm({ ...form, phone: v })} showError={touched} />
-                  {touched && fieldErrors.phone && <p className="text-xs text-destructive mt-1">{fieldErrors.phone}</p>}
+                  <label className="text-sm font-medium block mb-1">Phone</label>
+                  <Input value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} maxLength={20} />
                 </div>
                 <div>
-                  <label htmlFor="he-city" className="text-sm font-medium block mb-1">City *</label>
-                  <Input id="he-city" value={form.city} onChange={e => setForm({ ...form, city: e.target.value })} maxLength={80}
-                    aria-invalid={touched && !!fieldErrors.city || undefined}
-                    className={touched && fieldErrors.city ? "border-destructive" : ""} />
-                  {touched && fieldErrors.city && <p className="text-xs text-destructive mt-1">{fieldErrors.city}</p>}
+                  <label className="text-sm font-medium block mb-1">City *</label>
+                  <Input value={form.city} onChange={e => setForm({ ...form, city: e.target.value })} maxLength={80} />
                 </div>
                 <div>
                   <label className="text-sm font-medium block mb-1">English Proficiency *</label>
@@ -513,22 +461,15 @@ const HostEligibility = () => {
                 </div>
                 <div className="grid sm:grid-cols-2 gap-3">
                   {SOCIAL_FIELDS.map(f => (
-                    <div key={f.key}>
-                      <div className="flex items-center gap-2">
-                        <f.icon className="w-4 h-4 text-muted-foreground shrink-0" />
-                        <Input
-                          value={form.social_links[f.key] || ""}
-                          onChange={e => updateSocial(f.key, e.target.value)}
-                          placeholder={f.placeholder}
-                          maxLength={300}
-                          aria-label={`${f.label} profile URL`}
-                          aria-invalid={!!fieldErrors[`social_${f.key}`] || undefined}
-                          className={fieldErrors[`social_${f.key}`] ? "border-destructive focus-visible:ring-destructive" : ""}
-                        />
-                      </div>
-                      {fieldErrors[`social_${f.key}`] && (
-                        <p className="text-xs text-destructive mt-1 ml-6">{f.label}: {fieldErrors[`social_${f.key}`]}</p>
-                      )}
+                    <div key={f.key} className="flex items-center gap-2">
+                      <f.icon className="w-4 h-4 text-muted-foreground shrink-0" />
+                      <Input
+                        value={form.social_links[f.key] || ""}
+                        onChange={e => updateSocial(f.key, e.target.value)}
+                        placeholder={f.placeholder}
+                        maxLength={300}
+                        className={form.social_links[f.key] && !urlOk(form.social_links[f.key]) ? "border-destructive" : ""}
+                      />
                     </div>
                   ))}
                 </div>
@@ -562,17 +503,11 @@ const HostEligibility = () => {
 
               <div className="flex items-center justify-between flex-wrap gap-3 pt-2">
                 <p className="text-xs text-muted-foreground flex items-center gap-1.5"><Lock className="w-3 h-3" /> Verified by our trust team within 48 hours</p>
-                {user ? (
-                  <Button onClick={submit} disabled={submitting} size="lg" className="rounded-full gap-2">
-                    {submitting ? "Submitting..." : "Submit Application"} <ArrowRight className="w-4 h-4" />
-                  </Button>
-                ) : (
-                  <Button asChild size="lg" className="rounded-full gap-2">
-                    <Link to="/login/host?redirect=/host-eligibility">Sign in to submit <ArrowRight className="w-4 h-4" /></Link>
-                  </Button>
-                )}
+                <Button onClick={submit} disabled={submitting || !user} size="lg" className="rounded-full gap-2">
+                  {submitting ? "Submitting..." : "Submit Application"} <ArrowRight className="w-4 h-4" />
+                </Button>
               </div>
-
+              {!user && <p className="text-xs text-destructive text-right">Sign in to submit your application.</p>}
             </CardContent>
           </Card>
         )}

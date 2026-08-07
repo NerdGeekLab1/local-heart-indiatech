@@ -1,1 +1,0 @@
-UPDATE public.feature_flags SET enabled_globally = true WHERE flag_key = 'ai_concierge';

@@ -25,7 +25,7 @@ const priceRanges = [
 const bikeExperiences = [
   {
     id: "exp-bike-ladakh", title: "Leh-Ladakh Bike Expedition", description: "Ride through the world's highest motorable passes on a Royal Enfield. Cross Khardung La (18,380 ft) and experience breathtaking Himalayan landscapes.",
-    image: "https://images.unsplash.com/photo-1449426468159-d96dbf08f19f?w=600&q=80",
+    image: "https://images.unsplash.com/photo-1558618666-fcd25c85f82e?w=600&q=80",
     price: 29000, duration: "7 Days", category: "Bike Tour", hostId: "arjun-varanasi", hostName: "Arjun", hostCity: "Varanasi", rating: 4.9, reviewCount: 45,
     difficulty: "Hard" as const, groupSize: "4-8", maxGuests: 8,
     includes: ["Royal Enfield 500cc", "Fuel", "Mechanic support", "Camping gear", "Meals", "Permits", "First aid", "Oxygen cylinder"],
@@ -73,7 +73,7 @@ const allCategories = [
   { label: "Wedding", emoji: "💍" },
   { label: "Village", emoji: "🏡" },
   { label: "Festival", emoji: "🪔" },
-].filter((c, i, arr) => arr.findIndex(x => x.label === c.label) === i);
+];
 
 const Experiences = () => {
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
@@ -103,14 +103,7 @@ const Experiences = () => {
       });
   }, []);
 
-  const allExperiences = useMemo(() => {
-    const seen = new Set<string>();
-    return [...dbExperiences, ...staticExperiences].filter(e => {
-      if (seen.has(e.id)) return false;
-      seen.add(e.id);
-      return true;
-    });
-  }, [dbExperiences]);
+  const allExperiences = useMemo(() => [...dbExperiences, ...staticExperiences], [dbExperiences]);
 
   const filtered = useMemo(() => {
     let result = allExperiences.filter(e => {
@@ -307,7 +300,7 @@ const Experiences = () => {
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               {bikeExperiences.map((exp, i) => (
-                <Link to={`/experience/${exp.id}`} key={`${exp.id}-${i}`}>
+                <Link to={`/experience/${exp.id}`} key={exp.id}>
                   <motion.div
                     initial={{ opacity: 0, y: 10 }}
                     whileInView={{ opacity: 1, y: 0 }}
@@ -375,7 +368,7 @@ const Experiences = () => {
           </h2>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
             {allExperiences.slice(0, 4).map((exp, i) => (
-              <motion.div key={`${exp.id}-${i}`} initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }}
+              <motion.div key={exp.id} initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }}
                 className="relative aspect-[9/16] rounded-xl overflow-hidden group cursor-pointer">
                 <img src={exp.image} alt={exp.title} className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-500" />
                 <div className="absolute inset-0 bg-gradient-to-t from-foreground/70 via-transparent to-transparent" />
@@ -407,7 +400,7 @@ const Experiences = () => {
         {/* Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {filtered.map((exp, i) => (
-            <Link to={`/experience/${exp.id}`} key={`${exp.id}-${i}`}>
+            <Link to={`/experience/${exp.id}`} key={exp.id}>
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 whileInView={{ opacity: 1, y: 0 }}
