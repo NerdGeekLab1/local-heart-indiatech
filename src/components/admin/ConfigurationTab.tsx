@@ -8,6 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { sanitizeHeadScripts } from "@/lib/sanitizeHeadScripts";
+import FormControlsPanel from "@/components/admin/FormControlsPanel";
 
 interface ConfigEntry {
   id: string;
@@ -100,6 +101,7 @@ const ConfigurationTab = () => {
 
   return (
     <div className="mt-6 space-y-6">
+      <FormControlsPanel />
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
           <h2 className="text-xl font-bold text-foreground flex items-center gap-2">

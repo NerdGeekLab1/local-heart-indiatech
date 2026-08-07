@@ -163,6 +163,9 @@ const Signup = () => {
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
               </div>
+              <div className="flex justify-end">
+                <Link to="/forgot-password" className="text-sm font-medium text-primary hover:underline">Forgot password?</Link>
+              </div>
               <Button onClick={handleLogin} disabled={loading} className="w-full rounded-full bg-primary text-primary-foreground">
                 {loading ? "Signing in..." : "Sign In"}
               </Button>

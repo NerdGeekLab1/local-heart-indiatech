@@ -13,6 +13,7 @@ import SiteHead from "@/components/SiteHead";
 const OnboardingChecklist = lazy(() => import("@/components/OnboardingChecklist.tsx"));
 import AdminGuard from "@/components/AdminGuard.tsx";
 import RequireAuth from "@/components/RequireAuth.tsx";
+import FormAvailabilityGate from "@/components/FormAvailabilityGate.tsx";
 
 import Breadcrumbs from "@/components/Breadcrumbs.tsx";
 import { useLocation } from "react-router-dom";
@@ -67,6 +68,7 @@ const FeaturesHub = lazy(() => import("./pages/FeaturesHub.tsx"));
 const Feed = lazy(() => import("./pages/Feed.tsx"));
 const TravelerProfile = lazy(() => import("./pages/TravelerProfile.tsx"));
 const NotFound = lazy(() => import("./pages/NotFound.tsx"));
+const PasswordRecovery = lazy(() => import("./pages/PasswordRecovery.tsx"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -117,11 +119,13 @@ const App = () => (
             <Route path="/experience/:id" element={<ExperienceDetail />} />
             <Route path="/host/:id" element={<HostProfile />} />
             <Route path="/book/:id" element={<Booking />} />
-            <Route path="/become-host" element={<BecomeHost />} />
-            <Route path="/signup" element={<Signup />} />
-            <Route path="/login/traveler" element={<Signup />} />
-            <Route path="/login/host" element={<Signup />} />
-            <Route path="/admin-login" element={<AdminLogin />} />
+            <Route path="/become-host" element={<FormAvailabilityGate formKey="become_host"><BecomeHost /></FormAvailabilityGate>} />
+            <Route path="/signup" element={<FormAvailabilityGate formKey="account_signup"><Signup /></FormAvailabilityGate>} />
+            <Route path="/login/traveler" element={<FormAvailabilityGate formKey="traveler_login"><Signup /></FormAvailabilityGate>} />
+            <Route path="/login/host" element={<FormAvailabilityGate formKey="host_login"><Signup /></FormAvailabilityGate>} />
+            <Route path="/admin-login" element={<FormAvailabilityGate formKey="admin_login"><AdminLogin /></FormAvailabilityGate>} />
+            <Route path="/forgot-password" element={<FormAvailabilityGate formKey="password_recovery"><PasswordRecovery /></FormAvailabilityGate>} />
+            <Route path="/reset-password" element={<PasswordRecovery />} />
             <Route path="/destinations" element={<Destinations />} />
             <Route path="/destination/:name" element={<DestinationDetail />} />
             <Route path="/community" element={<Community />} />
@@ -152,7 +156,7 @@ const App = () => (
             <Route path="/membership" element={<Membership />} />
             <Route path="/auth/callback" element={<AuthCallback />} />
             <Route path="/referrals" element={<Referrals />} />
-            <Route path="/host-eligibility" element={<HostEligibility />} />
+            <Route path="/host-eligibility" element={<FormAvailabilityGate formKey="host_eligibility_beta"><FeatureGate flag="host_eligibility_beta" fallback={<FormAvailabilityGate formKey="host_eligibility_beta"><HostEligibility /></FormAvailabilityGate>}><HostEligibility /></FeatureGate></FormAvailabilityGate>} />
             <Route path="/beta-waitlist" element={<BetaWaitlist />} />
             <Route path="/beta-waitlist/confirm" element={<BetaWaitlistConfirm />} />
             <Route path="/admin/feature-flags" element={<AdminGuard><FeatureFlagsAdmin /></AdminGuard>} />
