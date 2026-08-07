@@ -156,7 +156,7 @@ const App = () => (
             <Route path="/membership" element={<Membership />} />
             <Route path="/auth/callback" element={<AuthCallback />} />
             <Route path="/referrals" element={<Referrals />} />
-            <Route path="/host-eligibility" element={<FormAvailabilityGate formKey="host_eligibility_beta"><FeatureGate flag="host_eligibility_beta" fallback={<FormAvailabilityGate formKey="host_eligibility_beta"><HostEligibility /></FormAvailabilityGate>}><HostEligibility /></FeatureGate></FormAvailabilityGate>} />
+            <Route path="/host-eligibility" element={<FormAvailabilityGate formKey="host_eligibility_beta"><HostEligibility /></FormAvailabilityGate>} />
             <Route path="/beta-waitlist" element={<BetaWaitlist />} />
             <Route path="/beta-waitlist/confirm" element={<BetaWaitlistConfirm />} />
             <Route path="/admin/feature-flags" element={<AdminGuard><FeatureFlagsAdmin /></AdminGuard>} />
