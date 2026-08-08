@@ -356,8 +356,8 @@ const HostEligibility = () => {
               </div>
             </div>
             <div className="flex gap-2 shrink-0">
-              <Button asChild className="rounded-full"><Link to="/login/host?redirect=/host-eligibility">Host sign in</Link></Button>
-              <Button asChild variant="outline" className="rounded-full"><Link to="/signup?role=host&redirect=/host-eligibility">Create account</Link></Button>
+              <Button asChild className="rounded-full"><Link to="/login/host?next=/host-eligibility">Host sign in</Link></Button>
+              <Button asChild variant="outline" className="rounded-full"><Link to="/signup?next=/host-eligibility">Create traveler account</Link></Button>
             </div>
           </div>
         )}
