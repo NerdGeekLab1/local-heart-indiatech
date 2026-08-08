@@ -1,6 +1,6 @@
 import { BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer } from "recharts";
 import { useState, useEffect, useMemo, Fragment } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import TestModePanel from "@/components/admin/TestModePanel";
 
 import { Link, useSearchParams } from "react-router-dom";
@@ -115,6 +115,7 @@ const AdminDashboard = () => {
 
   const { toast } = useToast();
   const { user } = useAuth();
+  const queryClient = useQueryClient();
   const { format } = useCurrency();
   const totalRevenue = mockBookings.reduce((s, b) => s + b.totalPrice, 0);
   const platformFee = Math.round(totalRevenue * 0.15);
@@ -249,6 +250,32 @@ const AdminDashboard = () => {
     const id = setInterval(() => setDataRefreshKey(k => k + 1), 60000);
     return () => clearInterval(id);
   }, []);
+
+  // Keep operational tables fresh without polling. RLS still controls which rows
+  // are delivered, and the channel is always removed when the console unmounts.
+  useEffect(() => {
+    let refreshTimer: ReturnType<typeof setTimeout> | undefined;
+    const refreshAdminData = () => {
+      if (refreshTimer) clearTimeout(refreshTimer);
+      refreshTimer = setTimeout(() => {
+        queryClient.invalidateQueries({ queryKey: ["admin-console-data"] });
+      }, 150);
+    };
+
+    const channel = supabase
+      .channel("admin-operational-tables")
+      .on("postgres_changes", { event: "*", schema: "public", table: "host_applications" }, refreshAdminData)
+      .on("postgres_changes", { event: "*", schema: "public", table: "host_eligibility" }, refreshAdminData)
+      .on("postgres_changes", { event: "*", schema: "public", table: "beta_wanderers" }, refreshAdminData)
+      .on("postgres_changes", { event: "*", schema: "public", table: "reviews" }, refreshAdminData)
+      .on("postgres_changes", { event: "*", schema: "public", table: "bookings" }, refreshAdminData)
+      .subscribe();
+
+    return () => {
+      if (refreshTimer) clearTimeout(refreshTimer);
+      supabase.removeChannel(channel);
+    };
+  }, [queryClient]);
 
 
   // Audit log loader — refreshes when an admin action bumps the reload key
