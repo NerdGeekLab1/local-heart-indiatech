@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { motion } from "framer-motion";
 
 const AuthCallback = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [status, setStatus] = useState<"loading" | "success" | "error">("loading");
   const [message, setMessage] = useState("Verifying your email...");
 
@@ -15,6 +16,13 @@ const AuthCallback = () => {
         if (error) throw error;
 
         if (data.session) {
+          if (searchParams.get("flow") === "host-application") {
+            setStatus("success");
+            setMessage("Email confirmed. Your host application is awaiting approval.");
+            await supabase.auth.signOut();
+            setTimeout(() => navigate("/login/host"), 2200);
+            return;
+          }
           setStatus("success");
           setMessage("Email verified! Redirecting...");
           const { data: roleData } = await supabase
@@ -40,7 +48,7 @@ const AuthCallback = () => {
       }
     };
     handleCallback();
-  }, [navigate]);
+  }, [navigate, searchParams]);
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center">

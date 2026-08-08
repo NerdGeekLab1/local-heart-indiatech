@@ -276,6 +276,7 @@ const Signup = () => {
             )}
           </p>}
           {portalRole && <p className="mt-6 text-center text-sm text-muted-foreground">Wrong portal? <Link className="font-medium text-primary hover:underline" to={portalRole === "host" ? "/login/traveler" : "/login/host"}>Sign in as {portalRole === "host" ? "traveler" : "host"}</Link></p>}
+          {portalRole === "host" && <p className="mt-2 text-center text-sm text-muted-foreground">New host? <Link className="font-medium text-primary hover:underline" to="/become-host">Register and choose a password</Link></p>}
 
           {/* Demo Accounts */}
           <div className="mt-6 rounded-xl bg-secondary/50 border border-border p-4">

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Check, MapPin, Camera, ArrowRight, Loader2 } from "lucide-react";
+import { Check, MapPin, Camera, ArrowRight, Loader2, Eye, EyeOff } from "lucide-react";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -33,6 +33,11 @@ const step0Schema = z.object({
   phone: z.string().trim().refine(v => isValidLocalPhone(splitPhone(v).number), "Enter a 10-digit phone number"),
   city: z.string().trim().min(2, "Enter your city").max(80),
   state: z.string().trim().min(2, "Enter your state").max(80),
+  password: z.string().min(8, "Password must be at least 8 characters").max(72),
+  confirmPassword: z.string(),
+}).refine(data => data.password === data.confirmPassword, {
+  message: "Passwords do not match",
+  path: ["confirmPassword"],
 });
 
 const BecomeHost = () => {
@@ -40,11 +45,12 @@ const BecomeHost = () => {
   const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [touched, setTouched] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const { toast } = useToast();
   const { user } = useAuth();
 
   const [form, setForm] = useState({
-    name: "", email: "", phone: "", city: "", state: "",
+    name: "", email: "", phone: "", city: "", state: "", password: "", confirmPassword: "",
     services: [] as string[], languages: [] as string[],
     bio: "", tagline: "", specialties: [] as string[],
     pricePerDay: "",
@@ -66,7 +72,7 @@ const BecomeHost = () => {
   };
 
   const step0Errors = (() => {
-    const parsed = step0Schema.safeParse(form);
+    const parsed = step0Schema.safeParse(user ? { ...form, password: "existing-user", confirmPassword: "existing-user" } : form);
     const errs: Record<string, string> = {};
     if (!parsed.success) for (const i of parsed.error.issues) {
       const k = String(i.path[0]);
@@ -102,8 +108,28 @@ const BecomeHost = () => {
       return;
     }
     setSubmitting(true);
+    let applicationUserId = user?.id ?? null;
+
+    if (!user) {
+      const firstName = form.name.trim().split(/\s+/)[0] || form.name.trim();
+      const { data: signupData, error: signupError } = await supabase.auth.signUp({
+        email: form.email.trim().toLowerCase(),
+        password: form.password,
+        options: {
+          data: { first_name: firstName, role: "traveler", host_application_pending: true },
+          emailRedirectTo: `${window.location.origin}/auth/callback?flow=host-application`,
+        },
+      });
+      if (signupError) {
+        setSubmitting(false);
+        toast({ title: "Account creation failed", description: signupError.message, variant: "destructive" });
+        return;
+      }
+      applicationUserId = signupData.session ? signupData.user?.id ?? null : null;
+    }
+
     const { error } = await supabase.from("host_applications").insert({
-      user_id: user?.id ?? null,
+      user_id: applicationUserId,
       full_name: form.name.trim(),
       email: form.email.trim(),
       phone: form.phone.trim(),
@@ -138,7 +164,12 @@ const BecomeHost = () => {
       return;
     }
     setSubmitted(true);
-    toast({ title: "Application Submitted!", description: "We'll review your profile and get back to you within 48 hours." });
+    toast({
+      title: "Application submitted!",
+      description: user
+        ? "We'll review your profile and get back to you within 48 hours."
+        : "Confirm your email, then wait for admin approval before signing in to the Host portal.",
+    });
   };
 
   const Chips = ({ items, field }: { items: string[]; field: string }) => (
@@ -166,8 +197,11 @@ const BecomeHost = () => {
             </div>
             <h1 className="text-3xl font-bold text-foreground">Application Submitted!</h1>
             <p className="mt-3 text-muted-foreground">Thank you, {form.name}! Our team reviews every host profile within 48 hours.</p>
-            <p className="mt-2 text-sm text-muted-foreground">Next steps: KYC verification → Profile review → Go live!</p>
-            <Button asChild variant="outline" className="mt-6 rounded-full"><Link to="/">Back to home</Link></Button>
+            <p className="mt-2 text-sm text-muted-foreground">Next steps: confirm email → admin review → Host portal access.</p>
+            <div className="mt-6 flex flex-wrap justify-center gap-2">
+              <Button asChild variant="outline" className="rounded-full"><Link to="/">Back to home</Link></Button>
+              <Button asChild className="rounded-full"><Link to="/login/host">Host sign in</Link></Button>
+            </div>
           </motion.div>
         </div>
         <Footer />
@@ -229,6 +263,25 @@ const BecomeHost = () => {
                   className={touched && step0Errors.state ? "border-destructive" : ""} />
                 {touched && step0Errors.state && <p className="text-xs text-destructive mt-1">{step0Errors.state}</p>}
               </div>
+              {!user && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label htmlFor="bh-password" className="text-sm font-medium text-foreground mb-1 block">Choose Password *</label>
+                    <div className="relative">
+                      <Input id="bh-password" type={showPassword ? "text" : "password"} value={form.password} onChange={e => update("password", e.target.value)} autoComplete="new-password" className={touched && step0Errors.password ? "border-destructive pr-10" : "pr-10"} />
+                      <Button type="button" variant="ghost" size="icon" aria-label={showPassword ? "Hide password" : "Show password"} onClick={() => setShowPassword(v => !v)} className="absolute right-0 top-0 h-10 w-10">
+                        {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      </Button>
+                    </div>
+                    {touched && step0Errors.password && <p className="text-xs text-destructive mt-1">{step0Errors.password}</p>}
+                  </div>
+                  <div>
+                    <label htmlFor="bh-confirm-password" className="text-sm font-medium text-foreground mb-1 block">Confirm Password *</label>
+                    <Input id="bh-confirm-password" type={showPassword ? "text" : "password"} value={form.confirmPassword} onChange={e => update("confirmPassword", e.target.value)} autoComplete="new-password" className={touched && step0Errors.confirmPassword ? "border-destructive" : ""} />
+                    {touched && step0Errors.confirmPassword && <p className="text-xs text-destructive mt-1">{step0Errors.confirmPassword}</p>}
+                  </div>
+                </div>
+              )}
               <div>
                 <label className="text-sm font-medium text-foreground mb-2 block">Languages Spoken</label>
                 <Chips items={LANGUAGES} field="languages" />
