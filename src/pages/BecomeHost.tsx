@@ -72,7 +72,7 @@ const BecomeHost = () => {
   };
 
   const step0Errors = (() => {
-    const parsed = step0Schema.safeParse(form);
+    const parsed = step0Schema.safeParse(user ? { ...form, password: "existing-user", confirmPassword: "existing-user" } : form);
     const errs: Record<string, string> = {};
     if (!parsed.success) for (const i of parsed.error.issues) {
       const k = String(i.path[0]);
