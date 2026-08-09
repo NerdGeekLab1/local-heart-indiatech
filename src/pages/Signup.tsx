@@ -94,7 +94,6 @@ const Signup = () => {
     if (error) {
       toast({ title: error.message, variant: "destructive" });
     } else if (portalRole === "host" && role === null) {
-      await supabase.auth.signOut();
       toast({ title: "Host approval pending", description: "Confirm your email and wait for approval. You can track progress on the onboarding status page.", variant: "destructive" });
       navigate("/host-onboarding", { replace: true });
     } else if (portalRole && role !== portalRole) {

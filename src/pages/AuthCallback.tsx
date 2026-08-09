@@ -18,9 +18,8 @@ const AuthCallback = () => {
         if (data.session) {
           if (searchParams.get("flow") === "host-application") {
             setStatus("success");
-            setMessage("Email confirmed. Your host application is awaiting approval.");
-            await supabase.auth.signOut();
-            setTimeout(() => navigate("/login/host"), 2200);
+            setMessage("Email confirmed. Track your host application status next.");
+            setTimeout(() => navigate("/host-onboarding"), 1800);
             return;
           }
           setStatus("success");

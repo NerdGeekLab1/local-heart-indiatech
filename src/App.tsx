@@ -128,7 +128,7 @@ const App = () => (
             <Route path="/admin-login" element={<FormAvailabilityGate formKey="admin_login"><AdminLogin /></FormAvailabilityGate>} />
             <Route path="/forgot-password" element={<FormAvailabilityGate formKey="password_recovery"><PasswordRecovery /></FormAvailabilityGate>} />
             <Route path="/reset-password" element={<PasswordRecovery />} />
-            <Route path="/host-onboarding" element={<RequireAuth><HostOnboarding /></RequireAuth>} />
+            <Route path="/host-onboarding" element={<HostOnboarding />} />
             <Route path="/destinations" element={<Destinations />} />
             <Route path="/destination/:name" element={<DestinationDetail />} />
             <Route path="/community" element={<Community />} />
