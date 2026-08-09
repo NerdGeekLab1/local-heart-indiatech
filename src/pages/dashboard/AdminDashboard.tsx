@@ -262,20 +262,29 @@ const AdminDashboard = () => {
       }, 150);
     };
 
+    const notifyChange = (label: string) => (payload: any) => {
+      refreshAdminData();
+      const action = payload.eventType === "INSERT" ? "New" : "Updated";
+      toast({
+        title: `${action} ${label}`,
+        description: "The admin table has been refreshed with the latest data.",
+      });
+    };
+
     const channel = supabase
       .channel("admin-operational-tables")
-      .on("postgres_changes", { event: "*", schema: "public", table: "host_applications" }, refreshAdminData)
-      .on("postgres_changes", { event: "*", schema: "public", table: "host_eligibility" }, refreshAdminData)
-      .on("postgres_changes", { event: "*", schema: "public", table: "beta_wanderers" }, refreshAdminData)
-      .on("postgres_changes", { event: "*", schema: "public", table: "reviews" }, refreshAdminData)
-      .on("postgres_changes", { event: "*", schema: "public", table: "bookings" }, refreshAdminData)
+      .on("postgres_changes", { event: "*", schema: "public", table: "host_applications" }, notifyChange("host application"))
+      .on("postgres_changes", { event: "*", schema: "public", table: "host_eligibility" }, notifyChange("beta host application"))
+      .on("postgres_changes", { event: "*", schema: "public", table: "beta_wanderers" }, notifyChange("Beta Wanderer application"))
+      .on("postgres_changes", { event: "*", schema: "public", table: "reviews" }, notifyChange("review"))
+      .on("postgres_changes", { event: "*", schema: "public", table: "bookings" }, notifyChange("booking"))
       .subscribe();
 
     return () => {
       if (refreshTimer) clearTimeout(refreshTimer);
       supabase.removeChannel(channel);
     };
-  }, [queryClient]);
+  }, [queryClient, toast]);
 
 
   // Audit log loader — refreshes when an admin action bumps the reload key
@@ -478,8 +487,9 @@ const AdminDashboard = () => {
     });
     setAuditLogReloadKey(k => k + 1);
     setDbHostProfileApps(p => p.map(a => a.id === app.id ? { ...a, ...(approved || {}), status } : a));
-    if (status === "approved" && app.user_id && !userRoles.some(r => r.user_id === app.user_id && r.role === "host")) {
-      setUserRoles(p => [...p, { id: `host-${app.user_id}`, user_id: app.user_id, role: "host" }]);
+    const approvedUserId = approved?.user_id ?? app.user_id;
+    if (status === "approved" && approvedUserId && !userRoles.some(r => r.user_id === approvedUserId && r.role === "host")) {
+      setUserRoles(p => [...p.filter(r => r.user_id !== approvedUserId), { id: `host-${approvedUserId}`, user_id: approvedUserId, role: "host" }]);
     }
     toast({ title: status === "approved" ? "Host approved and activated" : `Host profile application → ${status}` });
   };
@@ -2438,7 +2448,8 @@ const AdminDashboard = () => {
           ? updateHostProfileAppStatus(detailApp.row, s)
           : updateHostApplicationStatus(detailApp.row, s))}
         statuses={detailApp?.kind === "profile" ? [
-          { value: "verified", label: "Verify profile", icon: "approve" },
+          { value: "approved", label: "Approve host", icon: "approve" },
+          { value: "verified", label: "Verify profile", icon: "review" },
           { value: "under_review", label: "Mark under review", icon: "review" },
           { value: "rejected", label: "Reject", icon: "reject" },
         ] : [

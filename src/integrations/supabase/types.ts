@@ -2137,6 +2137,18 @@ export type Database = {
           status: string
         }[]
       }
+      get_host_onboarding_status: {
+        Args: never
+        Returns: {
+          admin_approved: boolean
+          application_status: string
+          application_submitted: boolean
+          email_confirmed: boolean
+          onboarding_complete: boolean
+          reviewed_at: string
+          submitted_at: string
+        }[]
+      }
       get_public_profile: {
         Args: { _id: string }
         Returns: {

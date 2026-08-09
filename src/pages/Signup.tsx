@@ -25,7 +25,7 @@ const Signup = () => {
   const { pathname } = useLocation();
   const portalRole = pathname === "/login/host" ? "host" : pathname === "/login/traveler" ? "traveler" : null;
   const expectedDashboard = portalRole === "host" ? "/dashboard/host" : "/dashboard/traveler";
-  const nextPath = searchParams.get("next") || "/dashboard/traveler";
+  const nextPath = searchParams.get("next") || expectedDashboard;
 
   const update = (field: string, value: any) => setForm(prev => ({ ...prev, [field]: value }));
   const toggleArray = (field: "travelStyle" | "interests", val: string) => {
@@ -93,6 +93,9 @@ const Signup = () => {
     setLoading(false);
     if (error) {
       toast({ title: error.message, variant: "destructive" });
+    } else if (portalRole === "host" && role === null) {
+      toast({ title: "Host approval pending", description: "Confirm your email and wait for approval. You can track progress on the onboarding status page.", variant: "destructive" });
+      navigate("/host-onboarding", { replace: true });
     } else if (portalRole && role !== portalRole) {
       await supabase.auth.signOut();
       toast({ title: `This is the ${portalRole} sign-in`, description: `Use the ${role || "correct"} portal for this account.`, variant: "destructive" });
