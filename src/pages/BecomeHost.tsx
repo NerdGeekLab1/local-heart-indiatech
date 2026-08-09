@@ -116,7 +116,7 @@ const BecomeHost = () => {
         email: form.email.trim().toLowerCase(),
         password: form.password,
         options: {
-          data: { first_name: firstName, role: "traveler", host_application_pending: true },
+          data: { first_name: firstName, role: "host", host_application_pending: true },
           emailRedirectTo: `${window.location.origin}/auth/callback?flow=host-application`,
         },
       });
@@ -160,7 +160,12 @@ const BecomeHost = () => {
     });
     setSubmitting(false);
     if (error) {
-      toast({ title: "Submission failed", description: error.message, variant: "destructive" });
+      const duplicate = error.code === "23505" || error.message.toLowerCase().includes("duplicate");
+      toast({
+        title: duplicate ? "Application already exists" : "Submission failed",
+        description: duplicate ? "This email already has a host application. Confirm the email, then use Host sign in or check onboarding status." : error.message,
+        variant: "destructive",
+      });
       return;
     }
     setSubmitted(true);
@@ -200,7 +205,7 @@ const BecomeHost = () => {
             <p className="mt-2 text-sm text-muted-foreground">Next steps: confirm email → admin review → Host portal access.</p>
             <div className="mt-6 flex flex-wrap justify-center gap-2">
               <Button asChild variant="outline" className="rounded-full"><Link to="/">Back to home</Link></Button>
-              <Button asChild className="rounded-full"><Link to="/login/host">Host sign in</Link></Button>
+               <Button asChild className="rounded-full"><Link to="/host-onboarding">Check application status</Link></Button>
             </div>
           </motion.div>
         </div>

@@ -59,7 +59,7 @@ const HostOnboarding = () => {
             <>
               <div className="flex items-center justify-between gap-4 border-b border-border pb-4">
                 <span className="font-semibold text-foreground">Current status</span>
-                <span className="rounded-full bg-primary/10 px-3 py-1 text-sm font-medium capitalize text-primary">{status.application_status?.replaceAll("_", " ")}</span>
+                <span className="rounded-full bg-primary/10 px-3 py-1 text-sm font-medium capitalize text-primary">{status.application_status?.replace(/_/g, " ")}</span>
               </div>
               <ol className="mt-6 space-y-5">
                 {steps.map((step, index) => (

@@ -70,6 +70,7 @@ const Feed = lazy(() => import("./pages/Feed.tsx"));
 const TravelerProfile = lazy(() => import("./pages/TravelerProfile.tsx"));
 const NotFound = lazy(() => import("./pages/NotFound.tsx"));
 const PasswordRecovery = lazy(() => import("./pages/PasswordRecovery.tsx"));
+const HostOnboarding = lazy(() => import("./pages/HostOnboarding.tsx"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -127,6 +128,7 @@ const App = () => (
             <Route path="/admin-login" element={<FormAvailabilityGate formKey="admin_login"><AdminLogin /></FormAvailabilityGate>} />
             <Route path="/forgot-password" element={<FormAvailabilityGate formKey="password_recovery"><PasswordRecovery /></FormAvailabilityGate>} />
             <Route path="/reset-password" element={<PasswordRecovery />} />
+            <Route path="/host-onboarding" element={<RequireAuth><HostOnboarding /></RequireAuth>} />
             <Route path="/destinations" element={<Destinations />} />
             <Route path="/destination/:name" element={<DestinationDetail />} />
             <Route path="/community" element={<Community />} />
