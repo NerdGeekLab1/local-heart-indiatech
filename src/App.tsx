@@ -42,6 +42,7 @@ const Safety = lazy(() => import("./pages/Safety.tsx"));
 const Terms = lazy(() => import("./pages/Terms.tsx"));
 const Privacy = lazy(() => import("./pages/Privacy.tsx"));
 const Cookies = lazy(() => import("./pages/Cookies.tsx"));
+const Unsubscribe = lazy(() => import("./pages/Unsubscribe.tsx"));
 const Docs = lazy(() => import("./pages/Docs.tsx"));
 const HostTrip = lazy(() => import("./pages/HostTrip.tsx"));
 const Grievances = lazy(() => import("./pages/Grievances.tsx"));
@@ -143,6 +144,7 @@ const App = () => (
             <Route path="/terms" element={<Terms />} />
             <Route path="/privacy" element={<Privacy />} />
             <Route path="/cookies" element={<Cookies />} />
+            <Route path="/unsubscribe" element={<Unsubscribe />} />
             <Route path="/docs" element={<Docs />} />
             <Route path="/host-trip" element={<FormAvailabilityGate formKey="host_trip"><HostTrip /></FormAvailabilityGate>} />
             <Route path="/grievances" element={<FormAvailabilityGate formKey="grievance"><Grievances /></FormAvailabilityGate>} />
