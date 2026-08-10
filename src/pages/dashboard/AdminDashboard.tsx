@@ -319,8 +319,25 @@ const AdminDashboard = () => {
   const updateTripStatus = async (id: string, status: string) => {
     await supabase.from("trip_listings").update({ status }).eq("id", id);
     setDbTrips(p => p.map(t => t.id === id ? { ...t, status } : t));
+    const trip = dbTrips.find(t => t.id === id);
+    if (trip?.creator_id) {
+      sendAppEmail({
+        template: "itinerary-update",
+        userId: trip.creator_id,
+        idempotencyKey: `itinerary-${id}-${status}`,
+        data: {
+          tripTitle: trip.title,
+          updatedBy: "The Travelista team",
+          changeSummary: `Trip listing status changed to ${status}`,
+          newStartDate: trip.start_date ?? undefined,
+          newEndDate: trip.end_date ?? undefined,
+          itineraryUrl: `${window.location.origin}/trip/${id}`,
+        },
+      });
+    }
     toast({ title: `Trip ${status}` });
   };
+
 
   const updateGrievanceStatus = async (id: string, status: string, resolution?: string) => {
     const update: any = { status, updated_at: new Date().toISOString() };
@@ -604,8 +621,27 @@ const AdminDashboard = () => {
     const { error } = await supabase.from("bookings").update({ status }).eq("id", id);
     if (error) { toast({ title: "Update failed", description: error.message, variant: "destructive" }); return; }
     setDbBookings(p => p.map(b => b.id === id ? { ...b, status } : b));
+    if (status === "confirmed") {
+      const booking = dbBookings.find(b => b.id === id);
+      if (booking?.traveler_id) {
+        sendAppEmail({
+          template: "booking-confirmation",
+          userId: booking.traveler_id,
+          idempotencyKey: `booking-confirm-${id}`,
+          data: {
+            experienceTitle: (booking.services || []).join(", ") || "your trip",
+            startDate: booking.start_date,
+            endDate: booking.end_date,
+            guests: booking.guests,
+            totalPrice: booking.total_price ? `₹${Number(booking.total_price).toLocaleString("en-IN")}` : undefined,
+            bookingUrl: `${window.location.origin}/dashboard/traveler?tab=bookings`,
+          },
+        });
+      }
+    }
     toast({ title: `Booking → ${status}` });
   };
+
   const approvedWanderers = dbWanderers.filter(w => w.status === "approved");
   const leaderboard = [...dbWanderers].filter(w => w.status === "approved").sort((a, b) => (b.score || 0) - (a.score || 0));
   const matchesHostSearch = (a: any) =>
