@@ -14,6 +14,7 @@ import { hosts, reviews, experiences, propertyTypes, vehicleTypes } from "@/lib/
 import { useLocalStorage } from "@/hooks/use-local-storage";
 import EditDialog, { FieldConfig } from "@/components/EditDialog";
 import { useToast } from "@/hooks/use-toast";
+import { sendAppEmail } from "@/lib/appEmails";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import ImageUpload from "@/components/ImageUpload";
