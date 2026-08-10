@@ -14,6 +14,7 @@ import { hosts, reviews, experiences, propertyTypes, vehicleTypes } from "@/lib/
 import { useLocalStorage } from "@/hooks/use-local-storage";
 import EditDialog, { FieldConfig } from "@/components/EditDialog";
 import { useToast } from "@/hooks/use-toast";
+import { sendAppEmail } from "@/lib/appEmails";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import ImageUpload from "@/components/ImageUpload";
@@ -332,8 +333,29 @@ const HostDashboard = () => {
     const { error } = await supabase.from("bookings").update({ status }).eq("id", id);
     if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
     setHostBookings(p => p.map(b => b.id === id ? { ...b, status } : b));
+    if (status === "confirmed") {
+      const booking = hostBookings.find(b => b.id === id);
+      if (booking?.traveler_id) {
+        sendAppEmail({
+          template: "booking-confirmation",
+          userId: booking.traveler_id,
+          idempotencyKey: `booking-confirm-${id}`,
+          data: {
+            hostName: host?.name,
+            location: host?.city,
+            experienceTitle: (booking.services || []).join(", ") || "your trip",
+            startDate: booking.start_date,
+            endDate: booking.end_date,
+            guests: booking.guests,
+            totalPrice: booking.total_price ? `₹${Number(booking.total_price).toLocaleString("en-IN")}` : undefined,
+            bookingUrl: `${window.location.origin}/dashboard/traveler?tab=bookings`,
+          },
+        });
+      }
+    }
     toast({ title: `Booking ${status}` });
   };
+
 
   const generateInvoice = async (booking: any) => {
     if (!user) return;
