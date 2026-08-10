@@ -509,6 +509,19 @@ const AdminDashboard = () => {
     if (status === "approved" && approvedUserId && !userRoles.some(r => r.user_id === approvedUserId && r.role === "host")) {
       setUserRoles(p => [...p.filter(r => r.user_id !== approvedUserId), { id: `host-${approvedUserId}`, user_id: approvedUserId, role: "host" }]);
     }
+    if (status === "approved") {
+      sendAppEmail({
+        template: "host-acceptance",
+        recipientEmail: app.email,
+        idempotencyKey: `host-accept-${app.id}`,
+        data: {
+          hostName: app.full_name,
+          city: app.city,
+          loginUrl: `${window.location.origin}/login/host`,
+          onboardingUrl: `${window.location.origin}/host-onboarding`,
+        },
+      });
+    }
     toast({ title: status === "approved" ? "Host approved and activated" : `Host profile application → ${status}` });
   };
 
