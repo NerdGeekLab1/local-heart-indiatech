@@ -49,6 +49,16 @@ const Signup = () => {
       return;
     }
     setLoading(true);
+    const { data: taken } = await supabase.rpc("email_already_registered", { _email: form.email });
+    if (taken) {
+      setLoading(false);
+      toast({
+        title: "This email is already registered",
+        description: "Each email can hold one role only. Please sign in instead.",
+        variant: "destructive",
+      });
+      return;
+    }
     const { error } = await supabase.auth.signUp({
       email: form.email,
       password: form.password,

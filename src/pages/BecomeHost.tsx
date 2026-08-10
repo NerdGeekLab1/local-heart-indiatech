@@ -111,6 +111,19 @@ const BecomeHost = () => {
     let applicationUserId = user?.id ?? null;
 
     if (!user) {
+      const { data: taken } = await supabase.rpc("email_already_registered", { _email: form.email });
+      if (taken) {
+        setSubmitting(false);
+        toast({
+          title: "This email is already registered",
+          description: "Each email can hold one role only. Sign in with this email, or use a different address.",
+          variant: "destructive",
+        });
+        return;
+      }
+    }
+
+    if (!user) {
       const firstName = form.name.trim().split(/\s+/)[0] || form.name.trim();
       const { data: signupData, error: signupError } = await supabase.auth.signUp({
         email: form.email.trim().toLowerCase(),
