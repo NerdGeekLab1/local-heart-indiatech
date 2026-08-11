@@ -149,7 +149,9 @@ const BecomeHost = () => {
       email: form.email.trim(),
       phone: form.phone.trim(),
       city: form.city.trim(),
-      state: form.state.trim(),
+      state: form.country && form.country !== "India"
+        ? [form.state.trim(), form.country].filter(Boolean).join(", ")
+        : form.state.trim(),
       services: form.services,
       languages: form.languages,
       specialties: form.specialties,
