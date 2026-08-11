@@ -269,17 +269,27 @@ const BecomeHost = () => {
                   <PhoneInput id="bh-phone" value={form.phone} onChange={v => update("phone", v)} showError={touched} />
                 </div>
                 <div>
-                  <label htmlFor="bh-city" className="text-sm font-medium text-foreground mb-1 block">City *</label>
-                  <Input id="bh-city" value={form.city} onChange={e => update("city", e.target.value)} placeholder="e.g. Jaipur" maxLength={80}
-                    className={touched && step0Errors.city ? "border-destructive" : ""} />
-                  {touched && step0Errors.city && <p className="text-xs text-destructive mt-1">{step0Errors.city}</p>}
+                  <label htmlFor="bh-country" className="text-sm font-medium text-foreground mb-1 block">Country *</label>
+                  <SearchSelect id="bh-country" value={form.country} options={COUNTRY_NAMES} placeholder="Select country"
+                    ariaLabel="Country"
+                    onChange={v => setForm(prev => ({ ...prev, country: v, state: "", city: "" }))} />
                 </div>
               </div>
-              <div>
-                <label htmlFor="bh-state" className="text-sm font-medium text-foreground mb-1 block">State *</label>
-                <Input id="bh-state" value={form.state} onChange={e => update("state", e.target.value)} placeholder="e.g. Rajasthan" maxLength={80}
-                  className={touched && step0Errors.state ? "border-destructive" : ""} />
-                {touched && step0Errors.state && <p className="text-xs text-destructive mt-1">{step0Errors.state}</p>}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label htmlFor="bh-state" className="text-sm font-medium text-foreground mb-1 block">State / Region *</label>
+                  <SearchSelect id="bh-state" value={form.state} options={regionsFor(form.country)} placeholder="Select state or region"
+                    ariaLabel="State or region" invalid={touched && !!step0Errors.state}
+                    onChange={v => update("state", v)} />
+                  {touched && step0Errors.state && <p className="text-xs text-destructive mt-1">{step0Errors.state}</p>}
+                </div>
+                <div>
+                  <label htmlFor="bh-city" className="text-sm font-medium text-foreground mb-1 block">City *</label>
+                  <SearchSelect id="bh-city" value={form.city} options={citiesFor(form.country)} placeholder="Select city"
+                    ariaLabel="City" invalid={touched && !!step0Errors.city}
+                    onChange={v => update("city", v)} />
+                  {touched && step0Errors.city && <p className="text-xs text-destructive mt-1">{step0Errors.city}</p>}
+                </div>
               </div>
               {!user && (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
