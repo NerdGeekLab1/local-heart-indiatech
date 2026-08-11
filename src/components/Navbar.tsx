@@ -294,7 +294,6 @@ const Navbar = () => {
                   {link.label}
                 </Link>
               ))}
-              <Link to="/become-host" className="block py-2.5 px-3 text-sm font-medium rounded-lg" onClick={() => setMobileOpen(false)}>Become a Host</Link>
               <Link to="/host-trip" className="block py-2.5 px-3 text-sm font-medium rounded-lg" onClick={() => setMobileOpen(false)}>Host a Trip</Link>
               <Link to="/community" className="block py-2.5 px-3 text-sm font-medium rounded-lg" onClick={() => setMobileOpen(false)}>Community</Link>
               <Link to="/grievances" className="block py-2.5 px-3 text-sm font-medium rounded-lg" onClick={() => setMobileOpen(false)}>Grievances</Link>
