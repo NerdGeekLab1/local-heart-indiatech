@@ -10,6 +10,8 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import Breadcrumbs from "@/components/Breadcrumbs";
 import PhoneInput from "@/components/PhoneInput";
+import SearchSelect from "@/components/SearchSelect";
+import { COUNTRY_NAMES, regionsFor, citiesFor } from "@/lib/geo";
 import ImageUpload from "@/components/ImageUpload";
 import { splitPhone, isValidLocalPhone } from "@/lib/phone";
 import { useToast } from "@/hooks/use-toast";
