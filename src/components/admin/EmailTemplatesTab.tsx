@@ -7,6 +7,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import EmailDnsStatus from "@/components/admin/EmailDnsStatus";
+
 
 interface EmailTemplate {
   id: string;
