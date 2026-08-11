@@ -260,6 +260,10 @@ const EmailTemplatesTab = () => {
         </div>
       </div>
 
+      <EmailDnsStatus />
+
+
+
       {/* Variable Reference */}
       <div className="rounded-lg bg-card shadow-card overflow-hidden">
         <button onClick={() => setShowVarRef(s => !s)}
