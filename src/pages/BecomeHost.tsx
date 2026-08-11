@@ -50,7 +50,7 @@ const BecomeHost = () => {
   const { user } = useAuth();
 
   const [form, setForm] = useState({
-    name: "", email: "", phone: "", city: "", state: "", password: "", confirmPassword: "",
+    name: "", email: "", phone: "", country: "India", city: "", state: "", password: "", confirmPassword: "",
     services: [] as string[], languages: [] as string[],
     bio: "", tagline: "", specialties: [] as string[],
     pricePerDay: "",
