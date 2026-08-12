@@ -64,7 +64,7 @@ const TripLeaderProfile = () => {
   return (
     <div className="min-h-screen bg-background">
       <Helmet>
-        <title>{`${profile?.first_name || "Trip Leader"} — Trip Leader on Travelista`}</title>
+        <title>{`${profile?.first_name || "Trip Leader"} — Trip Leader on RoamYoo`}</title>
         <meta name="description" content={(profile?.bio || `Trip Leader profile with ${trips.length} active trips across India.`).slice(0, 155)} />
         <link rel="canonical" href={`/trip-leader/${id}`} />
         <meta property="og:type" content="profile" />

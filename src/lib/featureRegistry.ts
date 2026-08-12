@@ -1,5 +1,5 @@
 /**
- * Travelista feature registry.
+ * RoamYoo feature registry.
  *
  * Every shipped capability is registered here with a semantic version history so
  * the Admin Test Mode console can roll a specific version to a specific audience

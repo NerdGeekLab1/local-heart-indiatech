@@ -53,7 +53,7 @@ const Community = () => {
       <div className="pt-24 pb-16 px-4 sm:px-6 lg:px-8 mx-auto max-w-7xl">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-10">
           <h1 className="text-4xl sm:text-5xl font-bold text-foreground">Community</h1>
-          <p className="mt-3 text-lg text-muted-foreground max-w-2xl mx-auto">Stories, reels, and inspiration from the Travelista family</p>
+          <p className="mt-3 text-lg text-muted-foreground max-w-2xl mx-auto">Stories, reels, and inspiration from the RoamYoo family</p>
         </motion.div>
 
         {/* Stats */}

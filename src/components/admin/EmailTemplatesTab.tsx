@@ -55,7 +55,7 @@ const VARIABLE_REFERENCE: Record<string, { name: string; description: string }[]
     { name: "first_name", description: "Recipient's first name" },
     { name: "last_name", description: "Recipient's last name" },
     { name: "email", description: "Recipient email address" },
-    { name: "site_name", description: "Platform name (e.g. Travelista)" },
+    { name: "site_name", description: "Platform name (e.g. RoamYoo)" },
     { name: "site_url", description: "Public site URL" },
     { name: "current_year", description: "Current year for footer" },
   ],
@@ -446,7 +446,7 @@ const EmailTemplatesTab = () => {
             className="bg-card rounded-xl shadow-elevated max-w-xl w-full p-6 max-h-[85vh] overflow-y-auto">
             <p className="text-xs uppercase tracking-wider text-muted-foreground mb-1">Preview</p>
             <h3 className="text-lg font-bold text-foreground mb-1">{previewing.subject}</h3>
-            <p className="text-xs text-muted-foreground mb-4">From: Travelista &lt;notify@travelista.app&gt;</p>
+            <p className="text-xs text-muted-foreground mb-4">From: RoamYoo &lt;notify@travelista.app&gt;</p>
             <div className="border border-border rounded-lg p-4 bg-background prose prose-sm max-w-none dark:prose-invert"
               dangerouslySetInnerHTML={{ __html: previewing.body_html }} />
             <Button variant="outline" onClick={() => setPreviewing(null)} className="rounded-full mt-4">Close</Button>

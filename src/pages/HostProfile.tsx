@@ -191,7 +191,7 @@ const HostProfile = () => {
           <Button size="lg" variant="outline" className="rounded-full px-6 gap-2" onClick={() => {
             const url = window.location.href;
             if (navigator.share) {
-              navigator.share({ title: `${host.name} on Travelista`, text: `Check out ${host.name}'s hosting in ${host.city}!`, url });
+              navigator.share({ title: `${host.name} on RoamYoo`, text: `Check out ${host.name}'s hosting in ${host.city}!`, url });
             } else {
               navigator.clipboard.writeText(url);
               toast({ title: "Link copied!", description: "Share link copied to clipboard" });

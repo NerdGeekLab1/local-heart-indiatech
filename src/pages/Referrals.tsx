@@ -64,7 +64,7 @@ const Referrals = () => {
   const shareLink = () => {
     const url = `${window.location.origin}/signup?ref=${referralCode}`;
     if (navigator.share) {
-      navigator.share({ title: "Join Travelista!", text: "Use my referral link to get bonus rewards!", url });
+      navigator.share({ title: "Join RoamYoo!", text: "Use my referral link to get bonus rewards!", url });
     } else {
       copyCode();
     }

@@ -143,7 +143,7 @@ const Signup = () => {
             <ArrowLeft className="w-4 h-4" /> Back to Home
           </Link>
 
-          <h1 className="text-3xl font-bold text-foreground">{portalRole ? `${portalRole === "host" ? "Host" : "Traveler"} sign in` : mode === "signup" ? "Join Travelista" : "Welcome Back"}</h1>
+          <h1 className="text-3xl font-bold text-foreground">{portalRole ? `${portalRole === "host" ? "Host" : "Traveler"} sign in` : mode === "signup" ? "Join RoamYoo" : "Welcome Back"}</h1>
           <p className="mt-1 text-muted-foreground">{portalRole ? `Access your ${portalRole} workspace` : mode === "signup" ? "Create your traveler account" : "Sign in to your account"}</p>
 
           {/* Mode Toggle */}

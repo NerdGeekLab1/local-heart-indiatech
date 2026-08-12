@@ -6,7 +6,7 @@ import Footer from "@/components/Footer";
 const sections = [
   {
     title: "1. What Are Cookies & Local Storage",
-    content: "Cookies are small text files stored by your browser. Travelista also uses browser local storage, which works similarly but stays on your device. Together they keep you signed in, remember your preferences, and help the app load faster."
+    content: "Cookies are small text files stored by your browser. RoamYoo also uses browser local storage, which works similarly but stays on your device. Together they keep you signed in, remember your preferences, and help the app load faster."
   },
   {
     title: "2. Strictly Necessary (Always On)",
@@ -14,7 +14,7 @@ const sections = [
   },
   {
     title: "3. Preferences",
-    content: "We remember your choices so Travelista feels like yours: light/dark theme, currency (INR/USD/EUR), the last dashboard tab you opened (admin), dismissed onboarding checklists, and your last visited dashboard. These live in local storage on your device and are never sent to third parties."
+    content: "We remember your choices so RoamYoo feels like yours: light/dark theme, currency (INR/USD/EUR), the last dashboard tab you opened (admin), dismissed onboarding checklists, and your last visited dashboard. These live in local storage on your device and are never sent to third parties."
   },
   {
     title: "4. Analytics & Performance",
@@ -30,7 +30,7 @@ const sections = [
   },
   {
     title: "7. Changes & Contact",
-    content: "We will update this page if our cookie usage changes. Questions: privacy@travelista.com · Travelista, 123 Startup Lane, Bangalore, Karnataka 560001, India."
+    content: "We will update this page if our cookie usage changes. Questions: privacy@travelista.com · RoamYoo, 123 Startup Lane, Bangalore, Karnataka 560001, India."
   },
 ];
 
@@ -45,8 +45,8 @@ const cookieRows = [
 const Cookies = () => (
   <div className="min-h-screen bg-background">
     <Helmet>
-      <title>Cookie Policy | Travelista</title>
-      <meta name="description" content="Which cookies and local storage Travelista uses, why, and how to control them." />
+      <title>Cookie Policy | RoamYoo</title>
+      <meta name="description" content="Which cookies and local storage RoamYoo uses, why, and how to control them." />
     </Helmet>
     <Navbar />
     <div className="pt-24 pb-16 px-4 sm:px-6 lg:px-8 mx-auto max-w-3xl">
@@ -54,7 +54,7 @@ const Cookies = () => (
         <h1 className="text-3xl sm:text-4xl font-bold text-foreground">Cookie Policy</h1>
         <p className="mt-2 text-muted-foreground">Last updated: July 28, 2026</p>
         <p className="mt-4 text-sm text-muted-foreground leading-relaxed">
-          This page explains the cookies and browser storage Travelista uses. We keep it minimal:
+          This page explains the cookies and browser storage RoamYoo uses. We keep it minimal:
           no advertising trackers, no cross-site profiling.
         </p>
       </motion.div>

@@ -1,7 +1,7 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle, Ban, Clock, Eye, ExternalLink } from "lucide-react";
+import { CheckCircle, Ban, Clock, Eye, ExternalLink, Mail } from "lucide-react";
 
 export interface AuditEntry {
   id: string;
@@ -26,6 +26,7 @@ interface Props {
   statuses?: { value: string; label: string; icon?: "approve" | "review" | "wait" | "reject" }[];
   /** Admin actions recorded for this application, newest first. */
   auditEntries?: AuditEntry[];
+  onResendEmail?: () => void;
 }
 
 
@@ -58,7 +59,7 @@ const renderValue = (v: any) => {
 const icons = { approve: CheckCircle, review: Eye, wait: Clock, reject: Ban };
 
 /** Full read-only view of a host application with inline verification actions. */
-const ApplicationDetailDialog = ({ open, onClose, record, title, groups, photosKey = "photos", socialKey = "social_links", onStatus, statuses = [], auditEntries = [] }: Props) => {
+const ApplicationDetailDialog = ({ open, onClose, record, title, groups, photosKey = "photos", socialKey = "social_links", onStatus, statuses = [], auditEntries = [], onResendEmail }: Props) => {
   if (!record) return null;
   const photos: string[] = Array.isArray(record[photosKey]) ? record[photosKey] : [];
   const socials: Record<string, string> = record[socialKey] && typeof record[socialKey] === "object" ? record[socialKey] : {};
@@ -166,6 +167,11 @@ const ApplicationDetailDialog = ({ open, onClose, record, title, groups, photosK
 
           {onStatus && statuses.length > 0 && (
             <div className="flex flex-wrap gap-2 border-t border-border pt-4">
+              {onResendEmail && (
+                <Button size="sm" variant="outline" className="rounded-full text-xs" onClick={onResendEmail}>
+                  <Mail className="w-3.5 h-3.5 mr-1" /> Resend latest email
+                </Button>
+              )}
               {statuses.map(s => {
                 const Icon = s.icon ? icons[s.icon] : CheckCircle;
                 const destructive = s.icon === "reject";

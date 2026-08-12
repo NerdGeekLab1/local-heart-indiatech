@@ -23,7 +23,7 @@ const inAppDocSections = [
 const repoFiles = [
   { icon: BookOpen, name: "PLATFORM_DOCUMENTATION.md", path: "PLATFORM_DOCUMENTATION.md", desc: "Complete routes, forms, role features, architecture, relationships, security and admin guide" },
   { icon: FileCode2, name: "PROJECT_DOCUMENTATION.md", path: "PROJECT_DOCUMENTATION.md", desc: "Full feature list, 40+ routes, tech stack reference" },
-  { icon: Map, name: "Travelista_Roadmap.md", path: "Travelista_Roadmap.md", desc: "Phased roadmap incl. Phase 5 — Luggage Companion programme" },
+  { icon: Map, name: "RoamYoo_Roadmap.md", path: "RoamYoo_Roadmap.md", desc: "Phased roadmap incl. Phase 5 — Luggage Companion programme" },
   { icon: Package, name: "API Package (Postman)", path: "docs/api/travelista.postman_collection.json", desc: "33 tables, RPCs, edge functions & storage — import into Postman for the mobile app" },
   { icon: FileText, name: "API Guide", path: "docs/api/README.md", desc: "Auth, REST, RPC and storage conventions for API consumers" },
   { icon: Database, name: "Database Schema Export", path: "docs/db/schema.sql", desc: "Portable migration: tables, grants, RLS, functions, triggers, buckets" },

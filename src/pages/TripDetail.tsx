@@ -122,12 +122,12 @@ const TripDetail = () => {
   return (
     <div className="min-h-screen bg-background">
       <Helmet>
-        <title>{`${trip.title} — ${trip.destination || "Trip"} on Travelista`}</title>
+        <title>{`${trip.title} — ${trip.destination || "Trip"} on RoamYoo`}</title>
         <meta name="description" content={(trip.description || `${trip.title} — ${trip.duration || "trip"} starting from ₹${trip.total_price}.`).slice(0, 155)} />
         <link rel="canonical" href={`/trip/${id}`} />
         <meta property="og:type" content="article" />
         <meta property="og:title" content={trip.title} />
-        <meta property="og:description" content={(trip.description || `${trip.destination || "Trip"} adventure on Travelista.`).slice(0, 200)} />
+        <meta property="og:description" content={(trip.description || `${trip.destination || "Trip"} adventure on RoamYoo.`).slice(0, 200)} />
         <meta property="og:url" content={`/trip/${id}`} />
         {trip.image_url && <meta property="og:image" content={trip.image_url} />}
         <meta name="twitter:card" content="summary_large_image" />

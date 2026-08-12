@@ -15,7 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { hosts, mockBookings, reviews, experiences, destinations } from "@/lib/data";
+import { destinations } from "@/lib/data";
 import { useLocalStorage } from "@/hooks/use-local-storage";
 import EditDialog, { FieldConfig } from "@/components/EditDialog";
 import { useToast } from "@/hooks/use-toast";
@@ -118,8 +118,6 @@ const AdminDashboard = () => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const { format } = useCurrency();
-  const totalRevenue = mockBookings.reduce((s, b) => s + b.totalPrice, 0);
-  const platformFee = Math.round(totalRevenue * 0.15);
 
   // CRUD state
   const [customDestinations, setCustomDestinations] = useLocalStorage<any[]>("admin_custom_destinations", []);
@@ -130,7 +128,7 @@ const AdminDashboard = () => {
   const [removedReviews, setRemovedReviews] = useLocalStorage<string[]>("admin_removed_reviews", []);
   const [expandedHost, setExpandedHost] = useState<string | null>(null);
   const [platformSettings, setPlatformSettings] = useLocalStorage("admin_settings", {
-    commissionRate: 15, platformName: "Travelista", defaultCurrency: "INR",
+    commissionRate: 15, platformName: "RoamYoo", defaultCurrency: "INR",
   });
 
   const [editDialog, setEditDialog] = useState<{ open: boolean; title: string; fields: FieldConfig[]; data?: any; onSave: (d: any) => void; onDelete?: () => void }>({
@@ -159,6 +157,8 @@ const AdminDashboard = () => {
   const [dbBookings, setDbBookings] = useState<any[]>([]);
   const [dbFeedPosts, setDbFeedPosts] = useState<any[]>([]);
   const [dbReviews, setDbReviews] = useState<any[]>([]);
+  const totalRevenue = dbBookings.reduce((sum, booking) => sum + Number(booking.total_price || 0), 0);
+  const platformFee = Math.round(totalRevenue * 0.15);
   const [dataRefreshKey, setDataRefreshKey] = useState(0);
   const [lastSynced, setLastSynced] = useState<Date | null>(null);
 
@@ -328,7 +328,7 @@ const AdminDashboard = () => {
         idempotencyKey: `itinerary-${id}-${status}`,
         data: {
           tripTitle: trip.title,
-          updatedBy: "The Travelista team",
+          updatedBy: "The RoamYoo team",
           changeSummary: `Trip listing status changed to ${status}`,
           newStartDate: trip.start_date ?? undefined,
           newEndDate: trip.end_date ?? undefined,
@@ -441,10 +441,10 @@ const AdminDashboard = () => {
     const { error } = await supabase.from("email_notifications").insert({
       recipient_user_id: targetUser.id,
       recipient_email: targetUser.email,
-      subject: "Travelista account update",
+      subject: "RoamYoo account update",
       template_name: "admin_user_email",
       trigger_event: "admin_user_management",
-      body_html: `<p>Hi ${targetUser.first_name || "traveler"},</p><p>Your Travelista account has an update from the admin team. Please sign in to review your latest status and messages.</p>`,
+      body_html: `<p>Hi ${targetUser.first_name || "traveler"},</p><p>Your RoamYoo account has an update from the admin team. Please sign in to review your latest status and messages.</p>`,
       payload: { user_id: targetUser.id, action: "send_email" },
       sent_by: user.id,
     });
@@ -457,7 +457,7 @@ const AdminDashboard = () => {
     const { error } = await supabase.from("messages").insert({
       sender_id: user.id,
       receiver_id: targetUser.id,
-      content: "Travelista admin notification: please review your dashboard for the latest account updates.",
+      content: "RoamYoo admin notification: please review your dashboard for the latest account updates.",
     });
     if (error) { toast({ title: "Notification failed", description: error.message, variant: "destructive" }); return; }
     toast({ title: "Notification sent" });
@@ -594,7 +594,7 @@ const AdminDashboard = () => {
   }, [dbUsers, userSearch, userRoleFilter, userRoles]);
 
   // Filtered experiences
-  const allExperiences = dbExperiences.length > 0 ? dbExperiences : experiences.map(e => ({ ...e, host_id: null, host_name: e.hostName, host_city: e.hostCity }));
+  const allExperiences = dbExperiences;
   const filteredExperiences = useMemo(() => {
     let list = allExperiences;
     if (experienceStatusFilter !== "all") {
@@ -654,6 +654,54 @@ const AdminDashboard = () => {
       }
     }
     toast({ title: `Booking → ${status}` });
+  };
+
+  const resendBookingEmail = async (id: string) => {
+    if (!user) return;
+    const booking = dbBookings.find(b => b.id === id);
+    if (!booking?.traveler_id) {
+      toast({ title: "Email unavailable", description: "This booking has no traveler account.", variant: "destructive" });
+      return;
+    }
+    const attemptId = crypto.randomUUID();
+    const result = await sendAppEmail({
+      template: "booking-confirmation",
+      userId: booking.traveler_id,
+      idempotencyKey: `booking-confirm-resend-${id}-${attemptId}`,
+      data: {
+        experienceTitle: (booking.services || []).join(", ") || "your trip",
+        startDate: booking.start_date,
+        endDate: booking.end_date,
+        guests: booking.guests,
+        totalPrice: booking.total_price ? `₹${Number(booking.total_price).toLocaleString("en-IN")}` : undefined,
+        bookingUrl: `${window.location.origin}/dashboard/traveler?tab=bookings`,
+      },
+    });
+    await supabase.from("admin_audit_log").insert({
+      admin_id: user.id, entity_type: "booking", entity_id: id, action: "resend_email",
+      notes: result.error ? "Transactional email resend failed" : "Transactional email resend queued",
+      metadata: { template: "booking-confirmation", attempt_id: attemptId, success: !result.error },
+    });
+    setAuditLogReloadKey(k => k + 1);
+    toast({ title: result.error ? "Resend failed" : "Booking email queued", variant: result.error ? "destructive" : "default" });
+  };
+
+  const resendHostApplicationEmail = async (app: any) => {
+    if (!user || !app?.email) return;
+    const attemptId = crypto.randomUUID();
+    const result = await sendAppEmail({
+      template: "host-acceptance", recipientEmail: app.email,
+      idempotencyKey: `host-accept-resend-${app.id}-${attemptId}`,
+      data: { hostName: app.full_name, city: app.city, loginUrl: `${window.location.origin}/login/host`, onboardingUrl: `${window.location.origin}/host-onboarding` },
+    });
+    await supabase.from("admin_audit_log").insert({
+      admin_id: user.id, entity_type: "host_application", entity_id: app.id, action: "resend_email",
+      previous_status: app.status, new_status: app.status,
+      notes: result.error ? "Host acceptance resend failed" : "Host acceptance resend queued",
+      metadata: { template: "host-acceptance", attempt_id: attemptId, success: !result.error },
+    });
+    setAuditLogReloadKey(k => k + 1);
+    toast({ title: result.error ? "Resend failed" : "Host email queued", variant: result.error ? "destructive" : "default" });
   };
 
   const approvedWanderers = dbWanderers.filter(w => w.status === "approved");
@@ -1617,7 +1665,7 @@ const AdminDashboard = () => {
           <div className="mt-6">
             <div className="flex items-center justify-between mb-4 gap-3 flex-wrap">
               <h2 className="text-xl font-bold text-foreground">
-                Hosts ({registeredHosts.length} registered · {hosts.length} showcase)
+                Hosts ({registeredHosts.length} registered)
               </h2>
               <Button size="sm" variant="outline" className="rounded-full text-xs gap-1.5" onClick={() => setDataRefreshKey(k => k + 1)}>
                 <TrendingUp className="w-3.5 h-3.5" /> Refresh live data
@@ -1694,58 +1742,6 @@ const AdminDashboard = () => {
                 </div>
               </div>
             )}
-            <h3 className="font-bold text-foreground mb-2">Showcase hosts (catalog)</h3>
-
-            <div className="space-y-3">
-              {hosts.map(h => {
-                const status = getHostStatus(h.id);
-                const isExpanded = expandedHost === h.id;
-                const hBookings = mockBookings.filter(b => b.hostId === h.id);
-                return (
-                  <div key={h.id} className={`rounded-xl bg-card shadow-card overflow-hidden ${isExpanded ? "ring-2 ring-primary/20" : ""}`}>
-                    <div className="p-4 flex items-center gap-4 cursor-pointer" onClick={() => setExpandedHost(isExpanded ? null : h.id)}>
-                      <img src={h.image} alt={h.name} className="w-12 h-12 rounded-full object-cover" />
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2">
-                          <p className="font-bold text-foreground">{h.name}</p>
-                          <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${statusBadge(status)}`}>{status}</span>
-                        </div>
-                        <p className="text-xs text-muted-foreground">{h.city} · <Star className="w-3 h-3 inline fill-primary text-primary" /> {h.rating}</p>
-                      </div>
-                      <ChevronDown className={`w-4 h-4 text-muted-foreground transition-transform ${isExpanded ? "rotate-180" : ""}`} />
-                    </div>
-                    <AnimatePresence>
-                      {isExpanded && (
-                        <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
-                          <div className="px-4 pb-4 border-t border-border pt-4 space-y-3">
-                            <div className="flex flex-wrap gap-2">
-                              <select className="text-xs rounded-md border border-input bg-background px-2 py-1.5"
-                                value={status} onChange={e => { setHostStatuses(p => ({ ...p, [h.id]: e.target.value })); toast({ title: `${h.name} → ${e.target.value}` }); }}>
-                                <option value="verified">✓ Verified</option>
-                                <option value="pending">⏳ Pending</option>
-                                <option value="suspended">⛔ Suspended</option>
-                              </select>
-                              <Button size="sm" variant="outline" className="text-xs rounded-full gap-1" onClick={() => setEditDialog({
-                                open: true, title: `Edit ${h.name}`, fields: hostEditFields,
-                                data: { name: h.name, city: h.city, tagline: h.tagline, bio: h.bio, pricePerDay: h.pricePerDay, safetyScore: h.safetyScore },
-                                onSave: (d) => toast({ title: `${d.name} updated` }),
-                              })}><Edit className="w-3 h-3" /> Edit</Button>
-                            </div>
-                            <textarea className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm min-h-[40px]"
-                              placeholder="Admin notes..." value={hostNotes[h.id] || ""} onChange={e => setHostNotes(p => ({ ...p, [h.id]: e.target.value }))} />
-                            <div className="grid grid-cols-3 gap-3 text-xs text-muted-foreground">
-                              <div className="rounded-lg bg-secondary/50 p-3"><p className="font-bold text-foreground mb-1">Bookings</p><p>{hBookings.length} · {format(hBookings.reduce((s, b) => s + b.totalPrice, 0))}</p></div>
-                              <div className="rounded-lg bg-secondary/50 p-3"><p className="font-bold text-foreground mb-1">Services</p><p>{h.services.join(", ")}</p></div>
-                              <div className="rounded-lg bg-secondary/50 p-3"><p className="font-bold text-foreground mb-1">Safety</p><p>{h.safetyScore}/100</p></div>
-                            </div>
-                          </div>
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-                  </div>
-                );
-              })}
-            </div>
           </div>
         )}
 
@@ -1767,6 +1763,7 @@ const AdminDashboard = () => {
               onPageSize={setBookingsPageSize}
               formatCurrency={format}
               onStatusChange={updateBookingStatus}
+              onResendEmail={resendBookingEmail}
               onRefresh={() => setDataRefreshKey(k => k + 1)}
             />
           </div>
@@ -2112,12 +2109,12 @@ const AdminDashboard = () => {
           <div className="mt-6 space-y-6">
             <div>
               <h2 className="text-xl font-bold text-foreground">Review Moderation</h2>
-              <p className="text-sm text-muted-foreground mt-1">Flag and remove traveler reviews. Live database reviews are shown first; demo reviews appear when the database has none.</p>
+              <p className="text-sm text-muted-foreground mt-1">Flag and remove traveler reviews from live platform data.</p>
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
               {[
                 { label: "Live Reviews", value: dbReviews.length, icon: Star },
-                { label: "Verified Hosts", value: hosts.filter(h => getHostStatus(h.id) === "verified").length, icon: Shield },
+                { label: "Verified Hosts", value: registeredHosts.length, icon: Shield },
                 { label: "Flagged Reviews", value: flaggedReviews.length, icon: Flag },
                 { label: "Removed Reviews", value: removedReviews.length, icon: Ban },
               ].map(s => (
@@ -2130,9 +2127,9 @@ const AdminDashboard = () => {
             </div>
             <ReviewModerationPanel
               dbReviews={dbReviews}
-              mockReviews={reviews}
+              mockReviews={[]}
               getUserName={getUserName}
-              getMockHostName={(hostId) => hosts.find(h => h.id === hostId)?.name || "Unknown host"}
+              getMockHostName={() => "Unknown host"}
             />
           </div>
         )}
@@ -2509,6 +2506,7 @@ const AdminDashboard = () => {
           { value: "rejected", label: "Reject", icon: "reject" },
         ]}
         auditEntries={detailApp?.row?.id ? auditEntriesFor(detailApp.row.id) : []}
+        onResendEmail={detailApp?.row?.status === "approved" ? () => resendHostApplicationEmail(detailApp.row) : undefined}
       />
 
 

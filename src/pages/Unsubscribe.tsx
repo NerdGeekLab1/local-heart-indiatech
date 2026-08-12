@@ -95,7 +95,7 @@ const Unsubscribe = () => {
               <Check className="w-12 h-12 text-accent mx-auto mb-4" />
               <h1 className="text-2xl font-bold text-foreground">Unsubscribed</h1>
               <p className="mt-3 text-muted-foreground">
-                You won't receive further notification emails from Travelista.
+                You won't receive further notification emails from RoamYoo.
               </p>
             </>
           )}
@@ -116,7 +116,7 @@ const Unsubscribe = () => {
 
           <div className="mt-8">
             <Link to="/" className="text-sm text-primary hover:underline">
-              Back to Travelista
+              Back to RoamYoo
             </Link>
           </div>
         </motion.div>

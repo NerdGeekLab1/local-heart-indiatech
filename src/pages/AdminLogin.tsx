@@ -76,7 +76,7 @@ const AdminLogin = () => {
             </div>
             <div>
               <h1 className="text-2xl font-bold text-foreground">Admin Login</h1>
-              <p className="text-sm text-muted-foreground">Secure access for Travelista operations.</p>
+              <p className="text-sm text-muted-foreground">Secure access for RoamYoo operations.</p>
             </div>
           </div>
 

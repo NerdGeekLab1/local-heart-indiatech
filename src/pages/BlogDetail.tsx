@@ -38,7 +38,7 @@ const BlogDetail = () => {
   return (
     <div className="min-h-screen bg-background">
       <Helmet>
-        <title>{`${post.title} | Travelista`}</title>
+        <title>{`${post.title} | RoamYoo`}</title>
         <meta name="description" content={description} />
         <link rel="canonical" href={canonical} />
         <meta property="og:type" content="article" />

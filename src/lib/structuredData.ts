@@ -22,7 +22,7 @@ export const organizationSchema = (settings: SiteSettings) => {
   return {
     "@context": "https://schema.org",
     "@type": "Organization",
-    name: settings.site_title?.split("—")[0].trim() || "Travelista",
+    name: settings.site_title?.split("—")[0].trim() || "RoamYoo",
     url: base(settings) || undefined,
     description: settings.meta_description || undefined,
     logo: settings.logo_url || undefined,
@@ -43,7 +43,7 @@ export const organizationSchema = (settings: SiteSettings) => {
 export const webSiteSchema = (settings: SiteSettings) => ({
   "@context": "https://schema.org",
   "@type": "WebSite",
-  name: settings.site_title || "Travelista",
+  name: settings.site_title || "RoamYoo",
   url: base(settings) || undefined,
   ...(base(settings)
     ? {
@@ -80,7 +80,7 @@ export const articleSchema = (settings: SiteSettings, a: ArticleInput) => ({
   datePublished: a.datePublished || undefined,
   dateModified: a.dateModified || a.datePublished || undefined,
   wordCount: a.body ? stripHtml(a.body).split(" ").filter(Boolean).length : undefined,
-  author: { "@type": "Person", name: a.author || "Travelista Editorial" },
+  author: { "@type": "Person", name: a.author || "RoamYoo Editorial" },
   publisher: organizationSchema(settings),
   mainEntityOfPage: { "@type": "WebPage", "@id": `${base(settings)}${a.path}` },
 });

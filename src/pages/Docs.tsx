@@ -10,7 +10,7 @@ import Footer from "@/components/Footer";
 const sections = [
   {
     id: "overview", icon: Globe, title: "Project Overview",
-    content: `**Travelista** is a social travel marketplace connecting international travelers with verified local hosts across India.
+    content: `**RoamYoo** is a social travel marketplace connecting international travelers with verified local hosts across India.
 
 **Vision**: Book a person, not just a place. Hosts offer guided tours, homestays, transport, food, and cultural immersion.
 
@@ -346,7 +346,7 @@ All colors use HSL via CSS variables defined in \`index.css\`:
     id: "changelog", icon: Clock, title: "Changelog",
     content: `**v1.3 — May 2026** (Current)
 - [x] **Project documentation refreshed** — \`PROJECT_DOCUMENTATION.md\` rewritten with full URL map, feature × role flow, and DB index
-- [x] **Roadmap published** — \`Travelista_Roadmap.md\` adds the new **Luggage Companion programme** for Phase 5
+- [x] **Roadmap published** — \`RoamYoo_Roadmap.md\` adds the new **Luggage Companion programme** for Phase 5
 - [x] **README.md** updated with Luggage highlights + doc links
 - [x] New **Roadmap** tab in this Developer Portal
 
@@ -421,7 +421,7 @@ const Docs = () => {
             </div>
             <div>
               <h1 className="text-3xl sm:text-4xl font-bold text-foreground">Developer Portal</h1>
-              <p className="text-muted-foreground text-sm">Travelista — Complete technical reference</p>
+              <p className="text-muted-foreground text-sm">RoamYoo — Complete technical reference</p>
             </div>
           </div>
         </motion.div>

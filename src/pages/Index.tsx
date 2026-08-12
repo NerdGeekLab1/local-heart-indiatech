@@ -380,7 +380,7 @@ const Index = () => {
           <div className="flex items-end justify-between mb-8">
             <div>
               <h2 className="text-2xl sm:text-3xl font-bold text-foreground">From the Blog</h2>
-              <p className="mt-2 text-muted-foreground">Stories, guides, and insights from the Travelista community</p>
+              <p className="mt-2 text-muted-foreground">Stories, guides, and insights from the RoamYoo community</p>
             </div>
             <Link to="/community?tab=blog" className="hidden sm:flex items-center gap-1 text-sm font-medium text-primary hover:underline">
               Read more <ArrowRight className="w-3 h-3" />
@@ -477,7 +477,7 @@ const Index = () => {
                   <Smartphone className="w-10 h-10 text-primary" />
                 </div>
                 <h3 className="text-lg font-bold text-foreground">Coming Soon on Mobile</h3>
-                <p className="text-sm text-muted-foreground mt-2">Download the Travelista app for on-the-go bookings, live host chat, and offline guides.</p>
+                <p className="text-sm text-muted-foreground mt-2">Download the RoamYoo app for on-the-go bookings, live host chat, and offline guides.</p>
                 <div className="mt-6 flex justify-center gap-3">
                   <Button variant="outline" className="rounded-xl px-6 gap-2 text-sm" disabled>
                     App Store
