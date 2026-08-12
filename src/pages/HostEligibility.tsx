@@ -18,11 +18,12 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Link } from "react-router-dom";
 import PhoneInput from "@/components/PhoneInput";
+import SearchSelect from "@/components/SearchSelect";
+import { COUNTRY_NAMES, citiesFor } from "@/lib/geo";
 import { splitPhone, isValidLocalPhone } from "@/lib/phone";
 
 const LANGS = ["English", "Hindi", "French", "German", "Spanish", "Japanese", "Mandarin", "Italian", "Russian", "Arabic"];
 const SPECIALTIES = ["Cultural", "Spiritual", "Adventure", "Culinary", "Wellness", "Wildlife", "Heritage", "Festival"];
-const COUNTRIES = ["USA", "UK", "Germany", "France", "Japan", "Australia", "Canada", "Israel", "Spain", "Italy", "Netherlands", "Brazil"];
 
 const SOCIAL_FIELDS = [
   { key: "instagram", label: "Instagram", icon: Instagram, placeholder: "https://instagram.com/yourhandle" },
@@ -207,6 +208,7 @@ const HostEligibility = () => {
     hosting_specialties: [] as string[], why_host: "",
     social_links: {} as Record<string, string>,
   });
+  const [residenceCountry, setResidenceCountry] = useState("India");
 
   const [touched, setTouched] = useState(false);
   const fieldErrors = useMemo(() => {
@@ -443,10 +445,14 @@ const HostEligibility = () => {
                   {touched && fieldErrors.phone && <p className="text-xs text-destructive mt-1">{fieldErrors.phone}</p>}
                 </div>
                 <div>
+                  <label htmlFor="he-country" className="text-sm font-medium block mb-1">Country *</label>
+                  <SearchSelect id="he-country" value={residenceCountry} options={COUNTRY_NAMES} placeholder="Select country"
+                    ariaLabel="Country" onChange={value => { setResidenceCountry(value); setForm(prev => ({ ...prev, city: "" })); }} />
+                </div>
+                <div>
                   <label htmlFor="he-city" className="text-sm font-medium block mb-1">City *</label>
-                  <Input id="he-city" value={form.city} onChange={e => setForm({ ...form, city: e.target.value })} maxLength={80}
-                    aria-invalid={touched && !!fieldErrors.city || undefined}
-                    className={touched && fieldErrors.city ? "border-destructive" : ""} />
+                  <SearchSelect id="he-city" value={form.city} options={citiesFor(residenceCountry)} placeholder="Select city"
+                    ariaLabel="City" invalid={touched && !!fieldErrors.city} onChange={value => setForm(prev => ({ ...prev, city: value }))} />
                   {touched && fieldErrors.city && <p className="text-xs text-destructive mt-1">{fieldErrors.city}</p>}
                 </div>
                 <div>
@@ -487,7 +493,7 @@ const HostEligibility = () => {
               <div>
                 <label className="text-sm font-medium block mb-2">Target Countries</label>
                 <div className="flex flex-wrap gap-2">
-                  {COUNTRIES.map(c => (
+                  {COUNTRY_NAMES.map(c => (
                     <button key={c} onClick={() => toggleArr("country_focus", c)} className={`rounded-full px-3 py-1.5 text-xs font-medium transition-all ${form.country_focus.includes(c) ? "bg-primary text-primary-foreground" : "bg-secondary hover:bg-secondary/80"}`}>{c}</button>
                   ))}
                 </div>

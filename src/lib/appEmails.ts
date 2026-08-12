@@ -18,7 +18,7 @@ export async function sendAppEmail(opts: {
   data?: Record<string, unknown>;
 }) {
   try {
-    const { error } = await supabase.functions.invoke("notify-email", {
+    const { data, error } = await supabase.functions.invoke("notify-email", {
       body: {
         templateName: opts.template,
         userId: opts.userId ?? undefined,
@@ -28,7 +28,9 @@ export async function sendAppEmail(opts: {
       },
     });
     if (error) console.warn(`[appEmails] ${opts.template} failed:`, error.message);
+    return { data, error };
   } catch (e) {
     console.warn(`[appEmails] ${opts.template} threw:`, e);
+    return { data: null, error: e instanceof Error ? e : new Error(String(e)) };
   }
 }

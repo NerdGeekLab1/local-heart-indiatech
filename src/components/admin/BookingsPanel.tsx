@@ -1,6 +1,7 @@
-import { Calendar, TrendingUp } from "lucide-react";
+import { Calendar, Mail, TrendingUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import AdminPagination from "@/components/admin/AdminPagination";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export interface BookingRow {
   id: string;
@@ -22,16 +23,17 @@ interface Props {
   onPageSize: (s: number) => void;
   formatCurrency: (n: number) => string;
   onStatusChange: (id: string, status: string) => void;
+  onResendEmail: (id: string) => void;
   onRefresh: () => void;
 }
 
 /** Admin bookings table with explicit loading and empty states. */
-const BookingsPanel = ({ rows, loading, page, pageSize, onPage, onPageSize, formatCurrency, onStatusChange, onRefresh }: Props) => {
+const BookingsPanel = ({ rows, loading, page, pageSize, onPage, onPageSize, formatCurrency, onStatusChange, onResendEmail, onRefresh }: Props) => {
   if (loading && rows.length === 0) {
     return (
       <div data-testid="bookings-loading" className="rounded-2xl border border-border bg-card shadow-card p-4 space-y-3">
         {[0, 1, 2, 3, 4].map(i => (
-          <div key={i} className="h-10 rounded-lg bg-secondary/50 animate-pulse" />
+          <Skeleton key={i} className="h-10 w-full" />
         ))}
       </div>
     );
@@ -67,6 +69,7 @@ const BookingsPanel = ({ rows, loading, page, pageSize, onPage, onPageSize, form
               <th className="text-left font-semibold px-4 py-3">Guests</th>
               <th className="text-right font-semibold px-4 py-3">Total</th>
               <th className="text-right font-semibold px-4 py-3">Status</th>
+              <th className="text-right font-semibold px-4 py-3">Email</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-border">
@@ -85,6 +88,11 @@ const BookingsPanel = ({ rows, loading, page, pageSize, onPage, onPageSize, form
                     <option value="pending">Pending</option><option value="confirmed">Confirmed</option>
                     <option value="completed">Completed</option><option value="cancelled">Cancelled</option>
                   </select>
+                </td>
+                <td className="px-4 py-3 text-right">
+                  <Button variant="outline" size="sm" className="rounded-full text-xs gap-1" onClick={() => onResendEmail(r.id)}>
+                    <Mail className="w-3 h-3" /> Resend
+                  </Button>
                 </td>
               </tr>
             ))}
