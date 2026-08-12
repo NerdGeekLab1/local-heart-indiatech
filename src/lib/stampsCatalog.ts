@@ -46,7 +46,7 @@ export const STAMP_CATALOG: StampDef[] = [
   { key: "mile_culture",     category: "milestone", tier: "gold",     title: "Culture Curator",   description: "Attended 5 cultural festivals or events",    emoji: "🎭", threshold: 5,  metric: "festivals_attended" },
   { key: "mile_storyteller", category: "milestone", tier: "silver",   title: "Storyteller",       description: "Posted 10 reviews with video",               emoji: "🎥", threshold: 10, metric: "video_reviews" },
   { key: "mile_streak_12",   category: "milestone", tier: "legend",   title: "12-Month Nomad",    description: "Booked a trip every month for a year",       emoji: "🔥", threshold: 12, metric: "streak_months" },
-  { key: "mile_referrer",    category: "milestone", tier: "gold",     title: "Community Builder", description: "Referred 5 friends who joined Travelista",   emoji: "🤝", threshold: 5,  metric: "referrals_done" },
+  { key: "mile_referrer",    category: "milestone", tier: "gold",     title: "Community Builder", description: "Referred 5 friends who joined RoamYoo",   emoji: "🤝", threshold: 5,  metric: "referrals_done" },
 
   // 🌦️ Seasonal
   { key: "sea_monsoon",      category: "seasonal", tier: "bronze",   title: "Monsoon Chaser",    description: "Travelled during monsoon season",            emoji: "🌧️", threshold: 1, metric: "monsoon_trips" },

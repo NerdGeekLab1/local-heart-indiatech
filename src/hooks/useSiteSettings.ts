@@ -24,7 +24,7 @@ export interface SiteSettings {
 }
 
 export const SITE_SETTINGS_DEFAULTS: SiteSettings = {
-  site_title: "Travelista — Authentic India, hosted by locals",
+  site_title: "RoamYoo — Authentic India, hosted by locals",
   tagline: "Travel India like a local",
   meta_description:
     "Discover India through local hosts: curated trips, homestays, food experiences and traveler stories.",

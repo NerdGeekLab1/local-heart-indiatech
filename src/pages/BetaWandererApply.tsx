@@ -79,7 +79,7 @@ const BetaWandererApply = () => {
             <div className="text-4xl mb-3">🧭</div>
             <h1 className="text-3xl font-bold text-foreground">Become a Beta Wanderer</h1>
             <p className="text-muted-foreground mt-2 max-w-lg mx-auto">
-              Travel to unexplored destinations, shoot videos, share feedback, and earn rewards. Be the eyes and ears of the Travelista community!
+              Travel to unexplored destinations, shoot videos, share feedback, and earn rewards. Be the eyes and ears of the RoamYoo community!
             </p>
             <div className="flex gap-4 justify-center mt-4">
               {[

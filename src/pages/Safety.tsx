@@ -14,7 +14,7 @@ const Safety = () => {
   ];
 
   const tips = [
-    "Always communicate through the Travelista platform",
+    "Always communicate through the RoamYoo platform",
     "Video call your host before booking",
     "Share your itinerary with family/friends",
     "Check reviews and safety scores carefully",
@@ -33,7 +33,7 @@ const Safety = () => {
             <Shield className="w-8 h-8 text-accent" />
           </div>
           <h1 className="text-3xl sm:text-4xl font-bold text-foreground">Your Safety, Our Priority</h1>
-          <p className="mt-3 text-muted-foreground max-w-2xl mx-auto">Travelista is built on trust. Every layer of our platform is designed to keep you safe while connecting you with authentic experiences.</p>
+          <p className="mt-3 text-muted-foreground max-w-2xl mx-auto">RoamYoo is built on trust. Every layer of our platform is designed to keep you safe while connecting you with authentic experiences.</p>
         </motion.div>
 
         {/* Features */}
@@ -68,7 +68,7 @@ const Safety = () => {
           <h2 className="text-lg font-bold text-foreground">Emergency Contact</h2>
           <p className="text-muted-foreground mt-1">If you're in immediate danger, call local emergency services first.</p>
           <p className="mt-3 text-2xl font-bold text-primary">+91 1800 123 4567</p>
-          <p className="text-sm text-muted-foreground">Travelista 24/7 Emergency Line</p>
+          <p className="text-sm text-muted-foreground">RoamYoo 24/7 Emergency Line</p>
         </div>
       </div>
       <Footer />

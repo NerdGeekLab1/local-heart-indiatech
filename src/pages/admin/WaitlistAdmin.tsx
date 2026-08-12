@@ -60,7 +60,7 @@ export default function WaitlistAdmin() {
     if (!user) return;
     await supabase.from("email_notifications").insert({
       recipient_email: r.email,
-      subject: "Your Travelista beta spot is live",
+      subject: "Your RoamYoo beta spot is live",
       template_name: "beta_waitlist_invite",
       trigger_event: "beta_waitlist_invite",
       body_html: `<p>Hi ${r.full_name || "traveler"},</p><p>Great news — your <strong>${r.plan_interest || "beta"}</strong> spot is ready! Sign in to start exploring.</p>`,

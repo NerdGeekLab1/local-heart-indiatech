@@ -472,7 +472,7 @@ const BecomeHost = () => {
               <div className="p-4 rounded-lg bg-secondary">
                 <h3 className="text-sm font-semibold text-foreground mb-2">What's Included</h3>
                 <ul className="text-sm text-muted-foreground space-y-1">
-                  <li>✓ Travelista takes 15% commission per booking</li>
+                  <li>✓ RoamYoo takes 15% commission per booking</li>
                   <li>✓ You set your own prices and availability</li>
                   <li>✓ Payments processed securely via the platform</li>
                   <li>✓ Cancel or modify bookings anytime before confirmation</li>
@@ -483,7 +483,7 @@ const BecomeHost = () => {
                 <ol className="text-sm text-muted-foreground space-y-1 list-decimal list-inside">
                   <li>We review your application (24-48 hours)</li>
                   <li>KYC verification (ID + address proof)</li>
-                  <li>Profile goes live on Travelista</li>
+                  <li>Profile goes live on RoamYoo</li>
                   <li>Start receiving booking inquiries!</li>
                 </ol>
               </div>

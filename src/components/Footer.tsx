@@ -7,24 +7,24 @@ const Footer = () => (
     <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12">
       <div className="grid grid-cols-2 md:grid-cols-6 gap-8">
         <div className="col-span-2">
-          <h4 className="text-lg font-bold text-primary mb-4">Travelista</h4>
+          <h4 className="text-lg font-bold text-primary mb-4">RoamYoo</h4>
           <p className="text-sm text-muted-foreground leading-relaxed max-w-xs">
             Book a person, not just a place. Authentic India, one host at a time.
           </p>
           <div className="flex gap-3 mt-4">
-            <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" aria-label="Travelista on Instagram" className="w-9 h-9 rounded-full bg-card border border-border flex items-center justify-center text-muted-foreground hover:text-primary hover:border-primary transition-colors">
+            <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" aria-label="RoamYoo on Instagram" className="w-9 h-9 rounded-full bg-card border border-border flex items-center justify-center text-muted-foreground hover:text-primary hover:border-primary transition-colors">
               <Instagram className="w-4 h-4" />
             </a>
-            <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" aria-label="Travelista on Facebook" className="w-9 h-9 rounded-full bg-card border border-border flex items-center justify-center text-muted-foreground hover:text-primary hover:border-primary transition-colors">
+            <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" aria-label="RoamYoo on Facebook" className="w-9 h-9 rounded-full bg-card border border-border flex items-center justify-center text-muted-foreground hover:text-primary hover:border-primary transition-colors">
               <Facebook className="w-4 h-4" />
             </a>
-            <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" aria-label="Travelista on X" className="w-9 h-9 rounded-full bg-card border border-border flex items-center justify-center text-muted-foreground hover:text-primary hover:border-primary transition-colors">
+            <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" aria-label="RoamYoo on X" className="w-9 h-9 rounded-full bg-card border border-border flex items-center justify-center text-muted-foreground hover:text-primary hover:border-primary transition-colors">
               <Twitter className="w-4 h-4" />
             </a>
-            <a href="https://youtube.com" target="_blank" rel="noopener noreferrer" aria-label="Travelista on YouTube" className="w-9 h-9 rounded-full bg-card border border-border flex items-center justify-center text-muted-foreground hover:text-primary hover:border-primary transition-colors">
+            <a href="https://youtube.com" target="_blank" rel="noopener noreferrer" aria-label="RoamYoo on YouTube" className="w-9 h-9 rounded-full bg-card border border-border flex items-center justify-center text-muted-foreground hover:text-primary hover:border-primary transition-colors">
               <Youtube className="w-4 h-4" />
             </a>
-            <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer" aria-label="Travelista on LinkedIn" className="w-9 h-9 rounded-full bg-card border border-border flex items-center justify-center text-muted-foreground hover:text-primary hover:border-primary transition-colors">
+            <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer" aria-label="RoamYoo on LinkedIn" className="w-9 h-9 rounded-full bg-card border border-border flex items-center justify-center text-muted-foreground hover:text-primary hover:border-primary transition-colors">
               <Linkedin className="w-4 h-4" />
             </a>
           </div>
@@ -74,7 +74,7 @@ const Footer = () => (
         </div>
       </div>
       <div className="mt-10 pt-6 border-t border-border flex flex-col sm:flex-row items-center justify-between gap-3">
-        <p className="text-xs text-muted-foreground">© 2026 Travelista. All rights reserved.</p>
+        <p className="text-xs text-muted-foreground">© 2026 RoamYoo. All rights reserved.</p>
         <div className="flex gap-4 text-xs text-muted-foreground flex-wrap justify-center">
           <Link to="/terms" className="hover:text-foreground transition-colors">Terms</Link>
           <Link to="/privacy" className="hover:text-foreground transition-colors">Privacy</Link>

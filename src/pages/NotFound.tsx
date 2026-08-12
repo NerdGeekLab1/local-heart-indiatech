@@ -14,7 +14,7 @@ const NotFound = () => {
   return (
     <div className="flex min-h-screen items-center justify-center bg-muted px-4">
       <Helmet>
-        <title>Page not found · Travelista</title>
+        <title>Page not found · RoamYoo</title>
         <meta name="robots" content="noindex" />
       </Helmet>
       <div className="text-center max-w-md">

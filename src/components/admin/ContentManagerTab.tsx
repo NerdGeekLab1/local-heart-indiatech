@@ -24,7 +24,7 @@ interface EntityConfig {
 }
 
 const BLOG_CATEGORIES = ["Travel Guide", "Industry Insights", "Adventure", "Food & Culture", "Wellness", "Culture", "Sustainability", "Festivals", "Budget Travel"];
-const AUTHORS = ["Travelista Editorial", "Ravi S.", "Priya K.", "Deepak S.", "Kiran M.", "Arjun M.", "Community Contributor"];
+const AUTHORS = ["RoamYoo Editorial", "Ravi S.", "Priya K.", "Deepak S.", "Kiran M.", "Arjun M.", "Community Contributor"];
 const LOCATIONS = [
   "Jaipur, Rajasthan", "Udaipur, Rajasthan", "Jaisalmer, Rajasthan", "Varanasi, Uttar Pradesh", "Agra, Uttar Pradesh",
   "Rishikesh, Uttarakhand", "Alleppey, Kerala", "Munnar, Kerala", "Kochi, Kerala", "Goa", "Mumbai, Maharashtra",

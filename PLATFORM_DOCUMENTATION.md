@@ -1,4 +1,4 @@
-# Travelista Platform Documentation
+# RoamYoo Platform Documentation
 
 **Version:** 2.0  
 **Updated:** 7 August 2026  
@@ -6,7 +6,7 @@
 
 ## 1. Platform overview
 
-Travelista is an India-focused social travel marketplace. It combines destination discovery, local-host services, traveler-led trips, community publishing, bookings, trust and safety, rewards, beta creator programs, and an administration console.
+RoamYoo is an India-focused social travel marketplace. It combines destination discovery, local-host services, traveler-led trips, community publishing, bookings, trust and safety, rewards, beta creator programs, and an administration console.
 
 ### User types
 
@@ -28,7 +28,7 @@ Travelista is an India-focused social travel marketplace. It combines destinatio
 
 | Route | Description | Access |
 |---|---|---|
-| `/` | Main Travelista discovery page | Public |
+| `/` | Main RoamYoo discovery page | Public |
 | `/explore` | Unified exploration view | Public |
 | `/experiences` | Search and browse approved experiences | Public |
 | `/experience/:id` | Experience details, host, media, pricing, reviews, and booking CTA | Public |
@@ -278,7 +278,7 @@ erDiagram
 
 ```mermaid
 mindmap
-  root((Travelista))
+  root((RoamYoo))
     Public
       Discovery
         Destinations
@@ -377,4 +377,4 @@ Open **View full** to inspect all submitted data, photos, social links, and the 
 - `docs/api/README.md` — API consumption guide.
 - `docs/api/travelista.postman_collection.json` — Postman collection.
 - `docs/db/schema.sql` — portable schema reference.
-- `Travelista_Roadmap.md` — future roadmap, including the Luggage Companion program.
+- `RoamYoo_Roadmap.md` — future roadmap, including the Luggage Companion program.

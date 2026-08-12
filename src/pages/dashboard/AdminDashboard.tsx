@@ -130,7 +130,7 @@ const AdminDashboard = () => {
   const [removedReviews, setRemovedReviews] = useLocalStorage<string[]>("admin_removed_reviews", []);
   const [expandedHost, setExpandedHost] = useState<string | null>(null);
   const [platformSettings, setPlatformSettings] = useLocalStorage("admin_settings", {
-    commissionRate: 15, platformName: "Travelista", defaultCurrency: "INR",
+    commissionRate: 15, platformName: "RoamYoo", defaultCurrency: "INR",
   });
 
   const [editDialog, setEditDialog] = useState<{ open: boolean; title: string; fields: FieldConfig[]; data?: any; onSave: (d: any) => void; onDelete?: () => void }>({
@@ -328,7 +328,7 @@ const AdminDashboard = () => {
         idempotencyKey: `itinerary-${id}-${status}`,
         data: {
           tripTitle: trip.title,
-          updatedBy: "The Travelista team",
+          updatedBy: "The RoamYoo team",
           changeSummary: `Trip listing status changed to ${status}`,
           newStartDate: trip.start_date ?? undefined,
           newEndDate: trip.end_date ?? undefined,
@@ -441,10 +441,10 @@ const AdminDashboard = () => {
     const { error } = await supabase.from("email_notifications").insert({
       recipient_user_id: targetUser.id,
       recipient_email: targetUser.email,
-      subject: "Travelista account update",
+      subject: "RoamYoo account update",
       template_name: "admin_user_email",
       trigger_event: "admin_user_management",
-      body_html: `<p>Hi ${targetUser.first_name || "traveler"},</p><p>Your Travelista account has an update from the admin team. Please sign in to review your latest status and messages.</p>`,
+      body_html: `<p>Hi ${targetUser.first_name || "traveler"},</p><p>Your RoamYoo account has an update from the admin team. Please sign in to review your latest status and messages.</p>`,
       payload: { user_id: targetUser.id, action: "send_email" },
       sent_by: user.id,
     });
@@ -457,7 +457,7 @@ const AdminDashboard = () => {
     const { error } = await supabase.from("messages").insert({
       sender_id: user.id,
       receiver_id: targetUser.id,
-      content: "Travelista admin notification: please review your dashboard for the latest account updates.",
+      content: "RoamYoo admin notification: please review your dashboard for the latest account updates.",
     });
     if (error) { toast({ title: "Notification failed", description: error.message, variant: "destructive" }); return; }
     toast({ title: "Notification sent" });

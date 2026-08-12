@@ -64,7 +64,7 @@ export default function PasswordRecovery() {
         <Link to="/login/traveler" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"><ArrowLeft className="h-4 w-4" /> Back to sign in</Link>
         <KeyRound className="mt-6 h-9 w-9 text-primary" />
         <h1 className="mt-3 text-2xl font-bold">{isReset ? "Set a new password" : "Forgot your password?"}</h1>
-        <p className="mt-1 text-sm text-muted-foreground">{isReset ? "Choose a new password for your Travelista account." : "Enter your account email and we’ll send a secure reset link."}</p>
+        <p className="mt-1 text-sm text-muted-foreground">{isReset ? "Choose a new password for your RoamYoo account." : "Enter your account email and we’ll send a secure reset link."}</p>
         <form onSubmit={submit} className="mt-6 space-y-4">
           {!isReset ? <Input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="you@example.com" autoComplete="email" maxLength={255} /> : <>
             <Input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="New password" autoComplete="new-password" maxLength={128} />

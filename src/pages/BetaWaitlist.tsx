@@ -45,7 +45,7 @@ export default function BetaWaitlist() {
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary mb-6">
             <Sparkles className="w-4 h-4" /> <span className="text-sm font-medium">Early access · Public beta</span>
           </div>
-          <h1 className="text-4xl md:text-6xl font-bold mb-4">Be first to wander with Travelista</h1>
+          <h1 className="text-4xl md:text-6xl font-bold mb-4">Be first to wander with RoamYoo</h1>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">Join the waitlist to unlock founding-member pricing, exclusive Beta Wanderer missions, and curated India experiences.</p>
         </motion.div>
 

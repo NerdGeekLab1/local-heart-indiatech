@@ -5,7 +5,7 @@ import Footer from "@/components/Footer";
 const sections = [
   {
     title: "1. Acceptance of Terms",
-    content: "By accessing and using Travelista, you agree to be bound by these Terms of Service and all applicable laws and regulations. If you do not agree with any of these terms, you are prohibited from using the platform."
+    content: "By accessing and using RoamYoo, you agree to be bound by these Terms of Service and all applicable laws and regulations. If you do not agree with any of these terms, you are prohibited from using the platform."
   },
   {
     title: "2. User Accounts",
@@ -37,11 +37,11 @@ const sections = [
   },
   {
     title: "9. Limitation of Liability",
-    content: "Travelista acts as a marketplace connecting travelers with hosts. We are not liable for the actions, omissions, or negligence of hosts or travelers. We do not guarantee the quality, safety, or legality of listed services. Our liability is limited to the amount paid through the platform for the specific booking in question."
+    content: "RoamYoo acts as a marketplace connecting travelers with hosts. We are not liable for the actions, omissions, or negligence of hosts or travelers. We do not guarantee the quality, safety, or legality of listed services. Our liability is limited to the amount paid through the platform for the specific booking in question."
   },
   {
     title: "10. Contact",
-    content: "For questions about these terms, contact us at legal@travelista.com or write to: Travelista Legal Team, 123 Startup Lane, Bangalore, Karnataka 560001, India."
+    content: "For questions about these terms, contact us at legal@travelista.com or write to: RoamYoo Legal Team, 123 Startup Lane, Bangalore, Karnataka 560001, India."
   },
 ];
 

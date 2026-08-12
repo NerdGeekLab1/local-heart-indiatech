@@ -73,7 +73,7 @@ const TravelerProfile = () => {
 
   const share = () => {
     const u = window.location.href;
-    if (navigator.share) navigator.share({ title: `${name} on Travelista`, url: u });
+    if (navigator.share) navigator.share({ title: `${name} on RoamYoo`, url: u });
     else { navigator.clipboard.writeText(u); toast({ title: "Profile link copied!" }); }
   };
 
@@ -92,16 +92,16 @@ const TravelerProfile = () => {
   return (
     <div className="min-h-screen bg-background">
       <Helmet>
-        <title>{`${name} — Traveler on Travelista`}</title>
+        <title>{`${name} — Traveler on RoamYoo`}</title>
         <meta name="description" content={description.slice(0, 155)} />
         <link rel="canonical" href={url} />
         <meta property="og:type" content="profile" />
-        <meta property="og:title" content={`${name} — Traveler on Travelista`} />
+        <meta property="og:title" content={`${name} — Traveler on RoamYoo`} />
         <meta property="og:description" content={description.slice(0, 200)} />
         <meta property="og:url" content={url} />
         {ogImage && <meta property="og:image" content={ogImage} />}
         <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content={`${name} on Travelista`} />
+        <meta name="twitter:title" content={`${name} on RoamYoo`} />
         <meta name="twitter:description" content={description.slice(0, 200)} />
         {ogImage && <meta name="twitter:image" content={ogImage} />}
         <script type="application/ld+json">{JSON.stringify({

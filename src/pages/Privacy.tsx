@@ -6,7 +6,7 @@ import Footer from "@/components/Footer";
 const sections = [
   {
     title: "1. What We Collect",
-    content: "We collect information you give us directly: your name, email, phone number, nationality, profile photo, travel styles and interests when you create an account; host KYC details when you apply to host; booking details, reviews, feed posts, and messages you create on the platform. We also collect usage data such as pages visited, device type, and approximate location when you browse Travelista."
+    content: "We collect information you give us directly: your name, email, phone number, nationality, profile photo, travel styles and interests when you create an account; host KYC details when you apply to host; booking details, reviews, feed posts, and messages you create on the platform. We also collect usage data such as pages visited, device type, and approximate location when you browse RoamYoo."
   },
   {
     title: "2. How We Use Your Data",
@@ -18,7 +18,7 @@ const sections = [
   },
   {
     title: "4. Data Storage & Security",
-    content: "Travelista is built on Lovable Cloud. Data is stored in a managed Postgres database with row-level security policies that restrict every table to its rightful owner, encrypted connections (TLS) for all traffic, and scoped storage buckets for avatars and feed media. Administrative actions are recorded in an audit log."
+    content: "RoamYoo is built on Lovable Cloud. Data is stored in a managed Postgres database with row-level security policies that restrict every table to its rightful owner, encrypted connections (TLS) for all traffic, and scoped storage buckets for avatars and feed media. Administrative actions are recorded in an audit log."
   },
   {
     title: "5. Third-Party Services",
@@ -34,7 +34,7 @@ const sections = [
   },
   {
     title: "8. Children",
-    content: "Travelista is not directed at children under 18. We do not knowingly collect data from minors; accounts found to belong to minors are removed."
+    content: "RoamYoo is not directed at children under 18. We do not knowingly collect data from minors; accounts found to belong to minors are removed."
   },
   {
     title: "9. Changes to This Policy",
@@ -42,15 +42,15 @@ const sections = [
   },
   {
     title: "10. Contact",
-    content: "Privacy questions or requests: privacy@travelista.com · Travelista Privacy Team, 123 Startup Lane, Bangalore, Karnataka 560001, India."
+    content: "Privacy questions or requests: privacy@travelista.com · RoamYoo Privacy Team, 123 Startup Lane, Bangalore, Karnataka 560001, India."
   },
 ];
 
 const Privacy = () => (
   <div className="min-h-screen bg-background">
     <Helmet>
-      <title>Privacy Policy | Travelista</title>
-      <meta name="description" content="How Travelista collects, uses, stores, and protects your personal data — and the rights you have over it." />
+      <title>Privacy Policy | RoamYoo</title>
+      <meta name="description" content="How RoamYoo collects, uses, stores, and protects your personal data — and the rights you have over it." />
     </Helmet>
     <Navbar />
     <div className="pt-24 pb-16 px-4 sm:px-6 lg:px-8 mx-auto max-w-3xl">
@@ -58,8 +58,8 @@ const Privacy = () => (
         <h1 className="text-3xl sm:text-4xl font-bold text-foreground">Privacy Policy</h1>
         <p className="mt-2 text-muted-foreground">Last updated: July 28, 2026</p>
         <p className="mt-4 text-sm text-muted-foreground leading-relaxed">
-          This policy is maintained by the Travelista team to explain what data we collect, why we collect it,
-          and the control you have over it. It applies to travelers, hosts, and beta wanderers using Travelista.
+          This policy is maintained by the RoamYoo team to explain what data we collect, why we collect it,
+          and the control you have over it. It applies to travelers, hosts, and beta wanderers using RoamYoo.
         </p>
       </motion.div>
 

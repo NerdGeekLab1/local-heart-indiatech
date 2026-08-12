@@ -1,4 +1,4 @@
-# Travelista — India's Social Travel Marketplace
+# RoamYoo — India's Social Travel Marketplace
 
 > A social-media-meets-marketplace platform for India-focused travel:
 > travelers discover destinations, book vetted local hosts, join group
@@ -25,7 +25,7 @@
 
 ## Overview
 
-Travelista is a unified app where:
+RoamYoo is a unified app where:
 
 - **Travelers** browse destinations across India, book curated experiences,
   join traveler-led group trips, earn travel-streak rewards, and connect
@@ -259,7 +259,7 @@ bunx vitest run      # Unit tests
 
 ## Roadmap
 
-See **`Travelista_Roadmap.md`** for the full phased plan and
+See **`RoamYoo_Roadmap.md`** for the full phased plan and
 **`PROJECT_DOCUMENTATION.md`** for the complete URL / feature reference.
 The in-app developer portal lives at `/docs`.
 

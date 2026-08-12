@@ -84,7 +84,7 @@ const Navbar = () => {
           <div className="flex h-14 items-center justify-between gap-3">
             <div className="flex items-center gap-3 min-w-0">
               <Link to="/dashboard/admin" className="text-lg font-bold text-primary shrink-0">
-                Travelista <span className="text-foreground/70 font-medium">Admin</span>
+                RoamYoo <span className="text-foreground/70 font-medium">Admin</span>
               </Link>
             </div>
             <div className="flex items-center gap-2">
@@ -114,7 +114,7 @@ const Navbar = () => {
         <div className="flex h-16 items-center justify-between">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2">
-            <span className="text-2xl font-bold tracking-tight text-primary">Travelista</span>
+            <span className="text-2xl font-bold tracking-tight text-primary">RoamYoo</span>
           </Link>
 
           {/* Desktop Nav Links */}

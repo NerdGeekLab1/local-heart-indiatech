@@ -64,7 +64,7 @@ export default function BetaWaitlistConfirm() {
               </div>
               <CheckCircle2 className="w-14 h-14 mx-auto text-primary mb-4" />
               <h1 className="text-2xl font-bold mb-2">You're confirmed{state.full_name ? `, ${state.full_name.split(" ")[0]}` : ""}!</h1>
-              <p className="text-muted-foreground mb-6">We've confirmed <strong>{state.email}</strong> for the Travelista beta.</p>
+              <p className="text-muted-foreground mb-6">We've confirmed <strong>{state.email}</strong> for the RoamYoo beta.</p>
 
               <div className="grid grid-cols-2 gap-3 text-left mb-6">
                 <div className="rounded-lg border p-3">

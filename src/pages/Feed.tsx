@@ -138,10 +138,10 @@ const Feed = () => {
   return (
     <div className="min-h-screen bg-background relative overflow-hidden">
       <Helmet>
-        <title>Live Atlas Feed — Travelista postcards from Bharat</title>
+        <title>Live Atlas Feed — RoamYoo postcards from Bharat</title>
         <meta name="description" content="Live feed of traveler postcards across India — places, adventures and vibes pinned on a real-time map." />
         <link rel="canonical" href="/feed" />
-        <meta property="og:title" content="Travelista — Live Atlas Feed" />
+        <meta property="og:title" content="RoamYoo — Live Atlas Feed" />
         <meta property="og:description" content="Real postcards from real roads across India." />
         <meta property="og:type" content="website" />
         <meta property="og:url" content="/feed" />
@@ -160,7 +160,7 @@ const Feed = () => {
           <div className="relative grid sm:grid-cols-3 gap-4 p-5 sm:p-6 items-center">
             <div className="sm:col-span-2">
               <div className="inline-flex items-center gap-2 text-[10px] uppercase tracking-[0.3em] font-bold text-primary mb-1">
-                <Flame className="w-3 h-3" /> Travelista · Live Atlas
+                <Flame className="w-3 h-3" /> RoamYoo · Live Atlas
               </div>
               <h1 className="text-3xl sm:text-4xl font-extrabold text-foreground tracking-tight leading-tight">
                 Stories pinned across <span className="bg-gradient-to-r from-primary to-pink-500 bg-clip-text text-transparent">Bharat</span>
