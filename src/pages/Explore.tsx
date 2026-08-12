@@ -206,7 +206,7 @@ const Explore = () => {
         {/* Grid */}
         <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {loading ? Array.from({ length: 6 }, (_, i) => <Skeleton key={i} className="aspect-[4/5] w-full rounded-lg" />) : pagedHosts.map((host, i) => (
-            <HostCard key={host.id} host={{ id: host.id, name: host.name, city: host.city || "", bio: host.bio || "", image: host.avatar_url || "/placeholder.svg", rating: 0, reviewCount: 0, verified: true, tagline: host.experiencesCount ? `${host.experiencesCount} approved experiences` : "Verified local host", specialties: [], languages: [], pricePerDay: 0, safetyScore: 0, responseTime: "", expertiseTags: [] }} index={i} />
+            <HostCard key={host.id} host={{ id: host.id, name: host.name, city: host.city || "", bio: host.bio || "", image: host.avatar_url || "/placeholder.svg", rating: 0, reviewCount: 0, verified: true, tagline: host.experiencesCount ? `${host.experiencesCount} approved experiences` : "Verified local host", specialties: [], languages: [], services: [], pricePerDay: 0, safetyScore: 0, responseTime: "", expertiseTags: [] }} index={i} />
           ))}
         </div>
 

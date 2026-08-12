@@ -656,6 +656,54 @@ const AdminDashboard = () => {
     toast({ title: `Booking → ${status}` });
   };
 
+  const resendBookingEmail = async (id: string) => {
+    if (!user) return;
+    const booking = dbBookings.find(b => b.id === id);
+    if (!booking?.traveler_id) {
+      toast({ title: "Email unavailable", description: "This booking has no traveler account.", variant: "destructive" });
+      return;
+    }
+    const attemptId = crypto.randomUUID();
+    const result = await sendAppEmail({
+      template: "booking-confirmation",
+      userId: booking.traveler_id,
+      idempotencyKey: `booking-confirm-resend-${id}-${attemptId}`,
+      data: {
+        experienceTitle: (booking.services || []).join(", ") || "your trip",
+        startDate: booking.start_date,
+        endDate: booking.end_date,
+        guests: booking.guests,
+        totalPrice: booking.total_price ? `₹${Number(booking.total_price).toLocaleString("en-IN")}` : undefined,
+        bookingUrl: `${window.location.origin}/dashboard/traveler?tab=bookings`,
+      },
+    });
+    await supabase.from("admin_audit_log").insert({
+      admin_id: user.id, entity_type: "booking", entity_id: id, action: "resend_email",
+      notes: result.error ? "Transactional email resend failed" : "Transactional email resend queued",
+      metadata: { template: "booking-confirmation", attempt_id: attemptId, success: !result.error },
+    });
+    setAuditLogReloadKey(k => k + 1);
+    toast({ title: result.error ? "Resend failed" : "Booking email queued", variant: result.error ? "destructive" : "default" });
+  };
+
+  const resendHostApplicationEmail = async (app: any) => {
+    if (!user || !app?.email) return;
+    const attemptId = crypto.randomUUID();
+    const result = await sendAppEmail({
+      template: "host-acceptance", recipientEmail: app.email,
+      idempotencyKey: `host-accept-resend-${app.id}-${attemptId}`,
+      data: { hostName: app.full_name, city: app.city, loginUrl: `${window.location.origin}/login/host`, onboardingUrl: `${window.location.origin}/host-onboarding` },
+    });
+    await supabase.from("admin_audit_log").insert({
+      admin_id: user.id, entity_type: "host_application", entity_id: app.id, action: "resend_email",
+      previous_status: app.status, new_status: app.status,
+      notes: result.error ? "Host acceptance resend failed" : "Host acceptance resend queued",
+      metadata: { template: "host-acceptance", attempt_id: attemptId, success: !result.error },
+    });
+    setAuditLogReloadKey(k => k + 1);
+    toast({ title: result.error ? "Resend failed" : "Host email queued", variant: result.error ? "destructive" : "default" });
+  };
+
   const approvedWanderers = dbWanderers.filter(w => w.status === "approved");
   const leaderboard = [...dbWanderers].filter(w => w.status === "approved").sort((a, b) => (b.score || 0) - (a.score || 0));
   const matchesHostSearch = (a: any) =>
@@ -1767,6 +1815,7 @@ const AdminDashboard = () => {
               onPageSize={setBookingsPageSize}
               formatCurrency={format}
               onStatusChange={updateBookingStatus}
+              onResendEmail={resendBookingEmail}
               onRefresh={() => setDataRefreshKey(k => k + 1)}
             />
           </div>
@@ -2509,6 +2558,7 @@ const AdminDashboard = () => {
           { value: "rejected", label: "Reject", icon: "reject" },
         ]}
         auditEntries={detailApp?.row?.id ? auditEntriesFor(detailApp.row.id) : []}
+        onResendEmail={detailApp?.row?.status === "approved" ? () => resendHostApplicationEmail(detailApp.row) : undefined}
       />
 
 

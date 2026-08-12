@@ -23,7 +23,7 @@ interface Props {
   onPageSize: (s: number) => void;
   formatCurrency: (n: number) => string;
   onStatusChange: (id: string, status: string) => void;
-  onResendEmail: (id: string) => void;
+  onResendEmail?: (id: string) => void;
   onRefresh: () => void;
 }
 
@@ -90,7 +90,7 @@ const BookingsPanel = ({ rows, loading, page, pageSize, onPage, onPageSize, form
                   </select>
                 </td>
                 <td className="px-4 py-3 text-right">
-                  <Button variant="outline" size="sm" className="rounded-full text-xs gap-1" onClick={() => onResendEmail(r.id)}>
+                  <Button variant="outline" size="sm" className="rounded-full text-xs gap-1" disabled={!onResendEmail} onClick={() => onResendEmail?.(r.id)}>
                     <Mail className="w-3 h-3" /> Resend
                   </Button>
                 </td>
