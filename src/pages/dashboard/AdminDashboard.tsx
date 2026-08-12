@@ -2109,12 +2109,12 @@ const AdminDashboard = () => {
           <div className="mt-6 space-y-6">
             <div>
               <h2 className="text-xl font-bold text-foreground">Review Moderation</h2>
-              <p className="text-sm text-muted-foreground mt-1">Flag and remove traveler reviews. Live database reviews are shown first; demo reviews appear when the database has none.</p>
+              <p className="text-sm text-muted-foreground mt-1">Flag and remove traveler reviews from live platform data.</p>
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
               {[
                 { label: "Live Reviews", value: dbReviews.length, icon: Star },
-                { label: "Verified Hosts", value: hosts.filter(h => getHostStatus(h.id) === "verified").length, icon: Shield },
+                { label: "Verified Hosts", value: registeredHosts.length, icon: Shield },
                 { label: "Flagged Reviews", value: flaggedReviews.length, icon: Flag },
                 { label: "Removed Reviews", value: removedReviews.length, icon: Ban },
               ].map(s => (
@@ -2127,9 +2127,9 @@ const AdminDashboard = () => {
             </div>
             <ReviewModerationPanel
               dbReviews={dbReviews}
-              mockReviews={reviews}
+              mockReviews={[]}
               getUserName={getUserName}
-              getMockHostName={(hostId) => hosts.find(h => h.id === hostId)?.name || "Unknown host"}
+              getMockHostName={() => "Unknown host"}
             />
           </div>
         )}
