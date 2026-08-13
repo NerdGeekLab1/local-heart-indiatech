@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo } from "react";
 import { motion } from "framer-motion";
-import { Eye, EyeOff, Save, Key, CreditCard, Mail, MessageCircle, Sparkles, Settings as SettingsIcon, Plus, BarChart3, ShieldAlert, CheckCircle2 } from "lucide-react";
+import { Eye, EyeOff, Save, Key, CreditCard, Mail, MessageCircle, Sparkles, Settings as SettingsIcon, Plus, BarChart3, ShieldAlert, CheckCircle2, FileInput } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -39,6 +39,7 @@ const ConfigurationTab = () => {
   const [drafts, setDrafts] = useState<Record<string, string>>({});
   const [newKey, setNewKey] = useState({ key: "", category: "general", description: "", is_secret: false });
   const [showNew, setShowNew] = useState(false);
+  const [subTab, setSubTab] = useState<"platform" | "forms">("platform");
 
   const load = async () => {
     setLoading(true);
