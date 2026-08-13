@@ -1,66 +1,58 @@
-## Scope
+# Host identity, directory, and live dashboard repair
 
-Seven distinct changes spanning admin UX, subscription management, destinations UI, host workflows, a new wedding feature, and docs.
+## Goal
 
-## 1. Admin dashboard — left sidebar navigation
+Ensure approved hosts always receive the host role, sign in through the dedicated host route, appear in Explore, and have a working database-backed public profile and dashboard with no demo/local-only data.
 
-- Refactor `src/pages/dashboard/AdminDashboard.tsx` from top tabs to a left vertical nav using shadcn `Sidebar` (collapsible, icon mini-state).
-- Group nav items by section: Overview, Users & ACL, Experiences, Experience Requests, Trips, Bookings, Subscriptions, Emails, Destinations, Configuration, Grievances.
-- Keep query-param routing (`?tab=`) intact so deep links still work.
-- Add a header bar with `SidebarTrigger`, breadcrumb of current section, and theme/profile controls.
+## Backend and legacy repair
 
-## 2. Subscription management — full CRUD
+- Normalize the host application lifecycle around `approved`; keep `verified` as a legacy/admin alias that runs the same approval RPC rather than a plain status update.
+- Strengthen the approval function to link the confirmed auth account by normalized email, remove every non-host role, assign the single `host` role, and update onboarding/audit records atomically.
+- Backfill legacy verified/approved applications: link matching confirmed accounts, promote them to host, and remove stale traveler roles. Applications without a matching confirmed account remain pending linkage instead of exposing a broken host profile.
+- Add durable host profile/listing fields and tables with grants and RLS: unique public username/slug, city/tagline/services/specialties, visibility and pricing settings, plus real Property, Dish, and Transport records (including selectable amenities arrays and photos).
+- Add safe public profile RPCs that expose only approved, public host information; never expose application email/phone or private settings.
+- Enable realtime on the host-owned tables used by dashboard stats/listings where not already enabled.
 
-- Add a new `subscription_plans` table (separate from per-user `subscriptions`) so admins can create/edit/delete plan tiers without code changes.
-  - Fields: name, slug, price, currency, billing_cycle, description, features[], badge, is_active, sort_order, perks_json (discount %, cancellations, etc.).
-  - Seeded with current 4 tiers (Free, Explorer, Adventurer, Nomad).
-- Admin sidebar gets a **Subscriptions** section with a `SubscriptionPlansTab`:
-  - Table of plans + "New Plan" dialog using `EditDialog`.
-  - Edit/delete actions, toggle active.
-- `Membership.tsx` switches to load tiers from `subscription_plans` (fallback to existing constants if empty). Subscribe still writes to per-user `subscriptions` table.
+## Login and routing
 
-## 3. Destinations page UI
+- Keep `/login/traveler` and `/login/host` as separate entry points.
+- Make host login reject traveler-only accounts with a clear message instead of redirecting them to a different portal; traveler login does the inverse.
+- Refresh role state after repair/approval and route strictly from the authoritative backend role.
+- Preserve route guards as a second layer so a host cannot enter the traveler dashboard and vice versa.
 
-- `src/pages/Destinations.tsx`: replace the dense "Quick Jump — 80 destinations" grid with a horizontally scrolling carousel (embla-based), auto-scrolling left-to-right with hover pause.
-- Polish hero, filters, and card grid (better spacing, gradient overlays, skeleton states).
+## Public host directory and profile
 
-## 4. Host → Request New Experience visible in admin
+- Replace the mock-data `HostProfile` implementation with live profile, approved experiences, reviews, services, specialties, properties, dishes, and transport data.
+- Support `/host/:username` with UUID fallback for existing shared links.
+- Update Explore to list approved public hosts even when they have no approved experience yet; map live services, specialties, rating, pricing, and avatar into each card.
+- Make Public View and Copy Link use the saved username and verify that the same URL opens the same live host shown in Explore.
 
-- The flow already writes to `experience_requests`. Confirm host dashboard's "Request New Experience" submits there.
-- Add an **Experience Requests** tab in admin sidebar (new component `ExperienceRequestsTab.tsx`) listing all rows with approve/reject actions; on approve, copy the row into `experiences` with `status='approved'`.
+## Host dashboard and settings
 
-## 5. Host dashboard — edit existing experiences
+- Remove remaining localStorage-backed host profile, Food Menu, Property, and Vehicle records; migrate UI saves to the database and show proper empty states.
+- Add username availability/format validation and profile visibility controls.
+- Add removable/selectable tags for services and specialties; persist social links and existing profile settings.
+- Save dishes, properties, and transport through their real models; transport amenities remain selectable/custom tags.
+- Subscribe to host bookings, reviews, experiences, and listings inside `useEffect` with cleanup so performance/stat cards and lists update without refresh.
 
-- In `HostDashboard.tsx`, ensure each owned experience has an Edit button opening `EditDialog` to update title, price, description, image, etc. Persist via `experiences` update.
+## Admin behavior
 
-## 6. Wedding events — new "Upcoming Weddings" host module
+- Make every approval/verification control call the atomic host approval function and report account-linking failures clearly.
+- Keep the existing realtime audit timeline; ensure approval, role backfill/repair, and publishing events are logged with timestamps and immediately appear in its filters.
 
-- New `wedding_events` table:
-  - host_id, couple_names, wedding_date, venue, city, description, highlights[], cover_image_url, cuisines[], guest_count, contact_phone, status, public visibility flag.
-  - RLS: host CRUD on own; public read of `is_public=true`; admin all.
-- Host dashboard gains an **Upcoming Weddings** tab to add/edit/delete wedding entries.
-- Surface upcoming weddings in admin sidebar (read-only list) for moderation.
+## Verification
 
-## 7. README.md
-
-Replace the placeholder with full project documentation:
-- Project overview, India-focused traveler/host marketplace + social features.
-- Tech stack (React 18, Vite, Tailwind, shadcn, Supabase / Lovable Cloud, Lovable AI Gateway).
-- Feature catalog (Beta Wanderer, Trip Leader, gamified rewards, AI recs, KYC, real-time chat, invoices/tax, subscriptions, weddings, etc.).
-- Data model summary (key tables + roles).
-- Environment, scripts, folder layout.
-- Auth (email + Google OAuth), file storage buckets, edge functions.
-- Roadmap section.
+- Add/extend automated tests for:
+  - verified/approved application → one host role and no traveler role;
+  - host login → host dashboard, traveler login isolation, and role repair;
+  - Explore card → username public profile with correct live name/city/services;
+  - admin audit timeline receives a newly inserted approval event without reload;
+  - dish/property/transport records and amenity tags persist and re-render;
+  - host dashboard stats update after a realtime booking/review change.
+- Run focused unit/RLS tests and Playwright flows on desktop and mobile; confirm empty states and no mock host/listing values remain.
 
 ## Technical notes
 
-- New migration creates `subscription_plans` and `wedding_events` with RLS and `update_updated_at_column` triggers; seeds default plans.
-- Sidebar uses `collapsible="icon"` + persistent `SidebarTrigger` in admin header so it works on mobile too.
-- Destinations carousel uses existing `embla-carousel-react` + `embla-carousel-autoplay` (add if missing) with `dragFree` and slow autoplay.
-- All new UI strictly uses semantic tokens from `index.css` (no raw color classes).
-- No changes to auth, RLS on existing tables, or pricing logic beyond making plans editable.
-
-## Out of scope
-
-- Payment gateway integration (admin-managed plans still use the existing manual subscribe flow).
-- Wedding bookings/RSVP (this iteration only adds the host-managed listing).
+- All new public-schema tables receive explicit authenticated/service-role grants before RLS policies.
+- Public reads go through narrowly scoped functions or policies; private host application data remains admin/owner-only.
+- Existing autogenerated backend client/type files are not edited manually.
