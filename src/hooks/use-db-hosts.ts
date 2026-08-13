@@ -3,10 +3,17 @@ import { supabase } from "@/integrations/supabase/client";
 
 export interface DbHost {
   id: string;
+  username: string | null;
   name: string;
   city: string | null;
+  tagline: string | null;
   bio: string | null;
   avatar_url: string | null;
+  services: string[];
+  specialties: string[];
+  pricePerDay: number;
+  rating: number;
+  reviewCount: number;
   experiencesCount: number;
 }
 
@@ -21,49 +28,42 @@ export const useDbHosts = () => {
 
   useEffect(() => {
     let cancelled = false;
-    (async () => {
-      const { data: profiles } = await supabase
-        .from("profiles")
-        .select("id, first_name, last_name, nationality, bio, avatar_url");
-
-      const { data: roles } = await supabase
-        .from("user_roles")
-        .select("user_id")
-        .eq("role", "host");
-
-      const hostIds = new Set((roles ?? []).map(r => r.user_id));
-
-      const { data: exps } = await supabase
-        .from("experiences")
-        .select("host_id, host_city")
-        .eq("status", "approved");
-
-      const expCounts = new Map<string, { count: number; city?: string }>();
-      (exps ?? []).forEach(e => {
-        if (!e.host_id) return;
-        const cur = expCounts.get(e.host_id) ?? { count: 0 };
-        cur.count += 1;
-        if (e.host_city && !cur.city) cur.city = e.host_city;
-        expCounts.set(e.host_id, cur);
-      });
-
-      const result: DbHost[] = (profiles ?? [])
-        .filter(p => hostIds.has(p.id))
-        .map(p => ({
-          id: p.id,
-          name: [p.first_name, p.last_name].filter(Boolean).join(" ") || "Host",
-          city: expCounts.get(p.id)?.city ?? p.nationality ?? null,
-          bio: p.bio,
-          avatar_url: p.avatar_url,
-          experiencesCount: expCounts.get(p.id)?.count ?? 0,
-        }));
+    const load = async () => {
+      const { data, error } = await supabase.rpc("get_public_host_directory");
+      if (error) {
+        if (!cancelled) {
+          setHosts([]);
+          setLoading(false);
+        }
+        return;
+      }
+      const result: DbHost[] = (data ?? []).map((host) => ({
+        id: host.id,
+        username: host.username,
+        name: host.full_name || "Host",
+        city: host.city,
+        tagline: host.tagline,
+        bio: host.bio,
+        avatar_url: host.avatar_url,
+        services: host.services ?? [],
+        specialties: host.specialties ?? [],
+        pricePerDay: Number(host.price_per_day || 0),
+        rating: Number(host.rating || 0),
+        reviewCount: Number(host.review_count || 0),
+        experiencesCount: Number(host.experiences_count || 0),
+      }));
 
       if (!cancelled) {
         setHosts(result);
         setLoading(false);
       }
-    })();
-    return () => { cancelled = true; };
+    };
+    void load();
+    const channel = supabase.channel("public-host-directory")
+      .on("postgres_changes", { event: "*", schema: "public", table: "profiles" }, load)
+      .on("postgres_changes", { event: "*", schema: "public", table: "experiences" }, load)
+      .subscribe();
+    return () => { cancelled = true; void supabase.removeChannel(channel); };
   }, []);
 
   return { hosts, loading };

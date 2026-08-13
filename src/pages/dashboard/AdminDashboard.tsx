@@ -501,7 +501,8 @@ const AdminDashboard = () => {
   const updateHostProfileAppStatus = async (app: any, status: string) => {
     if (!user) return;
     const previousStatus = app.status;
-    const { data: approved, error } = status === "approved"
+    const shouldApprove = status === "approved" || status === "verified";
+    const { data: approved, error } = shouldApprove
       ? await supabase.rpc("approve_host_profile_application", { _application_id: app.id })
       : await supabase.from("host_applications")
         .update({ status, reviewed_by: user.id, reviewed_at: new Date().toISOString() })
@@ -509,18 +510,19 @@ const AdminDashboard = () => {
         .select()
         .single();
     if (error) { toast({ title: "Update failed", description: error.message, variant: "destructive" }); return; }
-    if (status !== "approved") await supabase.from("admin_audit_log").insert({
+    if (!shouldApprove) await supabase.from("admin_audit_log").insert({
       admin_id: user.id, entity_type: "host_application", entity_id: app.id,
       action: status, previous_status: previousStatus, new_status: status,
       metadata: { email: app.email, city: app.city },
     });
     setAuditLogReloadKey(k => k + 1);
-    setDbHostProfileApps(p => p.map(a => a.id === app.id ? { ...a, ...(approved || {}), status } : a));
+    const resultingStatus = shouldApprove ? "approved" : status;
+    setDbHostProfileApps(p => p.map(a => a.id === app.id ? { ...a, ...(approved || {}), status: resultingStatus } : a));
     const approvedUserId = approved?.user_id ?? app.user_id;
-    if (status === "approved" && approvedUserId && !userRoles.some(r => r.user_id === approvedUserId && r.role === "host")) {
+    if (shouldApprove && approvedUserId && !userRoles.some(r => r.user_id === approvedUserId && r.role === "host")) {
       setUserRoles(p => [...p.filter(r => r.user_id !== approvedUserId), { id: `host-${approvedUserId}`, user_id: approvedUserId, role: "host" }]);
     }
-    if (status === "approved") {
+    if (shouldApprove) {
       sendAppEmail({
         template: "host-acceptance",
         recipientEmail: app.email,

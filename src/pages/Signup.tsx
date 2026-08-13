@@ -108,7 +108,7 @@ const Signup = () => {
       navigate("/host-onboarding", { replace: true });
     } else if (portalRole && role !== portalRole) {
       await supabase.auth.signOut();
-      toast({ title: `This is the ${portalRole} sign-in`, description: `Use the ${role || "correct"} portal for this account.`, variant: "destructive" });
+      toast({ title: `This account is not a ${portalRole}`, description: role === "host" ? "Use the dedicated Host sign-in page." : role === "traveler" ? "Use the dedicated Traveler sign-in page." : "Use the portal assigned to this account.", variant: "destructive" });
     } else {
       toast({ title: "Welcome back! 🎉" });
       try { window.localStorage.setItem("travelista.lastDashboard", resolveLanding(role)); } catch {}

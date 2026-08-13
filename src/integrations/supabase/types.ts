@@ -1227,6 +1227,63 @@ export type Database = {
         }
         Relationships: []
       }
+      host_dishes: {
+        Row: {
+          allergen_notes: string | null
+          availability: string | null
+          created_at: string
+          cuisine: string
+          description: string
+          dietary_tags: string[]
+          host_id: string
+          id: string
+          meal_type: string
+          name: string
+          photos: string[]
+          prep_time: string | null
+          price_per_plate: number
+          serves: number
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          allergen_notes?: string | null
+          availability?: string | null
+          created_at?: string
+          cuisine: string
+          description: string
+          dietary_tags?: string[]
+          host_id: string
+          id?: string
+          meal_type: string
+          name: string
+          photos?: string[]
+          prep_time?: string | null
+          price_per_plate?: number
+          serves?: number
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          allergen_notes?: string | null
+          availability?: string | null
+          created_at?: string
+          cuisine?: string
+          description?: string
+          dietary_tags?: string[]
+          host_id?: string
+          id?: string
+          meal_type?: string
+          name?: string
+          photos?: string[]
+          prep_time?: string | null
+          price_per_plate?: number
+          serves?: number
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       host_eligibility: {
         Row: {
           admin_notes: string | null
@@ -1326,6 +1383,123 @@ export type Database = {
           waitlist_position?: number | null
           why_host?: string | null
           years_hosting?: number
+        }
+        Relationships: []
+      }
+      host_properties: {
+        Row: {
+          amenities: string[]
+          availability: string | null
+          check_in: string | null
+          check_out: string | null
+          created_at: string
+          description: string
+          host_id: string
+          house_rules: string | null
+          id: string
+          location: string
+          max_guests: number
+          nightly_rate: number
+          photos: string[]
+          property_name: string
+          property_type: string
+          status: string
+          updated_at: string
+          weekly_rate: number
+        }
+        Insert: {
+          amenities?: string[]
+          availability?: string | null
+          check_in?: string | null
+          check_out?: string | null
+          created_at?: string
+          description: string
+          host_id: string
+          house_rules?: string | null
+          id?: string
+          location: string
+          max_guests?: number
+          nightly_rate?: number
+          photos?: string[]
+          property_name: string
+          property_type: string
+          status?: string
+          updated_at?: string
+          weekly_rate?: number
+        }
+        Update: {
+          amenities?: string[]
+          availability?: string | null
+          check_in?: string | null
+          check_out?: string | null
+          created_at?: string
+          description?: string
+          host_id?: string
+          house_rules?: string | null
+          id?: string
+          location?: string
+          max_guests?: number
+          nightly_rate?: number
+          photos?: string[]
+          property_name?: string
+          property_type?: string
+          status?: string
+          updated_at?: string
+          weekly_rate?: number
+        }
+        Relationships: []
+      }
+      host_transports: {
+        Row: {
+          amenities: string[]
+          availability: string | null
+          capacity: number
+          created_at: string
+          description: string
+          host_id: string
+          id: string
+          model: string
+          photos: string[]
+          price_per_day: number
+          price_per_km: number
+          service_radius_km: number
+          status: string
+          updated_at: string
+          vehicle_type: string
+        }
+        Insert: {
+          amenities?: string[]
+          availability?: string | null
+          capacity?: number
+          created_at?: string
+          description: string
+          host_id: string
+          id?: string
+          model: string
+          photos?: string[]
+          price_per_day?: number
+          price_per_km?: number
+          service_radius_km?: number
+          status?: string
+          updated_at?: string
+          vehicle_type: string
+        }
+        Update: {
+          amenities?: string[]
+          availability?: string | null
+          capacity?: number
+          created_at?: string
+          description?: string
+          host_id?: string
+          id?: string
+          model?: string
+          photos?: string[]
+          price_per_day?: number
+          price_per_km?: number
+          service_radius_km?: number
+          status?: string
+          updated_at?: string
+          vehicle_type?: string
         }
         Relationships: []
       }
@@ -1430,47 +1604,71 @@ export type Database = {
         Row: {
           avatar_url: string | null
           bio: string | null
+          city: string | null
           created_at: string
           email: string | null
           first_name: string
+          host_since: string | null
           id: string
           interests: string[] | null
+          is_public: boolean
           last_name: string | null
           nationality: string | null
           phone: string | null
+          price_per_day: number
+          services: string[]
           social_links: Json
+          specialties: string[]
+          tagline: string | null
           travel_styles: string[] | null
           updated_at: string
+          username: string | null
         }
         Insert: {
           avatar_url?: string | null
           bio?: string | null
+          city?: string | null
           created_at?: string
           email?: string | null
           first_name?: string
+          host_since?: string | null
           id: string
           interests?: string[] | null
+          is_public?: boolean
           last_name?: string | null
           nationality?: string | null
           phone?: string | null
+          price_per_day?: number
+          services?: string[]
           social_links?: Json
+          specialties?: string[]
+          tagline?: string | null
           travel_styles?: string[] | null
           updated_at?: string
+          username?: string | null
         }
         Update: {
           avatar_url?: string | null
           bio?: string | null
+          city?: string | null
           created_at?: string
           email?: string | null
           first_name?: string
+          host_since?: string | null
           id?: string
           interests?: string[] | null
+          is_public?: boolean
           last_name?: string | null
           nationality?: string | null
           phone?: string | null
+          price_per_day?: number
+          services?: string[]
           social_links?: Json
+          specialties?: string[]
+          tagline?: string | null
           travel_styles?: string[] | null
           updated_at?: string
+          username?: string | null
         }
         Relationships: []
       }
@@ -2270,6 +2468,28 @@ export type Database = {
           reviewed_at: string
           role_matches_approval: boolean
           submitted_at: string
+        }[]
+      }
+      get_my_role: { Args: never; Returns: string }
+      get_public_host: { Args: { _identifier: string }; Returns: Json }
+      get_public_host_directory: {
+        Args: never
+        Returns: {
+          avatar_url: string
+          bio: string
+          city: string
+          experiences_count: number
+          full_name: string
+          host_since: string
+          id: string
+          price_per_day: number
+          rating: number
+          review_count: number
+          services: string[]
+          social_links: Json
+          specialties: string[]
+          tagline: string
+          username: string
         }[]
       }
       get_public_profile: {

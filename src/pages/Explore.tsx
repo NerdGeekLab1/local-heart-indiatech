@@ -26,7 +26,7 @@ const Explore = () => {
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
 
   const cities = useMemo(() => [...new Set(hosts.map(h => h.city).filter(Boolean))] as string[], [hosts]);
-  const allExpertise: string[] = [];
+  const allExpertise = useMemo(() => [...new Set(hosts.flatMap(h => h.specialties))].sort(), [hosts]);
   const toggleExpertise = (e: string) => setSelectedExpertise(prev => prev.includes(e) ? prev.filter(x => x !== e) : [...prev, e]);
   const toggleTag = (t: string) => setSelectedTags(prev => prev.includes(t) ? prev.filter(x => x !== t) : [...prev, t]);
 
@@ -47,12 +47,12 @@ const Explore = () => {
         (h.city || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
         (h.bio || "").toLowerCase().includes(searchQuery.toLowerCase());
       const matchesCity = !selectedCity || h.city === selectedCity;
-      const matchesExpertise = selectedExpertise.length === 0;
-      const matchesTags = selectedTags.length === 0;
-      const matchesVibe = !activeVibe;
+      const matchesExpertise = selectedExpertise.length === 0 || selectedExpertise.every(tag => h.specialties.includes(tag));
+      const matchesTags = selectedTags.length === 0 || selectedTags.some(tag => h.specialties.includes(tag));
+      const matchesVibe = !activeVibe || h.specialties.includes(activeVibe) || h.services.includes(activeVibe);
       return matchesSearch && matchesCity && matchesExpertise && matchesTags && matchesVibe;
     });
-  }, [searchQuery, selectedCity, selectedMonth, selectedExpertise, selectedTags, activeVibe]);
+  }, [hosts, searchQuery, selectedCity, selectedExpertise, selectedTags, activeVibe]);
   const pageCount = Math.max(1, Math.ceil(filteredHosts.length / PAGE_SIZE));
   const safePage = Math.min(page, pageCount - 1);
   const pagedHosts = filteredHosts.slice(safePage * PAGE_SIZE, (safePage + 1) * PAGE_SIZE);
@@ -206,7 +206,7 @@ const Explore = () => {
         {/* Grid */}
         <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {loading ? Array.from({ length: 6 }, (_, i) => <Skeleton key={i} className="aspect-[4/5] w-full rounded-lg" />) : pagedHosts.map((host, i) => (
-            <HostCard key={host.id} host={{ id: host.id, name: host.name, city: host.city || "", bio: host.bio || "", image: host.avatar_url || "/placeholder.svg", rating: 0, reviewCount: 0, verified: true, tagline: host.experiencesCount ? `${host.experiencesCount} approved experiences` : "Verified local host", specialties: [], languages: [], services: [], pricePerDay: 0, safetyScore: 0, responseTime: "", expertiseTags: [] }} index={i} />
+            <HostCard key={host.id} profilePath={host.username || host.id} host={{ id: host.id, name: host.name, city: host.city || "", bio: host.bio || "", image: host.avatar_url || "/placeholder.svg", rating: host.rating, reviewCount: host.reviewCount, verified: true, tagline: host.tagline || (host.experiencesCount ? `${host.experiencesCount} approved experiences` : "Verified local host"), specialties: host.specialties, languages: [], services: host.services, pricePerDay: host.pricePerDay, safetyScore: 0, responseTime: "", expertiseTags: host.specialties }} index={i} />
           ))}
         </div>
 
@@ -216,7 +216,7 @@ const Explore = () => {
           <Button variant="outline" disabled={safePage >= pageCount - 1} onClick={() => setPage(p => Math.min(pageCount - 1, p + 1))}>Next</Button>
         </div>}
 
-        {filteredHosts.length === 0 && (
+        {!loading && filteredHosts.length === 0 && (
           <div className="text-center py-20">
             <p className="text-4xl mb-4">🔍</p>
             <p className="text-lg font-semibold text-foreground">No hosts found</p>

@@ -8,6 +8,7 @@ interface AuthContextType {
   loading: boolean;
   userRole: string | null;
   userRoles: string[];
+  refreshRole: () => Promise<string | null>;
   signUp: (email: string, password: string, metadata?: Record<string, any>) => Promise<any>;
   signIn: (email: string, password: string) => Promise<any>;
   signOut: () => Promise<void>;
@@ -25,17 +26,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [userRoles, setUserRoles] = useState<string[]>([]);
 
   const fetchRole = async (userId: string) => {
-    const { data, error } = await supabase
-      .from("user_roles")
-      .select("role")
-      .eq("user_id", userId)
-      .maybeSingle();
+    const { data, error } = await supabase.rpc("get_my_role");
     if (error) {
       setUserRole(null);
       setUserRoles([]);
       return null;
     }
-    const roles = data?.role ? [data.role] : [];
+    const roles = data ? [data] : [];
     setUserRoles(roles);
     const role = roles[0] ?? null;
     setUserRole(role);
@@ -95,6 +92,26 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     };
   }, []);
 
+  useEffect(() => {
+    if (!user?.id) return;
+
+    const syncRole = () => { void fetchRole(user.id); };
+    const channel = supabase
+      .channel(`current-user-role-${user.id}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "user_roles", filter: `user_id=eq.${user.id}` },
+        syncRole,
+      )
+      .subscribe();
+
+    window.addEventListener("focus", syncRole);
+    return () => {
+      window.removeEventListener("focus", syncRole);
+      void supabase.removeChannel(channel);
+    };
+  }, [user?.id]);
+
   const signUp = async (email: string, password: string, metadata?: Record<string, any>) => {
     return supabase.auth.signUp({
       email,
@@ -129,8 +146,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setUserRoles([]);
   };
 
+  const refreshRole = async () => user ? fetchRole(user.id) : null;
+
   return (
-    <AuthContext.Provider value={{ user, session, loading, userRole, userRoles, signUp, signIn, signOut }}>
+    <AuthContext.Provider value={{ user, session, loading, userRole, userRoles, signUp, signIn, signOut, refreshRole }}>
       {children}
     </AuthContext.Provider>
   );

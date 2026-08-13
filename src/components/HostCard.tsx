@@ -7,9 +7,10 @@ import { useCurrency } from "@/contexts/CurrencyContext";
 interface HostCardProps {
   host: Host;
   index?: number;
+  profilePath?: string;
 }
 
-const HostCard = ({ host, index = 0 }: HostCardProps) => {
+const HostCard = ({ host, index = 0, profilePath }: HostCardProps) => {
   const { format } = useCurrency();
   return (
     <motion.div
@@ -18,7 +19,7 @@ const HostCard = ({ host, index = 0 }: HostCardProps) => {
       viewport={{ once: true }}
       transition={{ delay: index * 0.1, duration: 0.5 }}
     >
-      <Link to={`/host/${host.id}`} className="group block">
+      <Link to={`/host/${profilePath || host.id}`} className="group block">
         <div className="relative rounded-lg bg-card p-2 shadow-card transition-all duration-300 hover:shadow-card-hover">
           <div className="relative aspect-[3/4] overflow-hidden rounded-md">
             <img src={host.image} alt={host.name} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
