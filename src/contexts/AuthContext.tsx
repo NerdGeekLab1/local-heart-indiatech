@@ -92,6 +92,26 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     };
   }, []);
 
+  useEffect(() => {
+    if (!user?.id) return;
+
+    const syncRole = () => { void fetchRole(user.id); };
+    const channel = supabase
+      .channel(`current-user-role-${user.id}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "user_roles", filter: `user_id=eq.${user.id}` },
+        syncRole,
+      )
+      .subscribe();
+
+    window.addEventListener("focus", syncRole);
+    return () => {
+      window.removeEventListener("focus", syncRole);
+      void supabase.removeChannel(channel);
+    };
+  }, [user?.id]);
+
   const signUp = async (email: string, password: string, metadata?: Record<string, any>) => {
     return supabase.auth.signUp({
       email,
