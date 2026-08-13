@@ -2470,6 +2470,7 @@ export type Database = {
           submitted_at: string
         }[]
       }
+      get_my_role: { Args: never; Returns: string }
       get_public_host: { Args: { _identifier: string }; Returns: Json }
       get_public_host_directory: {
         Args: never
