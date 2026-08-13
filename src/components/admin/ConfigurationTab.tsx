@@ -277,7 +277,10 @@ const ConfigurationTab = () => {
         <code className="mx-1 px-1 rounded bg-secondary">app_configuration</code> table. For production secrets used at
         runtime by Lovable Cloud (e.g. Stripe webhooks), continue to use the platform's secret manager.
       </div>
+      </div>
+      )}
     </div>
+
   );
 };
 
