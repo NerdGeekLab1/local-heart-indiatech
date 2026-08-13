@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import ImageUpload from "@/components/ImageUpload";
 
 export type ListingModule = "experience" | "dish" | "property" | "transport" | "specialRequest";
-type FieldType = "text" | "number" | "textarea" | "select" | "time" | "tags";
+type FieldType = "text" | "number" | "textarea" | "select" | "time" | "tags" | "chips";
 
 export interface ListingField {
   key: string;
@@ -71,7 +71,7 @@ export const listingSchemas: Record<ListingModule, ListingSchema> = {
       { key: "propertyType", label: "Property type", type: "select", options: ["Homestay", "Guesthouse", "Apartment", "Villa", "Farm stay", "Heritage home"], required: true },
       { key: "description", label: "Description", type: "textarea", required: true },
       { key: "location", label: "Location", required: true },
-      { key: "amenities", label: "Amenities", type: "tags", placeholder: "Wi-Fi, Breakfast, Parking" },
+      { key: "amenities", label: "Amenities", type: "chips", placeholder: "Add another amenity", options: ["Wi-Fi", "Breakfast", "Parking", "Air conditioning", "Hot water", "Power backup", "Kitchen access", "Laundry", "Pet friendly", "Wheelchair accessible", "Workspace", "Garden / terrace"] },
       { key: "houseRules", label: "House rules", type: "textarea", required: true },
       { key: "nightlyRate", label: "Nightly rate (₹)", type: "number", required: true },
       { key: "weeklyRate", label: "Weekly rate (₹)", type: "number", required: true },
@@ -93,7 +93,7 @@ export const listingSchemas: Record<ListingModule, ListingSchema> = {
       { key: "pricePerDay", label: "Price per day (₹)", type: "number", required: true },
       { key: "pricePerKm", label: "Price per km (₹)", type: "number", required: true },
       { key: "serviceRadius", label: "Service radius (km)", type: "number", required: true },
-      { key: "amenities", label: "Vehicle amenities", type: "tags", placeholder: "AC, Wi-Fi, Child seat" },
+      { key: "amenities", label: "Vehicle amenities", type: "chips", placeholder: "Add another amenity", options: ["Air conditioning", "Wi-Fi", "Child seat", "Music system", "Phone charger", "Luggage carrier", "First-aid kit", "Bottled water", "GPS navigation", "Reclining seats", "Helmets included", "Non-smoking"] },
       { key: "availability", label: "Availability", required: true },
     ],
   },
@@ -152,9 +152,43 @@ export default function ListingForm({ module, userId, initialData, onCancel, onS
       </div>
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         {schema.fields.map((field) => (
-          <div key={field.key} className={field.type === "textarea" ? "sm:col-span-2" : ""}>
+          <div key={field.key} className={field.type === "textarea" || field.type === "chips" ? "sm:col-span-2" : ""}>
             <label className="text-sm font-medium text-foreground">{field.label}{field.required ? " *" : ""}</label>
             {field.type === "textarea" ? <textarea className="mt-1 flex min-h-24 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" required={field.required} value={data[field.key] ?? ""} onChange={(e) => setData({ ...data, [field.key]: e.target.value })} />
+              : field.type === "chips" ? (() => {
+                const selected = String(data[field.key] ?? "").split(",").map((item) => item.trim()).filter(Boolean);
+                const toggle = (option: string) => {
+                  const next = selected.includes(option) ? selected.filter((item) => item !== option) : [...selected, option];
+                  setData({ ...data, [field.key]: next.join(", ") });
+                };
+                const custom = selected.filter((item) => !(field.options ?? []).includes(item));
+                return (
+                  <div className="mt-2 space-y-2">
+                    <div className="flex flex-wrap gap-2">
+                      {[...(field.options ?? []), ...custom].map((option) => {
+                        const active = selected.includes(option);
+                        return (
+                          <button key={option} type="button" onClick={() => toggle(option)}
+                            aria-pressed={active}
+                            className={`rounded-full border px-3 py-1.5 text-xs font-medium transition-colors ${active ? "border-primary bg-primary text-primary-foreground" : "border-border bg-background text-muted-foreground hover:border-primary/50 hover:text-foreground"}`}>
+                            {option}
+                          </button>
+                        );
+                      })}
+                    </div>
+                    <Input className="h-9 text-xs" placeholder={field.placeholder || "Add your own, then press Enter"}
+                      onKeyDown={(event) => {
+                        if (event.key !== "Enter") return;
+                        event.preventDefault();
+                        const value = event.currentTarget.value.trim();
+                        if (!value || selected.includes(value)) return;
+                        setData({ ...data, [field.key]: [...selected, value].join(", ") });
+                        event.currentTarget.value = "";
+                      }} />
+                    <p className="text-xs text-muted-foreground">{selected.length ? `Selected: ${selected.join(", ")}` : "Tap the tags that apply."}</p>
+                  </div>
+                );
+              })()
               : field.type === "select" ? <select className="mt-1 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" required={field.required} value={data[field.key] ?? ""} onChange={(e) => setData({ ...data, [field.key]: e.target.value })}><option value="">Select…</option>{field.options?.map((option) => <option key={option}>{option}</option>)}</select>
               : <Input className="mt-1" type={field.type === "number" ? "number" : field.type === "time" ? "time" : "text"} min={field.type === "number" ? 0 : undefined} required={field.required} placeholder={field.type === "tags" ? field.placeholder || "Separate with commas" : field.placeholder} value={data[field.key] ?? ""} onChange={(e) => setData({ ...data, [field.key]: field.type === "number" ? Number(e.target.value) : e.target.value })} />}
           </div>

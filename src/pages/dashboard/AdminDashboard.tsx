@@ -300,6 +300,17 @@ const AdminDashboard = () => {
     })();
   }, [auditLogReloadKey]);
 
+  // Live audit log — new admin actions appear without a manual refresh
+  useEffect(() => {
+    const channel = supabase
+      .channel("admin-audit-log-live")
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "admin_audit_log" }, (payload) => {
+        setAuditLog((current: any[]) => [payload.new as any, ...current.filter(row => row.id !== (payload.new as any).id)].slice(0, 200));
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, []);
+
   // Helpers
   const getUserName = (userId: string) => {
     const u = dbUsers.find(u => u.id === userId);

@@ -1,7 +1,8 @@
-import { useEffect, useState } from "react";
-import { CheckCircle, Circle, Clock, LogIn } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
+import { CheckCircle, Circle, Clock, LogIn, RefreshCw } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
 type OnboardingStatus = {
@@ -18,21 +19,37 @@ type OnboardingStatus = {
 
 
 const HostOnboarding = () => {
+  const { toast } = useToast();
   const [status, setStatus] = useState<OnboardingStatus | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [repairing, setRepairing] = useState(false);
 
-  useEffect(() => {
-    let active = true;
-    (async () => {
-      const { data, error: requestError } = await (supabase.rpc as any)("get_host_onboarding_status");
-      if (!active) return;
-      setStatus(Array.isArray(data) ? data[0] ?? null : data ?? null);
-      setError(requestError?.message ?? "");
-      setLoading(false);
-    })();
-    return () => { active = false; };
+  const loadStatus = useCallback(async () => {
+    const { data, error: requestError } = await (supabase.rpc as any)("get_host_onboarding_status");
+    setStatus(Array.isArray(data) ? data[0] ?? null : data ?? null);
+    setError(requestError?.message ?? "");
+    setLoading(false);
   }, []);
+
+  useEffect(() => { void loadStatus(); }, [loadStatus]);
+
+  const repairRole = async () => {
+    setRepairing(true);
+    const { data, error: rpcError } = await (supabase.rpc as any)("repair_my_host_role");
+    const result = Array.isArray(data) ? data[0] : data;
+    if (rpcError) {
+      toast({ title: "Role repair failed", description: rpcError.message, variant: "destructive" });
+    } else {
+      toast({
+        title: result?.repaired ? "Role repaired ✅" : "Nothing to repair",
+        description: result?.message ?? "",
+        variant: result?.repaired ? "default" : "destructive",
+      });
+      await loadStatus();
+    }
+    setRepairing(false);
+  };
 
   const steps = [
     { label: "Application submitted", done: status?.application_submitted },
@@ -86,12 +103,19 @@ const HostOnboarding = () => {
                 <p className="mt-2 text-sm text-muted-foreground">
                   {status.admin_approved
                     ? status.role_matches_approval === false
-                      ? "Your application is approved but your account still shows a non-host role. Sign out and back in — if it persists, contact support so an admin can repair your role."
+                      ? "Your application is approved but your account still shows a non-host role. Run the role repair below to sync it instantly."
                       : "Approval succeeded and your account holds the host role, so signing in takes you to the Host dashboard."
                     : status.application_status === "rejected"
                       ? "Your application was not approved, so no host role is assigned to this account."
                       : "Your application is still under review. Your account stays on its current role until an admin approves it."}
                 </p>
+
+                {status.admin_approved && (
+                  <Button variant="outline" size="sm" className="mt-3 gap-2" disabled={repairing} onClick={repairRole}>
+                    <RefreshCw className={`h-4 w-4 ${repairing ? "animate-spin" : ""}`} />
+                    {repairing ? "Syncing your role…" : "Repair my host role"}
+                  </Button>
+                )}
               </div>
 
               {status.admin_approved && !status.onboarding_complete && (
