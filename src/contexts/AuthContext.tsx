@@ -8,6 +8,7 @@ interface AuthContextType {
   loading: boolean;
   userRole: string | null;
   userRoles: string[];
+  refreshRole: () => Promise<string | null>;
   signUp: (email: string, password: string, metadata?: Record<string, any>) => Promise<any>;
   signIn: (email: string, password: string) => Promise<any>;
   signOut: () => Promise<void>;
@@ -129,8 +130,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setUserRoles([]);
   };
 
+  const refreshRole = async () => user ? fetchRole(user.id) : null;
+
   return (
-    <AuthContext.Provider value={{ user, session, loading, userRole, userRoles, signUp, signIn, signOut }}>
+    <AuthContext.Provider value={{ user, session, loading, userRole, userRoles, signUp, signIn, signOut, refreshRole }}>
       {children}
     </AuthContext.Provider>
   );

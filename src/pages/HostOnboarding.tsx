@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 
 type OnboardingStatus = {
   application_status: string | null;
@@ -20,6 +21,7 @@ type OnboardingStatus = {
 
 const HostOnboarding = () => {
   const { toast } = useToast();
+  const { refreshRole } = useAuth();
   const [status, setStatus] = useState<OnboardingStatus | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -46,6 +48,7 @@ const HostOnboarding = () => {
         description: result?.message ?? "",
         variant: result?.repaired ? "default" : "destructive",
       });
+      await refreshRole();
       await loadStatus();
     }
     setRepairing(false);

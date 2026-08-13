@@ -12,7 +12,6 @@ import { Input } from "@/components/ui/input";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { propertyTypes, vehicleTypes } from "@/lib/data";
-import { useLocalStorage } from "@/hooks/use-local-storage";
 import EditDialog, { FieldConfig } from "@/components/EditDialog";
 import { useToast } from "@/hooks/use-toast";
 import { sendAppEmail } from "@/lib/appEmails";
@@ -81,21 +80,20 @@ const HostDashboard = () => {
   const [hostBookings, setHostBookings] = useState<any[]>([]);
   const totalEarnings = hostBookings.reduce((sum: number, b: any) => sum + Number(b.total_price || 0), 0);
 
-  const [hostProfile, setHostProfile] = useLocalStorage("host_profile_v2", {
-    name: "", tagline: "", bio: "", city: "", pricePerDay: 0,
+  const [hostProfile, setHostProfile] = useState({
+    name: "", username: "", tagline: "", bio: "", city: "", pricePerDay: 0, services: [] as string[], specialties: [] as string[],
   });
-  const [socialMedia, setSocialMedia] = useLocalStorage("host_social_media_v2", {
+  const [socialMedia, setSocialMedia] = useState({
     instagram: "", facebook: "", twitter: "", youtube: "", snapchat: "", linkedin: "", whatsapp: "", website: "",
   });
-  const [notifPrefs, setNotifPrefs] = useLocalStorage("host_notification_prefs", {
+  const [notifPrefs, setNotifPrefs] = useState({
     emailBookings: true, emailMessages: true, emailPayouts: true, instantBook: false, publicProfile: true, showPhone: false,
   });
-  const [pricing, setPricing] = useLocalStorage("host_pricing_v2", { guidePerDay: 0, cancellationPolicy: "flexible", currency: "INR" });
+  const [pricing, setPricing] = useState({ guidePerDay: 0, cancellationPolicy: "flexible", currency: "INR" });
 
-  const [customExperiences, setCustomExperiences] = useLocalStorage<any[]>("host_custom_experiences", []);
-  const [customVehicles, setCustomVehicles] = useLocalStorage<any[]>("host_custom_vehicles_v2", []);
-  const [customDishes, setCustomDishes] = useLocalStorage<any[]>("host_custom_dishes_v2", []);
-  const [customProperties, setCustomProperties] = useLocalStorage<any[]>("host_custom_properties_v2", []);
+  const [customVehicles, setCustomVehicles] = useState<any[]>([]);
+  const [customDishes, setCustomDishes] = useState<any[]>([]);
+  const [customProperties, setCustomProperties] = useState<any[]>([]);
   const [listingEditor, setListingEditor] = useState<{ module: ListingModule; index?: number } | null>(null);
 
   const [expForm, setExpForm] = useState({
@@ -170,18 +168,34 @@ const HostDashboard = () => {
       supabase.from("messages").select("*").or(`receiver_id.eq.${user.id},sender_id.eq.${user.id}`).order("created_at", { ascending: false }).limit(50),
       supabase.from("profiles").select("*").eq("id", user.id).maybeSingle(),
       supabase.from("experiences").select("*").eq("host_id", user.id).order("created_at", { ascending: false }),
-    ]).then(([{ data: reqs }, { data: invs }, { data: bks }, { data: revs }, { data: msgs }, { data: prof }, { data: exps }]) => {
+      supabase.from("host_properties").select("*").eq("host_id", user.id).order("created_at", { ascending: false }),
+      supabase.from("host_dishes").select("*").eq("host_id", user.id).order("created_at", { ascending: false }),
+      supabase.from("host_transports").select("*").eq("host_id", user.id).order("created_at", { ascending: false }),
+    ]).then(([{ data: reqs }, { data: invs }, { data: bks }, { data: revs }, { data: msgs }, { data: prof }, { data: exps }, { data: props }, { data: dishes }, { data: transports }]) => {
       setExpRequests(reqs || []);
       setHostInvoices(invs || []);
       setHostBookings(bks || []);
       setHostDbReviews(revs || []);
       setHostMessages(msgs || []);
       setHostDbExperiences(exps || []);
+      setCustomProperties((props || []).map((row: any) => ({ ...row, propertyName: row.property_name, propertyType: row.property_type, nightlyRate: row.nightly_rate, weeklyRate: row.weekly_rate, maxGuests: row.max_guests, houseRules: row.house_rules, checkIn: row.check_in, checkOut: row.check_out, images: row.photos })));
+      setCustomDishes((dishes || []).map((row: any) => ({ ...row, mealType: row.meal_type, dietaryTags: row.dietary_tags?.join(", "), pricePerPlate: row.price_per_plate, prepTime: row.prep_time, allergenNotes: row.allergen_notes, images: row.photos })));
+      setCustomVehicles((transports || []).map((row: any) => ({ ...row, type: row.vehicle_type, pricePerDay: row.price_per_day, pricePerKm: row.price_per_km, serviceRadius: row.service_radius_km, amenities: row.amenities?.join(", "), images: row.photos })));
       if (prof) {
         setHostDbProfile(prof);
-        setHostProfile(p => ({ ...p, name: `${prof.first_name} ${prof.last_name || ""}`.trim(), city: prof.nationality || p.city, bio: prof.bio || p.bio }));
+        setHostProfile(p => ({ ...p, name: `${prof.first_name} ${prof.last_name || ""}`.trim(), username: prof.username || "", city: prof.city || "", tagline: prof.tagline || "", bio: prof.bio || "", pricePerDay: Number(prof.price_per_day || 0), services: prof.services || [], specialties: prof.specialties || [] }));
+        setSocialMedia(p => ({ ...p, ...(prof.social_links || {}) }));
+        setNotifPrefs(p => ({ ...p, publicProfile: prof.is_public !== false }));
       }
     });
+
+    const reload = () => window.location.reload();
+    const channel = supabase.channel(`host-dashboard-${user.id}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "bookings", filter: `host_id=eq.${user.id}` }, reload)
+      .on("postgres_changes", { event: "*", schema: "public", table: "reviews", filter: `host_id=eq.${user.id}` }, reload)
+      .on("postgres_changes", { event: "*", schema: "public", table: "experiences", filter: `host_id=eq.${user.id}` }, reload)
+      .subscribe();
+    return () => { void supabase.removeChannel(channel); };
   }, [user]);
 
   const experienceEditFields: FieldConfig[] = [
@@ -356,7 +370,8 @@ const HostDashboard = () => {
   const thisMonthValue = monthValue(0);
   const lastMonthValue = monthValue(1);
   const monthDelta = lastMonthValue > 0 ? Math.round((thisMonthValue - lastMonthValue) / lastMonthValue * 100) : null;
-  const publicProfileUrl = user ? `${window.location.origin}/host/${user.id}` : "";
+  const publicProfilePath = hostProfile.username || user?.id || "";
+  const publicProfileUrl = publicProfilePath ? `${window.location.origin}/host/${publicProfilePath}` : "";
 
   const copyPublicLink = async () => {
     if (!publicProfileUrl) return;
@@ -453,7 +468,7 @@ const HostDashboard = () => {
           </div>
           <div className="flex items-center gap-2 sm:ml-auto">
             <Button asChild size="sm" variant="outline" className="rounded-full gap-1 text-xs">
-              <Link to={`/host/${user?.id ?? ""}`} target="_blank" rel="noreferrer"><Eye className="w-3.5 h-3.5" /> Public view</Link>
+               <Link to={`/host/${publicProfilePath}`} target="_blank" rel="noreferrer"><Eye className="w-3.5 h-3.5" /> Public view</Link>
             </Button>
             <Button size="sm" variant="outline" className="rounded-full gap-1 text-xs" onClick={copyPublicLink}>
               <Copy className="w-3.5 h-3.5" /> Copy link
@@ -871,11 +886,16 @@ const HostDashboard = () => {
             <div className="flex items-center justify-between"><h2 className="text-xl font-bold text-foreground">Properties & Vehicles</h2></div>
             {listingEditor && user && (listingEditor.module === "property" || listingEditor.module === "transport") && (
               <ListingForm module={listingEditor.module} userId={user.id}
-                initialData={listingEditor.index === undefined ? undefined : listingEditor.module === "property" ? customProperties[listingEditor.index] : customVehicles[listingEditor.index]}
-                onCancel={() => setListingEditor(null)} onSave={(listing) => {
+                 initialData={listingEditor.index === undefined ? undefined : listingEditor.module === "property" ? customProperties[listingEditor.index] : customVehicles[listingEditor.index]}
+                 onCancel={() => setListingEditor(null)} onSave={async (listing) => {
                   const target = listingEditor;
-                  if (target.module === "property") setCustomProperties(current => target.index === undefined ? [...current, listing] : current.map((item, index) => index === target.index ? listing : item));
-                  else setCustomVehicles(current => target.index === undefined ? [...current, listing] : current.map((item, index) => index === target.index ? listing : item));
+                   const existing = target.index === undefined ? null : target.module === "property" ? customProperties[target.index] : customVehicles[target.index];
+                   const tags = (value: unknown) => String(value || "").split(",").map(v => v.trim()).filter(Boolean);
+                   const query = target.module === "property"
+                     ? supabase.from("host_properties").upsert({ id: existing?.id, host_id: user.id, property_name: listing.propertyName, property_type: listing.propertyType, description: listing.description, location: listing.location, amenities: tags(listing.amenities), house_rules: listing.houseRules, nightly_rate: Number(listing.nightlyRate), weekly_rate: Number(listing.weeklyRate), max_guests: Number(listing.maxGuests), check_in: listing.checkIn || null, check_out: listing.checkOut || null, availability: listing.availability, photos: listing.images || [] }).select().single()
+                     : supabase.from("host_transports").upsert({ id: existing?.id, host_id: user.id, vehicle_type: listing.type, model: listing.model, description: listing.description, capacity: Number(listing.capacity), price_per_day: Number(listing.pricePerDay), price_per_km: Number(listing.pricePerKm), service_radius_km: Number(listing.serviceRadius), amenities: tags(listing.amenities), availability: listing.availability, photos: listing.images || [] }).select().single();
+                   const { error } = await query;
+                   if (error) { toast({ title: "Unable to save listing", description: error.message, variant: "destructive" }); return; }
                   setListingEditor(null); toast({ title: `${target.module === "property" ? "Property" : "Transport"} saved` });
                 }} />
             )}
@@ -931,7 +951,7 @@ const HostDashboard = () => {
               <h2 className="text-xl font-bold text-foreground">Food Menu</h2>
               <Button size="sm" className="rounded-full gap-1 text-xs" onClick={() => setListingEditor({ module: "dish" })}><Plus className="w-3 h-3" /> Add Dish</Button>
             </div>
-            {listingEditor?.module === "dish" && user && <ListingForm module="dish" userId={user.id} initialData={listingEditor.index === undefined ? undefined : customDishes[listingEditor.index]} onCancel={() => setListingEditor(null)} onSave={(listing) => { setCustomDishes(current => listingEditor.index === undefined ? [...current, listing] : current.map((item, index) => index === listingEditor.index ? listing : item)); setListingEditor(null); toast({ title: "Dish saved" }); }} />}
+            {listingEditor?.module === "dish" && user && <ListingForm module="dish" userId={user.id} initialData={listingEditor.index === undefined ? undefined : customDishes[listingEditor.index]} onCancel={() => setListingEditor(null)} onSave={async (listing) => { const existing = listingEditor.index === undefined ? null : customDishes[listingEditor.index]; const tags = String(listing.dietaryTags || "").split(",").map(v => v.trim()).filter(Boolean); const { error } = await supabase.from("host_dishes").upsert({ id: existing?.id, host_id: user.id, name: listing.name, description: listing.description, cuisine: listing.cuisine, meal_type: listing.mealType, dietary_tags: tags, serves: Number(listing.serves), prep_time: listing.prepTime, price_per_plate: Number(listing.pricePerPlate), allergen_notes: listing.allergenNotes, availability: listing.availability, photos: listing.images || [] }).select().single(); if (error) { toast({ title: "Unable to save dish", description: error.message, variant: "destructive" }); return; } setListingEditor(null); toast({ title: "Dish saved" }); }} />}
             {customDishes.map((dish, i) => (
               <div key={i} className="rounded-lg bg-card p-4 shadow-card flex justify-between items-center">
                 <div>
@@ -1138,7 +1158,10 @@ const HostDashboard = () => {
                 </div>
               </div>
               <div className="space-y-3">
-                <div><label className="text-sm font-medium text-foreground">Name</label><Input value={hostProfile.name} onChange={e => setHostProfile(p => ({ ...p, name: e.target.value }))} placeholder="Your full name" /></div>
+                 <div><label className="text-sm font-medium text-foreground">Name</label><Input value={hostProfile.name} onChange={e => setHostProfile(p => ({ ...p, name: e.target.value }))} placeholder="Your full name" /></div>
+                 <div><label className="text-sm font-medium text-foreground">Public username</label><Input value={hostProfile.username} onChange={e => setHostProfile(p => ({ ...p, username: e.target.value.toLowerCase().replace(/[^a-z0-9_-]/g, "") }))} placeholder="your-name" minLength={3} maxLength={30} /></div>
+                 <TagField label="Services offered" values={hostProfile.services} suggestions={["Guide", "Stay", "Transport", "Food"]} onChange={services => setHostProfile(p => ({ ...p, services }))} />
+                 <TagField label="Specialties" values={hostProfile.specialties} suggestions={["Adventure", "Culture", "Food", "Wellness", "Photography", "Local Guide"]} onChange={specialties => setHostProfile(p => ({ ...p, specialties }))} />
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div><label className="text-sm font-medium text-foreground">City</label><Input value={hostProfile.city} onChange={e => setHostProfile(p => ({ ...p, city: e.target.value }))} placeholder="e.g. Jaipur" /></div>
                   <div><label className="text-sm font-medium text-foreground">Tagline</label><Input value={hostProfile.tagline} onChange={e => setHostProfile(p => ({ ...p, tagline: e.target.value }))} placeholder="One line about your hosting" /></div>
@@ -1165,7 +1188,13 @@ const HostDashboard = () => {
                   id: user.id,
                   first_name: names[0] || "",
                   last_name: names.slice(1).join(" ") || "",
+                   username: hostProfile.username || null,
+                   city: hostProfile.city,
+                   tagline: hostProfile.tagline,
                   bio: hostProfile.bio,
+                   services: hostProfile.services,
+                   specialties: hostProfile.specialties,
+                   price_per_day: hostProfile.pricePerDay,
                 }, { onConflict: "id" });
                 if (error) { toast({ title: "Couldn't save profile", description: error.message, variant: "destructive" }); return; }
                 toast({ title: "Profile saved ✅" });
@@ -1180,7 +1209,7 @@ const HostDashboard = () => {
                 <Button size="sm" variant="ghost" className="h-8 gap-1 text-xs" onClick={copyPublicLink}><Copy className="w-3.5 h-3.5" /> Copy</Button>
               </div>
               <Button asChild size="sm" variant="outline" className="rounded-full gap-2 text-xs">
-                <Link to={`/host/${user?.id ?? ""}`} target="_blank" rel="noreferrer"><Eye className="w-3.5 h-3.5" /> Open public preview</Link>
+                 <Link to={`/host/${publicProfilePath}`} target="_blank" rel="noreferrer"><Eye className="w-3.5 h-3.5" /> Open public preview</Link>
               </Button>
             </div>
 
@@ -1235,7 +1264,7 @@ const HostDashboard = () => {
                   </label>
                 ))}
               </div>
-              <Button size="sm" className="rounded-full gap-2" onClick={() => toast({ title: "Preferences saved ✅" })}><Save className="w-4 h-4" /> Save preferences</Button>
+               <Button size="sm" className="rounded-full gap-2" onClick={async () => { if (!user) return; const { error } = await supabase.from("profiles").update({ is_public: notifPrefs.publicProfile }).eq("id", user.id); if (error) toast({ title: "Couldn't save visibility", description: error.message, variant: "destructive" }); else toast({ title: "Preferences saved ✅" }); }}><Save className="w-4 h-4" /> Save preferences</Button>
             </div>
           </div>
         )}
@@ -1251,3 +1280,7 @@ const HostDashboard = () => {
 };
 
 export default HostDashboard;
+
+function TagField({ label, values, suggestions, onChange }: { label: string; values: string[]; suggestions: string[]; onChange: (values: string[]) => void }) {
+  return <div><label className="text-sm font-medium text-foreground">{label}</label><div className="mt-2 flex flex-wrap gap-2">{suggestions.map(value => <Button key={value} type="button" size="sm" variant={values.includes(value) ? "default" : "outline"} className="h-8 rounded-full text-xs" onClick={() => onChange(values.includes(value) ? values.filter(item => item !== value) : [...values, value])}>{value}</Button>)}{values.filter(value => !suggestions.includes(value)).map(value => <Button key={value} type="button" size="sm" variant="secondary" className="h-8 rounded-full text-xs" onClick={() => onChange(values.filter(item => item !== value))}>{value} ×</Button>)}</div><Input className="mt-2" placeholder="Type a custom tag and press Enter" onKeyDown={event => { if (event.key !== "Enter") return; event.preventDefault(); const value = event.currentTarget.value.trim(); if (value && !values.includes(value)) onChange([...values, value]); event.currentTarget.value = ""; }} /></div>;
+}
