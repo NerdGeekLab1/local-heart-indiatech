@@ -1,7 +1,8 @@
-import { useEffect, useState } from "react";
-import { CheckCircle, Circle, Clock, LogIn } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
+import { CheckCircle, Circle, Clock, LogIn, RefreshCw } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
 type OnboardingStatus = {
