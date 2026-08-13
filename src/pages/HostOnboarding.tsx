@@ -12,7 +12,10 @@ type OnboardingStatus = {
   onboarding_complete: boolean;
   submitted_at: string | null;
   reviewed_at: string | null;
+  assigned_role: string | null;
+  role_matches_approval: boolean | null;
 };
+
 
 const HostOnboarding = () => {
   const [status, setStatus] = useState<OnboardingStatus | null>(null);
