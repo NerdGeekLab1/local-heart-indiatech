@@ -2382,6 +2382,14 @@ export type Database = {
           read_ct: number
         }[]
       }
+      repair_my_host_role: {
+        Args: never
+        Returns: {
+          assigned_role: string
+          message: string
+          repaired: boolean
+        }[]
+      }
       resolve_cms_preview: { Args: { _token: string }; Returns: Json }
     }
     Enums: {
