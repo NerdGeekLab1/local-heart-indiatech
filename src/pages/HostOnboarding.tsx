@@ -103,12 +103,19 @@ const HostOnboarding = () => {
                 <p className="mt-2 text-sm text-muted-foreground">
                   {status.admin_approved
                     ? status.role_matches_approval === false
-                      ? "Your application is approved but your account still shows a non-host role. Sign out and back in — if it persists, contact support so an admin can repair your role."
+                      ? "Your application is approved but your account still shows a non-host role. Run the role repair below to sync it instantly."
                       : "Approval succeeded and your account holds the host role, so signing in takes you to the Host dashboard."
                     : status.application_status === "rejected"
                       ? "Your application was not approved, so no host role is assigned to this account."
                       : "Your application is still under review. Your account stays on its current role until an admin approves it."}
                 </p>
+
+                {status.admin_approved && (
+                  <Button variant="outline" size="sm" className="mt-3 gap-2" disabled={repairing} onClick={repairRole}>
+                    <RefreshCw className={`h-4 w-4 ${repairing ? "animate-spin" : ""}`} />
+                    {repairing ? "Syncing your role…" : "Repair my host role"}
+                  </Button>
+                )}
               </div>
 
               {status.admin_approved && !status.onboarding_complete && (
