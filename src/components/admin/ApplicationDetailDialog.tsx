@@ -224,7 +224,7 @@ const ApplicationDetailDialog = ({ open, onClose, record, title, groups, photosK
             )}
           </div>
 
-          </div>
+
 
 
 
