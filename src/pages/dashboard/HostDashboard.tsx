@@ -184,16 +184,19 @@ const HostDashboard = () => {
       if (prof) {
         setHostDbProfile(prof);
         setHostProfile(p => ({ ...p, name: `${prof.first_name} ${prof.last_name || ""}`.trim(), username: prof.username || "", city: prof.city || "", tagline: prof.tagline || "", bio: prof.bio || "", pricePerDay: Number(prof.price_per_day || 0), services: prof.services || [], specialties: prof.specialties || [] }));
-        setSocialMedia(p => ({ ...p, ...(prof.social_links || {}) }));
+        const links = prof.social_links && typeof prof.social_links === "object" && !Array.isArray(prof.social_links) ? prof.social_links as Record<string, string> : {};
+        setSocialMedia(p => ({ ...p, ...links }));
         setNotifPrefs(p => ({ ...p, publicProfile: prof.is_public !== false }));
       }
     });
 
-    const reload = () => window.location.reload();
+    const refreshBookings = async () => { const { data } = await supabase.from("bookings").select("*").eq("host_id", user.id).order("created_at", { ascending: false }); setHostBookings(data || []); };
+    const refreshReviews = async () => { const { data } = await supabase.from("reviews").select("*").eq("host_id", user.id).order("created_at", { ascending: false }); setHostDbReviews(data || []); };
+    const refreshExperiences = async () => { const { data } = await supabase.from("experiences").select("*").eq("host_id", user.id).order("created_at", { ascending: false }); setHostDbExperiences(data || []); };
     const channel = supabase.channel(`host-dashboard-${user.id}`)
-      .on("postgres_changes", { event: "*", schema: "public", table: "bookings", filter: `host_id=eq.${user.id}` }, reload)
-      .on("postgres_changes", { event: "*", schema: "public", table: "reviews", filter: `host_id=eq.${user.id}` }, reload)
-      .on("postgres_changes", { event: "*", schema: "public", table: "experiences", filter: `host_id=eq.${user.id}` }, reload)
+      .on("postgres_changes", { event: "*", schema: "public", table: "bookings", filter: `host_id=eq.${user.id}` }, refreshBookings)
+      .on("postgres_changes", { event: "*", schema: "public", table: "reviews", filter: `host_id=eq.${user.id}` }, refreshReviews)
+      .on("postgres_changes", { event: "*", schema: "public", table: "experiences", filter: `host_id=eq.${user.id}` }, refreshExperiences)
       .subscribe();
     return () => { void supabase.removeChannel(channel); };
   }, [user]);
@@ -892,8 +895,8 @@ const HostDashboard = () => {
                    const existing = target.index === undefined ? null : target.module === "property" ? customProperties[target.index] : customVehicles[target.index];
                    const tags = (value: unknown) => String(value || "").split(",").map(v => v.trim()).filter(Boolean);
                    const query = target.module === "property"
-                     ? supabase.from("host_properties").upsert({ id: existing?.id, host_id: user.id, property_name: listing.propertyName, property_type: listing.propertyType, description: listing.description, location: listing.location, amenities: tags(listing.amenities), house_rules: listing.houseRules, nightly_rate: Number(listing.nightlyRate), weekly_rate: Number(listing.weeklyRate), max_guests: Number(listing.maxGuests), check_in: listing.checkIn || null, check_out: listing.checkOut || null, availability: listing.availability, photos: listing.images || [] }).select().single()
-                     : supabase.from("host_transports").upsert({ id: existing?.id, host_id: user.id, vehicle_type: listing.type, model: listing.model, description: listing.description, capacity: Number(listing.capacity), price_per_day: Number(listing.pricePerDay), price_per_km: Number(listing.pricePerKm), service_radius_km: Number(listing.serviceRadius), amenities: tags(listing.amenities), availability: listing.availability, photos: listing.images || [] }).select().single();
+                     ? supabase.from("host_properties").upsert({ ...(existing?.id ? { id: existing.id } : {}), host_id: user.id, property_name: String(listing.propertyName), property_type: String(listing.propertyType), description: String(listing.description), location: String(listing.location), amenities: tags(listing.amenities), house_rules: String(listing.houseRules || ""), nightly_rate: Number(listing.nightlyRate), weekly_rate: Number(listing.weeklyRate), max_guests: Number(listing.maxGuests), check_in: listing.checkIn ? String(listing.checkIn) : null, check_out: listing.checkOut ? String(listing.checkOut) : null, availability: String(listing.availability || ""), photos: Array.isArray(listing.images) ? listing.images as string[] : [] }).select().single()
+                     : supabase.from("host_transports").upsert({ ...(existing?.id ? { id: existing.id } : {}), host_id: user.id, vehicle_type: String(listing.type), model: String(listing.model), description: String(listing.description), capacity: Number(listing.capacity), price_per_day: Number(listing.pricePerDay), price_per_km: Number(listing.pricePerKm), service_radius_km: Number(listing.serviceRadius), amenities: tags(listing.amenities), availability: String(listing.availability || ""), photos: Array.isArray(listing.images) ? listing.images as string[] : [] }).select().single();
                    const { error } = await query;
                    if (error) { toast({ title: "Unable to save listing", description: error.message, variant: "destructive" }); return; }
                   setListingEditor(null); toast({ title: `${target.module === "property" ? "Property" : "Transport"} saved` });
@@ -951,7 +954,7 @@ const HostDashboard = () => {
               <h2 className="text-xl font-bold text-foreground">Food Menu</h2>
               <Button size="sm" className="rounded-full gap-1 text-xs" onClick={() => setListingEditor({ module: "dish" })}><Plus className="w-3 h-3" /> Add Dish</Button>
             </div>
-            {listingEditor?.module === "dish" && user && <ListingForm module="dish" userId={user.id} initialData={listingEditor.index === undefined ? undefined : customDishes[listingEditor.index]} onCancel={() => setListingEditor(null)} onSave={async (listing) => { const existing = listingEditor.index === undefined ? null : customDishes[listingEditor.index]; const tags = String(listing.dietaryTags || "").split(",").map(v => v.trim()).filter(Boolean); const { error } = await supabase.from("host_dishes").upsert({ id: existing?.id, host_id: user.id, name: listing.name, description: listing.description, cuisine: listing.cuisine, meal_type: listing.mealType, dietary_tags: tags, serves: Number(listing.serves), prep_time: listing.prepTime, price_per_plate: Number(listing.pricePerPlate), allergen_notes: listing.allergenNotes, availability: listing.availability, photos: listing.images || [] }).select().single(); if (error) { toast({ title: "Unable to save dish", description: error.message, variant: "destructive" }); return; } setListingEditor(null); toast({ title: "Dish saved" }); }} />}
+            {listingEditor?.module === "dish" && user && <ListingForm module="dish" userId={user.id} initialData={listingEditor.index === undefined ? undefined : customDishes[listingEditor.index]} onCancel={() => setListingEditor(null)} onSave={async (listing) => { const existing = listingEditor.index === undefined ? null : customDishes[listingEditor.index]; const tags = String(listing.dietaryTags || "").split(",").map(v => v.trim()).filter(Boolean); const { error } = await supabase.from("host_dishes").upsert({ ...(existing?.id ? { id: existing.id } : {}), host_id: user.id, name: String(listing.name), description: String(listing.description), cuisine: String(listing.cuisine), meal_type: String(listing.mealType), dietary_tags: tags, serves: Number(listing.serves), prep_time: String(listing.prepTime || ""), price_per_plate: Number(listing.pricePerPlate), allergen_notes: String(listing.allergenNotes || ""), availability: String(listing.availability || ""), photos: Array.isArray(listing.images) ? listing.images as string[] : [] }).select().single(); if (error) { toast({ title: "Unable to save dish", description: error.message, variant: "destructive" }); return; } setListingEditor(null); toast({ title: "Dish saved" }); }} />}
             {customDishes.map((dish, i) => (
               <div key={i} className="rounded-lg bg-card p-4 shadow-card flex justify-between items-center">
                 <div>
