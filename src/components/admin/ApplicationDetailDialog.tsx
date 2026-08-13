@@ -1,7 +1,10 @@
+import { useMemo, useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle, Ban, Clock, Eye, ExternalLink, Mail } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { CheckCircle, Ban, Clock, Eye, ExternalLink, Mail, Search } from "lucide-react";
+
 
 export interface AuditEntry {
   id: string;
@@ -60,7 +63,34 @@ const icons = { approve: CheckCircle, review: Eye, wait: Clock, reject: Ban };
 
 /** Full read-only view of a host application with inline verification actions. */
 const ApplicationDetailDialog = ({ open, onClose, record, title, groups, photosKey = "photos", socialKey = "social_links", onStatus, statuses = [], auditEntries = [], onResendEmail }: Props) => {
+  const [auditQuery, setAuditQuery] = useState("");
+  const [auditAction, setAuditAction] = useState("all");
+  const [auditFrom, setAuditFrom] = useState("");
+  const [auditTo, setAuditTo] = useState("");
+
+  const actionOptions = useMemo(
+    () => Array.from(new Set(auditEntries.map(e => e.action))).sort(),
+    [auditEntries],
+  );
+
+  const filteredAudit = useMemo(() => {
+    const q = auditQuery.trim().toLowerCase();
+    const from = auditFrom ? new Date(`${auditFrom}T00:00:00`).getTime() : null;
+    const to = auditTo ? new Date(`${auditTo}T23:59:59`).getTime() : null;
+    return auditEntries.filter(entry => {
+      if (auditAction !== "all" && entry.action !== auditAction) return false;
+      const ts = new Date(entry.created_at).getTime();
+      if (from !== null && ts < from) return false;
+      if (to !== null && ts > to) return false;
+      if (!q) return true;
+      return [entry.action, entry.previous_status, entry.new_status, entry.notes, JSON.stringify(entry.metadata ?? {})]
+        .filter(Boolean)
+        .some(v => String(v).toLowerCase().includes(q));
+    });
+  }, [auditEntries, auditQuery, auditAction, auditFrom, auditTo]);
+
   if (!record) return null;
+
   const photos: string[] = Array.isArray(record[photosKey]) ? record[photosKey] : [];
   const socials: Record<string, string> = record[socialKey] && typeof record[socialKey] === "object" ? record[socialKey] : {};
   const grouped = new Set(groups.flatMap(g => g.keys));
@@ -132,15 +162,46 @@ const ApplicationDetailDialog = ({ open, onClose, record, title, groups, photosK
 
           <div>
             <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-2">
-              Admin activity timeline ({auditEntries.length})
+              Admin activity timeline ({filteredAudit.length}{filteredAudit.length !== auditEntries.length ? ` of ${auditEntries.length}` : ""})
             </p>
+
+            {auditEntries.length > 0 && (
+              <div className="grid gap-2 sm:grid-cols-4 mb-3">
+                <div className="relative sm:col-span-2">
+                  <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+                  <Input value={auditQuery} onChange={e => setAuditQuery(e.target.value)}
+                    placeholder="Search status, notes, metadata" className="pl-8 h-9 text-xs" />
+                </div>
+                <select value={auditAction} onChange={e => setAuditAction(e.target.value)}
+                  aria-label="Filter by action type"
+                  className="h-9 rounded-md border border-input bg-background px-2 text-xs capitalize">
+                  <option value="all">All actions</option>
+                  {actionOptions.map(a => <option key={a} value={a}>{a.replace(/_/g, " ")}</option>)}
+                </select>
+                <div className="flex items-center gap-1">
+                  <Input type="date" aria-label="From date" value={auditFrom} onChange={e => setAuditFrom(e.target.value)} className="h-9 text-xs" />
+                  <Input type="date" aria-label="To date" value={auditTo} onChange={e => setAuditTo(e.target.value)} className="h-9 text-xs" />
+                </div>
+                {(auditQuery || auditAction !== "all" || auditFrom || auditTo) && (
+                  <Button size="sm" variant="ghost" className="h-8 text-xs justify-self-start"
+                    onClick={() => { setAuditQuery(""); setAuditAction("all"); setAuditFrom(""); setAuditTo(""); }}>
+                    Clear filters
+                  </Button>
+                )}
+              </div>
+            )}
+
             {auditEntries.length === 0 ? (
               <p className="text-sm text-muted-foreground rounded-lg border border-dashed border-border p-3">
                 No admin actions recorded yet. Review, waitlist, verify or approve actions will show up here with timestamps.
               </p>
+            ) : filteredAudit.length === 0 ? (
+              <p className="text-sm text-muted-foreground rounded-lg border border-dashed border-border p-3">
+                No activity matches these filters.
+              </p>
             ) : (
               <ol className="relative border-l border-border ml-2 space-y-3">
-                {auditEntries.map(entry => (
+                {filteredAudit.map(entry => (
                   <li key={entry.id} className="ml-4">
                     <span className="absolute -left-[5px] mt-1.5 h-2.5 w-2.5 rounded-full bg-primary" />
                     <div className="rounded-lg border border-border bg-card/50 p-3">
@@ -162,6 +223,8 @@ const ApplicationDetailDialog = ({ open, onClose, record, title, groups, photosK
               </ol>
             )}
           </div>
+
+
 
 
 

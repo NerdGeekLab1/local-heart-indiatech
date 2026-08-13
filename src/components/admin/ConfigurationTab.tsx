@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo } from "react";
 import { motion } from "framer-motion";
-import { Eye, EyeOff, Save, Key, CreditCard, Mail, MessageCircle, Sparkles, Settings as SettingsIcon, Plus, BarChart3, ShieldAlert, CheckCircle2 } from "lucide-react";
+import { Eye, EyeOff, Save, Key, CreditCard, Mail, MessageCircle, Sparkles, Settings as SettingsIcon, Plus, BarChart3, ShieldAlert, CheckCircle2, FileInput } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -39,6 +39,7 @@ const ConfigurationTab = () => {
   const [drafts, setDrafts] = useState<Record<string, string>>({});
   const [newKey, setNewKey] = useState({ key: "", category: "general", description: "", is_secret: false });
   const [showNew, setShowNew] = useState(false);
+  const [subTab, setSubTab] = useState<"platform" | "forms">("platform");
 
   const load = async () => {
     setLoading(true);
@@ -99,9 +100,30 @@ const ConfigurationTab = () => {
     return acc;
   }, {} as Record<string, ConfigEntry[]>);
 
+  const subTabs = [
+    { id: "platform", label: "Platform Configuration", icon: Key },
+    { id: "forms", label: "Forms", icon: FileInput },
+  ] as const;
+
   return (
     <div className="mt-6 space-y-6">
-      <FormControlsPanel />
+      <div className="flex gap-2 border-b border-border">
+        {subTabs.map(t => {
+          const Icon = t.icon;
+          const active = subTab === t.id;
+          return (
+            <button key={t.id} onClick={() => setSubTab(t.id)}
+              className={`-mb-px inline-flex items-center gap-2 px-4 py-2 text-sm font-medium border-b-2 transition-colors ${active ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"}`}>
+              <Icon className="w-4 h-4" /> {t.label}
+            </button>
+          );
+        })}
+      </div>
+
+      {subTab === "forms" && <FormControlsPanel />}
+
+      {subTab === "platform" && (
+      <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
           <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
@@ -115,6 +137,7 @@ const ConfigurationTab = () => {
           <Plus className="w-4 h-4" /> Add Key
         </Button>
       </div>
+
 
       {showNew && (
         <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}
@@ -255,7 +278,10 @@ const ConfigurationTab = () => {
         <code className="mx-1 px-1 rounded bg-secondary">app_configuration</code> table. For production secrets used at
         runtime by Lovable Cloud (e.g. Stripe webhooks), continue to use the platform's secret manager.
       </div>
+      </div>
+      )}
     </div>
+
   );
 };
 

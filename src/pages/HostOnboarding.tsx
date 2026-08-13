@@ -12,7 +12,10 @@ type OnboardingStatus = {
   onboarding_complete: boolean;
   submitted_at: string | null;
   reviewed_at: string | null;
+  assigned_role: string | null;
+  role_matches_approval: boolean | null;
 };
+
 
 const HostOnboarding = () => {
   const [status, setStatus] = useState<OnboardingStatus | null>(null);
@@ -72,9 +75,29 @@ const HostOnboarding = () => {
                   </li>
                 ))}
               </ol>
+
+              <div className="mt-8 rounded-lg border border-border bg-secondary/30 p-4">
+                <div className="flex items-center justify-between gap-3">
+                  <span className="text-sm font-semibold text-foreground">Role assigned to your account</span>
+                  <span data-testid="assigned-role" className="rounded-full bg-primary/10 px-3 py-1 text-sm font-medium capitalize text-primary">
+                    {status.assigned_role ?? "none yet"}
+                  </span>
+                </div>
+                <p className="mt-2 text-sm text-muted-foreground">
+                  {status.admin_approved
+                    ? status.role_matches_approval === false
+                      ? "Your application is approved but your account still shows a non-host role. Sign out and back in — if it persists, contact support so an admin can repair your role."
+                      : "Approval succeeded and your account holds the host role, so signing in takes you to the Host dashboard."
+                    : status.application_status === "rejected"
+                      ? "Your application was not approved, so no host role is assigned to this account."
+                      : "Your application is still under review. Your account stays on its current role until an admin approves it."}
+                </p>
+              </div>
+
               {status.admin_approved && !status.onboarding_complete && (
-                <Button asChild className="mt-8 w-full"><Link to="/dashboard/host">Continue in Host portal</Link></Button>
+                <Button asChild className="mt-6 w-full"><Link to="/dashboard/host">Continue in Host portal</Link></Button>
               )}
+
             </>
           )}
         </div>
