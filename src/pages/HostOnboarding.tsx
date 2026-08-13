@@ -19,21 +19,37 @@ type OnboardingStatus = {
 
 
 const HostOnboarding = () => {
+  const { toast } = useToast();
   const [status, setStatus] = useState<OnboardingStatus | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [repairing, setRepairing] = useState(false);
 
-  useEffect(() => {
-    let active = true;
-    (async () => {
-      const { data, error: requestError } = await (supabase.rpc as any)("get_host_onboarding_status");
-      if (!active) return;
-      setStatus(Array.isArray(data) ? data[0] ?? null : data ?? null);
-      setError(requestError?.message ?? "");
-      setLoading(false);
-    })();
-    return () => { active = false; };
+  const loadStatus = useCallback(async () => {
+    const { data, error: requestError } = await (supabase.rpc as any)("get_host_onboarding_status");
+    setStatus(Array.isArray(data) ? data[0] ?? null : data ?? null);
+    setError(requestError?.message ?? "");
+    setLoading(false);
   }, []);
+
+  useEffect(() => { void loadStatus(); }, [loadStatus]);
+
+  const repairRole = async () => {
+    setRepairing(true);
+    const { data, error: rpcError } = await (supabase.rpc as any)("repair_my_host_role");
+    const result = Array.isArray(data) ? data[0] : data;
+    if (rpcError) {
+      toast({ title: "Role repair failed", description: rpcError.message, variant: "destructive" });
+    } else {
+      toast({
+        title: result?.repaired ? "Role repaired ✅" : "Nothing to repair",
+        description: result?.message ?? "",
+        variant: result?.repaired ? "default" : "destructive",
+      });
+      await loadStatus();
+    }
+    setRepairing(false);
+  };
 
   const steps = [
     { label: "Application submitted", done: status?.application_submitted },
