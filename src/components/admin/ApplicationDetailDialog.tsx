@@ -63,7 +63,34 @@ const icons = { approve: CheckCircle, review: Eye, wait: Clock, reject: Ban };
 
 /** Full read-only view of a host application with inline verification actions. */
 const ApplicationDetailDialog = ({ open, onClose, record, title, groups, photosKey = "photos", socialKey = "social_links", onStatus, statuses = [], auditEntries = [], onResendEmail }: Props) => {
+  const [auditQuery, setAuditQuery] = useState("");
+  const [auditAction, setAuditAction] = useState("all");
+  const [auditFrom, setAuditFrom] = useState("");
+  const [auditTo, setAuditTo] = useState("");
+
+  const actionOptions = useMemo(
+    () => Array.from(new Set(auditEntries.map(e => e.action))).sort(),
+    [auditEntries],
+  );
+
+  const filteredAudit = useMemo(() => {
+    const q = auditQuery.trim().toLowerCase();
+    const from = auditFrom ? new Date(`${auditFrom}T00:00:00`).getTime() : null;
+    const to = auditTo ? new Date(`${auditTo}T23:59:59`).getTime() : null;
+    return auditEntries.filter(entry => {
+      if (auditAction !== "all" && entry.action !== auditAction) return false;
+      const ts = new Date(entry.created_at).getTime();
+      if (from !== null && ts < from) return false;
+      if (to !== null && ts > to) return false;
+      if (!q) return true;
+      return [entry.action, entry.previous_status, entry.new_status, entry.notes, JSON.stringify(entry.metadata ?? {})]
+        .filter(Boolean)
+        .some(v => String(v).toLowerCase().includes(q));
+    });
+  }, [auditEntries, auditQuery, auditAction, auditFrom, auditTo]);
+
   if (!record) return null;
+
   const photos: string[] = Array.isArray(record[photosKey]) ? record[photosKey] : [];
   const socials: Record<string, string> = record[socialKey] && typeof record[socialKey] === "object" ? record[socialKey] : {};
   const grouped = new Set(groups.flatMap(g => g.keys));
