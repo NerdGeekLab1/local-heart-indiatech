@@ -2264,9 +2264,11 @@ export type Database = {
           admin_approved: boolean
           application_status: string
           application_submitted: boolean
+          assigned_role: string
           email_confirmed: boolean
           onboarding_complete: boolean
           reviewed_at: string
+          role_matches_approval: boolean
           submitted_at: string
         }[]
       }
