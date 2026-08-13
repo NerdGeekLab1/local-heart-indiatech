@@ -52,7 +52,7 @@ const Explore = () => {
       const matchesVibe = !activeVibe || h.specialties.includes(activeVibe) || h.services.includes(activeVibe);
       return matchesSearch && matchesCity && matchesExpertise && matchesTags && matchesVibe;
     });
-  }, [searchQuery, selectedCity, selectedMonth, selectedExpertise, selectedTags, activeVibe]);
+  }, [hosts, searchQuery, selectedCity, selectedExpertise, selectedTags, activeVibe]);
   const pageCount = Math.max(1, Math.ceil(filteredHosts.length / PAGE_SIZE));
   const safePage = Math.min(page, pageCount - 1);
   const pagedHosts = filteredHosts.slice(safePage * PAGE_SIZE, (safePage + 1) * PAGE_SIZE);
@@ -216,7 +216,7 @@ const Explore = () => {
           <Button variant="outline" disabled={safePage >= pageCount - 1} onClick={() => setPage(p => Math.min(pageCount - 1, p + 1))}>Next</Button>
         </div>}
 
-        {filteredHosts.length === 0 && (
+        {!loading && filteredHosts.length === 0 && (
           <div className="text-center py-20">
             <p className="text-4xl mb-4">🔍</p>
             <p className="text-lg font-semibold text-foreground">No hosts found</p>

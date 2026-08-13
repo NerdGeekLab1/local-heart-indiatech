@@ -29,7 +29,14 @@ export const useDbHosts = () => {
   useEffect(() => {
     let cancelled = false;
     const load = async () => {
-      const { data } = await supabase.rpc("get_public_host_directory");
+      const { data, error } = await supabase.rpc("get_public_host_directory");
+      if (error) {
+        if (!cancelled) {
+          setHosts([]);
+          setLoading(false);
+        }
+        return;
+      }
       const result: DbHost[] = (data ?? []).map((host) => ({
         id: host.id,
         username: host.username,
