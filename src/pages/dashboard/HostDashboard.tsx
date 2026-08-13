@@ -2,15 +2,16 @@ import { useState, useEffect } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
-  DollarSign, Users, Star, Calendar, Clock, TrendingUp, MessageCircle, Settings, Home, Car, BarChart3,
-  Bell, UtensilsCrossed, Plus, Save, Instagram, Facebook, Twitter, Globe, Tag, Bike, MapPin, FileText, Receipt, Heart
+  DollarSign, Users, Star, Calendar, Clock, TrendingUp, TrendingDown, MessageCircle, Settings, Home, Car, BarChart3,
+  Bell, UtensilsCrossed, Plus, Save, Instagram, Facebook, Twitter, Youtube, Linkedin, Ghost, Globe, Tag, Bike, MapPin,
+  FileText, Receipt, Heart, Eye, Copy, Phone
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { hosts, reviews, experiences, propertyTypes, vehicleTypes } from "@/lib/data";
+import { propertyTypes, vehicleTypes } from "@/lib/data";
 import { useLocalStorage } from "@/hooks/use-local-storage";
 import EditDialog, { FieldConfig } from "@/components/EditDialog";
 import { useToast } from "@/hooks/use-toast";
@@ -21,10 +22,6 @@ import ImageUpload from "@/components/ImageUpload";
 import BetaModerationTools from "@/components/admin/BetaModerationTools";
 import ListingForm, { ListingModule } from "@/components/ListingForm";
 import type { TablesInsert } from "@/integrations/supabase/types";
-
-const host = hosts[0];
-const hostReviews = reviews.filter(r => r.hostId === host.id);
-const hostExperiences = experiences.filter(e => e.hostId === host.id);
 
 const statusColors: Record<string, string> = {
   pending: "bg-primary/10 text-primary", confirmed: "bg-accent/10 text-accent",
@@ -84,17 +81,21 @@ const HostDashboard = () => {
   const [hostBookings, setHostBookings] = useState<any[]>([]);
   const totalEarnings = hostBookings.reduce((sum: number, b: any) => sum + Number(b.total_price || 0), 0);
 
-  const [hostProfile, setHostProfile] = useLocalStorage("host_profile", {
-    name: host.name, tagline: host.tagline, bio: host.bio, city: host.city, pricePerDay: host.pricePerDay,
+  const [hostProfile, setHostProfile] = useLocalStorage("host_profile_v2", {
+    name: "", tagline: "", bio: "", city: "", pricePerDay: 0,
   });
-  const [socialMedia, setSocialMedia] = useLocalStorage("host_social_media", { instagram: "", facebook: "", twitter: "", website: "" });
-  const [pricing, setPricing] = useLocalStorage("host_pricing", { guidePerDay: host.pricePerDay, cancellationPolicy: "flexible", currency: "USD" });
-  
+  const [socialMedia, setSocialMedia] = useLocalStorage("host_social_media_v2", {
+    instagram: "", facebook: "", twitter: "", youtube: "", snapchat: "", linkedin: "", whatsapp: "", website: "",
+  });
+  const [notifPrefs, setNotifPrefs] = useLocalStorage("host_notification_prefs", {
+    emailBookings: true, emailMessages: true, emailPayouts: true, instantBook: false, publicProfile: true, showPhone: false,
+  });
+  const [pricing, setPricing] = useLocalStorage("host_pricing_v2", { guidePerDay: 0, cancellationPolicy: "flexible", currency: "INR" });
+
   const [customExperiences, setCustomExperiences] = useLocalStorage<any[]>("host_custom_experiences", []);
-  const [customVehicles, setCustomVehicles] = useLocalStorage<any[]>("host_custom_vehicles", []);
-  const [customDishes, setCustomDishes] = useLocalStorage<any[]>("host_custom_dishes", host.foodInfo?.dishes || []);
-  const [customProperties, setCustomProperties] = useLocalStorage<any[]>("host_custom_properties", host.stayInfo ? [host.stayInfo] : []);
-  const [customRooms, setCustomRooms] = useLocalStorage<any[]>("host_custom_rooms", host.stayInfo?.rooms || []);
+  const [customVehicles, setCustomVehicles] = useLocalStorage<any[]>("host_custom_vehicles_v2", []);
+  const [customDishes, setCustomDishes] = useLocalStorage<any[]>("host_custom_dishes_v2", []);
+  const [customProperties, setCustomProperties] = useLocalStorage<any[]>("host_custom_properties_v2", []);
   const [listingEditor, setListingEditor] = useState<{ module: ListingModule; index?: number } | null>(null);
 
   const [expForm, setExpForm] = useState({
@@ -326,8 +327,46 @@ const HostDashboard = () => {
     open: false, title: "", fields: [], onSave: () => {},
   });
 
-  const allExperiences = [...hostExperiences, ...customExperiences];
-  const allVehicles = [...(host.transportInfo?.vehicles || []), ...customVehicles];
+  const allVehicles = customVehicles;
+
+  const displayName = hostProfile.name
+    || `${hostDbProfile?.first_name ?? ""} ${hostDbProfile?.last_name ?? ""}`.trim()
+    || user?.email?.split("@")[0]
+    || "Host";
+  const displayCity = hostProfile.city || hostDbProfile?.nationality || "";
+  const hostSince = hostDbProfile?.created_at ? new Date(hostDbProfile.created_at).getFullYear() : null;
+  const ratingAvg = hostDbReviews.length
+    ? (hostDbReviews.reduce((sum: number, r: any) => sum + Number(r.rating || 0), 0) / hostDbReviews.length).toFixed(1)
+    : null;
+  const decidedBookings = hostBookings.filter((b: any) => ["confirmed", "completed", "cancelled"].includes(b.status));
+  const acceptanceRate = decidedBookings.length
+    ? Math.round(decidedBookings.filter((b: any) => b.status !== "cancelled").length / decidedBookings.length * 100)
+    : null;
+  const receivedMessages = hostMessages.filter((m: any) => m.receiver_id === user?.id);
+  const responseRate = receivedMessages.length
+    ? Math.round(receivedMessages.filter((m: any) => m.read).length / receivedMessages.length * 100)
+    : null;
+  const monthValue = (offset: number) => {
+    const ref = new Date();
+    ref.setMonth(ref.getMonth() - offset);
+    return hostBookings
+      .filter((b: any) => { const d = new Date(b.created_at); return d.getMonth() === ref.getMonth() && d.getFullYear() === ref.getFullYear(); })
+      .reduce((sum: number, b: any) => sum + Number(b.total_price || 0), 0);
+  };
+  const thisMonthValue = monthValue(0);
+  const lastMonthValue = monthValue(1);
+  const monthDelta = lastMonthValue > 0 ? Math.round((thisMonthValue - lastMonthValue) / lastMonthValue * 100) : null;
+  const publicProfileUrl = user ? `${window.location.origin}/host/${user.id}` : "";
+
+  const copyPublicLink = async () => {
+    if (!publicProfileUrl) return;
+    try {
+      await navigator.clipboard.writeText(publicProfileUrl);
+      toast({ title: "Link copied", description: "Share your public host page anywhere." });
+    } catch {
+      toast({ title: "Copy failed", description: publicProfileUrl, variant: "destructive" });
+    }
+  };
   
   const updateBookingStatus = async (id: string, status: string) => {
     const { error } = await supabase.from("bookings").update({ status }).eq("id", id);
@@ -341,8 +380,8 @@ const HostDashboard = () => {
           userId: booking.traveler_id,
           idempotencyKey: `booking-confirm-${id}`,
           data: {
-            hostName: host?.name,
-            location: host?.city,
+            hostName: displayName,
+            location: displayCity,
             experienceTitle: (booking.services || []).join(", ") || "your trip",
             startDate: booking.start_date,
             endDate: booking.end_date,
@@ -397,11 +436,28 @@ const HostDashboard = () => {
       <Navbar />
       <div className="pt-24 pb-16 px-4 sm:px-6 lg:px-8 mx-auto max-w-6xl">
         <BetaModerationTools scope="host" />
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="flex items-center gap-4">
-          <img src={host.image} alt={hostProfile.name} className="w-16 h-16 rounded-full object-cover shadow-card" />
-          <div>
-            <h1 className="text-3xl font-bold text-foreground">Welcome, {hostProfile.name}!</h1>
-            <p className="text-muted-foreground">{hostProfile.city} · Host since 2024</p>
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="flex flex-wrap items-center gap-4">
+          {hostDbProfile?.avatar_url ? (
+            <img src={hostDbProfile.avatar_url} alt={displayName} loading="lazy" className="w-16 h-16 rounded-full object-cover shadow-card" />
+          ) : (
+            <div className="w-16 h-16 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xl font-bold shadow-card">
+              {displayName.charAt(0).toUpperCase()}
+            </div>
+          )}
+          <div className="min-w-0">
+            <h1 className="text-3xl font-bold text-foreground">Welcome, {displayName}!</h1>
+            <p className="text-muted-foreground">
+              {displayCity || "Add your city in Settings"}
+              {hostSince ? ` · Host since ${hostSince}` : ""}
+            </p>
+          </div>
+          <div className="flex items-center gap-2 sm:ml-auto">
+            <Button asChild size="sm" variant="outline" className="rounded-full gap-1 text-xs">
+              <Link to={`/host/${user?.id ?? ""}`} target="_blank" rel="noreferrer"><Eye className="w-3.5 h-3.5" /> Public view</Link>
+            </Button>
+            <Button size="sm" variant="outline" className="rounded-full gap-1 text-xs" onClick={copyPublicLink}>
+              <Copy className="w-3.5 h-3.5" /> Copy link
+            </Button>
           </div>
         </motion.div>
 
@@ -418,9 +474,9 @@ const HostDashboard = () => {
           <>
             <div className="mt-6 grid grid-cols-2 sm:grid-cols-4 gap-4">
               {[
-                { label: "Total Earnings", value: `$${totalEarnings}`, icon: DollarSign, color: "text-accent" },
+                { label: "Total Earnings", value: `₹${totalEarnings.toLocaleString("en-IN")}`, icon: DollarSign, color: "text-accent" },
                 { label: "Total Bookings", value: `${hostBookings.length}`, icon: Calendar, color: "text-primary" },
-                { label: "Rating", value: `${host.rating}`, icon: Star, color: "text-primary" },
+                { label: hostDbReviews.length ? `Rating (${hostDbReviews.length})` : "Rating", value: ratingAvg ?? "—", icon: Star, color: "text-primary" },
                 { label: "Exp Requests", value: `${expRequests.length}`, icon: FileText, color: "text-muted-foreground" },
               ].map(s => (
                 <div key={s.label} className="rounded-lg bg-card p-4 shadow-card">
@@ -460,10 +516,35 @@ const HostDashboard = () => {
                 <div className="rounded-lg bg-card p-5 shadow-card">
                   <h3 className="text-sm font-bold text-foreground uppercase tracking-wider mb-3">Performance</h3>
                   <div className="space-y-3 text-sm">
-                    <div className="flex justify-between"><span className="text-muted-foreground">Response Rate</span><span className="font-medium text-foreground">98%</span></div>
-                    <div className="flex justify-between"><span className="text-muted-foreground">Acceptance Rate</span><span className="font-medium text-foreground">95%</span></div>
-                    <div className="flex justify-between"><span className="text-muted-foreground">This Month</span><span className="font-medium text-accent flex items-center gap-1"><TrendingUp className="w-3 h-3" /> +23%</span></div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Response Rate</span>
+                      <span className="font-medium text-foreground">{responseRate === null ? "No messages yet" : `${responseRate}%`}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Acceptance Rate</span>
+                      <span className="font-medium text-foreground">{acceptanceRate === null ? "No decisions yet" : `${acceptanceRate}%`}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">This Month</span>
+                      <span className="font-medium text-foreground">₹{thisMonthValue.toLocaleString("en-IN")}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">vs Last Month</span>
+                      {monthDelta === null ? (
+                        <span className="font-medium text-muted-foreground">Not enough history</span>
+                      ) : (
+                        <span className={`font-medium flex items-center gap-1 ${monthDelta >= 0 ? "text-accent" : "text-destructive"}`}>
+                          {monthDelta >= 0 ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
+                          {monthDelta >= 0 ? "+" : ""}{monthDelta}%
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Live Listings</span>
+                      <span className="font-medium text-foreground">{hostDbExperiences.filter((e: any) => e.status === "approved").length}</span>
+                    </div>
                   </div>
+                  <p className="mt-3 text-[11px] text-muted-foreground">All figures come from your live bookings, reviews and messages.</p>
                 </div>
               </div>
             </div>
@@ -566,19 +647,6 @@ const HostDashboard = () => {
               </div>);
             })()}
 
-            {allExperiences.length > 0 && (
-              <div>
-                <h2 className="text-xl font-bold text-foreground mb-4">Sample Experiences ({allExperiences.length})</h2>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {allExperiences.map(exp => (
-                    <div key={exp.id} className="rounded-lg bg-card p-4 shadow-card">
-                      <h4 className="font-semibold text-foreground">{exp.title}</h4>
-                      <p className="text-sm text-muted-foreground">${exp.price} · {exp.duration} · {exp.category}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
 
             <div className="rounded-2xl bg-card p-6 shadow-card">
               <div className="flex items-center justify-between gap-4 flex-wrap">
@@ -787,7 +855,7 @@ const HostDashboard = () => {
                             req.status === "approved" ? "bg-accent/10 text-accent" : req.status === "rejected" ? "bg-destructive/10 text-destructive" : "bg-primary/10 text-primary"
                           }`}>{req.status}</span>
                         </div>
-                        <p className="text-xs text-muted-foreground mt-1">{req.category} · {req.location} · ${req.price}</p>
+                        <p className="text-xs text-muted-foreground mt-1">{req.category} · {req.location} · ₹{req.price}</p>
                       </div>
                       <p className="text-xs text-muted-foreground">{new Date(req.created_at).toLocaleDateString()}</p>
                     </div>
@@ -829,6 +897,7 @@ const HostDashboard = () => {
                   <p className="text-sm text-muted-foreground mt-1">{prop.description}</p>
                 </div>
               ))}
+              {customProperties.length === 0 && <p className="text-sm text-muted-foreground py-6 text-center">No properties added yet.</p>}
             </div>
             <div>
               <div className="flex items-center justify-between mb-3">
@@ -836,14 +905,22 @@ const HostDashboard = () => {
                 <Button size="sm" className="rounded-full gap-1 text-xs" onClick={() => setListingEditor({ module: "transport" })}><Plus className="w-3 h-3" /> Add</Button>
               </div>
               {allVehicles.map((v, i) => (
-                <div key={i} className="rounded-lg bg-card p-4 shadow-card mb-2 flex justify-between items-center">
-                  <div>
+                <div key={i} className="rounded-lg bg-card p-4 shadow-card mb-2 flex justify-between items-start gap-3">
+                  <div className="min-w-0">
                     <p className="font-medium text-foreground">{v.model} <span className="text-xs bg-secondary text-muted-foreground px-2 py-0.5 rounded-full ml-1">{v.type}</span></p>
-                    <p className="text-xs text-muted-foreground">{v.capacity} pax · ${v.pricePerDay}/day</p>
+                    <p className="text-xs text-muted-foreground">{v.capacity} pax · ₹{v.pricePerDay}/day{v.pricePerKm ? ` · ₹${v.pricePerKm}/km` : ""}</p>
+                    {String(v.amenities || "").trim() && (
+                      <div className="mt-2 flex flex-wrap gap-1.5">
+                        {String(v.amenities).split(",").map((a: string) => a.trim()).filter(Boolean).map((a: string) => (
+                          <span key={a} className="rounded-full bg-secondary px-2 py-0.5 text-[11px] text-muted-foreground">{a}</span>
+                        ))}
+                      </div>
+                    )}
                   </div>
-                  <Button variant="outline" size="sm" className="rounded-full text-xs" onClick={() => { const index = i - (host.transportInfo?.vehicles?.length || 0); if (index >= 0) setListingEditor({ module: "transport", index }); }}>Edit</Button>
+                  <Button variant="outline" size="sm" className="rounded-full text-xs" onClick={() => setListingEditor({ module: "transport", index: i })}>Edit</Button>
                 </div>
               ))}
+              {allVehicles.length === 0 && <p className="text-sm text-muted-foreground py-6 text-center">No vehicles added yet.</p>}
             </div>
           </div>
         )}
@@ -859,7 +936,10 @@ const HostDashboard = () => {
               <div key={i} className="rounded-lg bg-card p-4 shadow-card flex justify-between items-center">
                 <div>
                   <h4 className="font-semibold text-foreground">{dish.name}</h4>
-                  <p className="text-sm text-muted-foreground">{dish.cuisine} · ${dish.price}/person</p>
+                  <p className="text-sm text-muted-foreground">
+                    {[dish.cuisine, dish.mealType].filter(Boolean).join(" · ")}
+                    {dish.pricePerPlate || dish.price ? ` · ₹${dish.pricePerPlate ?? dish.price}/plate` : ""}
+                  </p>
                 </div>
                 <Button variant="outline" size="sm" className="rounded-full text-xs" onClick={() => setListingEditor({ module: "dish", index: i })}>Edit</Button>
               </div>
@@ -1058,31 +1138,104 @@ const HostDashboard = () => {
                 </div>
               </div>
               <div className="space-y-3">
-                <div><label className="text-sm font-medium text-foreground">Name</label><Input value={hostProfile.name} onChange={e => setHostProfile(p => ({ ...p, name: e.target.value }))} /></div>
-                <div><label className="text-sm font-medium text-foreground">City</label><Input value={hostProfile.city} onChange={e => setHostProfile(p => ({ ...p, city: e.target.value }))} /></div>
+                <div><label className="text-sm font-medium text-foreground">Name</label><Input value={hostProfile.name} onChange={e => setHostProfile(p => ({ ...p, name: e.target.value }))} placeholder="Your full name" /></div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div><label className="text-sm font-medium text-foreground">City</label><Input value={hostProfile.city} onChange={e => setHostProfile(p => ({ ...p, city: e.target.value }))} placeholder="e.g. Jaipur" /></div>
+                  <div><label className="text-sm font-medium text-foreground">Tagline</label><Input value={hostProfile.tagline} onChange={e => setHostProfile(p => ({ ...p, tagline: e.target.value }))} placeholder="One line about your hosting" /></div>
+                </div>
                 <div><label className="text-sm font-medium text-foreground">Bio</label>
-                  <textarea className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm min-h-[80px]"
-                    value={hostProfile.bio} onChange={e => setHostProfile(p => ({ ...p, bio: e.target.value }))} /></div>
-                <div><label className="text-sm font-medium text-foreground">Price/Day ($)</label><Input type="number" value={hostProfile.pricePerDay} onChange={e => setHostProfile(p => ({ ...p, pricePerDay: Number(e.target.value) }))} /></div>
+                  <textarea className="mt-1 flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm min-h-[80px]"
+                    value={hostProfile.bio} onChange={e => setHostProfile(p => ({ ...p, bio: e.target.value }))} placeholder="Tell travelers who you are" /></div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div><label className="text-sm font-medium text-foreground">Price/Day (₹)</label><Input type="number" min={0} value={hostProfile.pricePerDay} onChange={e => setHostProfile(p => ({ ...p, pricePerDay: Number(e.target.value) }))} /></div>
+                  <div><label className="text-sm font-medium text-foreground">Cancellation policy</label>
+                    <select className="mt-1 flex h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+                      value={pricing.cancellationPolicy} onChange={e => setPricing(p => ({ ...p, cancellationPolicy: e.target.value }))}>
+                      <option value="flexible">Flexible</option>
+                      <option value="moderate">Moderate</option>
+                      <option value="strict">Strict</option>
+                    </select>
+                  </div>
+                </div>
               </div>
               <Button size="sm" className="rounded-full gap-2" onClick={async () => {
                 if (!user) return;
-                const names = hostProfile.name.split(" ");
-                await supabase.from("profiles").update({
+                const names = hostProfile.name.trim().split(" ");
+                const { error } = await supabase.from("profiles").upsert({
+                  id: user.id,
                   first_name: names[0] || "",
                   last_name: names.slice(1).join(" ") || "",
                   bio: hostProfile.bio,
-                }).eq("id", user.id);
-                toast({ title: "Profile saved! ✅" });
-              }}><Save className="w-4 h-4" /> Save</Button>
+                }, { onConflict: "id" });
+                if (error) { toast({ title: "Couldn't save profile", description: error.message, variant: "destructive" }); return; }
+                toast({ title: "Profile saved ✅" });
+              }}><Save className="w-4 h-4" /> Save profile</Button>
             </div>
-            <div className="rounded-lg bg-card p-5 shadow-card space-y-4">
-              <h3 className="font-bold text-foreground flex items-center gap-2"><Globe className="w-4 h-4 text-primary" /> Social</h3>
-              <div className="space-y-3">
-                <div className="flex items-center gap-2"><Instagram className="w-4 h-4 text-muted-foreground" /><Input placeholder="Instagram" value={socialMedia.instagram} onChange={e => setSocialMedia(p => ({ ...p, instagram: e.target.value }))} /></div>
-                <div className="flex items-center gap-2"><Facebook className="w-4 h-4 text-muted-foreground" /><Input placeholder="Facebook" value={socialMedia.facebook} onChange={e => setSocialMedia(p => ({ ...p, facebook: e.target.value }))} /></div>
+
+            <div className="rounded-lg bg-card p-5 shadow-card space-y-3">
+              <h3 className="font-bold text-foreground flex items-center gap-2"><Eye className="w-4 h-4 text-primary" /> Public page</h3>
+              <p className="text-sm text-muted-foreground">This is what travelers see. Share it to get direct bookings.</p>
+              <div className="flex items-center gap-2 rounded-md border border-border bg-secondary/30 px-3 py-2">
+                <code className="flex-1 truncate text-xs text-muted-foreground">{publicProfileUrl || "Sign in to get your link"}</code>
+                <Button size="sm" variant="ghost" className="h-8 gap-1 text-xs" onClick={copyPublicLink}><Copy className="w-3.5 h-3.5" /> Copy</Button>
               </div>
-              <Button size="sm" className="rounded-full gap-2" onClick={() => toast({ title: "Saved!" })}><Save className="w-4 h-4" /> Save</Button>
+              <Button asChild size="sm" variant="outline" className="rounded-full gap-2 text-xs">
+                <Link to={`/host/${user?.id ?? ""}`} target="_blank" rel="noreferrer"><Eye className="w-3.5 h-3.5" /> Open public preview</Link>
+              </Button>
+            </div>
+
+            <div className="rounded-lg bg-card p-5 shadow-card space-y-4">
+              <h3 className="font-bold text-foreground flex items-center gap-2"><Globe className="w-4 h-4 text-primary" /> Social profiles</h3>
+              <div className="space-y-3">
+                {([
+                  { key: "instagram", label: "Instagram", Icon: Instagram },
+                  { key: "facebook", label: "Facebook", Icon: Facebook },
+                  { key: "twitter", label: "X (Twitter)", Icon: Twitter },
+                  { key: "youtube", label: "YouTube", Icon: Youtube },
+                  { key: "snapchat", label: "Snapchat", Icon: Ghost },
+                  { key: "linkedin", label: "LinkedIn", Icon: Linkedin },
+                  { key: "whatsapp", label: "WhatsApp", Icon: Phone },
+                  { key: "website", label: "Website", Icon: Globe },
+                ] as const).map(({ key, label, Icon }) => (
+                  <div key={key} className="flex items-center gap-2">
+                    <Icon className="w-4 h-4 shrink-0 text-muted-foreground" />
+                    <Input placeholder={`${label} link or handle`} aria-label={label}
+                      value={(socialMedia as Record<string, string>)[key] ?? ""}
+                      onChange={e => setSocialMedia(p => ({ ...p, [key]: e.target.value }))} />
+                  </div>
+                ))}
+              </div>
+              <Button size="sm" className="rounded-full gap-2" onClick={async () => {
+                if (!user) return;
+                const { error } = await supabase.from("profiles").upsert(
+                  { id: user.id, social_links: socialMedia },
+                  { onConflict: "id" }
+                );
+                if (error) { toast({ title: "Couldn't save socials", description: error.message, variant: "destructive" }); return; }
+                toast({ title: "Social links saved ✅" });
+              }}><Save className="w-4 h-4" /> Save socials</Button>
+            </div>
+
+            <div className="rounded-lg bg-card p-5 shadow-card space-y-4">
+              <h3 className="font-bold text-foreground flex items-center gap-2"><Bell className="w-4 h-4 text-primary" /> Notifications & visibility</h3>
+              <div className="space-y-1">
+                {([
+                  { key: "emailBookings", label: "Email me on new booking requests" },
+                  { key: "emailMessages", label: "Email me on new traveler messages" },
+                  { key: "emailPayouts", label: "Email me payout and invoice updates" },
+                  { key: "instantBook", label: "Allow instant booking without approval" },
+                  { key: "publicProfile", label: "Show my profile in public host directory" },
+                  { key: "showPhone", label: "Show my phone number to confirmed guests" },
+                ] as const).map(({ key, label }) => (
+                  <label key={key} className="flex items-center justify-between gap-3 rounded-md px-1 py-2 cursor-pointer hover:bg-secondary/40">
+                    <span className="text-sm text-foreground">{label}</span>
+                    <input type="checkbox" className="h-4 w-4 accent-primary"
+                      checked={Boolean((notifPrefs as Record<string, boolean>)[key])}
+                      onChange={e => setNotifPrefs(p => ({ ...p, [key]: e.target.checked }))} />
+                  </label>
+                ))}
+              </div>
+              <Button size="sm" className="rounded-full gap-2" onClick={() => toast({ title: "Preferences saved ✅" })}><Save className="w-4 h-4" /> Save preferences</Button>
             </div>
           </div>
         )}
