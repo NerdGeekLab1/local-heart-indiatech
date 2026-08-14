@@ -105,7 +105,7 @@ export default function AuditLogAdmin() {
                   <th className="text-left p-3">Metadata</th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody data-testid="audit-rows">
                 {filtered.map((r) => (
                   <tr key={r.id} className="border-t align-top">
                     <td className="p-3 whitespace-nowrap text-xs text-muted-foreground">{new Date(r.created_at).toLocaleString()}</td>
