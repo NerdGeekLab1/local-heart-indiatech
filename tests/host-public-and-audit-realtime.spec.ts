@@ -32,7 +32,6 @@ test("public host preview link loads the approved host with live data", async ({
 });
 
 test("admin audit timeline receives new entries in realtime", async ({ page, context }) => {
-  await page.goto("/login/host");
   await page.goto("/admin-login");
   await page.getByLabel(/email/i).first().fill(ADMIN_EMAIL);
   await page.getByLabel(/password/i).first().fill(PASSWORD);
