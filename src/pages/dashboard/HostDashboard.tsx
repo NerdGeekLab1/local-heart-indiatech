@@ -1241,6 +1241,14 @@ const HostDashboard = () => {
             </div>
 
             <div className="rounded-lg bg-card p-5 shadow-card space-y-3">
+              <h3 className="font-bold text-foreground flex items-center gap-2"><Heart className="w-4 h-4 text-primary" /> Reels &amp; Stories</h3>
+              <p className="text-sm text-muted-foreground">Posts you share on the feed appear in the Reels &amp; Stories section of your public host page.</p>
+              <Button asChild size="sm" variant="outline" className="rounded-full gap-2 text-xs">
+                <Link to="/feed"><Plus className="w-3.5 h-3.5" /> Manage reels &amp; stories</Link>
+              </Button>
+            </div>
+
+            <div className="rounded-lg bg-card p-5 shadow-card space-y-3">
               <h3 className="font-bold text-foreground flex items-center gap-2"><Eye className="w-4 h-4 text-primary" /> Public page</h3>
               <p className="text-sm text-muted-foreground">This is what travelers see. Share it to get direct bookings.</p>
               <div className="flex items-center gap-2 rounded-md border border-border bg-secondary/30 px-3 py-2">
