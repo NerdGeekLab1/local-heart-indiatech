@@ -45,16 +45,24 @@ export default function HostProfile() {
   if (!data) return <main className="min-h-screen bg-background flex items-center justify-center"><div className="text-center"><h1 className="text-2xl font-bold">Host not found</h1><Link className="mt-3 inline-block text-primary" to="/explore">Back to Explore</Link></div></main>;
 
   const { profile, experiences, reviews, properties, dishes, transports } = data;
+  const reels = data.reels ?? [];
   const avatar = profile.avatar_url || "/placeholder.svg";
+  const cover = profile.cover_url || profile.avatar_url || "/placeholder.svg";
   const share = async () => {
     if (navigator.share) await navigator.share({ title: `${profile.full_name} on RoamYoo`, url: window.location.href });
     else { await navigator.clipboard.writeText(window.location.href); toast({ title: "Link copied" }); }
   };
+  const quickInfo = [
+    { label: "Languages", value: (profile.languages || []).join(", ") },
+    { label: "Responds in", value: profile.response_time || "" },
+    { label: "Years hosting", value: profile.years_hosting ? String(profile.years_hosting) : "" },
+    { label: "Host since", value: profile.host_since ? new Date(profile.host_since).getFullYear().toString() : "" },
+  ].filter(item => item.value);
 
   return <div className="min-h-screen bg-background">
     <Navbar />
     <main className="pb-16 pt-20">
-      <div className="h-56 bg-secondary sm:h-72"><img src={avatar} alt="" className="h-full w-full object-cover opacity-30" /></div>
+      <div className="h-56 bg-secondary sm:h-72"><img src={cover} alt={`${profile.full_name} cover`} className={`h-full w-full object-cover ${profile.cover_url ? "" : "opacity-30"}`} /></div>
       <section className="relative z-10 mx-auto -mt-20 max-w-6xl px-4 sm:px-6">
         <div className="flex flex-col gap-5 sm:flex-row sm:items-end">
           <img src={avatar} alt={profile.full_name} className="h-36 w-36 rounded-lg border-4 border-background object-cover shadow-card" />
@@ -72,6 +80,15 @@ export default function HostProfile() {
           <span className="flex items-center gap-1 text-sm"><Star className="h-4 w-4 fill-primary text-primary" />{rating ? rating.toFixed(1) : "New"} ({reviews.length})</span>
         </div>
 
+        {quickInfo.length > 0 && (
+          <div className="mt-6" data-testid="host-quick-info">
+            <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Quick info</h2>
+            <dl className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
+              {quickInfo.map(item => <div key={item.label} className="rounded-lg border border-border bg-card p-4"><dt className="text-xs text-muted-foreground">{item.label}</dt><dd className="mt-1 font-medium text-foreground">{item.value}</dd></div>)}
+            </dl>
+          </div>
+        )}
+
         <div className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-4">
           {(profile.services || []).map(service => { const Icon = serviceIcons[service] || Compass; return <div key={service} className="rounded-lg border border-border bg-card p-4 text-center"><Icon className="mx-auto h-6 w-6 text-primary" /><p className="mt-2 font-medium">{service}</p></div>; })}
         </div>
@@ -79,6 +96,21 @@ export default function HostProfile() {
         <div className="mt-8 grid gap-8 lg:grid-cols-[2fr_1fr]">
           <div className="space-y-8">
             <section><h2 className="text-xl font-bold">About {profile.full_name}</h2><p className="mt-3 leading-relaxed text-muted-foreground">{profile.bio || "This host has not added a bio yet."}</p><div className="mt-3 flex flex-wrap gap-2">{(profile.specialties || []).map(item => <span key={item} className="rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary">{item}</span>)}</div></section>
+            <section data-testid="host-reels">
+              <h2 className="text-xl font-bold">Reels &amp; Stories</h2>
+              {reels.length ? (
+                <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3">
+                  {reels.map((reel: any) => (
+                    <figure key={reel.id} className="overflow-hidden rounded-lg border border-border bg-card">
+                      {reel.media_type === "video"
+                        ? <video src={reel.media_url} controls playsInline preload="metadata" className="aspect-[9/16] w-full object-cover" />
+                        : <img src={reel.media_url} alt={reel.caption || "Host story"} loading="lazy" className="aspect-[9/16] w-full object-cover" />}
+                      <figcaption className="p-3 text-xs text-muted-foreground line-clamp-2">{reel.caption || reel.location || "Story"}</figcaption>
+                    </figure>
+                  ))}
+                </div>
+              ) : <p className="mt-2 text-sm text-muted-foreground">No reels or stories shared yet.</p>}
+            </section>
             <ListingSection title="Experiences" empty="No approved experiences yet." items={experiences} render={(item) => <><p className="font-semibold">{item.title}</p><p className="text-sm text-muted-foreground">{item.location} · {format(Number(item.price || 0))}</p></>} />
             <ListingSection title="Properties" empty="No properties listed." items={properties} render={(item) => <><p className="font-semibold">{item.property_name}</p><p className="text-sm text-muted-foreground">{item.property_type} · {format(Number(item.nightly_rate || 0))}/night</p><Tags values={item.amenities} /></>} />
             <ListingSection title="Food menu" empty="No dishes listed." items={dishes} render={(item) => <><p className="font-semibold">{item.name}</p><p className="text-sm text-muted-foreground">{item.cuisine} · {item.meal_type} · {format(Number(item.price_per_plate || 0))}/plate</p><Tags values={item.dietary_tags} /></>} />
