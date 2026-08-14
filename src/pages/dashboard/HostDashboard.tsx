@@ -82,6 +82,7 @@ const HostDashboard = () => {
 
   const [hostProfile, setHostProfile] = useState({
     name: "", username: "", tagline: "", bio: "", city: "", pricePerDay: 0, services: [] as string[], specialties: [] as string[],
+    languages: [] as string[], responseTime: "", yearsHosting: 0,
   });
   const [socialMedia, setSocialMedia] = useState({
     instagram: "", facebook: "", twitter: "", youtube: "", snapchat: "", linkedin: "", whatsapp: "", website: "",
@@ -183,7 +184,7 @@ const HostDashboard = () => {
       setCustomVehicles((transports || []).map((row: any) => ({ ...row, type: row.vehicle_type, pricePerDay: row.price_per_day, pricePerKm: row.price_per_km, serviceRadius: row.service_radius_km, amenities: row.amenities?.join(", "), images: row.photos })));
       if (prof) {
         setHostDbProfile(prof);
-        setHostProfile(p => ({ ...p, name: `${prof.first_name} ${prof.last_name || ""}`.trim(), username: prof.username || "", city: prof.city || "", tagline: prof.tagline || "", bio: prof.bio || "", pricePerDay: Number(prof.price_per_day || 0), services: prof.services || [], specialties: prof.specialties || [] }));
+        setHostProfile(p => ({ ...p, name: `${prof.first_name} ${prof.last_name || ""}`.trim(), username: prof.username || "", city: prof.city || "", tagline: prof.tagline || "", bio: prof.bio || "", pricePerDay: Number(prof.price_per_day || 0), services: prof.services || [], specialties: prof.specialties || [], languages: prof.languages || [], responseTime: prof.response_time || "", yearsHosting: Number(prof.years_hosting || 0) }));
         const links = prof.social_links && typeof prof.social_links === "object" && !Array.isArray(prof.social_links) ? prof.social_links as Record<string, string> : {};
         setSocialMedia(p => ({ ...p, ...links }));
         setNotifPrefs(p => ({ ...p, publicProfile: prof.is_public !== false }));
@@ -193,10 +194,20 @@ const HostDashboard = () => {
     const refreshBookings = async () => { const { data } = await supabase.from("bookings").select("*").eq("host_id", user.id).order("created_at", { ascending: false }); setHostBookings(data || []); };
     const refreshReviews = async () => { const { data } = await supabase.from("reviews").select("*").eq("host_id", user.id).order("created_at", { ascending: false }); setHostDbReviews(data || []); };
     const refreshExperiences = async () => { const { data } = await supabase.from("experiences").select("*").eq("host_id", user.id).order("created_at", { ascending: false }); setHostDbExperiences(data || []); };
+    const refreshInvoices = async () => { const { data } = await supabase.from("invoices").select("*").eq("host_id", user.id).order("created_at", { ascending: false }); setHostInvoices(data || []); };
+    const refreshMessages = async () => { const { data } = await supabase.from("messages").select("*").or(`receiver_id.eq.${user.id},sender_id.eq.${user.id}`).order("created_at", { ascending: false }).limit(50); setHostMessages(data || []); };
+    const refreshProperties = async () => { const { data } = await supabase.from("host_properties").select("*").eq("host_id", user.id).order("created_at", { ascending: false }); setCustomProperties((data || []).map((row: any) => ({ ...row, propertyName: row.property_name, propertyType: row.property_type, nightlyRate: row.nightly_rate, weeklyRate: row.weekly_rate, maxGuests: row.max_guests, houseRules: row.house_rules, checkIn: row.check_in, checkOut: row.check_out, images: row.photos }))); };
+    const refreshDishes = async () => { const { data } = await supabase.from("host_dishes").select("*").eq("host_id", user.id).order("created_at", { ascending: false }); setCustomDishes((data || []).map((row: any) => ({ ...row, mealType: row.meal_type, dietaryTags: row.dietary_tags?.join(", "), pricePerPlate: row.price_per_plate, prepTime: row.prep_time, allergenNotes: row.allergen_notes, images: row.photos }))); };
+    const refreshTransports = async () => { const { data } = await supabase.from("host_transports").select("*").eq("host_id", user.id).order("created_at", { ascending: false }); setCustomVehicles((data || []).map((row: any) => ({ ...row, type: row.vehicle_type, pricePerDay: row.price_per_day, pricePerKm: row.price_per_km, serviceRadius: row.service_radius_km, amenities: row.amenities?.join(", "), images: row.photos }))); };
     const channel = supabase.channel(`host-dashboard-${user.id}`)
       .on("postgres_changes", { event: "*", schema: "public", table: "bookings", filter: `host_id=eq.${user.id}` }, refreshBookings)
       .on("postgres_changes", { event: "*", schema: "public", table: "reviews", filter: `host_id=eq.${user.id}` }, refreshReviews)
       .on("postgres_changes", { event: "*", schema: "public", table: "experiences", filter: `host_id=eq.${user.id}` }, refreshExperiences)
+      .on("postgres_changes", { event: "*", schema: "public", table: "invoices", filter: `host_id=eq.${user.id}` }, refreshInvoices)
+      .on("postgres_changes", { event: "*", schema: "public", table: "messages", filter: `receiver_id=eq.${user.id}` }, refreshMessages)
+      .on("postgres_changes", { event: "*", schema: "public", table: "host_properties", filter: `host_id=eq.${user.id}` }, refreshProperties)
+      .on("postgres_changes", { event: "*", schema: "public", table: "host_dishes", filter: `host_id=eq.${user.id}` }, refreshDishes)
+      .on("postgres_changes", { event: "*", schema: "public", table: "host_transports", filter: `host_id=eq.${user.id}` }, refreshTransports)
       .subscribe();
     return () => { void supabase.removeChannel(channel); };
   }, [user]);
@@ -1169,6 +1180,11 @@ const HostDashboard = () => {
                   <div><label className="text-sm font-medium text-foreground">City</label><Input value={hostProfile.city} onChange={e => setHostProfile(p => ({ ...p, city: e.target.value }))} placeholder="e.g. Jaipur" /></div>
                   <div><label className="text-sm font-medium text-foreground">Tagline</label><Input value={hostProfile.tagline} onChange={e => setHostProfile(p => ({ ...p, tagline: e.target.value }))} placeholder="One line about your hosting" /></div>
                 </div>
+                 <TagField label="Languages spoken" values={hostProfile.languages} suggestions={["English", "Hindi", "Punjabi", "Bengali", "Tamil", "Marathi", "Spanish", "French"]} onChange={languages => setHostProfile(p => ({ ...p, languages }))} />
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div><label className="text-sm font-medium text-foreground">Typical response time</label><Input value={hostProfile.responseTime} onChange={e => setHostProfile(p => ({ ...p, responseTime: e.target.value }))} placeholder="e.g. within 2 hours" /></div>
+                  <div><label className="text-sm font-medium text-foreground">Years hosting</label><Input type="number" min={0} value={hostProfile.yearsHosting} onChange={e => setHostProfile(p => ({ ...p, yearsHosting: Number(e.target.value) }))} /></div>
+                </div>
                 <div><label className="text-sm font-medium text-foreground">Bio</label>
                   <textarea className="mt-1 flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm min-h-[80px]"
                     value={hostProfile.bio} onChange={e => setHostProfile(p => ({ ...p, bio: e.target.value }))} placeholder="Tell travelers who you are" /></div>
@@ -1197,11 +1213,31 @@ const HostDashboard = () => {
                   bio: hostProfile.bio,
                    services: hostProfile.services,
                    specialties: hostProfile.specialties,
+                   languages: hostProfile.languages,
+                   response_time: hostProfile.responseTime || null,
+                   years_hosting: hostProfile.yearsHosting || 0,
                    price_per_day: hostProfile.pricePerDay,
                 }, { onConflict: "id" });
                 if (error) { toast({ title: "Couldn't save profile", description: error.message, variant: "destructive" }); return; }
                 toast({ title: "Profile saved ✅" });
               }}><Save className="w-4 h-4" /> Save profile</Button>
+            </div>
+
+            <div className="rounded-lg bg-card p-5 shadow-card space-y-3">
+              <h3 className="font-bold text-foreground flex items-center gap-2"><Tag className="w-4 h-4 text-primary" /> Cover photo</h3>
+              <p className="text-sm text-muted-foreground">Shown as the banner on your public host page.</p>
+              <ImageUpload
+                bucket="trip-images"
+                folder={user?.id || "anon"}
+                currentUrl={hostDbProfile?.cover_url}
+                onUpload={async (url) => {
+                  if (!user) return;
+                  const { error } = await supabase.from("profiles").upsert({ id: user.id, cover_url: url || null }, { onConflict: "id" });
+                  if (error) { toast({ title: "Couldn't save cover", description: error.message, variant: "destructive" }); return; }
+                  setHostDbProfile((p: any) => ({ ...(p || {}), cover_url: url || null }));
+                }}
+                className="h-32 w-full"
+              />
             </div>
 
             <div className="rounded-lg bg-card p-5 shadow-card space-y-3">
