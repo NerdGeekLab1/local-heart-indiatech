@@ -10,12 +10,13 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
 type PublicHostData = {
-  profile: { id: string; username?: string; full_name: string; city?: string; tagline?: string; bio?: string; avatar_url?: string; services?: string[]; specialties?: string[]; social_links?: Record<string, string>; price_per_day?: number; host_since?: string };
+  profile: { id: string; username?: string; full_name: string; city?: string; tagline?: string; bio?: string; avatar_url?: string; cover_url?: string; services?: string[]; specialties?: string[]; languages?: string[]; response_time?: string; years_hosting?: number; social_links?: Record<string, string>; price_per_day?: number; host_since?: string };
   experiences: any[];
   reviews: any[];
   properties: any[];
   dishes: any[];
   transports: any[];
+  reels?: any[];
 };
 
 const serviceIcons: Record<string, React.ElementType> = { Guide: Compass, Stay: Home, Transport: Car, Food: UtensilsCrossed };
