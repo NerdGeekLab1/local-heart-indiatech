@@ -1605,6 +1605,7 @@ export type Database = {
           avatar_url: string | null
           bio: string | null
           city: string | null
+          cover_url: string | null
           created_at: string
           email: string | null
           first_name: string
@@ -1612,10 +1613,12 @@ export type Database = {
           id: string
           interests: string[] | null
           is_public: boolean
+          languages: string[]
           last_name: string | null
           nationality: string | null
           phone: string | null
           price_per_day: number
+          response_time: string | null
           services: string[]
           social_links: Json
           specialties: string[]
@@ -1623,11 +1626,13 @@ export type Database = {
           travel_styles: string[] | null
           updated_at: string
           username: string | null
+          years_hosting: number
         }
         Insert: {
           avatar_url?: string | null
           bio?: string | null
           city?: string | null
+          cover_url?: string | null
           created_at?: string
           email?: string | null
           first_name?: string
@@ -1635,10 +1640,12 @@ export type Database = {
           id: string
           interests?: string[] | null
           is_public?: boolean
+          languages?: string[]
           last_name?: string | null
           nationality?: string | null
           phone?: string | null
           price_per_day?: number
+          response_time?: string | null
           services?: string[]
           social_links?: Json
           specialties?: string[]
@@ -1646,11 +1653,13 @@ export type Database = {
           travel_styles?: string[] | null
           updated_at?: string
           username?: string | null
+          years_hosting?: number
         }
         Update: {
           avatar_url?: string | null
           bio?: string | null
           city?: string | null
+          cover_url?: string | null
           created_at?: string
           email?: string | null
           first_name?: string
@@ -1658,10 +1667,12 @@ export type Database = {
           id?: string
           interests?: string[] | null
           is_public?: boolean
+          languages?: string[]
           last_name?: string | null
           nationality?: string | null
           phone?: string | null
           price_per_day?: number
+          response_time?: string | null
           services?: string[]
           social_links?: Json
           specialties?: string[]
@@ -1669,6 +1680,7 @@ export type Database = {
           travel_styles?: string[] | null
           updated_at?: string
           username?: string | null
+          years_hosting?: number
         }
         Relationships: []
       }
