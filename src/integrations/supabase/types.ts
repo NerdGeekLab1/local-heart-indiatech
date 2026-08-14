@@ -2490,12 +2490,15 @@ export type Database = {
           avatar_url: string
           bio: string
           city: string
+          cover_url: string
           experiences_count: number
           full_name: string
           host_since: string
           id: string
+          languages: string[]
           price_per_day: number
           rating: number
+          response_time: string
           review_count: number
           services: string[]
           social_links: Json
