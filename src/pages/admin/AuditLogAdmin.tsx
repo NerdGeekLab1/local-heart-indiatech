@@ -30,15 +30,24 @@ export default function AuditLogAdmin() {
   const [q, setQ] = useState("");
 
   useEffect(() => {
-    (async () => {
+    const load = async () => {
       const { data } = await supabase
         .from("admin_audit_log")
         .select("*")
         .order("created_at", { ascending: false })
         .limit(500);
       setRows((data ?? []) as Row[]);
-    })();
+    };
+    void load();
+    const channel = supabase
+      .channel("admin-audit-log-live")
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "admin_audit_log" }, (payload) => {
+        setRows((current) => [payload.new as Row, ...current.filter((row) => row.id !== (payload.new as Row).id)]);
+      })
+      .subscribe();
+    return () => { void supabase.removeChannel(channel); };
   }, []);
+
 
   const filtered = useMemo(
     () =>
@@ -96,7 +105,7 @@ export default function AuditLogAdmin() {
                   <th className="text-left p-3">Metadata</th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody data-testid="audit-rows">
                 {filtered.map((r) => (
                   <tr key={r.id} className="border-t align-top">
                     <td className="p-3 whitespace-nowrap text-xs text-muted-foreground">{new Date(r.created_at).toLocaleString()}</td>

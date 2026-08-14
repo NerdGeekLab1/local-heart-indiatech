@@ -9,6 +9,9 @@ export interface DbHost {
   tagline: string | null;
   bio: string | null;
   avatar_url: string | null;
+  cover_url: string | null;
+  languages: string[];
+  responseTime: string;
   services: string[];
   specialties: string[];
   pricePerDay: number;
@@ -45,6 +48,9 @@ export const useDbHosts = () => {
         tagline: host.tagline,
         bio: host.bio,
         avatar_url: host.avatar_url,
+        cover_url: host.cover_url,
+        languages: host.languages ?? [],
+        responseTime: host.response_time ?? "",
         services: host.services ?? [],
         specialties: host.specialties ?? [],
         pricePerDay: Number(host.price_per_day || 0),
