@@ -20,11 +20,12 @@ const Spinner = () => (
  * account to its one permitted dashboard.
  */
 export default function RequireAuth({ children, role }: RequireAuthProps) {
-  const { user, userRole, userRoles, loading } = useAuth();
+  const { user, userRole, userRoles, loading, roleLoaded } = useAuth();
   const location = useLocation();
   const hasRole = !role || userRole === role || userRoles.includes(role) || userRole === "admin";
 
-  if (loading || (user && userRole === null)) return <Spinner />;
+  // Spin only until the role lookup settles — never forever when a user has no role row.
+  if (loading || (user && !roleLoaded)) return <Spinner />;
 
   if (!user) {
     const next = encodeURIComponent(location.pathname + location.search);
