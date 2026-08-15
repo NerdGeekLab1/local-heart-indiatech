@@ -2117,6 +2117,18 @@ const AdminDashboard = () => {
           </div>
         )}
 
+        {/* ===== REELS & STORIES MODERATION TAB ===== */}
+        {activeTab === "reelsModeration" && (
+          <div className="mt-6 space-y-6">
+            <div>
+              <h2 className="text-xl font-bold text-foreground">Reels &amp; Stories Moderation</h2>
+              <p className="text-sm text-muted-foreground mt-1">Approve or reject host reels. Only approved reels are visible on public host profiles.</p>
+            </div>
+            <ReelsModerationPanel />
+          </div>
+        )}
+
+
         {/* ===== REVIEW MODERATION TAB ===== */}
         {activeTab === "reviewModeration" && (
           <div className="mt-6 space-y-6">
