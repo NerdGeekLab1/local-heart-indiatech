@@ -37,7 +37,7 @@ import DocsTab from "@/components/admin/DocsTab";
 import WebsiteCMSTab from "@/components/admin/WebsiteCMSTab";
 import ContentManagerTab from "@/components/admin/ContentManagerTab";
 import ChatPanel from "@/components/ChatPanel";
-import { Heart, Menu, BookOpen, PanelLeftClose, PanelLeftOpen } from "lucide-react";
+import { Film, Heart, Menu, BookOpen, PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import ApplicationDetailDialog from "@/components/admin/ApplicationDetailDialog";
 
 
