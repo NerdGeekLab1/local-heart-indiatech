@@ -3,7 +3,7 @@ import { Link, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   DollarSign, Users, Star, Calendar, Clock, TrendingUp, TrendingDown, MessageCircle, Settings, Home, Car, BarChart3,
-  Bell, UtensilsCrossed, Plus, Save, Instagram, Facebook, Twitter, Youtube, Linkedin, Ghost, Globe, Tag, Bike, MapPin,
+  Bell, UtensilsCrossed, Plus, Save, Instagram, Facebook, Twitter, Youtube, Linkedin, Ghost, Globe, Tag, Bike, MapPin, Film,
   FileText, Receipt, Heart, Eye, Copy, Phone
 } from "lucide-react";
 
@@ -21,13 +21,17 @@ import ImageUpload from "@/components/ImageUpload";
 import BetaModerationTools from "@/components/admin/BetaModerationTools";
 import ListingForm, { ListingModule } from "@/components/ListingForm";
 import type { TablesInsert } from "@/integrations/supabase/types";
+import HostReelsManager from "@/components/host/HostReelsManager";
+import HostActivityFeed from "@/components/host/HostActivityFeed";
+import ProfileCompleteness, { CompletenessRing } from "@/components/host/ProfileCompleteness";
+import { hostCompleteness } from "@/lib/hostCompleteness";
 
 const statusColors: Record<string, string> = {
   pending: "bg-primary/10 text-primary", confirmed: "bg-accent/10 text-accent",
   completed: "bg-secondary text-muted-foreground", cancelled: "bg-destructive/10 text-destructive",
 };
 
-type Tab = "overview" | "bookings" | "listings" | "experiences" | "food" | "reviews" | "earnings" | "invoices" | "messages" | "settings";
+type Tab = "overview" | "bookings" | "listings" | "experiences" | "food" | "reels" | "reviews" | "earnings" | "invoices" | "messages" | "settings";
 
 const profileFields: FieldConfig[] = [
   { key: "name", label: "Name", required: true },
@@ -78,6 +82,7 @@ const HostDashboard = () => {
   const { toast } = useToast();
   const { user } = useAuth();
   const [hostBookings, setHostBookings] = useState<any[]>([]);
+  const [approvedReelCount, setApprovedReelCount] = useState(0);
   const totalEarnings = hostBookings.reduce((sum: number, b: any) => sum + Number(b.total_price || 0), 0);
 
   const [hostProfile, setHostProfile] = useState({
@@ -452,6 +457,7 @@ const HostDashboard = () => {
     { id: "experiences", label: "Experiences", icon: Globe },
     { id: "listings", label: "Property", icon: Home },
     { id: "food", label: "Food Menu", icon: UtensilsCrossed },
+    { id: "reels", label: "Reels & Stories", icon: Film },
     { id: "reviews", label: "Reviews", icon: Star },
     { id: "earnings", label: "Earnings", icon: DollarSign },
     { id: "invoices", label: "Invoices", icon: Receipt },
@@ -463,7 +469,12 @@ const HostDashboard = () => {
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
-      <div className="pt-24 pb-16 px-4 sm:px-6 lg:px-8 mx-auto max-w-6xl">
+      {/* Host workspace hero — a saffron banner + side rail keeps it visually distinct from the traveler dashboard */}
+      <header className="relative overflow-hidden border-b border-border bg-gradient-to-br from-primary/25 via-accent/10 to-background pt-20">
+        {hostDbProfile?.cover_url && (
+          <img src={hostDbProfile.cover_url} alt="" aria-hidden className="absolute inset-0 h-full w-full object-cover opacity-20" />
+        )}
+        <div className="relative mx-auto max-w-6xl px-4 pb-8 pt-6 sm:px-6 lg:px-8">
         <BetaModerationTools scope="host" />
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="flex flex-wrap items-center gap-4">
           {hostDbProfile?.avatar_url ? (
@@ -490,7 +501,31 @@ const HostDashboard = () => {
           </div>
         </motion.div>
 
-        <div className="mt-6 flex gap-1 overflow-x-auto border-b border-border pb-px">
+        <div className="mt-5 flex items-center gap-3 rounded-2xl border border-border/60 bg-card/70 p-3 backdrop-blur">
+          <CompletenessRing score={completeness.score} size={48} />
+          <p className="text-xs text-muted-foreground">
+            <span className="font-semibold text-foreground">Host profile {completeness.score}% complete.</span>{" "}
+            {completeness.missing.length === 0 ? "Everything travelers look for is set." : `Next: ${completeness.missing[0].label}.`}
+          </p>
+        </div>
+        </div>
+      </header>
+
+      <div className="mx-auto max-w-6xl px-4 pb-16 sm:px-6 lg:flex lg:gap-8 lg:px-8">
+        {/* Desktop side rail */}
+        <aside className="hidden lg:block lg:w-56 lg:shrink-0 lg:pt-8">
+          <nav className="sticky top-24 space-y-1">
+            {tabs.map(t => (
+              <button key={t.id} onClick={() => setActiveTab(t.id)}
+                className={`flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors ${activeTab === t.id ? "bg-primary text-primary-foreground shadow-card" : "text-muted-foreground hover:bg-secondary hover:text-foreground"}`}>
+                <t.icon className="h-4 w-4" /> {t.label}
+              </button>
+            ))}
+          </nav>
+        </aside>
+
+        <div className="min-w-0 flex-1">
+        <div className="mt-4 flex gap-1 overflow-x-auto border-b border-border pb-px lg:hidden">
           {tabs.map(t => (
             <button key={t.id} onClick={() => setActiveTab(t.id)}
               className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium whitespace-nowrap transition-colors rounded-t-lg ${activeTab === t.id ? "bg-card text-primary border-b-2 border-primary" : "text-muted-foreground hover:text-foreground"}`}>
@@ -575,6 +610,8 @@ const HostDashboard = () => {
                   </div>
                   <p className="mt-3 text-[11px] text-muted-foreground">All figures come from your live bookings, reviews and messages.</p>
                 </div>
+                <ProfileCompleteness result={completeness} onJump={() => setActiveTab("settings")} />
+                {user && <HostActivityFeed userId={user.id} earnings={totalEarnings} />}
               </div>
             </div>
           </>
@@ -1140,6 +1177,12 @@ const HostDashboard = () => {
           </div>
         )}
 
+        {activeTab === "reels" && user && (
+          <div className="mt-6">
+            <HostReelsManager userId={user.id} />
+          </div>
+        )}
+
         {activeTab === "settings" && (
           <div className="mt-6 space-y-6 max-w-xl">
             <h2 className="text-xl font-bold text-foreground mb-4">Host Settings</h2>
@@ -1243,8 +1286,8 @@ const HostDashboard = () => {
             <div className="rounded-lg bg-card p-5 shadow-card space-y-3">
               <h3 className="font-bold text-foreground flex items-center gap-2"><Heart className="w-4 h-4 text-primary" /> Reels &amp; Stories</h3>
               <p className="text-sm text-muted-foreground">Posts you share on the feed appear in the Reels &amp; Stories section of your public host page.</p>
-              <Button asChild size="sm" variant="outline" className="rounded-full gap-2 text-xs">
-                <Link to="/feed"><Plus className="w-3.5 h-3.5" /> Manage reels &amp; stories</Link>
+              <Button size="sm" variant="outline" className="rounded-full gap-2 text-xs" onClick={() => setActiveTab("reels")}>
+                <Plus className="w-3.5 h-3.5" /> Manage reels &amp; stories
               </Button>
             </div>
 
@@ -1315,6 +1358,7 @@ const HostDashboard = () => {
             </div>
           </div>
         )}
+        </div>
       </div>
 
       <EditDialog open={editDialog.open} title={editDialog.title} fields={editDialog.fields}
