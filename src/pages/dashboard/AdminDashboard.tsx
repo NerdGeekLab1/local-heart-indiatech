@@ -29,6 +29,7 @@ import SubscriptionPlansTab from "@/components/admin/SubscriptionPlansTab";
 import WeddingsTab from "@/components/admin/WeddingsTab";
 import BetaModerationTools from "@/components/admin/BetaModerationTools";
 import FeedModerationPanel from "@/components/admin/FeedModerationPanel";
+import ReelsModerationPanel from "@/components/admin/ReelsModerationPanel";
 import ReviewModerationPanel from "@/components/admin/ReviewModerationPanel";
 import AdminPagination from "@/components/admin/AdminPagination";
 import BookingsPanel from "@/components/admin/BookingsPanel";
@@ -40,7 +41,7 @@ import { Heart, Menu, BookOpen, PanelLeftClose, PanelLeftOpen } from "lucide-rea
 import ApplicationDetailDialog from "@/components/admin/ApplicationDetailDialog";
 
 
-type Tab = "overview" | "hosts" | "hostWaitlist" | "bookings" | "experiences" | "destinations" | "trips" | "grievances" | "users" | "wanderers" | "missions" | "leaderboard" | "invoices" | "feedModeration" | "reviewModeration" | "analytics" | "settings" | "configuration" | "emails" | "plans" | "weddings" | "audit" | "testmode" | "docs" | "websiteCms" | "content";
+type Tab = "overview" | "hosts" | "hostWaitlist" | "bookings" | "experiences" | "destinations" | "trips" | "grievances" | "users" | "wanderers" | "missions" | "leaderboard" | "invoices" | "feedModeration" | "reelsModeration" | "reviewModeration" | "analytics" | "settings" | "configuration" | "emails" | "plans" | "weddings" | "audit" | "testmode" | "docs" | "websiteCms" | "content";
 
 const ADMIN_TAB_KEY = "travelista.admin.activeTab";
 const ADMIN_NAV_KEY = "travelista.admin.navCollapsed";
@@ -807,6 +808,7 @@ const AdminDashboard = () => {
     { id: "missions", label: "Missions", icon: Crosshair, group: "Operations" },
     { id: "grievances", label: "Grievances", icon: MessageSquare, badge: dbGrievances.filter(g => g.status === "open").length, group: "Operations" },
     { id: "feedModeration", label: "Feed Moderation", icon: Shield, badge: dbFeedPosts.filter(p => p.status === "pending").length, group: "Moderation" },
+    { id: "reelsModeration", label: "Reels & Stories", icon: Film, badge: dbFeedPosts.filter(p => (p.reel_status || "pending") === "pending").length, group: "Moderation" },
     { id: "reviewModeration", label: "Review Moderation", icon: Star, badge: flaggedReviews.length, group: "Moderation" },
     { id: "audit", label: "Audit Log", icon: FileText, group: "Operations" },
 
