@@ -8,6 +8,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { hostCompleteness } from "@/lib/hostCompleteness";
+import { CompletenessRing } from "@/components/host/ProfileCompleteness";
 
 type PublicHostData = {
   profile: { id: string; username?: string; full_name: string; city?: string; tagline?: string; bio?: string; avatar_url?: string; cover_url?: string; services?: string[]; specialties?: string[]; languages?: string[]; response_time?: string; years_hosting?: number; social_links?: Record<string, string>; price_per_day?: number; host_since?: string };
@@ -41,6 +43,24 @@ export default function HostProfile() {
     ? data.reviews.reduce((sum, review) => sum + Number(review.rating || 0), 0) / data.reviews.length
     : 0, [data]);
 
+  const completeness = useMemo(() => hostCompleteness({
+    coverUrl: data?.profile.cover_url,
+    avatarUrl: data?.profile.avatar_url,
+    bio: data?.profile.bio,
+    tagline: data?.profile.tagline,
+    city: data?.profile.city,
+    languages: data?.profile.languages,
+    responseTime: data?.profile.response_time,
+    yearsHosting: data?.profile.years_hosting,
+    services: data?.profile.services,
+    specialties: data?.profile.specialties,
+    reelsCount: data?.reels?.length ?? 0,
+    amenitiesCount:
+      (data?.properties ?? []).reduce((sum: number, item: any) => sum + (item.amenities?.length || 0), 0) +
+      (data?.transports ?? []).reduce((sum: number, item: any) => sum + (item.amenities?.length || 0), 0) +
+      (data?.dishes ?? []).reduce((sum: number, item: any) => sum + (item.dietary_tags?.length || 0), 0),
+  }), [data]);
+
   if (loading) return <div className="min-h-screen bg-background"><Navbar /><main className="mx-auto max-w-6xl px-4 pt-28"><Skeleton className="h-56 w-full rounded-lg" /><Skeleton className="mt-6 h-12 w-1/2" /></main></div>;
   if (!data) return <main className="min-h-screen bg-background flex items-center justify-center"><div className="text-center"><h1 className="text-2xl font-bold">Host not found</h1><Link className="mt-3 inline-block text-primary" to="/explore">Back to Explore</Link></div></main>;
 
@@ -71,7 +91,13 @@ export default function HostProfile() {
             <p className="mt-1 flex items-center gap-1 text-muted-foreground"><MapPin className="h-4 w-4" />{profile.city || "Location not added"}</p>
             {profile.tagline && <p className="mt-1 text-muted-foreground">{profile.tagline}</p>}
           </div>
-          <div className="sm:text-right"><p className="text-2xl font-bold">{format(Number(profile.price_per_day || 0))}</p><p className="text-xs text-muted-foreground">per day</p></div>
+          <div className="flex items-center gap-4 sm:flex-col sm:items-end">
+            <div className="sm:text-right"><p className="text-2xl font-bold">{format(Number(profile.price_per_day || 0))}</p><p className="text-xs text-muted-foreground">per day</p></div>
+            <div className="flex items-center gap-2" title="How complete this host profile is" data-testid="host-completeness-badge">
+              <CompletenessRing score={completeness.score} size={44} />
+              <span className="text-xs text-muted-foreground">profile<br />complete</span>
+            </div>
+          </div>
         </div>
 
         <div className="mt-6 flex flex-wrap gap-3">
@@ -79,15 +105,6 @@ export default function HostProfile() {
           <Button variant="outline" onClick={share} className="gap-2"><Share2 className="h-4 w-4" />Share</Button>
           <span className="flex items-center gap-1 text-sm"><Star className="h-4 w-4 fill-primary text-primary" />{rating ? rating.toFixed(1) : "New"} ({reviews.length})</span>
         </div>
-
-        {quickInfo.length > 0 && (
-          <div className="mt-6" data-testid="host-quick-info">
-            <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Quick info</h2>
-            <dl className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
-              {quickInfo.map(item => <div key={item.label} className="rounded-lg border border-border bg-card p-4"><dt className="text-xs text-muted-foreground">{item.label}</dt><dd className="mt-1 font-medium text-foreground">{item.value}</dd></div>)}
-            </dl>
-          </div>
-        )}
 
         <div className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-4">
           {(profile.services || []).map(service => { const Icon = serviceIcons[service] || Compass; return <div key={service} className="rounded-lg border border-border bg-card p-4 text-center"><Icon className="mx-auto h-6 w-6 text-primary" /><p className="mt-2 font-medium">{service}</p></div>; })}
@@ -116,7 +133,21 @@ export default function HostProfile() {
             <ListingSection title="Food menu" empty="No dishes listed." items={dishes} render={(item) => <><p className="font-semibold">{item.name}</p><p className="text-sm text-muted-foreground">{item.cuisine} · {item.meal_type} · {format(Number(item.price_per_plate || 0))}/plate</p><Tags values={item.dietary_tags} /></>} />
             <ListingSection title="Transport" empty="No vehicles listed." items={transports} render={(item) => <><p className="font-semibold">{item.model}</p><p className="text-sm text-muted-foreground">{item.vehicle_type} · {item.capacity} passengers · {format(Number(item.price_per_day || 0))}/day</p><Tags values={item.amenities} /></>} />
           </div>
-          <aside><h2 className="text-xl font-bold">Traveler reviews</h2><div className="mt-3 space-y-3">{reviews.length ? reviews.map(review => <article key={review.id} className="rounded-lg border border-border bg-card p-4"><p className="font-medium">{"★".repeat(Number(review.rating || 0))}</p><p className="mt-2 text-sm text-muted-foreground">{review.text || "Video review"}</p></article>) : <p className="text-sm text-muted-foreground">No reviews yet.</p>}</div></aside>
+          <aside className="space-y-6">
+            {quickInfo.length > 0 && (
+              <div data-testid="host-quick-info" className="rounded-lg border border-border bg-card p-5">
+                <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Quick info</h2>
+                <dl className="mt-3 space-y-2">
+                  {quickInfo.map(item => (
+                    <div key={item.label} className="flex items-start justify-between gap-3 border-b border-border/60 pb-2 last:border-0 last:pb-0">
+                      <dt className="text-xs text-muted-foreground">{item.label}</dt>
+                      <dd className="text-right text-sm font-medium text-foreground">{item.value}</dd>
+                    </div>
+                  ))}
+                </dl>
+              </div>
+            )}
+            <div><h2 className="text-xl font-bold">Traveler reviews</h2><div className="mt-3 space-y-3">{reviews.length ? reviews.map(review => <article key={review.id} className="rounded-lg border border-border bg-card p-4"><p className="font-medium">{"★".repeat(Number(review.rating || 0))}</p><p className="mt-2 text-sm text-muted-foreground">{review.text || "Video review"}</p></article>) : <p className="text-sm text-muted-foreground">No reviews yet.</p>}</div></div></aside>
         </div>
       </section>
     </main>
