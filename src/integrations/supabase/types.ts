@@ -1000,6 +1000,10 @@ export type Database = {
           location: string | null
           media_type: string
           media_url: string
+          reel_review_notes: string | null
+          reel_reviewed_at: string | null
+          reel_reviewed_by: string | null
+          reel_status: string
           removed_at: string | null
           removed_by: string | null
           removed_reason: string | null
@@ -1017,6 +1021,10 @@ export type Database = {
           location?: string | null
           media_type?: string
           media_url: string
+          reel_review_notes?: string | null
+          reel_reviewed_at?: string | null
+          reel_reviewed_by?: string | null
+          reel_status?: string
           removed_at?: string | null
           removed_by?: string | null
           removed_reason?: string | null
@@ -1034,6 +1042,10 @@ export type Database = {
           location?: string | null
           media_type?: string
           media_url?: string
+          reel_review_notes?: string | null
+          reel_reviewed_at?: string | null
+          reel_reviewed_by?: string | null
+          reel_status?: string
           removed_at?: string | null
           removed_by?: string | null
           removed_reason?: string | null
