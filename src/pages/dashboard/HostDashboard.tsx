@@ -451,6 +451,39 @@ const HostDashboard = () => {
     toast({ title: `Invoice ${invoiceNumber} generated! 🧾` });
   };
 
+  // Live count of reels approved for the public page (drives the completeness score).
+  useEffect(() => {
+    if (!user) return;
+    const load = async () => {
+      const { count } = await supabase.from("feed_posts").select("id", { count: "exact", head: true })
+        .eq("user_id", user.id).eq("reel_status", "approved");
+      setApprovedReelCount(count ?? 0);
+    };
+    void load();
+    const channel = supabase.channel(`host-reel-count-${user.id}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "feed_posts", filter: `user_id=eq.${user.id}` }, load)
+      .subscribe();
+    return () => { void supabase.removeChannel(channel); };
+  }, [user]);
+
+  const completeness = useMemo(() => hostCompleteness({
+    coverUrl: hostDbProfile?.cover_url,
+    avatarUrl: hostDbProfile?.avatar_url,
+    bio: hostProfile.bio,
+    tagline: hostProfile.tagline,
+    city: hostProfile.city,
+    languages: hostProfile.languages,
+    responseTime: hostProfile.responseTime,
+    yearsHosting: hostProfile.yearsHosting,
+    services: hostProfile.services,
+    specialties: hostProfile.specialties,
+    reelsCount: approvedReelCount,
+    amenitiesCount:
+      customProperties.reduce((sum, item: any) => sum + (item.amenities?.length || 0), 0) +
+      customVehicles.reduce((sum, item: any) => sum + (item.amenities?.length || 0), 0) +
+      customDishes.reduce((sum, item: any) => sum + (item.dietary_tags?.length || 0), 0),
+  }), [hostDbProfile, hostProfile, approvedReelCount, customProperties, customVehicles, customDishes]);
+
   const tabs: { id: Tab; label: string; icon: React.ElementType }[] = [
     { id: "overview", label: "Overview", icon: BarChart3 },
     { id: "bookings", label: "Bookings", icon: Calendar },
