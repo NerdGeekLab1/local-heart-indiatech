@@ -8,6 +8,8 @@ interface AuthContextType {
   loading: boolean;
   userRole: string | null;
   userRoles: string[];
+  /** True once a role lookup has settled for the signed-in user (even if it returned nothing). */
+  roleLoaded: boolean;
   refreshRole: () => Promise<string | null>;
   signUp: (email: string, password: string, metadata?: Record<string, any>) => Promise<any>;
   signIn: (email: string, password: string) => Promise<any>;
@@ -24,18 +26,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState(true);
   const [userRole, setUserRole] = useState<string | null>(null);
   const [userRoles, setUserRoles] = useState<string[]>([]);
+  const [roleLoaded, setRoleLoaded] = useState(false);
 
   const fetchRole = async (userId: string) => {
     const { data, error } = await supabase.rpc("get_my_role");
     if (error) {
       setUserRole(null);
       setUserRoles([]);
+      setRoleLoaded(true);
       return null;
     }
     const roles = data ? [data] : [];
     setUserRoles(roles);
     const role = roles[0] ?? null;
     setUserRole(role);
+    setRoleLoaded(true);
     return role;
   };
 
@@ -50,6 +55,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       if (!nextSession?.user) {
         setUserRole(null);
         setUserRoles([]);
+        setRoleLoaded(true);
         setLoading(false);
         return;
       }
@@ -69,7 +75,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         // Only show loading on real sign-in / initial hydrate; skip token refreshes to avoid flicker
         const isFreshAuth = event === "SIGNED_IN" || event === "INITIAL_SESSION" || event === "USER_UPDATED";
         if (isFreshAuth) setLoading(true);
-        if (isFreshAuth) setUserRole(null);
+        if (isFreshAuth) { setUserRole(null); setRoleLoaded(false); }
         setTimeout(async () => {
           try {
             await fetchRole(session.user.id);
@@ -80,6 +86,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       } else {
         setUserRole(null);
         setUserRoles([]);
+        setRoleLoaded(true);
         setLoading(false);
       }
     });
@@ -144,12 +151,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setSession(null);
     setUserRole(null);
     setUserRoles([]);
+    setRoleLoaded(true);
   };
 
   const refreshRole = async () => user ? fetchRole(user.id) : null;
 
   return (
-    <AuthContext.Provider value={{ user, session, loading, userRole, userRoles, signUp, signIn, signOut, refreshRole }}>
+    <AuthContext.Provider value={{ user, session, loading, userRole, userRoles, roleLoaded, signUp, signIn, signOut, refreshRole }}>
       {children}
     </AuthContext.Provider>
   );

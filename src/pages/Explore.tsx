@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useDbHosts } from "@/hooks/use-db-hosts";
+import { hostMatchScore, tagLabel, tagMatchCount, toTagSlug, toTagSlugs } from "@/lib/hostTags";
 
 const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 const PAGE_SIZE = 9;
@@ -26,7 +27,9 @@ const Explore = () => {
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
 
   const cities = useMemo(() => [...new Set(hosts.map(h => h.city).filter(Boolean))] as string[], [hosts]);
-  const allExpertise = useMemo(() => [...new Set(hosts.flatMap(h => h.specialties))].sort(), [hosts]);
+  // Expertise and tag filters run on canonical slugs so "Local Guide" and "local-guide" match.
+  const allExpertise = useMemo(() => toTagSlugs(hosts.flatMap(h => h.specialties)).sort(), [hosts]);
+  const allServices = useMemo(() => toTagSlugs(hosts.flatMap(h => h.services)).sort(), [hosts]);
   const toggleExpertise = (e: string) => setSelectedExpertise(prev => prev.includes(e) ? prev.filter(x => x !== e) : [...prev, e]);
   const toggleTag = (t: string) => setSelectedTags(prev => prev.includes(t) ? prev.filter(x => x !== t) : [...prev, t]);
 
@@ -41,18 +44,26 @@ const Explore = () => {
     setSearchQuery("");
   };
 
+  const selectedSlugs = useMemo(
+    () => Array.from(new Set([...selectedExpertise, ...selectedTags, ...(activeVibe ? [toTagSlug(activeVibe)] : [])])),
+    [selectedExpertise, selectedTags, activeVibe],
+  );
+
   const filteredHosts = useMemo(() => {
-    return hosts.filter(h => {
+    const matched = hosts.filter(h => {
       const matchesSearch = !searchQuery || h.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         (h.city || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
         (h.bio || "").toLowerCase().includes(searchQuery.toLowerCase());
+      const hostSlugs = new Set([...toTagSlugs(h.specialties), ...toTagSlugs(h.services)]);
       const matchesCity = !selectedCity || h.city === selectedCity;
-      const matchesExpertise = selectedExpertise.length === 0 || selectedExpertise.every(tag => h.specialties.includes(tag));
-      const matchesTags = selectedTags.length === 0 || selectedTags.some(tag => h.specialties.includes(tag));
-      const matchesVibe = !activeVibe || h.specialties.includes(activeVibe) || h.services.includes(activeVibe);
+      const matchesExpertise = selectedExpertise.length === 0 || selectedExpertise.every(slug => hostSlugs.has(slug));
+      const matchesTags = selectedTags.length === 0 || selectedTags.some(slug => hostSlugs.has(slug));
+      const matchesVibe = !activeVibe || hostSlugs.has(toTagSlug(activeVibe));
       return matchesSearch && matchesCity && matchesExpertise && matchesTags && matchesVibe;
     });
-  }, [hosts, searchQuery, selectedCity, selectedExpertise, selectedTags, activeVibe]);
+    // Rank overlapping interests first, then rating / social proof.
+    return [...matched].sort((a, b) => hostMatchScore(b, selectedSlugs) - hostMatchScore(a, selectedSlugs));
+  }, [hosts, searchQuery, selectedCity, selectedExpertise, selectedTags, activeVibe, selectedSlugs]);
   const pageCount = Math.max(1, Math.ceil(filteredHosts.length / PAGE_SIZE));
   const safePage = Math.min(page, pageCount - 1);
   const pagedHosts = filteredHosts.slice(safePage * PAGE_SIZE, (safePage + 1) * PAGE_SIZE);
@@ -145,11 +156,28 @@ const Explore = () => {
                     {allExpertise.map(e => (
                       <button key={e} onClick={() => toggleExpertise(e)}
                         className={`rounded-full px-3 py-1.5 text-xs font-medium transition-all ${selectedExpertise.includes(e) ? "bg-accent text-accent-foreground" : "bg-secondary text-secondary-foreground hover:bg-secondary/80"}`}>
-                        {e}
+                        {tagLabel(e)}
                       </button>
                     ))}
                   </div>
                 </div>
+
+                {/* Services */}
+                {allServices.length > 0 && (
+                  <div>
+                    <h4 className="text-sm font-bold text-foreground mb-3 flex items-center gap-2">
+                      <Tag className="w-4 h-4 text-primary" /> Services offered
+                    </h4>
+                    <div className="flex flex-wrap gap-2">
+                      {allServices.map(service => (
+                        <button key={service} onClick={() => toggleTag(service)}
+                          className={`rounded-full px-3 py-1.5 text-xs font-medium transition-all ${selectedTags.includes(service) ? "bg-primary text-primary-foreground" : "bg-secondary text-secondary-foreground hover:bg-secondary/80"}`}>
+                          {tagLabel(service)}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
                 {/* Explorer & Travel Tags */}
                 <div>
@@ -158,8 +186,8 @@ const Explore = () => {
                   </h4>
                   <div className="flex flex-wrap gap-2">
                     {specialTags.map(t => (
-                      <button key={t} onClick={() => toggleTag(t)}
-                        className={`rounded-full px-3 py-1.5 text-xs font-medium transition-all ${selectedTags.includes(t) ? "bg-primary text-primary-foreground" : "bg-secondary text-secondary-foreground hover:bg-secondary/80"}`}>
+                      <button key={t} onClick={() => toggleTag(toTagSlug(t))}
+                        className={`rounded-full px-3 py-1.5 text-xs font-medium transition-all ${selectedTags.includes(toTagSlug(t)) ? "bg-primary text-primary-foreground" : "bg-secondary text-secondary-foreground hover:bg-secondary/80"}`}>
                         🏷️ {t}
                       </button>
                     ))}
@@ -175,8 +203,8 @@ const Explore = () => {
           <div className="mt-4 flex flex-wrap gap-2">
             {selectedCity && <Badge variant="secondary" className="gap-1">📍 {selectedCity} <X className="w-3 h-3 cursor-pointer" onClick={() => setSelectedCity(null)} /></Badge>}
             {selectedMonth && <Badge variant="secondary" className="gap-1">📅 {selectedMonth} <X className="w-3 h-3 cursor-pointer" onClick={() => setSelectedMonth(null)} /></Badge>}
-            {selectedExpertise.map(e => <Badge key={e} variant="secondary" className="gap-1">🏅 {e} <X className="w-3 h-3 cursor-pointer" onClick={() => toggleExpertise(e)} /></Badge>)}
-            {selectedTags.map(t => <Badge key={t} variant="secondary" className="gap-1">🏷️ {t} <X className="w-3 h-3 cursor-pointer" onClick={() => toggleTag(t)} /></Badge>)}
+            {selectedExpertise.map(e => <Badge key={e} variant="secondary" className="gap-1">🏅 {tagLabel(e)} <X className="w-3 h-3 cursor-pointer" onClick={() => toggleExpertise(e)} /></Badge>)}
+            {selectedTags.map(t => <Badge key={t} variant="secondary" className="gap-1">🏷️ {tagLabel(t)} <X className="w-3 h-3 cursor-pointer" onClick={() => toggleTag(t)} /></Badge>)}
             {activeVibe && <Badge variant="secondary" className="gap-1">✨ {activeVibe} <X className="w-3 h-3 cursor-pointer" onClick={() => setActiveVibe(null)} /></Badge>}
           </div>
         )}
@@ -200,13 +228,23 @@ const Explore = () => {
 
         {/* Results Count */}
         <div className="mt-6 flex items-center justify-between">
-          <p className="text-sm text-muted-foreground">{filteredHosts.length} host{filteredHosts.length !== 1 ? "s" : ""} found</p>
+          <p className="text-sm text-muted-foreground">
+            {filteredHosts.length} host{filteredHosts.length !== 1 ? "s" : ""} found
+            {selectedSlugs.length > 0 && <span> · ranked by tag match</span>}
+          </p>
         </div>
 
         {/* Grid */}
         <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {loading ? Array.from({ length: 6 }, (_, i) => <Skeleton key={i} className="aspect-[4/5] w-full rounded-lg" />) : pagedHosts.map((host, i) => (
-            <HostCard key={host.id} profilePath={host.username || host.id} host={{ id: host.id, name: host.name, city: host.city || "", bio: host.bio || "", image: host.avatar_url || "/placeholder.svg", rating: host.rating, reviewCount: host.reviewCount, verified: true, tagline: host.tagline || (host.experiencesCount ? `${host.experiencesCount} approved experiences` : "Verified local host"), specialties: host.specialties, languages: host.languages, services: host.services, pricePerDay: host.pricePerDay, safetyScore: 0, responseTime: host.responseTime, expertiseTags: host.specialties }} index={i} />
+            <div key={host.id} className="relative">
+              {selectedSlugs.length > 0 && tagMatchCount(host, selectedSlugs) > 0 && (
+                <span className="absolute right-3 top-3 z-10 rounded-full bg-accent px-2 py-0.5 text-[10px] font-bold text-accent-foreground shadow-card">
+                  {tagMatchCount(host, selectedSlugs)}/{selectedSlugs.length} match
+                </span>
+              )}
+              <HostCard profilePath={host.username || host.id} host={{ id: host.id, name: host.name, city: host.city || "", bio: host.bio || "", image: host.avatar_url || "/placeholder.svg", rating: host.rating, reviewCount: host.reviewCount, verified: true, tagline: host.tagline || (host.experiencesCount ? `${host.experiencesCount} approved experiences` : "Verified local host"), specialties: host.specialties, languages: host.languages, services: host.services, pricePerDay: host.pricePerDay, safetyScore: 0, responseTime: host.responseTime, expertiseTags: host.specialties }} index={i} />
+            </div>
           ))}
         </div>
 

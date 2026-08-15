@@ -20,11 +20,15 @@ const Spinner = () => (
  * account to its one permitted dashboard.
  */
 export default function RequireAuth({ children, role }: RequireAuthProps) {
-  const { user, userRole, userRoles, loading } = useAuth();
+  const { user, userRole, userRoles, loading, roleLoaded } = useAuth();
   const location = useLocation();
-  const hasRole = !role || userRole === role || userRoles.includes(role) || userRole === "admin";
+  // A signed-in account with no role row yet is treated as a traveler so the
+  // guard can never bounce between two dashboards forever.
+  const effectiveRole = userRole ?? "traveler";
+  const hasRole = !role || effectiveRole === role || userRoles.includes(role) || effectiveRole === "admin";
 
-  if (loading || (user && userRole === null)) return <Spinner />;
+  // Spin only until the role lookup settles — never forever when a user has no role row.
+  if (loading || (user && !roleLoaded)) return <Spinner />;
 
   if (!user) {
     const next = encodeURIComponent(location.pathname + location.search);
@@ -33,8 +37,9 @@ export default function RequireAuth({ children, role }: RequireAuthProps) {
   }
 
   if (!hasRole) {
-    return <Navigate to={userRole === "host" ? "/dashboard/host" : "/dashboard/traveler"} replace />;
+    return <Navigate to={effectiveRole === "host" ? "/dashboard/host" : "/dashboard/traveler"} replace />;
   }
+
 
   return <>{children}</>;
 }
