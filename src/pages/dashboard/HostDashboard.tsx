@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
@@ -83,6 +83,7 @@ const HostDashboard = () => {
   const { user } = useAuth();
   const [hostBookings, setHostBookings] = useState<any[]>([]);
   const [approvedReelCount, setApprovedReelCount] = useState(0);
+  const [settingsSection, setSettingsSection] = useState<"profile" | "media" | "social" | "preferences">("profile");
   const totalEarnings = hostBookings.reduce((sum: number, b: any) => sum + Number(b.total_price || 0), 0);
 
   const [hostProfile, setHostProfile] = useState({
@@ -1218,8 +1219,22 @@ const HostDashboard = () => {
 
         {activeTab === "settings" && (
           <div className="mt-6 space-y-6 max-w-xl">
-            <h2 className="text-xl font-bold text-foreground mb-4">Host Settings</h2>
-            <div className="rounded-lg bg-card p-5 shadow-card space-y-4">
+            <h2 className="text-xl font-bold text-foreground">Host Settings</h2>
+            {/* Sub-tabs keep the long settings form scannable */}
+            <div className="flex flex-wrap gap-2">
+              {([
+                { id: "profile", label: "Profile" },
+                { id: "media", label: "Media & public page" },
+                { id: "social", label: "Social" },
+                { id: "preferences", label: "Preferences" },
+              ] as const).map(section => (
+                <button key={section.id} onClick={() => setSettingsSection(section.id)}
+                  className={`rounded-full px-3 py-1.5 text-xs font-semibold transition-colors ${settingsSection === section.id ? "bg-primary text-primary-foreground" : "bg-secondary text-secondary-foreground hover:bg-secondary/80"}`}>
+                  {section.label}
+                </button>
+              ))}
+            </div>
+            <div className={`rounded-lg bg-card p-5 shadow-card space-y-4 ${settingsSection === "profile" ? "" : "hidden"}`}>
               <h3 className="font-bold text-foreground flex items-center gap-2"><Settings className="w-4 h-4 text-primary" /> Profile</h3>
               <div className="flex items-center gap-4 mb-2">
                 <ImageUpload
@@ -1299,7 +1314,7 @@ const HostDashboard = () => {
               }}><Save className="w-4 h-4" /> Save profile</Button>
             </div>
 
-            <div className="rounded-lg bg-card p-5 shadow-card space-y-3">
+            <div className={`rounded-lg bg-card p-5 shadow-card space-y-3 ${settingsSection === "media" ? "" : "hidden"}`}>
               <h3 className="font-bold text-foreground flex items-center gap-2"><Tag className="w-4 h-4 text-primary" /> Cover photo</h3>
               <p className="text-sm text-muted-foreground">Shown as the banner on your public host page.</p>
               <ImageUpload
@@ -1316,7 +1331,7 @@ const HostDashboard = () => {
               />
             </div>
 
-            <div className="rounded-lg bg-card p-5 shadow-card space-y-3">
+            <div className={`rounded-lg bg-card p-5 shadow-card space-y-3 ${settingsSection === "media" ? "" : "hidden"}`}>
               <h3 className="font-bold text-foreground flex items-center gap-2"><Heart className="w-4 h-4 text-primary" /> Reels &amp; Stories</h3>
               <p className="text-sm text-muted-foreground">Posts you share on the feed appear in the Reels &amp; Stories section of your public host page.</p>
               <Button size="sm" variant="outline" className="rounded-full gap-2 text-xs" onClick={() => setActiveTab("reels")}>
@@ -1324,7 +1339,7 @@ const HostDashboard = () => {
               </Button>
             </div>
 
-            <div className="rounded-lg bg-card p-5 shadow-card space-y-3">
+            <div className={`rounded-lg bg-card p-5 shadow-card space-y-3 ${settingsSection === "media" ? "" : "hidden"}`}>
               <h3 className="font-bold text-foreground flex items-center gap-2"><Eye className="w-4 h-4 text-primary" /> Public page</h3>
               <p className="text-sm text-muted-foreground">This is what travelers see. Share it to get direct bookings.</p>
               <div className="flex items-center gap-2 rounded-md border border-border bg-secondary/30 px-3 py-2">
@@ -1336,7 +1351,7 @@ const HostDashboard = () => {
               </Button>
             </div>
 
-            <div className="rounded-lg bg-card p-5 shadow-card space-y-4">
+            <div className={`rounded-lg bg-card p-5 shadow-card space-y-4 ${settingsSection === "social" ? "" : "hidden"}`}>
               <h3 className="font-bold text-foreground flex items-center gap-2"><Globe className="w-4 h-4 text-primary" /> Social profiles</h3>
               <div className="space-y-3">
                 {([
@@ -1368,7 +1383,7 @@ const HostDashboard = () => {
               }}><Save className="w-4 h-4" /> Save socials</Button>
             </div>
 
-            <div className="rounded-lg bg-card p-5 shadow-card space-y-4">
+            <div className={`rounded-lg bg-card p-5 shadow-card space-y-4 ${settingsSection === "preferences" ? "" : "hidden"}`}>
               <h3 className="font-bold text-foreground flex items-center gap-2"><Bell className="w-4 h-4 text-primary" /> Notifications & visibility</h3>
               <div className="space-y-1">
                 {([
