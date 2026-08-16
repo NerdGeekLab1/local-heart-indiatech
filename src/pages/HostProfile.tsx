@@ -118,7 +118,7 @@ export default function HostProfile() {
               {reels.length ? (
                 <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3">
                   {reels.map((reel: any) => (
-                    <figure key={reel.id} className="overflow-hidden rounded-lg border border-border bg-card">
+                    <figure key={reel.id} data-reel-id={reel.id} className="overflow-hidden rounded-lg border border-border bg-card">
                       {reel.media_type === "video"
                         ? <video src={reel.media_url} controls playsInline preload="metadata" className="aspect-[9/16] w-full object-cover" />
                         : <img src={reel.media_url} alt={reel.caption || "Host story"} loading="lazy" className="aspect-[9/16] w-full object-cover" />}
