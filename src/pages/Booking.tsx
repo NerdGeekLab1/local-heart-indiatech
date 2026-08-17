@@ -117,6 +117,17 @@ const Booking = () => {
     );
   }
 
+  if (hostLoading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navbar />
+        <div className="mx-auto max-w-5xl px-4 pt-28">
+          <div className="h-40 animate-pulse rounded-2xl bg-secondary" />
+        </div>
+      </div>
+    );
+  }
+
   if (!host) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
