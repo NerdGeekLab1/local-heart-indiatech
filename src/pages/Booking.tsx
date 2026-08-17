@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useParams, useSearchParams, Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
@@ -41,13 +41,48 @@ const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
 const Booking = () => {
   const { id } = useParams();
   const [searchParams] = useSearchParams();
-  const host = hosts.find(h => h.id === id);
+  const mockHost = hosts.find(h => h.id === id);
   const { user } = useAuth();
   const { toast } = useToast();
   const { format: formatCurrency } = useCurrency();
   const navigate = useNavigate();
 
-  const isRealHost = !!id && UUID_RE.test(id);
+  // Real hosts live in the database and are resolved by uuid or username slug.
+  const [dbHost, setDbHost] = useState<typeof mockHost | null>(null);
+  const [hostLoading, setHostLoading] = useState(!mockHost);
+
+  useEffect(() => {
+    if (!id || mockHost) { setHostLoading(false); return; }
+    let active = true;
+    setHostLoading(true);
+    supabase.rpc("get_public_host", { _identifier: id }).then(({ data }) => {
+      if (!active) return;
+      const result = data as any;
+      const profile = result?.profile;
+      if (profile) {
+        const reviews = result?.reviews ?? [];
+        const rating = reviews.length
+          ? reviews.reduce((sum: number, r: any) => sum + Number(r.rating || 0), 0) / reviews.length
+          : 0;
+        setDbHost({
+          id: profile.id,
+          name: profile.full_name || "Host",
+          city: profile.city || "",
+          image: profile.avatar_url || "/placeholder.svg",
+          rating: rating ? Number(rating.toFixed(1)) : 0,
+          services: profile.services ?? [],
+        } as any);
+      } else {
+        setDbHost(null);
+      }
+      setHostLoading(false);
+    });
+    return () => { active = false; };
+  }, [id, mockHost]);
+
+  const host = mockHost ?? dbHost;
+  const isRealHost = !!host && UUID_RE.test(host.id);
+
 
   const [step, setStep] = useState(1);
   const [selectedServices, setSelectedServices] = useState<string[]>(
