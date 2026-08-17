@@ -269,7 +269,7 @@ const Booking = () => {
                   <h2 className="text-2xl font-bold text-foreground">Select Services</h2>
                   <p className="mt-1 text-muted-foreground">Choose what you'd like — each has individual pricing</p>
                   <div className="mt-6 space-y-3">
-                    {serviceOptions.filter(s => host.services.includes(s.key)).map(s => (
+                    {serviceOptions.filter(s => !host.services?.length || host.services.includes(s.key)).map(s => (
                       <button key={s.key} onClick={() => toggleService(s.key)}
                         className={`w-full flex items-center gap-4 rounded-xl p-4 text-left transition-all border ${
                           selectedServices.includes(s.key) ? "border-primary bg-primary/5 shadow-card" : "border-border bg-card hover:border-primary/30"
