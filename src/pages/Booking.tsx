@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useParams, useSearchParams, Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
@@ -41,13 +41,48 @@ const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
 const Booking = () => {
   const { id } = useParams();
   const [searchParams] = useSearchParams();
-  const host = hosts.find(h => h.id === id);
+  const mockHost = hosts.find(h => h.id === id);
   const { user } = useAuth();
   const { toast } = useToast();
   const { format: formatCurrency } = useCurrency();
   const navigate = useNavigate();
 
-  const isRealHost = !!id && UUID_RE.test(id);
+  // Real hosts live in the database and are resolved by uuid or username slug.
+  const [dbHost, setDbHost] = useState<typeof mockHost | null>(null);
+  const [hostLoading, setHostLoading] = useState(!mockHost);
+
+  useEffect(() => {
+    if (!id || mockHost) { setHostLoading(false); return; }
+    let active = true;
+    setHostLoading(true);
+    supabase.rpc("get_public_host", { _identifier: id }).then(({ data }) => {
+      if (!active) return;
+      const result = data as any;
+      const profile = result?.profile;
+      if (profile) {
+        const reviews = result?.reviews ?? [];
+        const rating = reviews.length
+          ? reviews.reduce((sum: number, r: any) => sum + Number(r.rating || 0), 0) / reviews.length
+          : 0;
+        setDbHost({
+          id: profile.id,
+          name: profile.full_name || "Host",
+          city: profile.city || "",
+          image: profile.avatar_url || "/placeholder.svg",
+          rating: rating ? Number(rating.toFixed(1)) : 0,
+          services: profile.services ?? [],
+        } as any);
+      } else {
+        setDbHost(null);
+      }
+      setHostLoading(false);
+    });
+    return () => { active = false; };
+  }, [id, mockHost]);
+
+  const host = mockHost ?? dbHost;
+  const isRealHost = !!host && UUID_RE.test(host.id);
+
 
   const [step, setStep] = useState(1);
   const [selectedServices, setSelectedServices] = useState<string[]>(
@@ -78,6 +113,17 @@ const Booking = () => {
           </motion.div>
         </div>
         <Footer />
+      </div>
+    );
+  }
+
+  if (hostLoading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navbar />
+        <div className="mx-auto max-w-5xl px-4 pt-28">
+          <div className="h-40 animate-pulse rounded-2xl bg-secondary" />
+        </div>
       </div>
     );
   }
@@ -223,7 +269,7 @@ const Booking = () => {
                   <h2 className="text-2xl font-bold text-foreground">Select Services</h2>
                   <p className="mt-1 text-muted-foreground">Choose what you'd like — each has individual pricing</p>
                   <div className="mt-6 space-y-3">
-                    {serviceOptions.filter(s => host.services.includes(s.key)).map(s => (
+                    {serviceOptions.filter(s => !host.services?.length || host.services.includes(s.key)).map(s => (
                       <button key={s.key} onClick={() => toggleService(s.key)}
                         className={`w-full flex items-center gap-4 rounded-xl p-4 text-left transition-all border ${
                           selectedServices.includes(s.key) ? "border-primary bg-primary/5 shadow-card" : "border-border bg-card hover:border-primary/30"
