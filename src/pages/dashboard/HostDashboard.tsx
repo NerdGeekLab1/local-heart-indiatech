@@ -87,6 +87,34 @@ const HostDashboard = () => {
   const [hostBookings, setHostBookings] = useState<any[]>([]);
   const [approvedReelCount, setApprovedReelCount] = useState(0);
   const [openBooking, setOpenBooking] = useState<any | null>(null);
+  const [savingAll, setSavingAll] = useState(false);
+
+  /** Persists every settings section in one write so the public preview always matches the editor. */
+  const saveAllSettings = async () => {
+    if (!user) return;
+    setSavingAll(true);
+    const names = hostProfile.name.trim().split(" ");
+    const { error } = await supabase.from("profiles").upsert({
+      id: user.id,
+      first_name: names[0] || "",
+      last_name: names.slice(1).join(" ") || "",
+      username: hostProfile.username || null,
+      city: hostProfile.city,
+      tagline: hostProfile.tagline,
+      bio: hostProfile.bio,
+      services: hostProfile.services,
+      specialties: hostProfile.specialties,
+      languages: hostProfile.languages,
+      response_time: hostProfile.responseTime || null,
+      years_hosting: hostProfile.yearsHosting || 0,
+      price_per_day: hostProfile.pricePerDay,
+      social_links: socialMedia,
+      is_public: notifPrefs.publicProfile,
+    }, { onConflict: "id" });
+    setSavingAll(false);
+    if (error) { toast({ title: "Couldn't save settings", description: error.message, variant: "destructive" }); return; }
+    toast({ title: "All settings saved ✅", description: "Your public host page is updated." });
+  };
   const [settingsSection, setSettingsSection] = useState<"profile" | "media" | "social" | "preferences">("profile");
   const totalEarnings = hostBookings.reduce((sum: number, b: any) => sum + Number(b.total_price || 0), 0);
 
@@ -1464,6 +1492,21 @@ const HostDashboard = () => {
                 ))}
               </div>
                <Button size="sm" className="rounded-full gap-2" onClick={async () => { if (!user) return; const { error } = await supabase.from("profiles").update({ is_public: notifPrefs.publicProfile }).eq("id", user.id); if (error) toast({ title: "Couldn't save visibility", description: error.message, variant: "destructive" }); else toast({ title: "Preferences saved ✅" }); }}><Save className="w-4 h-4" /> Save preferences</Button>
+            </div>
+
+            {/* Always-visible live save bar so no edit is lost between sub-tabs */}
+            <div className="sticky bottom-4 z-20 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-primary/30 bg-card/95 p-3 shadow-elevated backdrop-blur">
+              <p className="text-xs text-muted-foreground">Saves profile, socials and visibility together.</p>
+              <div className="flex items-center gap-2">
+                {hostProfile.username && (
+                  <Button asChild size="sm" variant="outline" className="rounded-full gap-2">
+                    <a href={`/host/${hostProfile.username}`} target="_blank" rel="noreferrer"><Eye className="h-4 w-4" /> Public preview</a>
+                  </Button>
+                )}
+                <Button size="sm" className="rounded-full gap-2" disabled={savingAll} onClick={saveAllSettings} data-testid="host-save-all">
+                  <Save className="h-4 w-4" /> {savingAll ? "Saving..." : "Save all changes"}
+                </Button>
+              </div>
             </div>
           </div>
         )}
