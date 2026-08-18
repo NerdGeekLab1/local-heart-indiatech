@@ -238,7 +238,7 @@ const Booking = () => {
               {startDate && endDate && <p className="text-sm"><strong>Dates:</strong> {format(startDate, "PPP")} – {format(endDate, "PPP")}</p>}
               <p className="text-sm"><strong>Guests:</strong> {guests}</p>
               {selectedSpecialRequests.length > 0 && (
-                <p className="text-sm"><strong>Special Requests:</strong> {selectedSpecialRequests.map(id => specialRequests.find(s => s.id === id)?.label).join(", ")}</p>
+                <p className="text-sm"><strong>Special Requests:</strong> {chosenAddons.map(addon => addon.name).join(", ")}</p>
               )}
               <p className="text-sm font-semibold"><strong>Total:</strong> {formatCurrency(total)}</p>
             </div>
