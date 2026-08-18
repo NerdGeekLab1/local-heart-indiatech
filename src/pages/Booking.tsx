@@ -353,15 +353,19 @@ const Booking = () => {
               {step === 3 && (
                 <div>
                   <h2 className="text-2xl font-bold text-foreground">Special Requests</h2>
-                  <p className="mt-1 text-muted-foreground">Add extras to make your trip special (+{formatCurrency(15)} each)</p>
-                  <div className="mt-6 grid grid-cols-2 sm:grid-cols-4 gap-3">
-                    {specialRequests.map(sr => (
+                  <p className="mt-1 text-muted-foreground">
+                    {hostAddons.length ? `Extras ${host.name} offers — each priced by the host` : `${host.name} hasn't published any add-ons yet.`}
+                  </p>
+                  <div className="mt-6 grid grid-cols-2 sm:grid-cols-4 gap-3" data-testid="booking-addons">
+                    {hostAddons.map(sr => (
                       <button key={sr.id} onClick={() => toggleSpecialRequest(sr.id)}
+                        title={sr.description || undefined}
                         className={`flex flex-col items-center gap-2 p-4 rounded-xl border transition-all ${
                           selectedSpecialRequests.includes(sr.id) ? "border-primary bg-primary/5 shadow-card" : "border-border bg-card hover:border-primary/30"
                         }`}>
                         <span className="text-2xl">{sr.emoji}</span>
-                        <span className="text-xs font-medium text-foreground text-center">{sr.label}</span>
+                        <span className="text-xs font-medium text-foreground text-center">{sr.name}</span>
+                        <span className="text-xs font-semibold text-primary">{formatCurrency(sr.price)}</span>
                         {selectedSpecialRequests.includes(sr.id) && (
                           <Check className="w-4 h-4 text-primary" />
                         )}
@@ -369,6 +373,7 @@ const Booking = () => {
                     ))}
                   </div>
                 </div>
+
               )}
 
               {step === 4 && (
