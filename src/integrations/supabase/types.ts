@@ -207,6 +207,7 @@ export type Database = {
           id: string
           message: string | null
           services: string[] | null
+          special_requests: string[]
           start_date: string
           status: string | null
           total_price: number
@@ -221,6 +222,7 @@ export type Database = {
           id?: string
           message?: string | null
           services?: string[] | null
+          special_requests?: string[]
           start_date: string
           status?: string | null
           total_price?: number
@@ -235,6 +237,7 @@ export type Database = {
           id?: string
           message?: string | null
           services?: string[] | null
+          special_requests?: string[]
           start_date?: string
           status?: string | null
           total_price?: number
@@ -1161,6 +1164,42 @@ export type Database = {
           },
         ]
       }
+      host_addons: {
+        Row: {
+          created_at: string
+          description: string | null
+          emoji: string
+          host_id: string
+          id: string
+          is_active: boolean
+          name: string
+          price: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          emoji?: string
+          host_id: string
+          id?: string
+          is_active?: boolean
+          name: string
+          price?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          emoji?: string
+          host_id?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          price?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       host_applications: {
         Row: {
           admin_notes: string | null
@@ -1629,6 +1668,7 @@ export type Database = {
           last_name: string | null
           nationality: string | null
           phone: string | null
+          presence_status: string
           price_per_day: number
           response_time: string | null
           services: string[]
@@ -1656,6 +1696,7 @@ export type Database = {
           last_name?: string | null
           nationality?: string | null
           phone?: string | null
+          presence_status?: string
           price_per_day?: number
           response_time?: string | null
           services?: string[]
@@ -1683,6 +1724,7 @@ export type Database = {
           last_name?: string | null
           nationality?: string | null
           phone?: string | null
+          presence_status?: string
           price_per_day?: number
           response_time?: string | null
           services?: string[]

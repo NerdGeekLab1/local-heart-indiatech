@@ -18,23 +18,21 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { useCurrency } from "@/contexts/CurrencyContext";
 
-const serviceOptions = [
-  { key: "Guide", label: "Local Guide", desc: "Personalized tours & experiences", icon: "🧭", price: 40 },
-  { key: "Stay", label: "Homestay", desc: "Authentic local accommodation", icon: "🏡", price: 35 },
-  { key: "Transport", label: "Transport", desc: "Vehicle with host as driver", icon: "🚗", price: 50 },
-  { key: "Food", label: "Food & Dining", desc: "Home-cooked meals & food experiences", icon: "🍛", price: 20 },
+/** Service catalogue — prices are always derived from the host's own live listings. */
+const serviceCatalogue = [
+  { key: "Guide", label: "Local Guide", desc: "Personalized tours & experiences", icon: "🧭" },
+  { key: "Stay", label: "Homestay", desc: "Authentic local accommodation", icon: "🏡" },
+  { key: "Transport", label: "Transport", desc: "Vehicle with host as driver", icon: "🚗" },
+  { key: "Food", label: "Food & Dining", desc: "Home-cooked meals & food experiences", icon: "🍛" },
 ];
 
-const specialRequests = [
-  { id: "wipe_tissues", label: "Wipe Tissues", emoji: "🧻" },
-  { id: "wine", label: "Wine Bottle", emoji: "🍷" },
-  { id: "cake", label: "Birthday Cake", emoji: "🎂" },
-  { id: "flowers", label: "Flower Bouquet", emoji: "💐" },
-  { id: "candles", label: "Candle Light Setup", emoji: "🕯️" },
-  { id: "snacks", label: "Snack Pack", emoji: "🍿" },
-  { id: "first_aid", label: "First Aid Kit", emoji: "🩹" },
-  { id: "photography", label: "Photography", emoji: "📸" },
-];
+type HostAddon = { id: string; name: string; emoji: string; description?: string | null; price: number };
+
+const minPrice = (rows: any[] | undefined, field: string) => {
+  const values = (rows || []).map(row => Number(row?.[field] || 0)).filter(value => value > 0);
+  return values.length ? Math.min(...values) : 0;
+};
+
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -50,6 +48,9 @@ const Booking = () => {
   // Real hosts live in the database and are resolved by uuid or username slug.
   const [dbHost, setDbHost] = useState<typeof mockHost | null>(null);
   const [hostLoading, setHostLoading] = useState(!mockHost);
+  /** Live prices + add-ons published by this host. */
+  const [hostRates, setHostRates] = useState<Record<string, number>>({});
+  const [hostAddons, setHostAddons] = useState<HostAddon[]>([]);
 
   useEffect(() => {
     if (!id || mockHost) { setHostLoading(false); return; }
@@ -72,6 +73,13 @@ const Booking = () => {
           rating: rating ? Number(rating.toFixed(1)) : 0,
           services: profile.services ?? [],
         } as any);
+        setHostRates({
+          Guide: Number(profile.price_per_day || 0),
+          Stay: minPrice(result?.properties, "nightly_rate"),
+          Transport: minPrice(result?.transports, "price_per_day"),
+          Food: minPrice(result?.dishes, "price_per_plate"),
+        });
+        setHostAddons((result?.addons ?? []).map((addon: any) => ({ ...addon, price: Number(addon.price || 0) })));
       } else {
         setDbHost(null);
       }
@@ -82,6 +90,11 @@ const Booking = () => {
 
   const host = mockHost ?? dbHost;
   const isRealHost = !!host && UUID_RE.test(host.id);
+  /** Only services the host actually priced can be booked. */
+  const serviceOptions = serviceCatalogue
+    .map(service => ({ ...service, price: hostRates[service.key] ?? 0 }))
+    .filter(service => service.price > 0);
+
 
 
   const [step, setStep] = useState(1);
@@ -154,7 +167,9 @@ const Booking = () => {
     const opt = serviceOptions.find(o => o.key === s);
     return acc + (opt?.price || 0) * days * guests;
   }, 0);
-  const specialRequestFee = selectedSpecialRequests.length * 15;
+  const chosenAddons = hostAddons.filter(addon => selectedSpecialRequests.includes(addon.id));
+  const specialRequestFee = chosenAddons.reduce((sum, addon) => sum + addon.price, 0);
+
   const serviceFee = Math.round(servicePricing * 0.1);
   const total = servicePricing + specialRequestFee + serviceFee;
 
@@ -185,7 +200,9 @@ const Booking = () => {
       end_date: endDate.toISOString().split("T")[0],
       guests,
       services: selectedServices,
+      special_requests: chosenAddons.map(addon => addon.name),
       total_price: total,
+
       message: message || null,
       status: "pending",
     });
@@ -223,7 +240,7 @@ const Booking = () => {
               {startDate && endDate && <p className="text-sm"><strong>Dates:</strong> {format(startDate, "PPP")} – {format(endDate, "PPP")}</p>}
               <p className="text-sm"><strong>Guests:</strong> {guests}</p>
               {selectedSpecialRequests.length > 0 && (
-                <p className="text-sm"><strong>Special Requests:</strong> {selectedSpecialRequests.map(id => specialRequests.find(s => s.id === id)?.label).join(", ")}</p>
+                <p className="text-sm"><strong>Special Requests:</strong> {chosenAddons.map(addon => addon.name).join(", ")}</p>
               )}
               <p className="text-sm font-semibold"><strong>Total:</strong> {formatCurrency(total)}</p>
             </div>
@@ -267,8 +284,14 @@ const Booking = () => {
               {step === 1 && (
                 <div>
                   <h2 className="text-2xl font-bold text-foreground">Select Services</h2>
-                  <p className="mt-1 text-muted-foreground">Choose what you'd like — each has individual pricing</p>
+                  <p className="mt-1 text-muted-foreground">Rates below come straight from {host.name}'s live listings</p>
+                  {serviceOptions.length === 0 && (
+                    <p className="mt-4 rounded-xl border border-border bg-card p-4 text-sm text-muted-foreground">
+                      {host.name} hasn't published prices yet. Message them to arrange a custom trip.
+                    </p>
+                  )}
                   <div className="mt-6 space-y-3">
+
                     {serviceOptions.filter(s => !host.services?.length || host.services.includes(s.key)).map(s => (
                       <button key={s.key} onClick={() => toggleService(s.key)}
                         className={`w-full flex items-center gap-4 rounded-xl p-4 text-left transition-all border ${
@@ -338,15 +361,19 @@ const Booking = () => {
               {step === 3 && (
                 <div>
                   <h2 className="text-2xl font-bold text-foreground">Special Requests</h2>
-                  <p className="mt-1 text-muted-foreground">Add extras to make your trip special (+{formatCurrency(15)} each)</p>
-                  <div className="mt-6 grid grid-cols-2 sm:grid-cols-4 gap-3">
-                    {specialRequests.map(sr => (
+                  <p className="mt-1 text-muted-foreground">
+                    {hostAddons.length ? `Extras ${host.name} offers — each priced by the host` : `${host.name} hasn't published any add-ons yet.`}
+                  </p>
+                  <div className="mt-6 grid grid-cols-2 sm:grid-cols-4 gap-3" data-testid="booking-addons">
+                    {hostAddons.map(sr => (
                       <button key={sr.id} onClick={() => toggleSpecialRequest(sr.id)}
+                        title={sr.description || undefined}
                         className={`flex flex-col items-center gap-2 p-4 rounded-xl border transition-all ${
                           selectedSpecialRequests.includes(sr.id) ? "border-primary bg-primary/5 shadow-card" : "border-border bg-card hover:border-primary/30"
                         }`}>
                         <span className="text-2xl">{sr.emoji}</span>
-                        <span className="text-xs font-medium text-foreground text-center">{sr.label}</span>
+                        <span className="text-xs font-medium text-foreground text-center">{sr.name}</span>
+                        <span className="text-xs font-semibold text-primary">{formatCurrency(sr.price)}</span>
                         {selectedSpecialRequests.includes(sr.id) && (
                           <Check className="w-4 h-4 text-primary" />
                         )}
@@ -354,6 +381,7 @@ const Booking = () => {
                     ))}
                   </div>
                 </div>
+
               )}
 
               {step === 4 && (
@@ -408,12 +436,13 @@ const Booking = () => {
                     </div>
                   );
                 })}
-                {selectedSpecialRequests.length > 0 && (
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">✨ Special requests ({selectedSpecialRequests.length})</span>
-                    <span className="text-foreground">{formatCurrency(specialRequestFee)}</span>
+                {chosenAddons.map(addon => (
+                  <div key={addon.id} className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">{addon.emoji} {addon.name}</span>
+                    <span className="text-foreground">{formatCurrency(addon.price)}</span>
                   </div>
-                )}
+                ))}
+
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Service fee</span>
                   <span className="text-foreground">{formatCurrency(serviceFee)}</span>

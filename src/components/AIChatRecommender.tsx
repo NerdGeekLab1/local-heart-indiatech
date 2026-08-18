@@ -96,6 +96,13 @@ const AIChatRecommender = () => {
     }
   };
 
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (event: KeyboardEvent) => { if (event.key === "Escape") setOpen(false); };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [open]);
+
   return (
     <>
       {/* FAB */}
@@ -107,9 +114,12 @@ const AIChatRecommender = () => {
             exit={{ scale: 0 }}
             onClick={() => setOpen(true)}
             aria-label="Open AI Travel Guide"
-            className="fixed bottom-20 right-4 z-50 w-14 h-14 rounded-full bg-primary text-primary-foreground shadow-lg flex items-center justify-center hover:bg-primary/90 transition-colors md:bottom-6"
+            className="group fixed right-4 top-1/2 z-50 flex h-14 w-14 -translate-y-1/2 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg transition-colors hover:bg-primary/90"
           >
             <Sparkles className="w-6 h-6" />
+            <span className="pointer-events-none absolute right-16 whitespace-nowrap rounded-full bg-foreground px-2 py-1 text-[11px] text-background opacity-0 transition-opacity group-hover:opacity-100">
+              AI Travel Guide
+            </span>
           </motion.button>
         )}
       </AnimatePresence>
@@ -121,7 +131,7 @@ const AIChatRecommender = () => {
             initial={{ opacity: 0, y: 20, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
-            className="fixed bottom-20 right-4 z-50 w-80 sm:w-96 h-[28rem] rounded-2xl bg-card border border-border shadow-2xl flex flex-col overflow-hidden md:bottom-6"
+            className="fixed right-4 top-1/2 z-50 flex h-[28rem] w-80 max-w-[calc(100vw-2rem)] -translate-y-1/2 flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-2xl sm:w-96"
           >
             {/* Header */}
             <div className="flex items-center justify-between px-4 py-3 bg-primary text-primary-foreground">
@@ -129,8 +139,9 @@ const AIChatRecommender = () => {
                 <Sparkles className="w-4 h-4" />
                 <span className="font-bold text-sm">AI Travel Guide</span>
               </div>
-              <button onClick={() => setOpen(false)} className="p-1 hover:bg-primary-foreground/10 rounded">
-                <X className="w-4 h-4" />
+              <button onClick={() => setOpen(false)} aria-label="Close AI Travel Guide" title="Close (Esc)"
+                className="flex items-center gap-1 rounded-full px-2 py-1 text-[11px] font-medium hover:bg-primary-foreground/10">
+                Close <X className="w-4 h-4" />
               </button>
             </div>
 

@@ -21,6 +21,11 @@ export interface HostNotificationPrefs {
   messages: boolean;
   bookings: boolean;
   earnings: boolean;
+  /** When on, notifications between quietFrom and quietTo are suppressed entirely. */
+  quietHours: boolean;
+  /** 24h "HH:MM" local times. quietFrom may be later than quietTo (overnight window). */
+  quietFrom: string;
+  quietTo: string;
 }
 
 const icons: Record<HostActivityEvent["kind"], React.ElementType> = {
@@ -30,13 +35,27 @@ const icons: Record<HostActivityEvent["kind"], React.ElementType> = {
   earnings: TrendingUp,
 };
 
-const prefRows: { key: keyof HostNotificationPrefs; label: string; hint: string }[] = [
+const prefRows: { key: "messages" | "bookings" | "earnings"; label: string; hint: string }[] = [
   { key: "messages", label: "New messages", hint: "Traveler chat messages" },
   { key: "bookings", label: "Booking & invoice updates", hint: "Requests, status changes, invoices" },
   { key: "earnings", label: "Earnings movement", hint: "When your total earnings change" },
 ];
 
-const defaultPrefs: HostNotificationPrefs = { messages: true, bookings: true, earnings: true };
+const defaultPrefs: HostNotificationPrefs = { messages: true, bookings: true, earnings: true, quietHours: false, quietFrom: "22:00", quietTo: "07:00" };
+
+const toMinutes = (value: string) => {
+  const [hour, minute] = String(value || "").split(":").map(Number);
+  return (Number.isFinite(hour) ? hour : 0) * 60 + (Number.isFinite(minute) ? minute : 0);
+};
+
+/** Overnight-safe check: 22:00 → 07:00 correctly covers 23:30 and 02:00. */
+export const isQuietNow = (prefs: HostNotificationPrefs, now = new Date()) => {
+  if (!prefs.quietHours) return false;
+  const current = now.getHours() * 60 + now.getMinutes();
+  const from = toMinutes(prefs.quietFrom);
+  const to = toMinutes(prefs.quietTo);
+  return from <= to ? current >= from && current < to : current >= from || current < to;
+};
 
 const inr = (value: number) => `₹${Number(value || 0).toLocaleString("en-IN")}`;
 const storageKey = (userId: string) => `host-activity-${userId}`;
@@ -76,8 +95,9 @@ export default function HostActivityFeed({ userId, earnings }: { userId: string;
     return next;
   };
 
-  const push = (event: Omit<HostActivityEvent, "id" | "at">, stream: keyof HostNotificationPrefs) => {
+  const push = (event: Omit<HostActivityEvent, "id" | "at">, stream: "messages" | "bookings" | "earnings") => {
     if (!prefsRef.current[stream]) return;
+    if (isQuietNow(prefsRef.current)) return;
     const entry: HostActivityEvent = { ...event, id: crypto.randomUUID(), at: new Date().toISOString(), read: false };
     setEvents(current => persist([entry, ...current].slice(0, 25)));
     toast({
@@ -184,6 +204,38 @@ export default function HostActivityFeed({ userId, earnings }: { userId: string;
             </label>
           ))}
           <p className="text-[11px] text-muted-foreground">Muted streams raise no toasts and no feed items.</p>
+
+          <div className="mt-3 border-t border-border/60 pt-3" data-testid="host-quiet-hours">
+            <label className="flex items-center justify-between gap-3">
+              <span className="min-w-0">
+                <span className="block text-sm text-foreground">Quiet hours</span>
+                <span className="block text-[11px] text-muted-foreground">Suppress every toast and feed item during this window</span>
+              </span>
+              <Switch
+                checked={prefs.quietHours}
+                onCheckedChange={value => savePrefs({ ...prefs, quietHours: value })}
+                aria-label="Quiet hours"
+              />
+            </label>
+            {prefs.quietHours && (
+              <div className="mt-2 flex items-center gap-2">
+                <label className="flex-1 text-[11px] text-muted-foreground">
+                  From
+                  <input type="time" value={prefs.quietFrom} aria-label="Quiet hours start"
+                    onChange={e => savePrefs({ ...prefs, quietFrom: e.target.value })}
+                    className="mt-1 w-full rounded-lg border border-border bg-background px-2 py-1 text-sm text-foreground" />
+                </label>
+                <label className="flex-1 text-[11px] text-muted-foreground">
+                  To
+                  <input type="time" value={prefs.quietTo} aria-label="Quiet hours end"
+                    onChange={e => savePrefs({ ...prefs, quietTo: e.target.value })}
+                    className="mt-1 w-full rounded-lg border border-border bg-background px-2 py-1 text-sm text-foreground" />
+                </label>
+              </div>
+            )}
+            {isQuietNow(prefs) && <p className="mt-2 text-[11px] font-medium text-primary">Quiet hours active — notifications are paused.</p>}
+          </div>
+
         </div>
       )}
 
