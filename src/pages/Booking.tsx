@@ -436,12 +436,13 @@ const Booking = () => {
                     </div>
                   );
                 })}
-                {selectedSpecialRequests.length > 0 && (
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">✨ Special requests ({selectedSpecialRequests.length})</span>
-                    <span className="text-foreground">{formatCurrency(specialRequestFee)}</span>
+                {chosenAddons.map(addon => (
+                  <div key={addon.id} className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">{addon.emoji} {addon.name}</span>
+                    <span className="text-foreground">{formatCurrency(addon.price)}</span>
                   </div>
-                )}
+                ))}
+
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Service fee</span>
                   <span className="text-foreground">{formatCurrency(serviceFee)}</span>
