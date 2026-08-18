@@ -1010,7 +1010,49 @@ const HostDashboard = () => {
 
         {activeTab === "listings" && (
           <div className="mt-6 space-y-6">
-            <div className="flex items-center justify-between"><h2 className="text-xl font-bold text-foreground">Properties & Vehicles</h2></div>
+            <div className="flex items-center justify-between"><h2 className="text-xl font-bold text-foreground">Properties &amp; Vehicles</h2></div>
+
+            {/* One table so the host sees everything they currently offer at a glance */}
+            {(() => {
+              const rows = [
+                ...hostDbExperiences.map((e: any) => ({ key: `e-${e.id}`, type: "Experience", name: e.title, detail: [e.category, e.location, e.duration].filter(Boolean).join(" · "), price: `₹${Number(e.price || 0).toLocaleString("en-IN")}`, status: e.status })),
+                ...customProperties.map((x: any) => ({ key: `p-${x.id}`, type: "Stay", name: x.propertyName, detail: [x.propertyType, x.location, x.maxGuests ? `${x.maxGuests} guests` : ""].filter(Boolean).join(" · "), price: `₹${Number(x.nightlyRate || 0).toLocaleString("en-IN")}/night`, status: x.status })),
+                ...customVehicles.map((x: any) => ({ key: `t-${x.id}`, type: "Transport", name: x.model, detail: [x.type, x.capacity ? `${x.capacity} pax` : "", x.serviceRadius ? `${x.serviceRadius} km radius` : ""].filter(Boolean).join(" · "), price: `₹${Number(x.pricePerDay || 0).toLocaleString("en-IN")}/day`, status: x.status })),
+                ...customDishes.map((x: any) => ({ key: `d-${x.id}`, type: "Food", name: x.name, detail: [x.cuisine, x.mealType, x.serves ? `serves ${x.serves}` : ""].filter(Boolean).join(" · "), price: `₹${Number(x.pricePerPlate || 0).toLocaleString("en-IN")}/plate`, status: x.status })),
+              ];
+              return (
+                <div className="overflow-x-auto rounded-2xl border border-border" data-testid="host-listings-table">
+                  <table className="w-full text-sm">
+                    <thead className="bg-secondary/40 text-left text-xs uppercase tracking-wide text-muted-foreground">
+                      <tr>
+                        <th className="px-4 py-2">Type</th>
+                        <th className="px-4 py-2">Listing</th>
+                        <th className="px-4 py-2">Details</th>
+                        <th className="px-4 py-2 text-right">Price</th>
+                        <th className="px-4 py-2">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {rows.length === 0 ? (
+                        <tr><td colSpan={5} className="px-4 py-6 text-center text-muted-foreground">Nothing listed yet — add a property, vehicle, dish or experience below.</td></tr>
+                      ) : rows.map(row => (
+                        <tr key={row.key} className="border-t border-border hover:bg-secondary/20">
+                          <td className="px-4 py-2 font-medium text-primary">{row.type}</td>
+                          <td className="px-4 py-2 font-medium text-foreground">{row.name}</td>
+                          <td className="px-4 py-2 text-muted-foreground">{row.detail || "—"}</td>
+                          <td className="px-4 py-2 text-right font-semibold text-foreground">{row.price}</td>
+                          <td className="px-4 py-2">
+                            <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${row.status === "approved" ? "bg-accent/10 text-accent" : row.status === "rejected" ? "bg-destructive/10 text-destructive" : "bg-primary/10 text-primary"}`}>
+                              {row.status || "pending"}
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              );
+            })()}
             {listingEditor && user && (listingEditor.module === "property" || listingEditor.module === "transport") && (
               <ListingForm module={listingEditor.module} userId={user.id}
                  initialData={listingEditor.index === undefined ? undefined : listingEditor.module === "property" ? customProperties[listingEditor.index] : customVehicles[listingEditor.index]}
