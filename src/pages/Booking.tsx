@@ -48,6 +48,9 @@ const Booking = () => {
   // Real hosts live in the database and are resolved by uuid or username slug.
   const [dbHost, setDbHost] = useState<typeof mockHost | null>(null);
   const [hostLoading, setHostLoading] = useState(!mockHost);
+  /** Live prices + add-ons published by this host. */
+  const [hostRates, setHostRates] = useState<Record<string, number>>({});
+  const [hostAddons, setHostAddons] = useState<HostAddon[]>([]);
 
   useEffect(() => {
     if (!id || mockHost) { setHostLoading(false); return; }
@@ -70,6 +73,13 @@ const Booking = () => {
           rating: rating ? Number(rating.toFixed(1)) : 0,
           services: profile.services ?? [],
         } as any);
+        setHostRates({
+          Guide: Number(profile.price_per_day || 0),
+          Stay: minPrice(result?.properties, "nightly_rate"),
+          Transport: minPrice(result?.transports, "price_per_day"),
+          Food: minPrice(result?.dishes, "price_per_plate"),
+        });
+        setHostAddons((result?.addons ?? []).map((addon: any) => ({ ...addon, price: Number(addon.price || 0) })));
       } else {
         setDbHost(null);
       }
@@ -80,6 +90,11 @@ const Booking = () => {
 
   const host = mockHost ?? dbHost;
   const isRealHost = !!host && UUID_RE.test(host.id);
+  /** Only services the host actually priced can be booked. */
+  const serviceOptions = serviceCatalogue
+    .map(service => ({ ...service, price: hostRates[service.key] ?? 0 }))
+    .filter(service => service.price > 0);
+
 
 
   const [step, setStep] = useState(1);
