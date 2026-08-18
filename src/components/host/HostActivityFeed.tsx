@@ -204,6 +204,38 @@ export default function HostActivityFeed({ userId, earnings }: { userId: string;
             </label>
           ))}
           <p className="text-[11px] text-muted-foreground">Muted streams raise no toasts and no feed items.</p>
+
+          <div className="mt-3 border-t border-border/60 pt-3" data-testid="host-quiet-hours">
+            <label className="flex items-center justify-between gap-3">
+              <span className="min-w-0">
+                <span className="block text-sm text-foreground">Quiet hours</span>
+                <span className="block text-[11px] text-muted-foreground">Suppress every toast and feed item during this window</span>
+              </span>
+              <Switch
+                checked={prefs.quietHours}
+                onCheckedChange={value => savePrefs({ ...prefs, quietHours: value })}
+                aria-label="Quiet hours"
+              />
+            </label>
+            {prefs.quietHours && (
+              <div className="mt-2 flex items-center gap-2">
+                <label className="flex-1 text-[11px] text-muted-foreground">
+                  From
+                  <input type="time" value={prefs.quietFrom} aria-label="Quiet hours start"
+                    onChange={e => savePrefs({ ...prefs, quietFrom: e.target.value })}
+                    className="mt-1 w-full rounded-lg border border-border bg-background px-2 py-1 text-sm text-foreground" />
+                </label>
+                <label className="flex-1 text-[11px] text-muted-foreground">
+                  To
+                  <input type="time" value={prefs.quietTo} aria-label="Quiet hours end"
+                    onChange={e => savePrefs({ ...prefs, quietTo: e.target.value })}
+                    className="mt-1 w-full rounded-lg border border-border bg-background px-2 py-1 text-sm text-foreground" />
+                </label>
+              </div>
+            )}
+            {isQuietNow(prefs) && <p className="mt-2 text-[11px] font-medium text-primary">Quiet hours active — notifications are paused.</p>}
+          </div>
+
         </div>
       )}
 
