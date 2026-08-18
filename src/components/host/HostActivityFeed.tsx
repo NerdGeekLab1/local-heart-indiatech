@@ -21,6 +21,11 @@ export interface HostNotificationPrefs {
   messages: boolean;
   bookings: boolean;
   earnings: boolean;
+  /** When on, notifications between quietFrom and quietTo are suppressed entirely. */
+  quietHours: boolean;
+  /** 24h "HH:MM" local times. quietFrom may be later than quietTo (overnight window). */
+  quietFrom: string;
+  quietTo: string;
 }
 
 const icons: Record<HostActivityEvent["kind"], React.ElementType> = {
@@ -30,13 +35,27 @@ const icons: Record<HostActivityEvent["kind"], React.ElementType> = {
   earnings: TrendingUp,
 };
 
-const prefRows: { key: keyof HostNotificationPrefs; label: string; hint: string }[] = [
+const prefRows: { key: "messages" | "bookings" | "earnings"; label: string; hint: string }[] = [
   { key: "messages", label: "New messages", hint: "Traveler chat messages" },
   { key: "bookings", label: "Booking & invoice updates", hint: "Requests, status changes, invoices" },
   { key: "earnings", label: "Earnings movement", hint: "When your total earnings change" },
 ];
 
-const defaultPrefs: HostNotificationPrefs = { messages: true, bookings: true, earnings: true };
+const defaultPrefs: HostNotificationPrefs = { messages: true, bookings: true, earnings: true, quietHours: false, quietFrom: "22:00", quietTo: "07:00" };
+
+const toMinutes = (value: string) => {
+  const [hour, minute] = String(value || "").split(":").map(Number);
+  return (Number.isFinite(hour) ? hour : 0) * 60 + (Number.isFinite(minute) ? minute : 0);
+};
+
+/** Overnight-safe check: 22:00 → 07:00 correctly covers 23:30 and 02:00. */
+export const isQuietNow = (prefs: HostNotificationPrefs, now = new Date()) => {
+  if (!prefs.quietHours) return false;
+  const current = now.getHours() * 60 + now.getMinutes();
+  const from = toMinutes(prefs.quietFrom);
+  const to = toMinutes(prefs.quietTo);
+  return from <= to ? current >= from && current < to : current >= from || current < to;
+};
 
 const inr = (value: number) => `₹${Number(value || 0).toLocaleString("en-IN")}`;
 const storageKey = (userId: string) => `host-activity-${userId}`;
@@ -76,8 +95,9 @@ export default function HostActivityFeed({ userId, earnings }: { userId: string;
     return next;
   };
 
-  const push = (event: Omit<HostActivityEvent, "id" | "at">, stream: keyof HostNotificationPrefs) => {
+  const push = (event: Omit<HostActivityEvent, "id" | "at">, stream: "messages" | "bookings" | "earnings") => {
     if (!prefsRef.current[stream]) return;
+    if (isQuietNow(prefsRef.current)) return;
     const entry: HostActivityEvent = { ...event, id: crypto.randomUUID(), at: new Date().toISOString(), read: false };
     setEvents(current => persist([entry, ...current].slice(0, 25)));
     toast({
