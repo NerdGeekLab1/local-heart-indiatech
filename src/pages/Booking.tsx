@@ -284,8 +284,14 @@ const Booking = () => {
               {step === 1 && (
                 <div>
                   <h2 className="text-2xl font-bold text-foreground">Select Services</h2>
-                  <p className="mt-1 text-muted-foreground">Choose what you'd like — each has individual pricing</p>
+                  <p className="mt-1 text-muted-foreground">Rates below come straight from {host.name}'s live listings</p>
+                  {serviceOptions.length === 0 && (
+                    <p className="mt-4 rounded-xl border border-border bg-card p-4 text-sm text-muted-foreground">
+                      {host.name} hasn't published prices yet. Message them to arrange a custom trip.
+                    </p>
+                  )}
                   <div className="mt-6 space-y-3">
+
                     {serviceOptions.filter(s => !host.services?.length || host.services.includes(s.key)).map(s => (
                       <button key={s.key} onClick={() => toggleService(s.key)}
                         className={`w-full flex items-center gap-4 rounded-xl p-4 text-left transition-all border ${
