@@ -167,7 +167,9 @@ const Booking = () => {
     const opt = serviceOptions.find(o => o.key === s);
     return acc + (opt?.price || 0) * days * guests;
   }, 0);
-  const specialRequestFee = selectedSpecialRequests.length * 15;
+  const chosenAddons = hostAddons.filter(addon => selectedSpecialRequests.includes(addon.id));
+  const specialRequestFee = chosenAddons.reduce((sum, addon) => sum + addon.price, 0);
+
   const serviceFee = Math.round(servicePricing * 0.1);
   const total = servicePricing + specialRequestFee + serviceFee;
 
