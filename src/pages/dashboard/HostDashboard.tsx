@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import {
   DollarSign, Users, Star, Calendar, Clock, TrendingUp, TrendingDown, MessageCircle, Settings, Home, Car, BarChart3,
   Bell, UtensilsCrossed, Plus, Save, Instagram, Facebook, Twitter, Youtube, Linkedin, Ghost, Globe, Tag, Bike, MapPin, Film,
-  FileText, Receipt, Heart, Eye, Copy, Phone
+  FileText, Receipt, Heart, Eye, Copy, Phone, Sparkles, ExternalLink
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -23,6 +23,9 @@ import ListingForm, { ListingModule } from "@/components/ListingForm";
 import type { TablesInsert } from "@/integrations/supabase/types";
 import HostReelsManager from "@/components/host/HostReelsManager";
 import HostActivityFeed from "@/components/host/HostActivityFeed";
+import HostAddonsManager from "@/components/host/HostAddonsManager";
+import HostMessageThreads from "@/components/host/HostMessageThreads";
+import BookingDetailDialog from "@/components/host/BookingDetailDialog";
 import ProfileCompleteness, { CompletenessRing } from "@/components/host/ProfileCompleteness";
 import { hostCompleteness } from "@/lib/hostCompleteness";
 
@@ -31,7 +34,7 @@ const statusColors: Record<string, string> = {
   completed: "bg-secondary text-muted-foreground", cancelled: "bg-destructive/10 text-destructive",
 };
 
-type Tab = "overview" | "bookings" | "listings" | "experiences" | "food" | "reels" | "reviews" | "earnings" | "invoices" | "messages" | "settings";
+type Tab = "overview" | "bookings" | "listings" | "experiences" | "food" | "addons" | "reels" | "reviews" | "earnings" | "invoices" | "messages" | "settings";
 
 const profileFields: FieldConfig[] = [
   { key: "name", label: "Name", required: true },
@@ -83,6 +86,7 @@ const HostDashboard = () => {
   const { user } = useAuth();
   const [hostBookings, setHostBookings] = useState<any[]>([]);
   const [approvedReelCount, setApprovedReelCount] = useState(0);
+  const [openBooking, setOpenBooking] = useState<any | null>(null);
   const [settingsSection, setSettingsSection] = useState<"profile" | "media" | "social" | "preferences">("profile");
   const totalEarnings = hostBookings.reduce((sum: number, b: any) => sum + Number(b.total_price || 0), 0);
 
@@ -493,6 +497,7 @@ const HostDashboard = () => {
     { id: "experiences", label: "Experiences", icon: Globe },
     { id: "listings", label: "Property", icon: Home },
     { id: "food", label: "Food Menu", icon: UtensilsCrossed },
+    { id: "addons", label: "Add-ons", icon: Sparkles },
     { id: "reels", label: "Reels & Stories", icon: Film },
     { id: "reviews", label: "Reviews", icon: Star },
     { id: "earnings", label: "Earnings", icon: DollarSign },
@@ -663,37 +668,64 @@ const HostDashboard = () => {
 
         {activeTab === "bookings" && (
           <div className="mt-6 space-y-3">
-            <h2 className="text-xl font-bold text-foreground mb-4">All Bookings ({hostBookings.length})</h2>
+            <h2 className="mb-4 text-xl font-bold text-foreground">All Bookings ({hostBookings.length})</h2>
             {hostBookings.length === 0 ? (
-              <div className="text-center py-12">
-                <Calendar className="w-12 h-12 text-muted-foreground/30 mx-auto mb-3" />
+              <div className="py-12 text-center">
+                <Calendar className="mx-auto mb-3 h-12 w-12 text-muted-foreground/30" />
                 <p className="text-muted-foreground">No bookings yet.</p>
               </div>
-            ) : hostBookings.map(b => (
-              <div key={b.id} className="rounded-lg bg-card p-4 shadow-card flex justify-between items-center">
-                <div>
-                  <div className="flex items-center gap-2">
-                    <h3 className="font-semibold text-foreground">#{b.id.slice(0,8)}</h3>
-                    <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${statusColors[b.status] || statusColors.pending}`}>{b.status}</span>
-                  </div>
-                  <p className="text-sm text-muted-foreground mt-1">{b.start_date} → {b.end_date} · {(b.services || []).join(", ")} · {b.guests} guest(s)</p>
-                </div>
-                <div className="text-right">
-                  <p className="font-bold text-foreground">₹{b.total_price}</p>
-                  {b.status === "pending" && (
-                    <div className="flex gap-2 mt-2">
-                      <Button size="sm" onClick={() => updateBookingStatus(b.id, "confirmed")} className="rounded-full bg-accent text-accent-foreground text-xs px-3">Accept</Button>
-                      <Button size="sm" variant="outline" onClick={() => updateBookingStatus(b.id, "cancelled")} className="rounded-full text-xs px-3">Decline</Button>
-                    </div>
-                  )}
-                  {(b.status === "confirmed" || b.status === "completed") && (
-                    <Button size="sm" variant="outline" onClick={() => generateInvoice(b)} className="rounded-full text-xs px-3 gap-1 mt-1">
-                      <Receipt className="w-3 h-3" /> Invoice
-                    </Button>
-                  )}
-                </div>
+            ) : (
+              <div className="overflow-x-auto rounded-2xl border border-border" data-testid="host-bookings-table">
+                <table className="w-full text-sm">
+                  <thead className="bg-secondary/40 text-left text-xs uppercase tracking-wide text-muted-foreground">
+                    <tr>
+                      <th className="px-4 py-2">Booking</th>
+                      <th className="px-4 py-2">Dates</th>
+                      <th className="px-4 py-2 text-center">Days</th>
+                      <th className="px-4 py-2 text-center">Guests</th>
+                      <th className="px-4 py-2">Services</th>
+                      <th className="px-4 py-2">Special requests</th>
+                      <th className="px-4 py-2 text-right">Total</th>
+                      <th className="px-4 py-2">Status</th>
+                      <th className="px-4 py-2" />
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {hostBookings.map(b => {
+                      const days = b.start_date && b.end_date
+                        ? Math.max(1, Math.round((new Date(b.end_date).getTime() - new Date(b.start_date).getTime()) / 86400000))
+                        : 0;
+                      const requests: string[] = b.special_requests || [];
+                      return (
+                        <tr key={b.id} className="border-t border-border hover:bg-secondary/20">
+                          <td className="px-4 py-2 font-medium text-foreground">#{b.id.slice(0, 8)}</td>
+                          <td className="px-4 py-2 text-muted-foreground">{b.start_date} → {b.end_date}</td>
+                          <td className="px-4 py-2 text-center">{days}</td>
+                          <td className="px-4 py-2 text-center">{b.guests ?? 1}</td>
+                          <td className="px-4 py-2 text-muted-foreground">{(b.services || []).join(", ") || "—"}</td>
+                          <td className="px-4 py-2 text-muted-foreground">{requests.length ? requests.join(", ") : "—"}</td>
+                          <td className="px-4 py-2 text-right font-semibold text-foreground">₹{Number(b.total_price || 0).toLocaleString("en-IN")}</td>
+                          <td className="px-4 py-2">
+                            <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${statusColors[b.status] || statusColors.pending}`}>{b.status}</span>
+                          </td>
+                          <td className="px-4 py-2 text-right">
+                            <Button size="sm" variant="outline" className="gap-1 rounded-full text-xs" onClick={() => setOpenBooking(b)}>
+                              <ExternalLink className="h-3 w-3" /> View
+                            </Button>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
               </div>
-            ))}
+            )}
+          </div>
+        )}
+
+        {activeTab === "addons" && user && (
+          <div className="mt-6">
+            <HostAddonsManager userId={user.id} />
           </div>
         )}
 
@@ -1194,31 +1226,8 @@ const HostDashboard = () => {
         )}
 
 
-        {activeTab === "messages" && (
-          <div className="mt-6">
-            <h2 className="text-xl font-bold text-foreground mb-4">Messages ({hostMessages.length})</h2>
-            {hostMessages.length === 0 ? (
-              <div className="text-center py-12">
-                <MessageCircle className="w-12 h-12 text-muted-foreground/30 mx-auto mb-3" />
-                <p className="text-muted-foreground">No messages yet. Traveler inquiries will appear here.</p>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {hostMessages.map(m => (
-                  <div key={m.id} className={`rounded-lg bg-card p-4 shadow-card flex items-center gap-4 ${!m.read && m.receiver_id === user?.id ? "border-l-4 border-primary" : ""}`}>
-                    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-sm font-bold text-primary">
-                      {m.sender_id === user?.id ? "You" : "📨"}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-semibold text-foreground text-sm">{m.sender_id === user?.id ? "You" : "Traveler"}</p>
-                      <p className="text-xs text-muted-foreground truncate">{m.content}</p>
-                    </div>
-                    <span className="text-xs text-muted-foreground shrink-0">{new Date(m.created_at).toLocaleDateString()}</span>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
+        {activeTab === "messages" && user && (
+          <HostMessageThreads userId={user.id} initialThread={searchParams.get("thread")} />
         )}
 
         {activeTab === "reels" && user && (
@@ -1418,6 +1427,14 @@ const HostDashboard = () => {
         )}
         </div>
       </div>
+
+      <BookingDetailDialog
+        booking={openBooking}
+        onOpenChange={(open) => { if (!open) setOpenBooking(null); }}
+        onStatus={(id, status) => { void updateBookingStatus(id, status); setOpenBooking(null); }}
+        onInvoice={(booking) => { void generateInvoice(booking); setOpenBooking(null); }}
+        onChat={() => { setOpenBooking(null); setActiveTab("messages"); }}
+      />
 
       <EditDialog open={editDialog.open} title={editDialog.title} fields={editDialog.fields}
         initialData={editDialog.data} onSave={(d) => { editDialog.onSave(d); setEditDialog(p => ({ ...p, open: false })); }}
