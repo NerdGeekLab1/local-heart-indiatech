@@ -200,7 +200,9 @@ const Booking = () => {
       end_date: endDate.toISOString().split("T")[0],
       guests,
       services: selectedServices,
+      special_requests: chosenAddons.map(addon => addon.name),
       total_price: total,
+
       message: message || null,
       status: "pending",
     });
