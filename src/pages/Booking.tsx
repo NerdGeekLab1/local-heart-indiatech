@@ -18,23 +18,21 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { useCurrency } from "@/contexts/CurrencyContext";
 
-const serviceOptions = [
-  { key: "Guide", label: "Local Guide", desc: "Personalized tours & experiences", icon: "🧭", price: 40 },
-  { key: "Stay", label: "Homestay", desc: "Authentic local accommodation", icon: "🏡", price: 35 },
-  { key: "Transport", label: "Transport", desc: "Vehicle with host as driver", icon: "🚗", price: 50 },
-  { key: "Food", label: "Food & Dining", desc: "Home-cooked meals & food experiences", icon: "🍛", price: 20 },
+/** Service catalogue — prices are always derived from the host's own live listings. */
+const serviceCatalogue = [
+  { key: "Guide", label: "Local Guide", desc: "Personalized tours & experiences", icon: "🧭" },
+  { key: "Stay", label: "Homestay", desc: "Authentic local accommodation", icon: "🏡" },
+  { key: "Transport", label: "Transport", desc: "Vehicle with host as driver", icon: "🚗" },
+  { key: "Food", label: "Food & Dining", desc: "Home-cooked meals & food experiences", icon: "🍛" },
 ];
 
-const specialRequests = [
-  { id: "wipe_tissues", label: "Wipe Tissues", emoji: "🧻" },
-  { id: "wine", label: "Wine Bottle", emoji: "🍷" },
-  { id: "cake", label: "Birthday Cake", emoji: "🎂" },
-  { id: "flowers", label: "Flower Bouquet", emoji: "💐" },
-  { id: "candles", label: "Candle Light Setup", emoji: "🕯️" },
-  { id: "snacks", label: "Snack Pack", emoji: "🍿" },
-  { id: "first_aid", label: "First Aid Kit", emoji: "🩹" },
-  { id: "photography", label: "Photography", emoji: "📸" },
-];
+type HostAddon = { id: string; name: string; emoji: string; description?: string | null; price: number };
+
+const minPrice = (rows: any[] | undefined, field: string) => {
+  const values = (rows || []).map(row => Number(row?.[field] || 0)).filter(value => value > 0);
+  return values.length ? Math.min(...values) : 0;
+};
+
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
