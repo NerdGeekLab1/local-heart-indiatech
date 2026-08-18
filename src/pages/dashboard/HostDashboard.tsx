@@ -216,7 +216,8 @@ const HostDashboard = () => {
       .on("postgres_changes", { event: "*", schema: "public", table: "host_transports", filter: `host_id=eq.${user.id}` }, refreshTransports)
       .subscribe();
     return () => { void supabase.removeChannel(channel); };
-  }, [user]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id]);
 
   const experienceEditFields: FieldConfig[] = [
     { key: "title", label: "Title", required: true },
@@ -465,7 +466,8 @@ const HostDashboard = () => {
       .on("postgres_changes", { event: "*", schema: "public", table: "feed_posts", filter: `user_id=eq.${user.id}` }, load)
       .subscribe();
     return () => { void supabase.removeChannel(channel); };
-  }, [user]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id]);
 
   const completeness = useMemo(() => hostCompleteness({
     coverUrl: hostDbProfile?.cover_url,
