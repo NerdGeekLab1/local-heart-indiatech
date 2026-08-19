@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { Car, Compass, Home, MapPin, MessageCircle, Share2, Star, UtensilsCrossed, Verified } from "lucide-react";
+import { Car, Clock3, Compass, Home, Languages, MapPin, MessageCircle, Share2, ShieldCheck, Sparkles, Star, UtensilsCrossed, Verified } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
@@ -78,10 +78,10 @@ export default function HostProfile() {
     else { await navigator.clipboard.writeText(window.location.href); toast({ title: "Link copied" }); }
   };
   const quickInfo = [
-    { label: "Languages", value: (profile.languages || []).join(", ") },
-    { label: "Responds in", value: profile.response_time || "" },
-    { label: "Years hosting", value: profile.years_hosting ? String(profile.years_hosting) : "" },
-    { label: "Host since", value: profile.host_since ? new Date(profile.host_since).getFullYear().toString() : "" },
+    { label: "Languages", value: (profile.languages || []).join(", "), icon: Languages },
+    { label: "Responds in", value: profile.response_time || "", icon: Clock3 },
+    { label: "Years hosting", value: profile.years_hosting ? String(profile.years_hosting) : "", icon: ShieldCheck },
+    { label: "Host since", value: profile.host_since ? new Date(profile.host_since).getFullYear().toString() : "", icon: Sparkles },
   ].filter(item => item.value);
 
   const tabs: { key: TabKey; label: string; count?: number }[] = [
@@ -98,11 +98,11 @@ export default function HostProfile() {
     <main className="pb-16 pt-20">
       <div className="h-56 bg-secondary sm:h-72"><img src={cover} alt={`${profile.full_name} cover`} className={`h-full w-full object-cover ${profile.cover_url ? "" : "opacity-30"}`} /></div>
       <section className="relative z-10 mx-auto -mt-20 max-w-6xl px-4 sm:px-6">
-        <div className="rounded-2xl border border-border bg-card p-5 shadow-card sm:p-6">
+        <div className="rounded-lg border border-border bg-card p-5 shadow-card sm:p-6">
           <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
             <img src={avatar} alt={profile.full_name} className="h-32 w-32 rounded-2xl border-4 border-background object-cover shadow-card sm:-mt-20" />
             <div className="flex-1">
-              <div className="flex items-center gap-2"><h1 className="text-3xl font-bold text-foreground">{profile.full_name}</h1><Verified className="h-5 w-5 text-accent" /></div>
+              <div className="flex flex-wrap items-center gap-2"><h1 className="text-3xl font-bold text-foreground">{profile.full_name}</h1><span className="inline-flex items-center gap-1 rounded-full bg-accent/10 px-2 py-1 text-xs font-semibold text-accent"><Verified className="h-4 w-4" /> Verified host</span></div>
               <p className="mt-1 flex items-center gap-1 text-muted-foreground"><MapPin className="h-4 w-4" />{profile.city || "Location not added"}</p>
               {profile.tagline && <p className="mt-1 text-muted-foreground">{profile.tagline}</p>}
               <div className="mt-3 flex flex-wrap items-center gap-3 text-sm">
@@ -123,7 +123,7 @@ export default function HostProfile() {
             </div>
           </div>
 
-          <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <div className="mt-6 grid grid-cols-2 gap-3 border-t border-border pt-5 sm:grid-cols-4">
             {(profile.services || []).map(service => {
               const Icon = serviceIcons[service] || Compass;
               const target = serviceTabs[service] || "overview";
@@ -133,11 +133,11 @@ export default function HostProfile() {
                   type="button"
                   onClick={() => setTab(target)}
                   data-testid={`host-service-${service.toLowerCase()}`}
-                  className={`rounded-xl border p-4 text-center transition hover:-translate-y-0.5 hover:border-primary hover:shadow-card ${tab === target ? "border-primary bg-primary/5" : "border-border bg-background"}`}
+                  className={`group rounded-lg border p-4 text-left transition hover:-translate-y-0.5 hover:border-primary hover:shadow-card ${tab === target ? "border-primary bg-primary/10" : "border-border bg-background"}`}
                 >
-                  <Icon className="mx-auto h-6 w-6 text-primary" />
-                  <p className="mt-2 font-medium">{service}</p>
-                  <p className="text-[11px] text-muted-foreground">View {service.toLowerCase()} options</p>
+                  <span className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10"><Icon className="h-5 w-5 text-primary" /></span>
+                  <p className="mt-3 font-semibold">{service}</p>
+                  <p className="text-xs text-muted-foreground">Explore options →</p>
                 </button>
               );
             })}
@@ -204,9 +204,9 @@ export default function HostProfile() {
                 <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Quick info</h2>
                 <dl className="mt-3 space-y-2">
                   {quickInfo.map(item => (
-                    <div key={item.label} className="flex items-start justify-between gap-3 border-b border-border/60 pb-2 last:border-0 last:pb-0">
-                      <dt className="text-xs text-muted-foreground">{item.label}</dt>
-                      <dd className="text-right text-sm font-medium text-foreground">{item.value}</dd>
+                    <div key={item.label} className="flex items-center gap-3 border-b border-border/60 pb-3 last:border-0 last:pb-0">
+                      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10"><item.icon className="h-4 w-4 text-primary" /></span>
+                      <div><dt className="text-xs text-muted-foreground">{item.label}</dt><dd className="text-sm font-semibold text-foreground">{item.value}</dd></div>
                     </div>
                   ))}
                 </dl>

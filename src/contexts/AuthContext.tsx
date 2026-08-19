@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useRef, useState, ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { User, Session } from "@supabase/supabase-js";
 
@@ -27,22 +27,33 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [userRole, setUserRole] = useState<string | null>(null);
   const [userRoles, setUserRoles] = useState<string[]>([]);
   const [roleLoaded, setRoleLoaded] = useState(false);
+  const roleRequestRef = useRef<Promise<string | null> | null>(null);
 
-  const fetchRole = async (userId: string) => {
-    const { data, error } = await supabase.rpc("get_my_role");
-    if (error) {
-      setUserRole(null);
-      setUserRoles([]);
-      setRoleLoaded(true);
-      return null;
-    }
-    const roles = data ? [data] : [];
-    setUserRoles(roles);
-    const role = roles[0] ?? null;
-    setUserRole(role);
-    setRoleLoaded(true);
-    return role;
-  };
+  const fetchRole = useCallback(async (_userId: string) => {
+    if (roleRequestRef.current) return roleRequestRef.current;
+    const request = (async () => {
+      try {
+        const roleQuery = supabase.rpc("get_my_role");
+        const timeout = new Promise<never>((_, reject) => window.setTimeout(() => reject(new Error("Role lookup timed out")), 8_000));
+        const { data, error } = await Promise.race([roleQuery, timeout]);
+        if (error) throw error;
+        const roles = data ? [data] : [];
+        const role = roles[0] ?? null;
+        setUserRoles(roles);
+        setUserRole(role);
+        return role;
+      } catch {
+        setUserRole(null);
+        setUserRoles([]);
+        return null;
+      } finally {
+        setRoleLoaded(true);
+        roleRequestRef.current = null;
+      }
+    })();
+    roleRequestRef.current = request;
+    return request;
+  }, []);
 
   useEffect(() => {
     let mounted = true;
@@ -73,14 +84,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setUser(session?.user ?? null);
       if (session?.user) {
         // Only show loading on real sign-in / initial hydrate; skip token refreshes to avoid flicker
-        const isFreshAuth = event === "SIGNED_IN" || event === "INITIAL_SESSION" || event === "USER_UPDATED";
-        if (isFreshAuth) setLoading(true);
-        if (isFreshAuth) { setUserRole(null); setRoleLoaded(false); }
+        const isInitialAuth = event === "INITIAL_SESSION";
+        if (isInitialAuth) setLoading(true);
+        if (isInitialAuth) { setUserRole(null); setRoleLoaded(false); }
         setTimeout(async () => {
           try {
             await fetchRole(session.user.id);
           } finally {
-            if (mounted && isFreshAuth) setLoading(false);
+            if (mounted && isInitialAuth) setLoading(false);
           }
         }, 0);
       } else {
@@ -97,7 +108,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       mounted = false;
       subscription.unsubscribe();
     };
-  }, []);
+  }, [fetchRole]);
 
   useEffect(() => {
     if (!user?.id) return;
@@ -117,7 +128,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       window.removeEventListener("focus", syncRole);
       void supabase.removeChannel(channel);
     };
-  }, [user?.id]);
+  }, [fetchRole, user?.id]);
 
   const signUp = async (email: string, password: string, metadata?: Record<string, any>) => {
     return supabase.auth.signUp({
