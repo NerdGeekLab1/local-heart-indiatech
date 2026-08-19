@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
-import { Calendar, MessageCircle, Receipt, Users } from "lucide-react";
+import { Calendar, Check, CircleCheck, MessageCircle, Plus, Receipt, Sparkles, Users, X } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
 const inr = (value: unknown) => `₹${Number(value || 0).toLocaleString("en-IN")}`;
@@ -19,14 +21,21 @@ export default function BookingDetailDialog({
   onStatus,
   onInvoice,
   onChat,
+  onRequestsSaved,
 }: {
   booking: any | null;
   onOpenChange: (open: boolean) => void;
   onStatus: (id: string, status: string) => void;
   onInvoice: (booking: any) => void;
   onChat?: (travelerId: string, name: string) => void;
+  onRequestsSaved?: (booking: any) => void;
 }) {
   const [traveler, setTraveler] = useState<{ first_name?: string; last_name?: string; avatar_url?: string } | null>(null);
+  const [proposed, setProposed] = useState<string[]>([]);
+  const [provided, setProvided] = useState<string[]>([]);
+  const [draft, setDraft] = useState("");
+  const [savingRequests, setSavingRequests] = useState(false);
+  const { toast } = useToast();
 
   useEffect(() => {
     if (!booking?.traveler_id) { setTraveler(null); return; }
@@ -37,10 +46,38 @@ export default function BookingDetailDialog({
     return () => { active = false; };
   }, [booking?.traveler_id]);
 
+  useEffect(() => {
+    setProposed(booking?.host_proposed_requests || []);
+    setProvided(booking?.provided_requests || []);
+    setDraft("");
+  }, [booking?.id, booking?.host_proposed_requests, booking?.provided_requests]);
+
   if (!booking) return null;
   const days = dayCount(booking.start_date, booking.end_date);
   const requests: string[] = booking.special_requests || [];
   const travelerName = traveler ? `${traveler.first_name || ""} ${traveler.last_name || ""}`.trim() || "Traveler" : "Traveler";
+  const toggleProvided = (request: string) => setProvided(current => current.includes(request) ? current.filter(item => item !== request) : [...current, request]);
+  const addProposal = () => {
+    const value = draft.trim();
+    if (!value || proposed.includes(value)) return;
+    setProposed(current => [...current, value]);
+    setDraft("");
+  };
+  const saveRequests = async () => {
+    setSavingRequests(true);
+    const { error } = await supabase.from("bookings").update({
+      host_proposed_requests: proposed,
+      provided_requests: provided,
+    } as any).eq("id", booking.id);
+    setSavingRequests(false);
+    if (error) {
+      toast({ title: "Couldn't save preparation details", description: error.message, variant: "destructive" });
+      return;
+    }
+    const updated = { ...booking, host_proposed_requests: proposed, provided_requests: provided };
+    onRequestsSaved?.(updated);
+    toast({ title: "Preparation details saved" });
+  };
 
   return (
     <Dialog open={!!booking} onOpenChange={onOpenChange}>
@@ -84,15 +121,31 @@ export default function BookingDetailDialog({
             </div>
           </div>
 
-          <div data-testid="host-booking-special-requests">
-            <p className="text-xs text-muted-foreground">Special requests to prepare</p>
-            <div className="mt-1 flex flex-wrap gap-1">
+          <div className="space-y-3 rounded-lg border border-border bg-secondary/20 p-3" data-testid="host-booking-special-requests">
+            <div className="flex items-center gap-2">
+              <Sparkles className="h-4 w-4 text-primary" />
+              <div><p className="font-semibold text-foreground">Preparation checklist</p><p className="text-xs text-muted-foreground">Tap each item you can provide.</p></div>
+            </div>
+            <div className="flex flex-wrap gap-2">
               {requests.length
                 ? requests.map(request => (
-                    <span key={request} className="rounded-full bg-accent/10 px-2 py-0.5 text-xs font-medium text-accent">{request}</span>
+                    <Button key={request} type="button" size="sm" variant={provided.includes(request) ? "default" : "outline"} className="h-8 gap-1 rounded-full text-xs" onClick={() => toggleProvided(request)}>
+                      {provided.includes(request) ? <CircleCheck className="h-3.5 w-3.5" /> : <Check className="h-3.5 w-3.5" />}{request}
+                    </Button>
                   ))
                 : <span className="text-muted-foreground">None requested</span>}
             </div>
+            <div className="border-t border-border pt-3">
+              <p className="text-xs font-medium text-foreground">Propose an addition</p>
+              <div className="mt-2 flex gap-2">
+                <Input value={draft} onChange={event => setDraft(event.target.value)} onKeyDown={event => { if (event.key === "Enter") { event.preventDefault(); addProposal(); } }} placeholder="e.g. Airport pickup" className="h-9" />
+                <Button type="button" size="icon" variant="outline" className="h-9 w-9 shrink-0" onClick={addProposal} aria-label="Add proposed item"><Plus className="h-4 w-4" /></Button>
+              </div>
+              {proposed.length > 0 && <div className="mt-2 flex flex-wrap gap-2">{proposed.map(item => <span key={item} className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary">{item}<button type="button" onClick={() => setProposed(current => current.filter(value => value !== item))} aria-label={`Remove ${item}`}><X className="h-3 w-3" /></button></span>)}</div>}
+            </div>
+            <Button type="button" size="sm" className="w-full gap-2" disabled={savingRequests} onClick={saveRequests}>
+              <Check className="h-4 w-4" />{savingRequests ? "Saving..." : "Confirm what will be provided"}
+            </Button>
           </div>
 
           {booking.message && (

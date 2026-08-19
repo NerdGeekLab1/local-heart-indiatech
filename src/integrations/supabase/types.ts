@@ -204,8 +204,10 @@ export type Database = {
           experience_id: string | null
           guests: number | null
           host_id: string | null
+          host_proposed_requests: string[]
           id: string
           message: string | null
+          provided_requests: string[]
           services: string[] | null
           special_requests: string[]
           start_date: string
@@ -219,8 +221,10 @@ export type Database = {
           experience_id?: string | null
           guests?: number | null
           host_id?: string | null
+          host_proposed_requests?: string[]
           id?: string
           message?: string | null
+          provided_requests?: string[]
           services?: string[] | null
           special_requests?: string[]
           start_date: string
@@ -234,8 +238,10 @@ export type Database = {
           experience_id?: string | null
           guests?: number | null
           host_id?: string | null
+          host_proposed_requests?: string[]
           id?: string
           message?: string | null
+          provided_requests?: string[]
           services?: string[] | null
           special_requests?: string[]
           start_date?: string

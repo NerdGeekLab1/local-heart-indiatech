@@ -34,6 +34,9 @@ const statusColors: Record<string, string> = {
   completed: "bg-secondary text-muted-foreground", cancelled: "bg-destructive/10 text-destructive",
 };
 
+const HOST_CACHE_TTL = 5 * 60_000;
+const hostDashboardCache = new Map<string, { loadedAt: number; rows: any[] }>();
+
 type Tab = "overview" | "bookings" | "listings" | "experiences" | "food" | "addons" | "reels" | "reviews" | "earnings" | "invoices" | "messages" | "settings";
 
 const profileFields: FieldConfig[] = [
@@ -199,6 +202,16 @@ const HostDashboard = () => {
 
   useEffect(() => {
     if (!user) return;
+    let active = true;
+    const cached = hostDashboardCache.get(user.id);
+    if (cached && Date.now() - cached.loadedAt < HOST_CACHE_TTL) {
+      const [reqs, invs, bks, revs, msgs, prof, exps, props, dishes, transports] = cached.rows;
+      setExpRequests(reqs || []); setHostInvoices(invs || []); setHostBookings(bks || []); setHostDbReviews(revs || []); setHostMessages(msgs || []); setHostDbExperiences(exps || []);
+      setCustomProperties((props || []).map((row: any) => ({ ...row, propertyName: row.property_name, propertyType: row.property_type, nightlyRate: row.nightly_rate, weeklyRate: row.weekly_rate, maxGuests: row.max_guests, houseRules: row.house_rules, checkIn: row.check_in, checkOut: row.check_out, images: row.photos })));
+      setCustomDishes((dishes || []).map((row: any) => ({ ...row, mealType: row.meal_type, dietaryTags: row.dietary_tags?.join(", "), pricePerPlate: row.price_per_plate, prepTime: row.prep_time, allergenNotes: row.allergen_notes, images: row.photos })));
+      setCustomVehicles((transports || []).map((row: any) => ({ ...row, type: row.vehicle_type, pricePerDay: row.price_per_day, pricePerKm: row.price_per_km, serviceRadius: row.service_radius_km, amenities: row.amenities?.join(", "), images: row.photos })));
+      if (prof) { setHostDbProfile(prof); setHostProfile(p => ({ ...p, name: `${prof.first_name} ${prof.last_name || ""}`.trim(), username: prof.username || "", city: prof.city || "", tagline: prof.tagline || "", bio: prof.bio || "", pricePerDay: Number(prof.price_per_day || 0), services: prof.services || [], specialties: prof.specialties || [], languages: prof.languages || [], responseTime: prof.response_time || "", yearsHosting: Number(prof.years_hosting || 0) })); }
+    }
     Promise.all([
       supabase.from("experience_requests").select("*").eq("host_id", user.id).order("created_at", { ascending: false }),
       supabase.from("invoices").select("*").eq("host_id", user.id).order("created_at", { ascending: false }),
@@ -211,6 +224,8 @@ const HostDashboard = () => {
       supabase.from("host_dishes").select("*").eq("host_id", user.id).order("created_at", { ascending: false }),
       supabase.from("host_transports").select("*").eq("host_id", user.id).order("created_at", { ascending: false }),
     ]).then(([{ data: reqs }, { data: invs }, { data: bks }, { data: revs }, { data: msgs }, { data: prof }, { data: exps }, { data: props }, { data: dishes }, { data: transports }]) => {
+      if (!active) return;
+      hostDashboardCache.set(user.id, { loadedAt: Date.now(), rows: [reqs, invs, bks, revs, msgs, prof, exps, props, dishes, transports] });
       setExpRequests(reqs || []);
       setHostInvoices(invs || []);
       setHostBookings(bks || []);
@@ -247,7 +262,7 @@ const HostDashboard = () => {
       .on("postgres_changes", { event: "*", schema: "public", table: "host_dishes", filter: `host_id=eq.${user.id}` }, refreshDishes)
       .on("postgres_changes", { event: "*", schema: "public", table: "host_transports", filter: `host_id=eq.${user.id}` }, refreshTransports)
       .subscribe();
-    return () => { void supabase.removeChannel(channel); };
+    return () => { active = false; void supabase.removeChannel(channel); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id]);
 
@@ -1519,6 +1534,11 @@ const HostDashboard = () => {
         onStatus={(id, status) => { void updateBookingStatus(id, status); setOpenBooking(null); }}
         onInvoice={(booking) => { void generateInvoice(booking); setOpenBooking(null); }}
         onChat={() => { setOpenBooking(null); setActiveTab("messages"); }}
+        onRequestsSaved={(updated) => {
+          setHostBookings(current => current.map(item => item.id === updated.id ? updated : item));
+          setOpenBooking(updated);
+          hostDashboardCache.delete(user?.id || "");
+        }}
       />
 
       <EditDialog open={editDialog.open} title={editDialog.title} fields={editDialog.fields}
