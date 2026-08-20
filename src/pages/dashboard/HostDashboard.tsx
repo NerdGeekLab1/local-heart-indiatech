@@ -199,33 +199,16 @@ const HostDashboard = () => {
   const [hostMessages, setHostMessages] = useState<any[]>([]);
   const [hostDbProfile, setHostDbProfile] = useState<any>(null);
   const [hostDbExperiences, setHostDbExperiences] = useState<any[]>([]);
+  const [dataLoading, setDataLoading] = useState(false);
+  const [dataError, setDataError] = useState<string | null>(null);
+  const [retryToken, setRetryToken] = useState(0);
 
   useEffect(() => {
     if (!user) return;
     let active = true;
-    const cached = hostDashboardCache.get(user.id);
-    if (cached && Date.now() - cached.loadedAt < HOST_CACHE_TTL) {
-      const [reqs, invs, bks, revs, msgs, prof, exps, props, dishes, transports] = cached.rows;
-      setExpRequests(reqs || []); setHostInvoices(invs || []); setHostBookings(bks || []); setHostDbReviews(revs || []); setHostMessages(msgs || []); setHostDbExperiences(exps || []);
-      setCustomProperties((props || []).map((row: any) => ({ ...row, propertyName: row.property_name, propertyType: row.property_type, nightlyRate: row.nightly_rate, weeklyRate: row.weekly_rate, maxGuests: row.max_guests, houseRules: row.house_rules, checkIn: row.check_in, checkOut: row.check_out, images: row.photos })));
-      setCustomDishes((dishes || []).map((row: any) => ({ ...row, mealType: row.meal_type, dietaryTags: row.dietary_tags?.join(", "), pricePerPlate: row.price_per_plate, prepTime: row.prep_time, allergenNotes: row.allergen_notes, images: row.photos })));
-      setCustomVehicles((transports || []).map((row: any) => ({ ...row, type: row.vehicle_type, pricePerDay: row.price_per_day, pricePerKm: row.price_per_km, serviceRadius: row.service_radius_km, amenities: row.amenities?.join(", "), images: row.photos })));
-      if (prof) { setHostDbProfile(prof); setHostProfile(p => ({ ...p, name: `${prof.first_name} ${prof.last_name || ""}`.trim(), username: prof.username || "", city: prof.city || "", tagline: prof.tagline || "", bio: prof.bio || "", pricePerDay: Number(prof.price_per_day || 0), services: prof.services || [], specialties: prof.specialties || [], languages: prof.languages || [], responseTime: prof.response_time || "", yearsHosting: Number(prof.years_hosting || 0) })); }
-    }
-    Promise.all([
-      supabase.from("experience_requests").select("*").eq("host_id", user.id).order("created_at", { ascending: false }),
-      supabase.from("invoices").select("*").eq("host_id", user.id).order("created_at", { ascending: false }),
-      supabase.from("bookings").select("*").eq("host_id", user.id).order("created_at", { ascending: false }),
-      supabase.from("reviews").select("*").eq("host_id", user.id).order("created_at", { ascending: false }),
-      supabase.from("messages").select("*").or(`receiver_id.eq.${user.id},sender_id.eq.${user.id}`).order("created_at", { ascending: false }).limit(50),
-      supabase.from("profiles").select("*").eq("id", user.id).maybeSingle(),
-      supabase.from("experiences").select("*").eq("host_id", user.id).order("created_at", { ascending: false }),
-      supabase.from("host_properties").select("*").eq("host_id", user.id).order("created_at", { ascending: false }),
-      supabase.from("host_dishes").select("*").eq("host_id", user.id).order("created_at", { ascending: false }),
-      supabase.from("host_transports").select("*").eq("host_id", user.id).order("created_at", { ascending: false }),
-    ]).then(([{ data: reqs }, { data: invs }, { data: bks }, { data: revs }, { data: msgs }, { data: prof }, { data: exps }, { data: props }, { data: dishes }, { data: transports }]) => {
-      if (!active) return;
-      hostDashboardCache.set(user.id, { loadedAt: Date.now(), rows: [reqs, invs, bks, revs, msgs, prof, exps, props, dishes, transports] });
+    let attempts = 0;
+    const applyRows = (rows: any[]) => {
+      const [reqs, invs, bks, revs, msgs, prof, exps, props, dishes, transports] = rows;
       setExpRequests(reqs || []);
       setHostInvoices(invs || []);
       setHostBookings(bks || []);
@@ -242,29 +225,75 @@ const HostDashboard = () => {
         setSocialMedia(p => ({ ...p, ...links }));
         setNotifPrefs(p => ({ ...p, publicProfile: prof.is_public !== false }));
       }
-    });
+    };
 
-    const refreshBookings = async () => { const { data } = await supabase.from("bookings").select("*").eq("host_id", user.id).order("created_at", { ascending: false }); setHostBookings(data || []); };
-    const refreshReviews = async () => { const { data } = await supabase.from("reviews").select("*").eq("host_id", user.id).order("created_at", { ascending: false }); setHostDbReviews(data || []); };
-    const refreshExperiences = async () => { const { data } = await supabase.from("experiences").select("*").eq("host_id", user.id).order("created_at", { ascending: false }); setHostDbExperiences(data || []); };
-    const refreshInvoices = async () => { const { data } = await supabase.from("invoices").select("*").eq("host_id", user.id).order("created_at", { ascending: false }); setHostInvoices(data || []); };
-    const refreshMessages = async () => { const { data } = await supabase.from("messages").select("*").or(`receiver_id.eq.${user.id},sender_id.eq.${user.id}`).order("created_at", { ascending: false }).limit(50); setHostMessages(data || []); };
-    const refreshProperties = async () => { const { data } = await supabase.from("host_properties").select("*").eq("host_id", user.id).order("created_at", { ascending: false }); setCustomProperties((data || []).map((row: any) => ({ ...row, propertyName: row.property_name, propertyType: row.property_type, nightlyRate: row.nightly_rate, weeklyRate: row.weekly_rate, maxGuests: row.max_guests, houseRules: row.house_rules, checkIn: row.check_in, checkOut: row.check_out, images: row.photos }))); };
-    const refreshDishes = async () => { const { data } = await supabase.from("host_dishes").select("*").eq("host_id", user.id).order("created_at", { ascending: false }); setCustomDishes((data || []).map((row: any) => ({ ...row, mealType: row.meal_type, dietaryTags: row.dietary_tags?.join(", "), pricePerPlate: row.price_per_plate, prepTime: row.prep_time, allergenNotes: row.allergen_notes, images: row.photos }))); };
-    const refreshTransports = async () => { const { data } = await supabase.from("host_transports").select("*").eq("host_id", user.id).order("created_at", { ascending: false }); setCustomVehicles((data || []).map((row: any) => ({ ...row, type: row.vehicle_type, pricePerDay: row.price_per_day, pricePerKm: row.price_per_km, serviceRadius: row.service_radius_km, amenities: row.amenities?.join(", "), images: row.photos }))); };
+    // Instant paint from cache, then always revalidate in the background.
+    const cached = hostDashboardCache.get(user.id);
+    const hasCache = Boolean(cached && Date.now() - cached.loadedAt < HOST_CACHE_TTL);
+    if (hasCache) applyRows(cached!.rows);
+
+    /** Circuit breaker: three failed attempts and we stop retrying and surface a clear error. */
+    const fetchAll = async () => {
+      if (!active) return;
+      attempts += 1;
+      setDataLoading(true);
+      try {
+        const query = Promise.all([
+          supabase.from("experience_requests").select("*").eq("host_id", user.id).order("created_at", { ascending: false }),
+          supabase.from("invoices").select("*").eq("host_id", user.id).order("created_at", { ascending: false }),
+          supabase.from("bookings").select("*").eq("host_id", user.id).order("created_at", { ascending: false }),
+          supabase.from("reviews").select("*").eq("host_id", user.id).order("created_at", { ascending: false }),
+          supabase.from("messages").select("*").or(`receiver_id.eq.${user.id},sender_id.eq.${user.id}`).order("created_at", { ascending: false }).limit(50),
+          supabase.from("profiles").select("*").eq("id", user.id).maybeSingle(),
+          supabase.from("experiences").select("*").eq("host_id", user.id).order("created_at", { ascending: false }),
+          supabase.from("host_properties").select("*").eq("host_id", user.id).order("created_at", { ascending: false }),
+          supabase.from("host_dishes").select("*").eq("host_id", user.id).order("created_at", { ascending: false }),
+          supabase.from("host_transports").select("*").eq("host_id", user.id).order("created_at", { ascending: false }),
+        ]);
+        const timeout = new Promise<never>((_, reject) => window.setTimeout(() => reject(new Error("Request timed out")), 12_000));
+        const results = await Promise.race([query, timeout]);
+        if (!active) return;
+        const rows = (results as any[]).map(result => result?.data ?? null);
+        hostDashboardCache.set(user.id, { loadedAt: Date.now(), rows });
+        applyRows(rows);
+        setDataError(null);
+        attempts = 0;
+      } catch (error: any) {
+        if (!active) return;
+        if (attempts < 3) { window.setTimeout(() => { void fetchAll(); }, 1_500 * attempts); return; }
+        setDataError(error?.message || "Couldn't load your dashboard data.");
+      } finally {
+        if (active) setDataLoading(false);
+      }
+    };
+    void fetchAll();
+
+    /** Any live change invalidates the cache so the next mount never shows stale rows. */
+    const invalidate = () => hostDashboardCache.delete(user.id);
+    const refreshBookings = async () => { invalidate(); const { data } = await supabase.from("bookings").select("*").eq("host_id", user.id).order("created_at", { ascending: false }); setHostBookings(data || []); };
+    const refreshReviews = async () => { invalidate(); const { data } = await supabase.from("reviews").select("*").eq("host_id", user.id).order("created_at", { ascending: false }); setHostDbReviews(data || []); };
+    const refreshExperiences = async () => { invalidate(); const { data } = await supabase.from("experiences").select("*").eq("host_id", user.id).order("created_at", { ascending: false }); setHostDbExperiences(data || []); };
+    const refreshInvoices = async () => { invalidate(); const { data } = await supabase.from("invoices").select("*").eq("host_id", user.id).order("created_at", { ascending: false }); setHostInvoices(data || []); };
+    const refreshMessages = async () => { invalidate(); const { data } = await supabase.from("messages").select("*").or(`receiver_id.eq.${user.id},sender_id.eq.${user.id}`).order("created_at", { ascending: false }).limit(50); setHostMessages(data || []); };
+    const refreshProfile = async () => { invalidate(); const { data } = await supabase.from("profiles").select("*").eq("id", user.id).maybeSingle(); if (data) setHostDbProfile(data); };
+    const refreshProperties = async () => { invalidate(); const { data } = await supabase.from("host_properties").select("*").eq("host_id", user.id).order("created_at", { ascending: false }); setCustomProperties((data || []).map((row: any) => ({ ...row, propertyName: row.property_name, propertyType: row.property_type, nightlyRate: row.nightly_rate, weeklyRate: row.weekly_rate, maxGuests: row.max_guests, houseRules: row.house_rules, checkIn: row.check_in, checkOut: row.check_out, images: row.photos }))); };
+    const refreshDishes = async () => { invalidate(); const { data } = await supabase.from("host_dishes").select("*").eq("host_id", user.id).order("created_at", { ascending: false }); setCustomDishes((data || []).map((row: any) => ({ ...row, mealType: row.meal_type, dietaryTags: row.dietary_tags?.join(", "), pricePerPlate: row.price_per_plate, prepTime: row.prep_time, allergenNotes: row.allergen_notes, images: row.photos }))); };
+    const refreshTransports = async () => { invalidate(); const { data } = await supabase.from("host_transports").select("*").eq("host_id", user.id).order("created_at", { ascending: false }); setCustomVehicles((data || []).map((row: any) => ({ ...row, type: row.vehicle_type, pricePerDay: row.price_per_day, pricePerKm: row.price_per_km, serviceRadius: row.service_radius_km, amenities: row.amenities?.join(", "), images: row.photos }))); };
     const channel = supabase.channel(`host-dashboard-${user.id}`)
       .on("postgres_changes", { event: "*", schema: "public", table: "bookings", filter: `host_id=eq.${user.id}` }, refreshBookings)
       .on("postgres_changes", { event: "*", schema: "public", table: "reviews", filter: `host_id=eq.${user.id}` }, refreshReviews)
       .on("postgres_changes", { event: "*", schema: "public", table: "experiences", filter: `host_id=eq.${user.id}` }, refreshExperiences)
       .on("postgres_changes", { event: "*", schema: "public", table: "invoices", filter: `host_id=eq.${user.id}` }, refreshInvoices)
       .on("postgres_changes", { event: "*", schema: "public", table: "messages", filter: `receiver_id=eq.${user.id}` }, refreshMessages)
+      .on("postgres_changes", { event: "*", schema: "public", table: "profiles", filter: `id=eq.${user.id}` }, refreshProfile)
       .on("postgres_changes", { event: "*", schema: "public", table: "host_properties", filter: `host_id=eq.${user.id}` }, refreshProperties)
       .on("postgres_changes", { event: "*", schema: "public", table: "host_dishes", filter: `host_id=eq.${user.id}` }, refreshDishes)
       .on("postgres_changes", { event: "*", schema: "public", table: "host_transports", filter: `host_id=eq.${user.id}` }, refreshTransports)
       .subscribe();
     return () => { active = false; void supabase.removeChannel(channel); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user?.id]);
+  }, [user?.id, retryToken]);
+
 
   const experienceEditFields: FieldConfig[] = [
     { key: "title", label: "Title", required: true },
