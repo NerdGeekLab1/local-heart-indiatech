@@ -112,6 +112,8 @@ const Booking = () => {
   const [selectedSpecialRequests, setSelectedSpecialRequests] = useState<string[]>([]);
   const [customRequests, setCustomRequests] = useState<CustomRequest[]>([]);
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [chatOpen, setChatOpen] = useState(false);
+
 
 
   // Auth gate
