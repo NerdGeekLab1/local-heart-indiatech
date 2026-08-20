@@ -110,7 +110,9 @@ const Booking = () => {
   const [message, setMessage] = useState("");
   const [submitted, setSubmitted] = useState(false);
   const [selectedSpecialRequests, setSelectedSpecialRequests] = useState<string[]>([]);
-  const [chatOpen, setChatOpen] = useState(false);
+  const [customRequests, setCustomRequests] = useState<CustomRequest[]>([]);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+
 
   // Auth gate
   if (!user) {
