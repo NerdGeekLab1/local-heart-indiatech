@@ -17,6 +17,9 @@ import { hosts } from "@/lib/data";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { useCurrency } from "@/contexts/CurrencyContext";
+import SpecialRequestEditor, { CustomRequest } from "@/components/booking/SpecialRequestEditor";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+
 
 /** Service catalogue — prices are always derived from the host's own live listings. */
 const serviceCatalogue = [
@@ -107,7 +110,11 @@ const Booking = () => {
   const [message, setMessage] = useState("");
   const [submitted, setSubmitted] = useState(false);
   const [selectedSpecialRequests, setSelectedSpecialRequests] = useState<string[]>([]);
+  const [customRequests, setCustomRequests] = useState<CustomRequest[]>([]);
+  const [confirmOpen, setConfirmOpen] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
+
+
 
   // Auth gate
   if (!user) {
@@ -169,6 +176,7 @@ const Booking = () => {
   }, 0);
   const chosenAddons = hostAddons.filter(addon => selectedSpecialRequests.includes(addon.id));
   const specialRequestFee = chosenAddons.reduce((sum, addon) => sum + addon.price, 0);
+  const allRequestLabels = [...chosenAddons.map(addon => addon.name), ...customRequests.map(item => `${item.type}: ${item.detail}`)];
 
   const serviceFee = Math.round(servicePricing * 0.1);
   const total = servicePricing + specialRequestFee + serviceFee;
@@ -200,7 +208,7 @@ const Booking = () => {
       end_date: endDate.toISOString().split("T")[0],
       guests,
       services: selectedServices,
-      special_requests: chosenAddons.map(addon => addon.name),
+      special_requests: allRequestLabels,
       total_price: total,
 
       message: message || null,
@@ -239,8 +247,8 @@ const Booking = () => {
               <p className="text-sm"><strong>Services:</strong> {selectedServices.join(", ")}</p>
               {startDate && endDate && <p className="text-sm"><strong>Dates:</strong> {format(startDate, "PPP")} – {format(endDate, "PPP")}</p>}
               <p className="text-sm"><strong>Guests:</strong> {guests}</p>
-              {selectedSpecialRequests.length > 0 && (
-                <p className="text-sm"><strong>Special Requests:</strong> {chosenAddons.map(addon => addon.name).join(", ")}</p>
+              {allRequestLabels.length > 0 && (
+                <p className="text-sm"><strong>Special Requests:</strong> {allRequestLabels.join(", ")}</p>
               )}
               <p className="text-sm font-semibold"><strong>Total:</strong> {formatCurrency(total)}</p>
             </div>
@@ -359,30 +367,17 @@ const Booking = () => {
               )}
 
               {step === 3 && (
-                <div>
-                  <h2 className="text-2xl font-bold text-foreground">Special Requests</h2>
-                  <p className="mt-1 text-muted-foreground">
-                    {hostAddons.length ? `Extras ${host.name} offers — each priced by the host` : `${host.name} hasn't published any add-ons yet.`}
-                  </p>
-                  <div className="mt-6 grid grid-cols-2 sm:grid-cols-4 gap-3" data-testid="booking-addons">
-                    {hostAddons.map(sr => (
-                      <button key={sr.id} onClick={() => toggleSpecialRequest(sr.id)}
-                        title={sr.description || undefined}
-                        className={`flex flex-col items-center gap-2 p-4 rounded-xl border transition-all ${
-                          selectedSpecialRequests.includes(sr.id) ? "border-primary bg-primary/5 shadow-card" : "border-border bg-card hover:border-primary/30"
-                        }`}>
-                        <span className="text-2xl">{sr.emoji}</span>
-                        <span className="text-xs font-medium text-foreground text-center">{sr.name}</span>
-                        <span className="text-xs font-semibold text-primary">{formatCurrency(sr.price)}</span>
-                        {selectedSpecialRequests.includes(sr.id) && (
-                          <Check className="w-4 h-4 text-primary" />
-                        )}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
+                <SpecialRequestEditor
+                  hostName={host.name}
+                  addons={hostAddons}
+                  selectedAddonIds={selectedSpecialRequests}
+                  onToggleAddon={toggleSpecialRequest}
+                  customRequests={customRequests}
+                  onChangeCustom={setCustomRequests}
+                  formatCurrency={formatCurrency}
+                />
               )}
+
 
               {step === 4 && (
                 <div>
@@ -402,7 +397,7 @@ const Booking = () => {
               {step < 4 ? (
                 <Button onClick={() => setStep(step + 1)} disabled={!canProceed()} className="rounded-full px-8">Continue</Button>
               ) : (
-                <Button onClick={handleSubmit} disabled={!canProceed()} className="rounded-full px-8 gap-2">
+                <Button onClick={() => setConfirmOpen(true)} disabled={!canProceed()} className="rounded-full px-8 gap-2">
                   <MessageCircle className="w-4 h-4" /> Confirm Booking
                 </Button>
               )}
@@ -480,6 +475,27 @@ const Booking = () => {
       </div>
       <Footer />
       {isRealHost && <ChatPanel receiverId={host.id} receiverName={host.name} receiverImage={host.image} isOpen={chatOpen} onClose={() => setChatOpen(false)} />}
+      <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+        <AlertDialogContent data-testid="booking-confirm-dialog">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirm your request details</AlertDialogTitle>
+            <AlertDialogDescription>
+              {host.name} will review and confirm each item before your trip.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="space-y-2 rounded-xl bg-secondary/40 p-4 text-sm">
+            <p><strong>Services:</strong> {selectedServices.join(", ") || "—"}</p>
+            {startDate && endDate && <p><strong>Dates:</strong> {format(startDate, "PPP")} – {format(endDate, "PPP")}</p>}
+            <p><strong>Guests:</strong> {guests}</p>
+            <p><strong>Special requests:</strong> {allRequestLabels.length ? allRequestLabels.join(" · ") : "None"}</p>
+            <p className="font-semibold"><strong>Total:</strong> {formatCurrency(total)}</p>
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Keep editing</AlertDialogCancel>
+            <AlertDialogAction onClick={handleSubmit}>Send booking request</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
