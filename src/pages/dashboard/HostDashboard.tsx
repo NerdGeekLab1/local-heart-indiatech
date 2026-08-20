@@ -647,6 +647,20 @@ const HostDashboard = () => {
           ))}
         </div>
 
+        {dataError && (
+          <div className="mt-4 flex flex-wrap items-center gap-3 rounded-xl border border-destructive/40 bg-destructive/10 p-4" data-testid="host-dashboard-error">
+            <div className="min-w-0 flex-1">
+              <p className="font-semibold text-foreground">Couldn't load your dashboard</p>
+              <p className="text-sm text-muted-foreground">{dataError} We stopped retrying to save your connection.</p>
+            </div>
+            <Button size="sm" className="rounded-full" disabled={dataLoading}
+              onClick={() => { setDataError(null); setRetryToken(token => token + 1); }}>
+              {dataLoading ? "Retrying..." : "Try again"}
+            </Button>
+          </div>
+        )}
+
+
         {activeTab === "overview" && (
           <>
             <div className="mt-6 grid grid-cols-2 sm:grid-cols-4 gap-4">
