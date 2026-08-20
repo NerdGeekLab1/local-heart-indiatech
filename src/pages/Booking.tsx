@@ -176,6 +176,7 @@ const Booking = () => {
   }, 0);
   const chosenAddons = hostAddons.filter(addon => selectedSpecialRequests.includes(addon.id));
   const specialRequestFee = chosenAddons.reduce((sum, addon) => sum + addon.price, 0);
+  const allRequestLabels = [...chosenAddons.map(addon => addon.name), ...customRequests.map(item => `${item.type}: ${item.detail}`)];
 
   const serviceFee = Math.round(servicePricing * 0.1);
   const total = servicePricing + specialRequestFee + serviceFee;
@@ -207,7 +208,7 @@ const Booking = () => {
       end_date: endDate.toISOString().split("T")[0],
       guests,
       services: selectedServices,
-      special_requests: chosenAddons.map(addon => addon.name),
+      special_requests: allRequestLabels,
       total_price: total,
 
       message: message || null,
@@ -246,8 +247,8 @@ const Booking = () => {
               <p className="text-sm"><strong>Services:</strong> {selectedServices.join(", ")}</p>
               {startDate && endDate && <p className="text-sm"><strong>Dates:</strong> {format(startDate, "PPP")} – {format(endDate, "PPP")}</p>}
               <p className="text-sm"><strong>Guests:</strong> {guests}</p>
-              {selectedSpecialRequests.length > 0 && (
-                <p className="text-sm"><strong>Special Requests:</strong> {chosenAddons.map(addon => addon.name).join(", ")}</p>
+              {allRequestLabels.length > 0 && (
+                <p className="text-sm"><strong>Special Requests:</strong> {allRequestLabels.join(", ")}</p>
               )}
               <p className="text-sm font-semibold"><strong>Total:</strong> {formatCurrency(total)}</p>
             </div>
@@ -396,7 +397,7 @@ const Booking = () => {
               {step < 4 ? (
                 <Button onClick={() => setStep(step + 1)} disabled={!canProceed()} className="rounded-full px-8">Continue</Button>
               ) : (
-                <Button onClick={handleSubmit} disabled={!canProceed()} className="rounded-full px-8 gap-2">
+                <Button onClick={() => setConfirmOpen(true)} disabled={!canProceed()} className="rounded-full px-8 gap-2">
                   <MessageCircle className="w-4 h-4" /> Confirm Booking
                 </Button>
               )}
@@ -474,6 +475,27 @@ const Booking = () => {
       </div>
       <Footer />
       {isRealHost && <ChatPanel receiverId={host.id} receiverName={host.name} receiverImage={host.image} isOpen={chatOpen} onClose={() => setChatOpen(false)} />}
+      <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+        <AlertDialogContent data-testid="booking-confirm-dialog">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirm your request details</AlertDialogTitle>
+            <AlertDialogDescription>
+              {host.name} will review and confirm each item before your trip.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="space-y-2 rounded-xl bg-secondary/40 p-4 text-sm">
+            <p><strong>Services:</strong> {selectedServices.join(", ") || "—"}</p>
+            {startDate && endDate && <p><strong>Dates:</strong> {format(startDate, "PPP")} – {format(endDate, "PPP")}</p>}
+            <p><strong>Guests:</strong> {guests}</p>
+            <p><strong>Special requests:</strong> {allRequestLabels.length ? allRequestLabels.join(" · ") : "None"}</p>
+            <p className="font-semibold"><strong>Total:</strong> {formatCurrency(total)}</p>
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Keep editing</AlertDialogCancel>
+            <AlertDialogAction onClick={handleSubmit}>Send booking request</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
