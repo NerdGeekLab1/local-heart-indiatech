@@ -17,6 +17,9 @@ import { hosts } from "@/lib/data";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { useCurrency } from "@/contexts/CurrencyContext";
+import SpecialRequestEditor, { CustomRequest } from "@/components/booking/SpecialRequestEditor";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+
 
 /** Service catalogue — prices are always derived from the host's own live listings. */
 const serviceCatalogue = [
