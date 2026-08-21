@@ -453,6 +453,20 @@ const HostDashboard = () => {
   const ratingAvg = hostDbReviews.length
     ? (hostDbReviews.reduce((sum: number, r: any) => sum + Number(r.rating || 0), 0) / hostDbReviews.length).toFixed(1)
     : null;
+  const completedBookings = hostBookings.filter((booking: any) => booking.status === "completed").length;
+  const approvedListings = hostDbExperiences.filter((item: any) => item.status === "approved").length
+    + customProperties.filter((item: any) => item.status === "approved").length
+    + customDishes.filter((item: any) => item.status === "approved").length
+    + customVehicles.filter((item: any) => item.status === "approved").length;
+  const verificationStatus = hostDbProfile?.verification_status || "not_applied";
+  const verificationMilestones = [
+    { label: "Approved host account", done: Boolean(hostDbProfile) },
+    { label: "Profile at least 80% complete", done: completeness.score >= 80 },
+    { label: "One approved listing", done: approvedListings > 0 },
+    { label: "Three completed bookings", done: completedBookings >= 3 },
+    { label: "Rating of 4.5 or higher", done: !hostDbReviews.length || Number(ratingAvg) >= 4.5 },
+  ];
+  const canApplyForVerification = verificationMilestones.every(item => item.done) && verificationStatus === "not_applied";
   const decidedBookings = hostBookings.filter((b: any) => ["confirmed", "completed", "cancelled"].includes(b.status));
   const acceptanceRate = decidedBookings.length
     ? Math.round(decidedBookings.filter((b: any) => b.status !== "cancelled").length / decidedBookings.length * 100)
@@ -514,6 +528,8 @@ const HostDashboard = () => {
 
   const generateInvoice = async (booking: any) => {
     if (!user) return;
+    const existing = hostInvoices.find(invoice => invoice.booking_id === booking.id);
+    if (existing) { setSelectedInvoice(existing); toast({ title: "Invoice already exists", description: "Opening the existing invoice instead." }); return; }
     const invoiceNumber = `INV-${new Date().getFullYear()}-${String(Math.floor(Math.random() * 9999)).padStart(4, "0")}`;
     const amount = Number(booking.total_price || 0);
     const taxAmount = Math.round(amount * 0.18);
@@ -530,6 +546,7 @@ const HostDashboard = () => {
     }).select().single();
     if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
     setHostInvoices(p => [data, ...p]);
+    setSelectedInvoice(data);
     toast({ title: `Invoice ${invoiceNumber} generated! 🧾` });
   };
 
@@ -657,8 +674,8 @@ const HostDashboard = () => {
               <p className="font-semibold text-foreground">Couldn't load your dashboard</p>
               <p className="text-sm text-muted-foreground">{dataError} We stopped retrying to save your connection.</p>
             </div>
-            <Button size="sm" className="rounded-full" disabled={dataLoading}
-              onClick={() => { setDataError(null); setRetryToken(token => token + 1); }}>
+            <Button size="sm" className="rounded-full" disabled={dataLoading} data-testid="host-dashboard-retry"
+              onClick={() => { retryAttemptsRef.current = 0; setDataError(null); setRetryToken(token => token + 1); }}>
               {dataLoading ? "Retrying..." : "Try again"}
             </Button>
           </div>
@@ -708,6 +725,12 @@ const HostDashboard = () => {
                 </div>
               </div>
               <div className="space-y-4">
+                <div className="rounded-lg border border-primary/20 bg-card p-5 shadow-card" data-testid="host-verification-card">
+                  <div className="flex items-center gap-2"><BadgeCheck className="h-5 w-5 text-primary" /><h3 className="font-bold">Host verification</h3></div>
+                  <p className="mt-1 text-xs text-muted-foreground">{verificationStatus === "verified" ? "Verified milestone badge earned." : verificationStatus === "pending" ? "Your application is under review." : "Complete each trust milestone to apply."}</p>
+                  <ul className="mt-3 space-y-1.5">{verificationMilestones.map(item => <li key={item.label} className="flex items-center gap-2 text-xs"><ShieldCheck className={`h-3.5 w-3.5 ${item.done ? "text-accent" : "text-muted-foreground"}`} /><span className={item.done ? "text-foreground" : "text-muted-foreground"}>{item.label}</span></li>)}</ul>
+                  {verificationStatus !== "verified" && verificationStatus !== "pending" && <Button size="sm" className="mt-4 w-full" disabled={!canApplyForVerification} onClick={async () => { if (!user) return; const { error } = await (supabase as any).from("host_verification_applications").insert({ host_id: user.id }); if (error) { toast({ title: "Couldn't apply", description: error.message, variant: "destructive" }); return; } setHostDbProfile((current: any) => ({ ...current, verification_status: "pending" })); toast({ title: "Verification application submitted" }); }}>Apply for verification</Button>}
+                </div>
                 <div className="rounded-lg bg-card p-5 shadow-card">
                   <h3 className="text-sm font-bold text-foreground uppercase tracking-wider mb-3">Performance</h3>
                   <div className="space-y-3 text-sm">
@@ -1337,7 +1360,7 @@ const HostDashboard = () => {
             ) : (
               <div className="space-y-3">
                 {hostInvoices.map(inv => (
-                  <div key={inv.id} className="rounded-lg bg-card p-4 shadow-card flex justify-between items-center">
+                  <button key={inv.id} type="button" onClick={() => setSelectedInvoice(inv)} className="flex w-full items-center justify-between rounded-lg bg-card p-4 text-left shadow-card transition hover:border-primary/40 hover:shadow-elegant">
                     <div>
                       <div className="flex items-center gap-2">
                         <Receipt className="w-4 h-4 text-primary" />
@@ -1350,7 +1373,7 @@ const HostDashboard = () => {
                       <p className="text-xs text-muted-foreground">Issued: {new Date(inv.issued_at).toLocaleDateString()}</p>
                     </div>
                     <p className="text-lg font-bold text-foreground">{inv.currency} {inv.total_amount}</p>
-                  </div>
+                  </button>
                 ))}
               </div>
             )}
@@ -1587,6 +1610,7 @@ const HostDashboard = () => {
           hostDashboardCache.delete(user?.id || "");
         }}
       />
+      <InvoiceDetail invoice={selectedInvoice} booking={hostBookings.find(item => item.id === selectedInvoice?.booking_id)} hostName={displayName} onOpenChange={open => { if (!open) setSelectedInvoice(null); }} />
 
       <EditDialog open={editDialog.open} title={editDialog.title} fields={editDialog.fields}
         initialData={editDialog.data} onSave={(d) => { editDialog.onSave(d); setEditDialog(p => ({ ...p, open: false })); }}
