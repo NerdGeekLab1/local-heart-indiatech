@@ -10,7 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
 type PublicHostData = {
-  profile: { id: string; username?: string; full_name: string; city?: string; tagline?: string; bio?: string; avatar_url?: string; cover_url?: string; services?: string[]; specialties?: string[]; languages?: string[]; response_time?: string; years_hosting?: number; social_links?: Record<string, string>; price_per_day?: number; host_since?: string };
+  profile: { id: string; username?: string; full_name: string; city?: string; tagline?: string; bio?: string; avatar_url?: string; cover_url?: string; services?: string[]; specialties?: string[]; languages?: string[]; response_time?: string; years_hosting?: number; social_links?: Record<string, string>; price_per_day?: number; host_since?: string; verification_status?: string };
   experiences: any[];
   reviews: any[];
   properties: any[];
@@ -46,7 +46,7 @@ export default function HostProfile() {
     ? data.reviews.reduce((sum, review) => sum + Number(review.rating || 0), 0) / data.reviews.length
     : 0, [data]);
 
-  if (loading) return <div className="min-h-screen bg-background"><Navbar /><main className="mx-auto max-w-6xl px-4 pt-28"><Skeleton className="h-56 w-full rounded-lg" /><Skeleton className="mt-6 h-12 w-1/2" /></main></div>;
+  if (loading) return <HostProfileSkeleton />;
   if (!data) return <main className="min-h-screen bg-background flex items-center justify-center"><div className="text-center"><h1 className="text-2xl font-bold">Host not found</h1><Link className="mt-3 inline-block text-primary" to="/explore">Back to Explore</Link></div></main>;
 
   const { profile, experiences, reviews, properties, dishes, transports } = data;
@@ -82,7 +82,7 @@ export default function HostProfile() {
           <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
             <img src={avatar} alt={profile.full_name} className="h-32 w-32 rounded-3xl border-4 border-background object-cover shadow-elegant ring-2 ring-primary/40 sm:-mt-24" />
             <div className="flex-1">
-              <div className="flex flex-wrap items-center gap-2"><h1 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">{profile.full_name}</h1><span className="inline-flex items-center gap-1 rounded-full bg-accent/10 px-2 py-1 text-xs font-semibold text-accent"><Verified className="h-4 w-4" /> Verified host</span></div>
+              <div className="flex flex-wrap items-center gap-2"><h1 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">{profile.full_name}</h1>{profile.verification_status === "verified" && <span className="inline-flex items-center gap-1 rounded-full bg-accent/10 px-2 py-1 text-xs font-semibold text-accent"><Verified className="h-4 w-4" /> Verified host</span>}</div>
               <p className="mt-1 flex items-center gap-1 text-muted-foreground"><MapPin className="h-4 w-4" />{profile.city || "Location not added"}</p>
               {profile.tagline && <p className="mt-1 text-muted-foreground">{profile.tagline}</p>}
               <div className="mt-3 flex flex-wrap items-center gap-3 text-sm">
@@ -100,7 +100,7 @@ export default function HostProfile() {
           </div>
 
           <div className="mt-6 grid grid-cols-2 gap-3 border-t border-border pt-5 sm:grid-cols-4">
-            {(profile.services || []).map(service => {
+            {(profile.services || []).length ? (profile.services || []).map(service => {
               const Icon = serviceIcons[service] || Compass;
               const target = serviceTabs[service] || "overview";
               return (
@@ -116,7 +116,7 @@ export default function HostProfile() {
                   <p className="flex items-center gap-1 text-xs font-medium text-primary">Explore options <ChevronRight className="h-3 w-3" /></p>
                 </button>
               );
-            })}
+            }) : <div className="col-span-full rounded-lg border border-dashed border-border p-4 text-center text-sm text-muted-foreground">This host is still adding service details.</div>}
           </div>
         </div>
 
@@ -140,7 +140,7 @@ export default function HostProfile() {
               <section className="rounded-2xl border border-border bg-card p-5">
                 <h2 className="flex items-center gap-2 text-xl font-bold"><Sparkles className="h-5 w-5 text-primary" />About {profile.full_name}</h2>
                 <p className="mt-3 leading-relaxed text-muted-foreground">{profile.bio || "This host has not added a bio yet."}</p>
-                <div className="mt-4 flex flex-wrap gap-2">{(profile.specialties || []).map(item => <span key={item} className="rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">{item}</span>)}</div>
+                {(profile.specialties || []).length ? <div className="mt-4 flex flex-wrap gap-2">{(profile.specialties || []).map(item => <span key={item} className="rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">{item}</span>)}</div> : <p className="mt-3 text-xs text-muted-foreground">Specialties will appear here once added.</p>}
               </section>
               <section data-testid="host-reels">
                 <h2 className="text-xl font-bold">Reels &amp; Stories</h2>
@@ -156,7 +156,7 @@ export default function HostProfile() {
                       </figure>
                     ))}
                   </div>
-                ) : <p className="mt-2 text-sm text-muted-foreground">No reels or stories shared yet.</p>}
+                ) : <EmptyState text="No reels or stories shared yet." />}
               </section>
             </>}
 
@@ -174,26 +174,24 @@ export default function HostProfile() {
                       <p className="mt-2 text-sm leading-relaxed text-foreground">{review.text || "Video review"}</p>
                       <p className="mt-3 font-medium text-primary">{"★".repeat(Number(review.rating || 0))}</p>
                     </article>
-                  )) : <p className="text-sm text-muted-foreground">No reviews yet.</p>}
+                  )) : <EmptyState text="No traveler reviews yet." />}
                 </div>
               </section>
             )}
           </div>
 
           <aside className="space-y-6">
-            {quickInfo.length > 0 && (
-              <div data-testid="host-quick-info" className="rounded-2xl border border-border bg-card p-5 shadow-card">
+            <div data-testid="host-quick-info" className="rounded-2xl border border-border bg-card p-5 shadow-card">
                 <h2 className="text-sm font-bold uppercase tracking-wide text-primary">Quick info</h2>
-                <dl className="mt-3 space-y-2">
+                {quickInfo.length ? <dl className="mt-3 space-y-2">
                   {quickInfo.map(item => (
                     <div key={item.label} className="flex items-center gap-3 border-b border-border/60 pb-3 last:border-0 last:pb-0">
                       <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10"><item.icon className="h-4 w-4 text-primary" /></span>
                       <div><dt className="text-xs text-muted-foreground">{item.label}</dt><dd className="text-sm font-semibold text-foreground">{item.value}</dd></div>
                     </div>
                   ))}
-                </dl>
+                </dl> : <p className="mt-3 text-sm text-muted-foreground">Quick information has not been added yet.</p>}
               </div>
-            )}
             <div className="rounded-2xl border border-border bg-card p-5 shadow-card">
               <h2 className="text-sm font-bold uppercase tracking-wide text-primary">Latest reviews</h2>
               <div className="mt-3 space-y-3">
@@ -216,6 +214,12 @@ export default function HostProfile() {
 
 function Tags({ values }: { values?: string[] }) { return <div className="mt-3 flex flex-wrap gap-1.5">{(values || []).map(value => <span key={value} className="rounded-full border border-border bg-secondary px-2.5 py-1 text-[11px] font-medium text-muted-foreground">{value}</span>)}</div>; }
 
+function EmptyState({ text }: { text: string }) { return <div className="mt-3 rounded-2xl border border-dashed border-border bg-card/60 p-6 text-center text-sm text-muted-foreground">{text}</div>; }
+
+function HostProfileSkeleton() {
+  return <div className="min-h-screen bg-background"><Navbar /><main className="pb-16 pt-20" aria-label="Loading host profile"><Skeleton className="h-56 w-full rounded-none sm:h-72" /><section className="relative z-10 mx-auto -mt-20 max-w-6xl px-4 sm:px-6"><div className="rounded-3xl border border-border bg-card p-6"><div className="flex gap-5"><Skeleton className="h-32 w-32 shrink-0 rounded-3xl" /><div className="flex-1 space-y-3"><Skeleton className="h-9 w-56" /><Skeleton className="h-4 w-40" /><Skeleton className="h-4 w-72" /></div></div><div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">{[0,1,2,3].map(item => <Skeleton key={item} className="h-28 rounded-2xl" />)}</div></div><Skeleton className="mt-6 h-12 w-full rounded-full" /><div className="mt-8 grid gap-8 lg:grid-cols-[2fr_1fr]"><div className="space-y-4"><Skeleton className="h-48 rounded-2xl" /><div className="grid grid-cols-2 gap-3"><Skeleton className="h-56 rounded-2xl" /><Skeleton className="h-56 rounded-2xl" /></div></div><Skeleton className="h-72 rounded-2xl" /></div></section></main></div>;
+}
+
 function ListingSection({ title, empty, items, render }: { title: string; empty: string; items: any[]; render: (item: any) => React.ReactNode }) {
   return <section>
     <h2 className="text-xl font-bold">{title}</h2>
@@ -230,6 +234,6 @@ function ListingSection({ title, empty, items, render }: { title: string; empty:
             </article>
           ))}
         </div>
-      : <div className="mt-3 rounded-2xl border border-dashed border-border bg-card/60 p-6 text-center text-sm text-muted-foreground">{empty}</div>}
+      : <EmptyState text={empty} />}
   </section>;
 }
