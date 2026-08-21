@@ -11,12 +11,12 @@ export interface CustomRequest {
 
 /** Request categories the traveler can pick from the icon dropdown. */
 export const requestTypes = [
-  { key: "Transport", icon: Car, placeholder: "e.g. Airport pickup at 6am" },
-  { key: "Food", icon: UtensilsCrossed, placeholder: "e.g. Jain thali, no onion or garlic" },
-  { key: "Stay", icon: Bed, placeholder: "e.g. Ground-floor room" },
-  { key: "Celebration", icon: Gift, placeholder: "e.g. Anniversary cake on day 2" },
-  { key: "Accessibility", icon: HeartHandshake, placeholder: "e.g. Step-free access" },
-  { key: "Other", icon: Sparkles, placeholder: "Describe your request" },
+  { key: "Transport", icon: Car, placeholder: "e.g. Airport pickup at 6am", description: "Pickups, drop-offs and local travel" },
+  { key: "Food", icon: UtensilsCrossed, placeholder: "e.g. Jain thali, no onion or garlic", description: "Meals, allergies and dietary needs" },
+  { key: "Stay", icon: Bed, placeholder: "e.g. Ground-floor room", description: "Room setup and accommodation needs" },
+  { key: "Celebration", icon: Gift, placeholder: "e.g. Anniversary cake on day 2", description: "Birthdays, anniversaries and surprises" },
+  { key: "Accessibility", icon: HeartHandshake, placeholder: "e.g. Step-free access", description: "Mobility and accessibility support" },
+  { key: "Other", icon: Sparkles, placeholder: "Describe your request", description: "Anything else the host should know" },
 ] as const;
 
 export const requestIcon = (type: string) =>
@@ -69,13 +69,14 @@ export default function SpecialRequestEditor({
           {addons.map(addon => {
             const active = selectedAddonIds.includes(addon.id);
             return (
-              <button key={addon.id} type="button" onClick={() => onToggleAddon(addon.id)} title={addon.description || undefined}
-                className={`relative flex flex-col items-center gap-2 rounded-xl border p-4 transition-all ${active ? "border-primary bg-primary/5 shadow-card" : "border-border bg-card hover:border-primary/30"}`}>
+              <Button key={addon.id} type="button" variant="outline" onClick={() => onToggleAddon(addon.id)}
+                className={`relative h-auto min-h-36 flex-col items-start gap-2 whitespace-normal rounded-xl p-4 text-left ${active ? "border-primary bg-primary/5 shadow-card" : "border-border bg-card hover:border-primary/30"}`}>
                 <span className="text-2xl">{addon.emoji}</span>
-                <span className="text-center text-xs font-medium text-foreground">{addon.name}</span>
+                <span className="text-sm font-semibold text-foreground">{addon.name}</span>
+                <span className="line-clamp-2 text-xs font-normal text-muted-foreground">{addon.description || "Optional extra offered by your host"}</span>
                 <span className="text-xs font-semibold text-primary">{formatCurrency(addon.price)}</span>
                 {active && <Check className="absolute right-2 top-2 h-4 w-4 text-primary" />}
-              </button>
+              </Button>
             );
           })}
         </div>
@@ -91,10 +92,10 @@ export default function SpecialRequestEditor({
                 <ChevronDown className="h-4 w-4 opacity-60" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" className="w-48 bg-popover">
+            <DropdownMenuContent align="start" className="w-72 bg-popover">
               {requestTypes.map(item => (
-                <DropdownMenuItem key={item.key} onSelect={() => setType(item.key)} className="gap-2">
-                  <item.icon className="h-4 w-4 text-primary" />{item.key}
+                <DropdownMenuItem key={item.key} onSelect={() => setType(item.key)} className="items-start gap-3 py-2">
+                  <item.icon className="mt-0.5 h-4 w-4 text-primary" /><span><span className="block font-medium">{item.key}</span><span className="block text-xs text-muted-foreground">{item.description}</span></span>
                 </DropdownMenuItem>
               ))}
             </DropdownMenuContent>
@@ -117,7 +118,7 @@ export default function SpecialRequestEditor({
             {chosenAddons.map(addon => (
               <li key={addon.id} className="flex items-center gap-2 text-sm text-foreground">
                 <span>{addon.emoji}</span>
-                <span className="flex-1">{addon.name}</span>
+                <span className="flex-1"><span className="block font-medium">{addon.name}</span><span className="block text-xs text-muted-foreground">{addon.description || "Host-offered extra"}</span></span>
                 <span className="text-xs font-semibold text-primary">{formatCurrency(addon.price)}</span>
               </li>
             ))}

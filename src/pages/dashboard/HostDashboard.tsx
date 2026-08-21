@@ -1,10 +1,10 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   DollarSign, Users, Star, Calendar, Clock, TrendingUp, TrendingDown, MessageCircle, Settings, Home, Car, BarChart3,
   Bell, UtensilsCrossed, Plus, Save, Instagram, Facebook, Twitter, Youtube, Linkedin, Ghost, Globe, Tag, Bike, MapPin, Film,
-  FileText, Receipt, Heart, Eye, Copy, Phone, Sparkles, ExternalLink
+  FileText, Receipt, Heart, Eye, Copy, Phone, Sparkles, ExternalLink, BadgeCheck, ShieldCheck
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -28,6 +28,7 @@ import HostMessageThreads from "@/components/host/HostMessageThreads";
 import BookingDetailDialog from "@/components/host/BookingDetailDialog";
 import ProfileCompleteness, { CompletenessRing } from "@/components/host/ProfileCompleteness";
 import { hostCompleteness } from "@/lib/hostCompleteness";
+import InvoiceDetail from "@/components/dashboard/InvoiceDetail";
 
 const statusColors: Record<string, string> = {
   pending: "bg-primary/10 text-primary", confirmed: "bg-accent/10 text-accent",
@@ -91,6 +92,8 @@ const HostDashboard = () => {
   const [approvedReelCount, setApprovedReelCount] = useState(0);
   const [openBooking, setOpenBooking] = useState<any | null>(null);
   const [savingAll, setSavingAll] = useState(false);
+  const [selectedInvoice, setSelectedInvoice] = useState<any | null>(null);
+  const retryAttemptsRef = useRef(0);
 
   /** Persists every settings section in one write so the public preview always matches the editor. */
   const saveAllSettings = async () => {
@@ -206,7 +209,6 @@ const HostDashboard = () => {
   useEffect(() => {
     if (!user) return;
     let active = true;
-    let attempts = 0;
     const applyRows = (rows: any[]) => {
       const [reqs, invs, bks, revs, msgs, prof, exps, props, dishes, transports] = rows;
       setExpRequests(reqs || []);
@@ -230,13 +232,13 @@ const HostDashboard = () => {
     // Instant paint from cache, then always revalidate in the background.
     const cached = hostDashboardCache.get(user.id);
     const hasCache = Boolean(cached && Date.now() - cached.loadedAt < HOST_CACHE_TTL);
-    if (hasCache) applyRows(cached!.rows);
+    if (hasCache && cached) applyRows(cached.rows);
 
     /** Circuit breaker: three failed attempts and we stop retrying and surface a clear error. */
     const fetchAll = async () => {
       if (!active) return;
-      attempts += 1;
-      setDataLoading(true);
+       retryAttemptsRef.current += 1;
+       if (!hasCache) setDataLoading(true);
       try {
         const query = Promise.all([
           supabase.from("experience_requests").select("*").eq("host_id", user.id).order("created_at", { ascending: false }),
@@ -253,14 +255,16 @@ const HostDashboard = () => {
         const timeout = new Promise<never>((_, reject) => window.setTimeout(() => reject(new Error("Request timed out")), 12_000));
         const results = await Promise.race([query, timeout]);
         if (!active) return;
-        const rows = (results as any[]).map(result => result?.data ?? null);
+         const failed = (results as any[]).find(result => result?.error);
+         if (failed?.error) throw failed.error;
+         const rows = (results as any[]).map(result => result?.data ?? null);
         hostDashboardCache.set(user.id, { loadedAt: Date.now(), rows });
         applyRows(rows);
         setDataError(null);
-        attempts = 0;
+         retryAttemptsRef.current = 0;
       } catch (error: any) {
         if (!active) return;
-        if (attempts < 3) { window.setTimeout(() => { void fetchAll(); }, 1_500 * attempts); return; }
+         if (retryAttemptsRef.current < 3) { window.setTimeout(() => { void fetchAll(); }, 1_500 * retryAttemptsRef.current); return; }
         setDataError(error?.message || "Couldn't load your dashboard data.");
       } finally {
         if (active) setDataLoading(false);
@@ -269,16 +273,16 @@ const HostDashboard = () => {
     void fetchAll();
 
     /** Any live change invalidates the cache so the next mount never shows stale rows. */
-    const invalidate = () => hostDashboardCache.delete(user.id);
-    const refreshBookings = async () => { invalidate(); const { data } = await supabase.from("bookings").select("*").eq("host_id", user.id).order("created_at", { ascending: false }); setHostBookings(data || []); };
-    const refreshReviews = async () => { invalidate(); const { data } = await supabase.from("reviews").select("*").eq("host_id", user.id).order("created_at", { ascending: false }); setHostDbReviews(data || []); };
-    const refreshExperiences = async () => { invalidate(); const { data } = await supabase.from("experiences").select("*").eq("host_id", user.id).order("created_at", { ascending: false }); setHostDbExperiences(data || []); };
-    const refreshInvoices = async () => { invalidate(); const { data } = await supabase.from("invoices").select("*").eq("host_id", user.id).order("created_at", { ascending: false }); setHostInvoices(data || []); };
-    const refreshMessages = async () => { invalidate(); const { data } = await supabase.from("messages").select("*").or(`receiver_id.eq.${user.id},sender_id.eq.${user.id}`).order("created_at", { ascending: false }).limit(50); setHostMessages(data || []); };
-    const refreshProfile = async () => { invalidate(); const { data } = await supabase.from("profiles").select("*").eq("id", user.id).maybeSingle(); if (data) setHostDbProfile(data); };
-    const refreshProperties = async () => { invalidate(); const { data } = await supabase.from("host_properties").select("*").eq("host_id", user.id).order("created_at", { ascending: false }); setCustomProperties((data || []).map((row: any) => ({ ...row, propertyName: row.property_name, propertyType: row.property_type, nightlyRate: row.nightly_rate, weeklyRate: row.weekly_rate, maxGuests: row.max_guests, houseRules: row.house_rules, checkIn: row.check_in, checkOut: row.check_out, images: row.photos }))); };
-    const refreshDishes = async () => { invalidate(); const { data } = await supabase.from("host_dishes").select("*").eq("host_id", user.id).order("created_at", { ascending: false }); setCustomDishes((data || []).map((row: any) => ({ ...row, mealType: row.meal_type, dietaryTags: row.dietary_tags?.join(", "), pricePerPlate: row.price_per_plate, prepTime: row.prep_time, allergenNotes: row.allergen_notes, images: row.photos }))); };
-    const refreshTransports = async () => { invalidate(); const { data } = await supabase.from("host_transports").select("*").eq("host_id", user.id).order("created_at", { ascending: false }); setCustomVehicles((data || []).map((row: any) => ({ ...row, type: row.vehicle_type, pricePerDay: row.price_per_day, pricePerKm: row.price_per_km, serviceRadius: row.service_radius_km, amenities: row.amenities?.join(", "), images: row.photos }))); };
+    const updateCacheRow = (index: number, value: any) => { const current = hostDashboardCache.get(user.id); if (!current) return; const rows = [...current.rows]; rows[index] = value; hostDashboardCache.set(user.id, { loadedAt: Date.now(), rows }); };
+    const refreshBookings = async () => { const { data } = await supabase.from("bookings").select("*").eq("host_id", user.id).order("created_at", { ascending: false }); updateCacheRow(2, data || []); setHostBookings(data || []); };
+    const refreshReviews = async () => { const { data } = await supabase.from("reviews").select("*").eq("host_id", user.id).order("created_at", { ascending: false }); updateCacheRow(3, data || []); setHostDbReviews(data || []); };
+    const refreshExperiences = async () => { const { data } = await supabase.from("experiences").select("*").eq("host_id", user.id).order("created_at", { ascending: false }); updateCacheRow(6, data || []); setHostDbExperiences(data || []); };
+    const refreshInvoices = async () => { const { data } = await supabase.from("invoices").select("*").eq("host_id", user.id).order("created_at", { ascending: false }); updateCacheRow(1, data || []); setHostInvoices(data || []); };
+    const refreshMessages = async () => { const { data } = await supabase.from("messages").select("*").or(`receiver_id.eq.${user.id},sender_id.eq.${user.id}`).order("created_at", { ascending: false }).limit(50); updateCacheRow(4, data || []); setHostMessages(data || []); };
+    const refreshProfile = async () => { const { data } = await supabase.from("profiles").select("*").eq("id", user.id).maybeSingle(); if (data) { updateCacheRow(5, data); setHostDbProfile(data); } };
+    const refreshProperties = async () => { const { data } = await supabase.from("host_properties").select("*").eq("host_id", user.id).order("created_at", { ascending: false }); updateCacheRow(7, data || []); setCustomProperties((data || []).map((row: any) => ({ ...row, propertyName: row.property_name, propertyType: row.property_type, nightlyRate: row.nightly_rate, weeklyRate: row.weekly_rate, maxGuests: row.max_guests, houseRules: row.house_rules, checkIn: row.check_in, checkOut: row.check_out, images: row.photos }))); };
+    const refreshDishes = async () => { const { data } = await supabase.from("host_dishes").select("*").eq("host_id", user.id).order("created_at", { ascending: false }); updateCacheRow(8, data || []); setCustomDishes((data || []).map((row: any) => ({ ...row, mealType: row.meal_type, dietaryTags: row.dietary_tags?.join(", "), pricePerPlate: row.price_per_plate, prepTime: row.prep_time, allergenNotes: row.allergen_notes, images: row.photos }))); };
+    const refreshTransports = async () => { const { data } = await supabase.from("host_transports").select("*").eq("host_id", user.id).order("created_at", { ascending: false }); updateCacheRow(9, data || []); setCustomVehicles((data || []).map((row: any) => ({ ...row, type: row.vehicle_type, pricePerDay: row.price_per_day, pricePerKm: row.price_per_km, serviceRadius: row.service_radius_km, amenities: row.amenities?.join(", "), images: row.photos }))); };
     const channel = supabase.channel(`host-dashboard-${user.id}`)
       .on("postgres_changes", { event: "*", schema: "public", table: "bookings", filter: `host_id=eq.${user.id}` }, refreshBookings)
       .on("postgres_changes", { event: "*", schema: "public", table: "reviews", filter: `host_id=eq.${user.id}` }, refreshReviews)
@@ -510,6 +514,8 @@ const HostDashboard = () => {
 
   const generateInvoice = async (booking: any) => {
     if (!user) return;
+    const existing = hostInvoices.find(invoice => invoice.booking_id === booking.id);
+    if (existing) { setSelectedInvoice(existing); toast({ title: "Invoice already exists", description: "Opening the existing invoice instead." }); return; }
     const invoiceNumber = `INV-${new Date().getFullYear()}-${String(Math.floor(Math.random() * 9999)).padStart(4, "0")}`;
     const amount = Number(booking.total_price || 0);
     const taxAmount = Math.round(amount * 0.18);
@@ -526,6 +532,7 @@ const HostDashboard = () => {
     }).select().single();
     if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
     setHostInvoices(p => [data, ...p]);
+    setSelectedInvoice(data);
     toast({ title: `Invoice ${invoiceNumber} generated! 🧾` });
   };
 
@@ -562,6 +569,20 @@ const HostDashboard = () => {
       customVehicles.reduce((sum, item: any) => sum + (item.amenities?.length || 0), 0) +
       customDishes.reduce((sum, item: any) => sum + (item.dietary_tags?.length || 0), 0),
   }), [hostDbProfile, hostProfile, approvedReelCount, customProperties, customVehicles, customDishes]);
+  const completedBookings = hostBookings.filter((booking: any) => booking.status === "completed").length;
+  const approvedListings = hostDbExperiences.filter((item: any) => item.status === "approved").length
+    + customProperties.filter((item: any) => item.status === "approved").length
+    + customDishes.filter((item: any) => item.status === "approved").length
+    + customVehicles.filter((item: any) => item.status === "approved").length;
+  const verificationStatus = hostDbProfile?.verification_status || "not_applied";
+  const verificationMilestones = [
+    { label: "Approved host account", done: Boolean(hostDbProfile) },
+    { label: "Profile at least 80% complete", done: completeness.score >= 80 },
+    { label: "One approved listing", done: approvedListings > 0 },
+    { label: "Three completed bookings", done: completedBookings >= 3 },
+    { label: "Rating of 4.5 or higher", done: !hostDbReviews.length || Number(ratingAvg) >= 4.5 },
+  ];
+  const canApplyForVerification = verificationMilestones.every(item => item.done) && verificationStatus === "not_applied";
 
   const tabs: { id: Tab; label: string; icon: React.ElementType }[] = [
     { id: "overview", label: "Overview", icon: BarChart3 },
@@ -653,8 +674,8 @@ const HostDashboard = () => {
               <p className="font-semibold text-foreground">Couldn't load your dashboard</p>
               <p className="text-sm text-muted-foreground">{dataError} We stopped retrying to save your connection.</p>
             </div>
-            <Button size="sm" className="rounded-full" disabled={dataLoading}
-              onClick={() => { setDataError(null); setRetryToken(token => token + 1); }}>
+            <Button size="sm" className="rounded-full" disabled={dataLoading} data-testid="host-dashboard-retry"
+              onClick={() => { retryAttemptsRef.current = 0; setDataError(null); setRetryToken(token => token + 1); }}>
               {dataLoading ? "Retrying..." : "Try again"}
             </Button>
           </div>
@@ -704,6 +725,12 @@ const HostDashboard = () => {
                 </div>
               </div>
               <div className="space-y-4">
+                <div className="rounded-lg border border-primary/20 bg-card p-5 shadow-card" data-testid="host-verification-card">
+                  <div className="flex items-center gap-2"><BadgeCheck className="h-5 w-5 text-primary" /><h3 className="font-bold">Host verification</h3></div>
+                  <p className="mt-1 text-xs text-muted-foreground">{verificationStatus === "verified" ? "Verified milestone badge earned." : verificationStatus === "pending" ? "Your application is under review." : "Complete each trust milestone to apply."}</p>
+                  <ul className="mt-3 space-y-1.5">{verificationMilestones.map(item => <li key={item.label} className="flex items-center gap-2 text-xs"><ShieldCheck className={`h-3.5 w-3.5 ${item.done ? "text-accent" : "text-muted-foreground"}`} /><span className={item.done ? "text-foreground" : "text-muted-foreground"}>{item.label}</span></li>)}</ul>
+                  {verificationStatus !== "verified" && verificationStatus !== "pending" && <Button size="sm" className="mt-4 w-full" disabled={!canApplyForVerification} onClick={async () => { const { error } = await (supabase as any).rpc("apply_for_host_verification"); if (error) { toast({ title: "Couldn't apply", description: error.message, variant: "destructive" }); return; } setHostDbProfile((current: any) => ({ ...current, verification_status: "pending" })); toast({ title: "Verification application submitted" }); }}>Apply for verification</Button>}
+                </div>
                 <div className="rounded-lg bg-card p-5 shadow-card">
                   <h3 className="text-sm font-bold text-foreground uppercase tracking-wider mb-3">Performance</h3>
                   <div className="space-y-3 text-sm">
@@ -1333,7 +1360,7 @@ const HostDashboard = () => {
             ) : (
               <div className="space-y-3">
                 {hostInvoices.map(inv => (
-                  <div key={inv.id} className="rounded-lg bg-card p-4 shadow-card flex justify-between items-center">
+                  <button key={inv.id} type="button" onClick={() => setSelectedInvoice(inv)} className="flex w-full items-center justify-between rounded-lg bg-card p-4 text-left shadow-card transition hover:border-primary/40 hover:shadow-elegant">
                     <div>
                       <div className="flex items-center gap-2">
                         <Receipt className="w-4 h-4 text-primary" />
@@ -1346,7 +1373,7 @@ const HostDashboard = () => {
                       <p className="text-xs text-muted-foreground">Issued: {new Date(inv.issued_at).toLocaleDateString()}</p>
                     </div>
                     <p className="text-lg font-bold text-foreground">{inv.currency} {inv.total_amount}</p>
-                  </div>
+                  </button>
                 ))}
               </div>
             )}
@@ -1583,6 +1610,7 @@ const HostDashboard = () => {
           hostDashboardCache.delete(user?.id || "");
         }}
       />
+      <InvoiceDetail invoice={selectedInvoice} booking={hostBookings.find(item => item.id === selectedInvoice?.booking_id)} hostName={displayName} onOpenChange={open => { if (!open) setSelectedInvoice(null); }} />
 
       <EditDialog open={editDialog.open} title={editDialog.title} fields={editDialog.fields}
         initialData={editDialog.data} onSave={(d) => { editDialog.onSave(d); setEditDialog(p => ({ ...p, open: false })); }}

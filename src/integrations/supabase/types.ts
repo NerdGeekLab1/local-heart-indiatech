@@ -1560,6 +1560,42 @@ export type Database = {
         }
         Relationships: []
       }
+      host_verification_applications: {
+        Row: {
+          created_at: string
+          host_id: string
+          id: string
+          milestone_snapshot: Json
+          review_notes: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          host_id: string
+          id?: string
+          milestone_snapshot?: Json
+          review_notes?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          host_id?: string
+          id?: string
+          milestone_snapshot?: Json
+          review_notes?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       invoices: {
         Row: {
           amount: number
@@ -1684,6 +1720,7 @@ export type Database = {
           travel_styles: string[] | null
           updated_at: string
           username: string | null
+          verification_status: string
           years_hosting: number
         }
         Insert: {
@@ -1712,6 +1749,7 @@ export type Database = {
           travel_styles?: string[] | null
           updated_at?: string
           username?: string | null
+          verification_status?: string
           years_hosting?: number
         }
         Update: {
@@ -1740,6 +1778,7 @@ export type Database = {
           travel_styles?: string[] | null
           updated_at?: string
           username?: string | null
+          verification_status?: string
           years_hosting?: number
         }
         Relationships: []
@@ -2432,6 +2471,26 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      apply_for_host_verification: {
+        Args: never
+        Returns: {
+          created_at: string
+          host_id: string
+          id: string
+          milestone_snapshot: Json
+          review_notes: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "host_verification_applications"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       approve_host_application: {
         Args: { _application_id: string }
         Returns: {
@@ -2686,6 +2745,26 @@ export type Database = {
         }[]
       }
       resolve_cms_preview: { Args: { _token: string }; Returns: Json }
+      review_host_verification: {
+        Args: { _application_id: string; _notes?: string; _status: string }
+        Returns: {
+          created_at: string
+          host_id: string
+          id: string
+          milestone_snapshot: Json
+          review_notes: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "host_verification_applications"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
     }
     Enums: {
       app_role: "admin" | "host" | "traveler"

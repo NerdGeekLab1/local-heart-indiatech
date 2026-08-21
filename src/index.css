@@ -140,3 +140,9 @@
     padding-bottom: 3.5rem;
   }
 }
+
+@media print {
+  body > * { visibility: hidden; }
+  [data-testid="invoice-detail"], [data-testid="invoice-detail"] * { visibility: visible; }
+  [data-testid="invoice-detail"] { position: fixed !important; inset: 0 !important; transform: none !important; width: 100% !important; max-width: none !important; }
+}

@@ -113,6 +113,33 @@ const Booking = () => {
   const [customRequests, setCustomRequests] = useState<CustomRequest[]>([]);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
+  const [draftReady, setDraftReady] = useState(false);
+
+  const draftKey = user && id ? `travelista-booking-draft:${user.id}:${id}` : null;
+  useEffect(() => {
+    if (!draftKey) return;
+    try {
+      const saved = JSON.parse(window.localStorage.getItem(draftKey) || "null");
+      if (saved) {
+        setStep(Math.min(4, Math.max(1, Number(saved.step) || 1)));
+        setSelectedServices(Array.isArray(saved.selectedServices) ? saved.selectedServices : []);
+        setStartDate(saved.startDate ? new Date(saved.startDate) : undefined);
+        setEndDate(saved.endDate ? new Date(saved.endDate) : undefined);
+        setGuests(Number(saved.guests) || 1);
+        setMessage(saved.message || "");
+        setSelectedSpecialRequests(Array.isArray(saved.selectedSpecialRequests) ? saved.selectedSpecialRequests : []);
+        setCustomRequests(Array.isArray(saved.customRequests) ? saved.customRequests : []);
+      }
+    } catch {
+      window.localStorage.removeItem(draftKey);
+    }
+    setDraftReady(true);
+  }, [draftKey]);
+
+  useEffect(() => {
+    if (!draftKey || !draftReady || submitted) return;
+    window.localStorage.setItem(draftKey, JSON.stringify({ step, selectedServices, startDate: startDate?.toISOString(), endDate: endDate?.toISOString(), guests, message, selectedSpecialRequests, customRequests }));
+  }, [customRequests, draftKey, draftReady, endDate, guests, message, selectedServices, selectedSpecialRequests, startDate, step, submitted]);
 
 
 
@@ -219,6 +246,7 @@ const Booking = () => {
       return;
     }
     setSubmitted(true);
+    if (draftKey) window.localStorage.removeItem(draftKey);
     toast({ title: "Booking Sent! 🎉", description: `Your booking has been sent to ${host.name}.` });
   };
 
@@ -247,9 +275,8 @@ const Booking = () => {
               <p className="text-sm"><strong>Services:</strong> {selectedServices.join(", ")}</p>
               {startDate && endDate && <p className="text-sm"><strong>Dates:</strong> {format(startDate, "PPP")} – {format(endDate, "PPP")}</p>}
               <p className="text-sm"><strong>Guests:</strong> {guests}</p>
-              {allRequestLabels.length > 0 && (
-                <p className="text-sm"><strong>Special Requests:</strong> {allRequestLabels.join(", ")}</p>
-              )}
+              {chosenAddons.map(addon => <div key={addon.id} className="flex justify-between gap-3 text-sm"><span><strong>{addon.emoji} {addon.name}</strong>{addon.description ? <span className="block text-xs text-muted-foreground">{addon.description}</span> : null}</span><span>{formatCurrency(addon.price)}</span></div>)}
+              {customRequests.map(item => <p key={`${item.type}-${item.detail}`} className="text-sm"><strong>{item.type}:</strong> {item.detail}</p>)}
               <p className="text-sm font-semibold"><strong>Total:</strong> {formatCurrency(total)}</p>
             </div>
             <div className="mt-8 flex gap-3 justify-center flex-wrap">
@@ -487,7 +514,7 @@ const Booking = () => {
             <p><strong>Services:</strong> {selectedServices.join(", ") || "—"}</p>
             {startDate && endDate && <p><strong>Dates:</strong> {format(startDate, "PPP")} – {format(endDate, "PPP")}</p>}
             <p><strong>Guests:</strong> {guests}</p>
-            <p><strong>Special requests:</strong> {allRequestLabels.length ? allRequestLabels.join(" · ") : "None"}</p>
+            {chosenAddons.length || customRequests.length ? <div><strong>Special requests:</strong><ul className="mt-1 space-y-1">{chosenAddons.map(addon => <li key={addon.id} className="flex justify-between gap-3"><span>{addon.emoji} {addon.name}{addon.description ? ` — ${addon.description}` : ""}</span><span>{formatCurrency(addon.price)}</span></li>)}{customRequests.map(item => <li key={`${item.type}-${item.detail}`}>{item.type}: {item.detail}</li>)}</ul></div> : <p><strong>Special requests:</strong> None</p>}
             <p className="font-semibold"><strong>Total:</strong> {formatCurrency(total)}</p>
           </div>
           <AlertDialogFooter>
