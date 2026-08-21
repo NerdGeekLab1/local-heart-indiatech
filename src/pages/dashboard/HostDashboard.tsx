@@ -453,20 +453,6 @@ const HostDashboard = () => {
   const ratingAvg = hostDbReviews.length
     ? (hostDbReviews.reduce((sum: number, r: any) => sum + Number(r.rating || 0), 0) / hostDbReviews.length).toFixed(1)
     : null;
-  const completedBookings = hostBookings.filter((booking: any) => booking.status === "completed").length;
-  const approvedListings = hostDbExperiences.filter((item: any) => item.status === "approved").length
-    + customProperties.filter((item: any) => item.status === "approved").length
-    + customDishes.filter((item: any) => item.status === "approved").length
-    + customVehicles.filter((item: any) => item.status === "approved").length;
-  const verificationStatus = hostDbProfile?.verification_status || "not_applied";
-  const verificationMilestones = [
-    { label: "Approved host account", done: Boolean(hostDbProfile) },
-    { label: "Profile at least 80% complete", done: completeness.score >= 80 },
-    { label: "One approved listing", done: approvedListings > 0 },
-    { label: "Three completed bookings", done: completedBookings >= 3 },
-    { label: "Rating of 4.5 or higher", done: !hostDbReviews.length || Number(ratingAvg) >= 4.5 },
-  ];
-  const canApplyForVerification = verificationMilestones.every(item => item.done) && verificationStatus === "not_applied";
   const decidedBookings = hostBookings.filter((b: any) => ["confirmed", "completed", "cancelled"].includes(b.status));
   const acceptanceRate = decidedBookings.length
     ? Math.round(decidedBookings.filter((b: any) => b.status !== "cancelled").length / decidedBookings.length * 100)
@@ -583,6 +569,20 @@ const HostDashboard = () => {
       customVehicles.reduce((sum, item: any) => sum + (item.amenities?.length || 0), 0) +
       customDishes.reduce((sum, item: any) => sum + (item.dietary_tags?.length || 0), 0),
   }), [hostDbProfile, hostProfile, approvedReelCount, customProperties, customVehicles, customDishes]);
+  const completedBookings = hostBookings.filter((booking: any) => booking.status === "completed").length;
+  const approvedListings = hostDbExperiences.filter((item: any) => item.status === "approved").length
+    + customProperties.filter((item: any) => item.status === "approved").length
+    + customDishes.filter((item: any) => item.status === "approved").length
+    + customVehicles.filter((item: any) => item.status === "approved").length;
+  const verificationStatus = hostDbProfile?.verification_status || "not_applied";
+  const verificationMilestones = [
+    { label: "Approved host account", done: Boolean(hostDbProfile) },
+    { label: "Profile at least 80% complete", done: completeness.score >= 80 },
+    { label: "One approved listing", done: approvedListings > 0 },
+    { label: "Three completed bookings", done: completedBookings >= 3 },
+    { label: "Rating of 4.5 or higher", done: !hostDbReviews.length || Number(ratingAvg) >= 4.5 },
+  ];
+  const canApplyForVerification = verificationMilestones.every(item => item.done) && verificationStatus === "not_applied";
 
   const tabs: { id: Tab; label: string; icon: React.ElementType }[] = [
     { id: "overview", label: "Overview", icon: BarChart3 },
