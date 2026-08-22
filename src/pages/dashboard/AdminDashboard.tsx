@@ -2370,15 +2370,7 @@ const AdminDashboard = () => {
         {activeTab === "settings" && (
           <div className="mt-6 space-y-6 max-w-xl">
             <h2 className="text-xl font-bold text-foreground mb-4">Platform Settings</h2>
-            <div className="rounded-lg bg-card p-5 shadow-card space-y-4">
-              <h3 className="font-bold text-foreground flex items-center gap-2"><DollarSign className="w-4 h-4 text-primary" /> Commission & Revenue</h3>
-              <div>
-                <label className="text-sm font-medium text-foreground">Commission Rate (%)</label>
-                <Input type="number" className="mt-1" value={platformSettings.commissionRate}
-                  onChange={e => setPlatformSettings(p => ({ ...p, commissionRate: Number(e.target.value) }))} />
-              </div>
-              <Button size="sm" className="rounded-full gap-2" onClick={() => toast({ title: `Rate: ${platformSettings.commissionRate}%` })}>Save</Button>
-            </div>
+            <PlatformChargesPanel />
             <div className="rounded-lg bg-card p-5 shadow-card space-y-4">
               <h3 className="font-bold text-foreground flex items-center gap-2"><Crown className="w-4 h-4 text-primary" /> Subscription Tiers</h3>
               <div className="grid grid-cols-2 gap-3">
