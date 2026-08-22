@@ -199,14 +199,18 @@ export type Database = {
       }
       bookings: {
         Row: {
+          commission_amount: number
           created_at: string
           end_date: string
           experience_id: string | null
+          gst_amount: number
           guests: number | null
+          handling_charge: number
           host_id: string | null
           host_proposed_requests: string[]
           id: string
           message: string | null
+          platform_fee: number
           provided_requests: string[]
           services: string[] | null
           special_requests: string[]
@@ -214,16 +218,22 @@ export type Database = {
           status: string | null
           total_price: number
           traveler_id: string
+          traveler_status: string
+          traveler_status_updated_at: string | null
         }
         Insert: {
+          commission_amount?: number
           created_at?: string
           end_date: string
           experience_id?: string | null
+          gst_amount?: number
           guests?: number | null
+          handling_charge?: number
           host_id?: string | null
           host_proposed_requests?: string[]
           id?: string
           message?: string | null
+          platform_fee?: number
           provided_requests?: string[]
           services?: string[] | null
           special_requests?: string[]
@@ -231,16 +241,22 @@ export type Database = {
           status?: string | null
           total_price?: number
           traveler_id: string
+          traveler_status?: string
+          traveler_status_updated_at?: string | null
         }
         Update: {
+          commission_amount?: number
           created_at?: string
           end_date?: string
           experience_id?: string | null
+          gst_amount?: number
           guests?: number | null
+          handling_charge?: number
           host_id?: string | null
           host_proposed_requests?: string[]
           id?: string
           message?: string | null
+          platform_fee?: number
           provided_requests?: string[]
           services?: string[] | null
           special_requests?: string[]
@@ -248,6 +264,8 @@ export type Database = {
           status?: string | null
           total_price?: number
           traveler_id?: string
+          traveler_status?: string
+          traveler_status_updated_at?: string | null
         }
         Relationships: [
           {
@@ -1692,6 +1710,57 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      platform_settings: {
+        Row: {
+          created_at: string
+          gst_percent: number
+          handling_charge: number
+          id: string
+          platform_fee_percent: number
+          singleton: boolean
+          updated_at: string
+          updated_by: string | null
+          verification_applications_enabled: boolean
+          verification_auto_approve: boolean
+          verification_min_completed_bookings: number
+          verification_min_listings: number
+          verification_min_profile_score: number
+          verification_min_rating: number
+        }
+        Insert: {
+          created_at?: string
+          gst_percent?: number
+          handling_charge?: number
+          id?: string
+          platform_fee_percent?: number
+          singleton?: boolean
+          updated_at?: string
+          updated_by?: string | null
+          verification_applications_enabled?: boolean
+          verification_auto_approve?: boolean
+          verification_min_completed_bookings?: number
+          verification_min_listings?: number
+          verification_min_profile_score?: number
+          verification_min_rating?: number
+        }
+        Update: {
+          created_at?: string
+          gst_percent?: number
+          handling_charge?: number
+          id?: string
+          platform_fee_percent?: number
+          singleton?: boolean
+          updated_at?: string
+          updated_by?: string | null
+          verification_applications_enabled?: boolean
+          verification_auto_approve?: boolean
+          verification_min_completed_bookings?: number
+          verification_min_listings?: number
+          verification_min_profile_score?: number
+          verification_min_rating?: number
+        }
+        Relationships: []
       }
       profiles: {
         Row: {
