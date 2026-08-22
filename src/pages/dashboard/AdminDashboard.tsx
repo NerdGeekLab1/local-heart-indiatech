@@ -33,6 +33,8 @@ import ReelsModerationPanel from "@/components/admin/ReelsModerationPanel";
 import ReviewModerationPanel from "@/components/admin/ReviewModerationPanel";
 import AdminPagination from "@/components/admin/AdminPagination";
 import BookingsPanel from "@/components/admin/BookingsPanel";
+import TransactionHistoryPanel from "@/components/admin/TransactionHistoryPanel";
+import PlatformChargesPanel from "@/components/admin/PlatformChargesPanel";
 import DocsTab from "@/components/admin/DocsTab";
 import WebsiteCMSTab from "@/components/admin/WebsiteCMSTab";
 import ContentManagerTab from "@/components/admin/ContentManagerTab";
