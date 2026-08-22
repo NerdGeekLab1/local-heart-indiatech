@@ -11,23 +11,13 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 
 const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
-const streakData = [
-  { month: "Jan", completed: true, dest: "Jaipur" },
-  { month: "Feb", completed: true, dest: "Varanasi" },
-  { month: "Mar", completed: true, dest: "Goa" },
-  { month: "Apr", completed: true, dest: "Rishikesh" },
-  { month: "May", completed: true, dest: "Manali" },
-  { month: "Jun", completed: false, dest: null },
-  { month: "Jul", completed: false, dest: null },
-  { month: "Aug", completed: false, dest: null },
-  { month: "Sep", completed: false, dest: null },
-  { month: "Oct", completed: false, dest: null },
-  { month: "Nov", completed: false, dest: null },
-  { month: "Dec", completed: false, dest: null },
-];
+type StreakMonth = { month: string; completed: boolean; dest: string | null };
+
+const emptyStreak = (): StreakMonth[] => months.map(month => ({ month, completed: false, dest: null }));
 
 const aiSuggestions = [
   { dest: "Udaipur", reason: "You love heritage walks — the City of Lakes awaits", match: 95, img: "🏰", month: "Jun" },
@@ -51,6 +41,27 @@ const Rewards = () => {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<"streak" | "calendar" | "badges">("streak");
+  const [streakData, setStreakData] = useState<StreakMonth[]>(emptyStreak());
+
+  /** Streak months come from the traveler's own completed trips — never demo data. */
+  useEffect(() => {
+    if (!user) { setStreakData(emptyStreak()); return; }
+    let active = true;
+    const year = new Date().getFullYear();
+    supabase.from("travel_streaks").select("month, completed").eq("user_id", user.id).then(({ data }) => {
+      if (!active) return;
+      const rows = data || [];
+      setStreakData(months.map((month, index) => {
+        const match = rows.find((row: any) => {
+          const d = new Date(row.month);
+          return d.getFullYear() === year && d.getMonth() === index;
+        });
+        return { month, completed: Boolean(match?.completed), dest: null };
+      }));
+    });
+    return () => { active = false; };
+  }, [user]);
+
   const currentStreak = streakData.filter(s => s.completed).length;
   const progress = (currentStreak / 11) * 100;
 
