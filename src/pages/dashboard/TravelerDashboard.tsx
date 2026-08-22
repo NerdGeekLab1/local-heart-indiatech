@@ -15,7 +15,7 @@ import { useLocalStorage } from "@/hooks/use-local-storage";
 import { useToast } from "@/hooks/use-toast";
 import VideoRecorder from "@/components/VideoRecorder";
 import { supabase } from "@/integrations/supabase/client";
-import { travelerStatusClasses, travelerStatusMeta, travelerStatusOptions } from "@/lib/travelerStatus";
+import { travelerStatusClasses, travelerStatusMeta, travelerStatuses } from "@/lib/travelerStatus";
 import { useAuth } from "@/contexts/AuthContext";
 import AIRecommendWidget from "@/components/AIRecommendWidget";
 import ImageUpload from "@/components/ImageUpload";
@@ -307,7 +307,7 @@ const TravelerDashboard = () => {
                     <div className="mt-3 border-t border-border pt-3">
                       <p className="text-xs font-semibold text-muted-foreground">My live trip status</p>
                       <div className="mt-2 flex flex-wrap gap-2" data-testid="traveler-status-picker">
-                        {travelerStatusOptions.map(option => (
+                        {travelerStatuses.map(option => (
                           <button key={option.key} type="button" onClick={() => updateTravelerStatus(b.id, option.key)}
                             className={`rounded-full px-3 py-1 text-xs font-semibold transition ${(b.traveler_status || "not_started") === option.key ? travelerStatusClasses[option.key] : "bg-secondary text-muted-foreground hover:text-foreground"}`}>
                             {option.emoji} {option.label}
