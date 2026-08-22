@@ -19,6 +19,8 @@ import { useToast } from "@/hooks/use-toast";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import SpecialRequestEditor, { CustomRequest } from "@/components/booking/SpecialRequestEditor";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { usePlatformSettings } from "@/hooks/usePlatformSettings";
+import { computeBookingCharges } from "@/lib/bookingCharges";
 
 
 /** Service catalogue — prices are always derived from the host's own live listings. */
@@ -205,8 +207,9 @@ const Booking = () => {
   const specialRequestFee = chosenAddons.reduce((sum, addon) => sum + addon.price, 0);
   const allRequestLabels = [...chosenAddons.map(addon => addon.name), ...customRequests.map(item => `${item.type}: ${item.detail}`)];
 
-  const serviceFee = Math.round(servicePricing * 0.1);
-  const total = servicePricing + specialRequestFee + serviceFee;
+  const charges = computeBookingCharges(servicePricing + specialRequestFee, platformSettings);
+  const serviceFee = charges.platformFee;
+  const total = charges.total;
 
   const canProceed = () => {
     if (step === 1) return selectedServices.length > 0;
@@ -237,6 +240,10 @@ const Booking = () => {
       services: selectedServices,
       special_requests: allRequestLabels,
       total_price: total,
+      platform_fee: charges.platformFee,
+      handling_charge: charges.handlingCharge,
+      gst_amount: charges.gstAmount,
+      commission_amount: charges.platformFee + charges.handlingCharge,
 
       message: message || null,
       status: "pending",
@@ -277,6 +284,7 @@ const Booking = () => {
               <p className="text-sm"><strong>Guests:</strong> {guests}</p>
               {chosenAddons.map(addon => <div key={addon.id} className="flex justify-between gap-3 text-sm"><span><strong>{addon.emoji} {addon.name}</strong>{addon.description ? <span className="block text-xs text-muted-foreground">{addon.description}</span> : null}</span><span>{formatCurrency(addon.price)}</span></div>)}
               {customRequests.map(item => <p key={`${item.type}-${item.detail}`} className="text-sm"><strong>{item.type}:</strong> {item.detail}</p>)}
+              <p className="text-sm"><strong>Platform fee:</strong> {formatCurrency(charges.platformFee)} · <strong>Handling:</strong> {formatCurrency(charges.handlingCharge)} · <strong>GST:</strong> {formatCurrency(charges.gstAmount)}</p>
               <p className="text-sm font-semibold"><strong>Total:</strong> {formatCurrency(total)}</p>
             </div>
             <div className="mt-8 flex gap-3 justify-center flex-wrap">
@@ -466,8 +474,16 @@ const Booking = () => {
                 ))}
 
                 <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Service fee</span>
-                  <span className="text-foreground">{formatCurrency(serviceFee)}</span>
+                  <span className="text-muted-foreground">Platform fee ({platformSettings.platform_fee_percent}%)</span>
+                  <span className="text-foreground">{formatCurrency(charges.platformFee)}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Handling charges</span>
+                  <span className="text-foreground">{formatCurrency(charges.handlingCharge)}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">GST ({platformSettings.gst_percent}%)</span>
+                  <span className="text-foreground">{formatCurrency(charges.gstAmount)}</span>
                 </div>
                 <div className="flex justify-between text-sm font-semibold border-t border-border pt-2">
                   <span className="text-foreground">Total</span>
