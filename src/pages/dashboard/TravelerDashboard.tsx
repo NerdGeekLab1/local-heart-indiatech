@@ -117,6 +117,16 @@ const TravelerDashboard = () => {
     toast({ title: savedHostIds.includes(hostId) ? "Removed" : "Saved!" });
   };
 
+  const upcomingBookings = bookings.filter(b => b.end_date && new Date(b.end_date) >= new Date() && b.status !== "cancelled");
+
+  /** Travelers update their own live trip status; hosts see it on their dashboard in realtime. */
+  const updateTravelerStatus = async (bookingId: string, status: string) => {
+    const { error } = await (supabase as any).from("bookings").update({ traveler_status: status }).eq("id", bookingId);
+    if (error) { toast({ title: "Couldn't update status", description: error.message, variant: "destructive" }); return; }
+    setBookings(prev => prev.map(b => b.id === bookingId ? { ...b, traveler_status: status } : b));
+    toast({ title: `Status updated to ${travelerStatusMeta(status).label}` });
+  };
+
   const submitReview = async () => {
     if (!user) return;
     if (!reviewText.trim()) { toast({ title: "Please write a review", variant: "destructive" }); return; }
