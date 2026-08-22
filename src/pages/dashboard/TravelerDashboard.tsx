@@ -15,6 +15,7 @@ import { useLocalStorage } from "@/hooks/use-local-storage";
 import { useToast } from "@/hooks/use-toast";
 import VideoRecorder from "@/components/VideoRecorder";
 import { supabase } from "@/integrations/supabase/client";
+import { travelerStatusClasses, travelerStatusMeta, travelerStatusOptions } from "@/lib/travelerStatus";
 import { useAuth } from "@/contexts/AuthContext";
 import AIRecommendWidget from "@/components/AIRecommendWidget";
 import ImageUpload from "@/components/ImageUpload";
@@ -205,8 +206,8 @@ const TravelerDashboard = () => {
             })()}
             <div className="mt-6 grid grid-cols-2 sm:grid-cols-4 gap-4">
               {[
-                { label: "Total Trips", value: myTrips.length || "3", icon: MapPin },
-                { label: "Upcoming", value: "2", icon: Calendar },
+                { label: "Total Trips", value: `${bookings.length}`, icon: MapPin },
+                { label: "Upcoming", value: `${upcomingBookings.length}`, icon: Calendar },
                 { label: "Saved Hosts", value: `${actualSavedHosts.length}`, icon: Heart },
                 { label: "Grievances", value: `${myGrievances.length}`, icon: AlertTriangle },
               ].map(s => (
@@ -292,6 +293,20 @@ const TravelerDashboard = () => {
                       {hasReview && <span className="text-xs text-accent block mt-1">✓ Reviewed</span>}
                     </div>
                   </div>
+                  {["confirmed", "completed"].includes(b.status) && (
+                    <div className="mt-3 border-t border-border pt-3">
+                      <p className="text-xs font-semibold text-muted-foreground">My live trip status</p>
+                      <div className="mt-2 flex flex-wrap gap-2" data-testid="traveler-status-picker">
+                        {travelerStatusOptions.map(option => (
+                          <button key={option.key} type="button" onClick={() => updateTravelerStatus(b.id, option.key)}
+                            className={`rounded-full px-3 py-1 text-xs font-semibold transition ${(b.traveler_status || "not_started") === option.key ? travelerStatusClasses[option.key] : "bg-secondary text-muted-foreground hover:text-foreground"}`}>
+                            {option.emoji} {option.label}
+                          </button>
+                        ))}
+                      </div>
+                      <p className="mt-2 text-[11px] text-muted-foreground">Your host sees {travelerStatusMeta(b.traveler_status).label} on their dashboard.</p>
+                    </div>
+                  )}
                   {reviewingBooking === b.id && (
                     <div className="mt-4 pt-4 border-t border-border space-y-4">
                       <div className="flex gap-1">{[1, 2, 3, 4, 5].map(n => (
