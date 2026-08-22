@@ -33,6 +33,8 @@ import ReelsModerationPanel from "@/components/admin/ReelsModerationPanel";
 import ReviewModerationPanel from "@/components/admin/ReviewModerationPanel";
 import AdminPagination from "@/components/admin/AdminPagination";
 import BookingsPanel from "@/components/admin/BookingsPanel";
+import TransactionHistoryPanel from "@/components/admin/TransactionHistoryPanel";
+import PlatformChargesPanel from "@/components/admin/PlatformChargesPanel";
 import DocsTab from "@/components/admin/DocsTab";
 import WebsiteCMSTab from "@/components/admin/WebsiteCMSTab";
 import ContentManagerTab from "@/components/admin/ContentManagerTab";
@@ -632,6 +634,7 @@ const AdminDashboard = () => {
 
   // Pagination for tabular views
   const [bookingsPage, setBookingsPage] = useState(0);
+  const [bookingsSubTab, setBookingsSubTab] = useState<"bookings" | "transactions">("bookings");
   const [usersPage, setUsersPage] = useState(0);
   const [hostQueuePage, setHostQueuePage] = useState(0);
   const [hostProfilePage, setHostProfilePage] = useState(0);
@@ -1763,24 +1766,38 @@ const AdminDashboard = () => {
         {/* Bookings Tab */}
         {activeTab === "bookings" && (
           <div className="mt-6">
-            <h2 className="text-xl font-bold text-foreground mb-4">All Bookings ({dbBookings.length})</h2>
-            <BookingsPanel
-              rows={dbBookings.map(b => ({
-                id: b.id as string, ref: `#${(b.id as string).slice(0, 8)}`,
-                host: getUserName(b.host_id), traveler: getUserName(b.traveler_id),
-                dates: `${b.start_date} → ${b.end_date}`, guests: b.guests ?? "—",
-                total: Number(b.total_price || 0), status: b.status || "pending",
-              }))}
-              loading={adminLoading}
-              page={bookingsPage}
-              pageSize={bookingsPageSize}
-              onPage={setBookingsPage}
-              onPageSize={setBookingsPageSize}
-              formatCurrency={format}
-              onStatusChange={updateBookingStatus}
-              onResendEmail={resendBookingEmail}
-              onRefresh={() => setDataRefreshKey(k => k + 1)}
-            />
+            <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+              <h2 className="text-xl font-bold text-foreground">All Bookings ({dbBookings.length})</h2>
+              <div className="flex gap-1 rounded-full border border-border bg-card p-1" data-testid="bookings-subtabs">
+                {([["bookings", "Bookings"], ["transactions", "Transaction history"]] as const).map(([key, label]) => (
+                  <button key={key} onClick={() => setBookingsSubTab(key)}
+                    className={`rounded-full px-3 py-1.5 text-xs font-semibold transition ${bookingsSubTab === key ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}>
+                    {label}
+                  </button>
+                ))}
+              </div>
+            </div>
+            {bookingsSubTab === "bookings" ? (
+              <BookingsPanel
+                rows={dbBookings.map(b => ({
+                  id: b.id as string, ref: `#${(b.id as string).slice(0, 8)}`,
+                  host: getUserName(b.host_id), traveler: getUserName(b.traveler_id),
+                  dates: `${b.start_date} → ${b.end_date}`, guests: b.guests ?? "—",
+                  total: Number(b.total_price || 0), status: b.status || "pending",
+                }))}
+                loading={adminLoading}
+                page={bookingsPage}
+                pageSize={bookingsPageSize}
+                onPage={setBookingsPage}
+                onPageSize={setBookingsPageSize}
+                formatCurrency={format}
+                onStatusChange={updateBookingStatus}
+                onResendEmail={resendBookingEmail}
+                onRefresh={() => setDataRefreshKey(k => k + 1)}
+              />
+            ) : (
+              <TransactionHistoryPanel bookings={dbBookings} getUserName={getUserName} formatCurrency={format} />
+            )}
           </div>
         )}
 
@@ -2353,15 +2370,7 @@ const AdminDashboard = () => {
         {activeTab === "settings" && (
           <div className="mt-6 space-y-6 max-w-xl">
             <h2 className="text-xl font-bold text-foreground mb-4">Platform Settings</h2>
-            <div className="rounded-lg bg-card p-5 shadow-card space-y-4">
-              <h3 className="font-bold text-foreground flex items-center gap-2"><DollarSign className="w-4 h-4 text-primary" /> Commission & Revenue</h3>
-              <div>
-                <label className="text-sm font-medium text-foreground">Commission Rate (%)</label>
-                <Input type="number" className="mt-1" value={platformSettings.commissionRate}
-                  onChange={e => setPlatformSettings(p => ({ ...p, commissionRate: Number(e.target.value) }))} />
-              </div>
-              <Button size="sm" className="rounded-full gap-2" onClick={() => toast({ title: `Rate: ${platformSettings.commissionRate}%` })}>Save</Button>
-            </div>
+            <PlatformChargesPanel />
             <div className="rounded-lg bg-card p-5 shadow-card space-y-4">
               <h3 className="font-bold text-foreground flex items-center gap-2"><Crown className="w-4 h-4 text-primary" /> Subscription Tiers</h3>
               <div className="grid grid-cols-2 gap-3">

@@ -11,23 +11,13 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 
 const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
-const streakData = [
-  { month: "Jan", completed: true, dest: "Jaipur" },
-  { month: "Feb", completed: true, dest: "Varanasi" },
-  { month: "Mar", completed: true, dest: "Goa" },
-  { month: "Apr", completed: true, dest: "Rishikesh" },
-  { month: "May", completed: true, dest: "Manali" },
-  { month: "Jun", completed: false, dest: null },
-  { month: "Jul", completed: false, dest: null },
-  { month: "Aug", completed: false, dest: null },
-  { month: "Sep", completed: false, dest: null },
-  { month: "Oct", completed: false, dest: null },
-  { month: "Nov", completed: false, dest: null },
-  { month: "Dec", completed: false, dest: null },
-];
+type StreakMonth = { month: string; completed: boolean; dest: string | null };
+
+const emptyStreak = (): StreakMonth[] => months.map(month => ({ month, completed: false, dest: null }));
 
 const aiSuggestions = [
   { dest: "Udaipur", reason: "You love heritage walks — the City of Lakes awaits", match: 95, img: "🏰", month: "Jun" },
@@ -39,19 +29,41 @@ const aiSuggestions = [
   { dest: "Andaman", reason: "Beach finale for your epic year!", match: 96, img: "🏝️", month: "Dec" },
 ];
 
-const badges = [
-  { name: "Explorer", icon: "🧭", desc: "Complete 3 trips", unlocked: true },
-  { name: "Adventurer", icon: "⛰️", desc: "Complete 5 trips", unlocked: true },
-  { name: "Wanderer", icon: "🌍", desc: "Visit 5 unique cities", unlocked: false },
-  { name: "Legend", icon: "👑", desc: "11-month streak", unlocked: false },
-  { name: "Free Spirit", icon: "🦋", desc: "Claim your free trip", unlocked: false },
-];
+const badgeCatalogue = [
+  { name: "Explorer", icon: "🧭", desc: "Complete 3 trips", need: 3 },
+  { name: "Adventurer", icon: "⛰️", desc: "Complete 5 trips", need: 5 },
+  { name: "Wanderer", icon: "🌍", desc: "Visit 5 unique cities", need: 5 },
+  { name: "Legend", icon: "👑", desc: "11-month streak", need: 11 },
+  { name: "Free Spirit", icon: "🦋", desc: "Claim your free trip", need: 12 },
+]
 
 const Rewards = () => {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<"streak" | "calendar" | "badges">("streak");
+  const [streakData, setStreakData] = useState<StreakMonth[]>(emptyStreak());
+
+  /** Streak months come from the traveler's own completed trips — never demo data. */
+  useEffect(() => {
+    if (!user) { setStreakData(emptyStreak()); return; }
+    let active = true;
+    const year = new Date().getFullYear();
+    supabase.from("travel_streaks").select("month, completed").eq("user_id", user.id).then(({ data }) => {
+      if (!active) return;
+      const rows = data || [];
+      setStreakData(months.map((month, index) => {
+        const match = rows.find((row: any) => {
+          const d = new Date(row.month);
+          return d.getFullYear() === year && d.getMonth() === index;
+        });
+        return { month, completed: Boolean(match?.completed), dest: null };
+      }));
+    });
+    return () => { active = false; };
+  }, [user]);
+
   const currentStreak = streakData.filter(s => s.completed).length;
+  const badges = badgeCatalogue.map(badge => ({ ...badge, unlocked: currentStreak >= badge.need }));
   const progress = (currentStreak / 11) * 100;
 
   useEffect(() => {
