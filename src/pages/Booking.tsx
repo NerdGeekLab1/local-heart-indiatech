@@ -48,6 +48,7 @@ const Booking = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const { format: formatCurrency } = useCurrency();
+  const { settings: platformSettings } = usePlatformSettings();
   const navigate = useNavigate();
 
   // Real hosts live in the database and are resolved by uuid or username slug.
