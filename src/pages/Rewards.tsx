@@ -29,13 +29,13 @@ const aiSuggestions = [
   { dest: "Andaman", reason: "Beach finale for your epic year!", match: 96, img: "🏝️", month: "Dec" },
 ];
 
-const badges = [
-  { name: "Explorer", icon: "🧭", desc: "Complete 3 trips", unlocked: true },
-  { name: "Adventurer", icon: "⛰️", desc: "Complete 5 trips", unlocked: true },
-  { name: "Wanderer", icon: "🌍", desc: "Visit 5 unique cities", unlocked: false },
-  { name: "Legend", icon: "👑", desc: "11-month streak", unlocked: false },
-  { name: "Free Spirit", icon: "🦋", desc: "Claim your free trip", unlocked: false },
-];
+const badgeCatalogue = [
+  { name: "Explorer", icon: "🧭", desc: "Complete 3 trips", need: 3 },
+  { name: "Adventurer", icon: "⛰️", desc: "Complete 5 trips", need: 5 },
+  { name: "Wanderer", icon: "🌍", desc: "Visit 5 unique cities", need: 5 },
+  { name: "Legend", icon: "👑", desc: "11-month streak", need: 11 },
+  { name: "Free Spirit", icon: "🦋", desc: "Claim your free trip", need: 12 },
+]
 
 const Rewards = () => {
   const { user, loading } = useAuth();
@@ -63,6 +63,7 @@ const Rewards = () => {
   }, [user]);
 
   const currentStreak = streakData.filter(s => s.completed).length;
+  const badges = badgeCatalogue.map(badge => ({ ...badge, unlocked: currentStreak >= badge.need }));
   const progress = (currentStreak / 11) * 100;
 
   useEffect(() => {
