@@ -16,6 +16,8 @@ import EditDialog, { FieldConfig } from "@/components/EditDialog";
 import { useToast } from "@/hooks/use-toast";
 import { sendAppEmail } from "@/lib/appEmails";
 import { supabase } from "@/integrations/supabase/client";
+import { usePlatformSettings } from "@/hooks/usePlatformSettings";
+import { travelerStatusClasses, travelerStatusMeta } from "@/lib/travelerStatus";
 import { useAuth } from "@/contexts/AuthContext";
 import ImageUpload from "@/components/ImageUpload";
 import BetaModerationTools from "@/components/admin/BetaModerationTools";
@@ -443,6 +445,7 @@ const HostDashboard = () => {
   });
 
   const allVehicles = customVehicles;
+  const { settings: platformSettings } = usePlatformSettings();
 
   const displayName = hostProfile.name
     || `${hostDbProfile?.first_name ?? ""} ${hostDbProfile?.last_name ?? ""}`.trim()
@@ -577,12 +580,13 @@ const HostDashboard = () => {
   const verificationStatus = hostDbProfile?.verification_status || "not_applied";
   const verificationMilestones = [
     { label: "Approved host account", done: Boolean(hostDbProfile) },
-    { label: "Profile at least 80% complete", done: completeness.score >= 80 },
-    { label: "One approved listing", done: approvedListings > 0 },
-    { label: "Three completed bookings", done: completedBookings >= 3 },
-    { label: "Rating of 4.5 or higher", done: !hostDbReviews.length || Number(ratingAvg) >= 4.5 },
+    { label: `Profile at least ${platformSettings.verification_min_profile_score}% complete`, done: completeness.score >= platformSettings.verification_min_profile_score },
+    { label: `${platformSettings.verification_min_listings} approved listing(s)`, done: approvedListings >= platformSettings.verification_min_listings },
+    { label: `${platformSettings.verification_min_completed_bookings} completed booking(s)`, done: completedBookings >= platformSettings.verification_min_completed_bookings },
+    { label: `Rating of ${platformSettings.verification_min_rating} or higher`, done: !hostDbReviews.length || Number(ratingAvg) >= platformSettings.verification_min_rating },
   ];
-  const canApplyForVerification = verificationMilestones.every(item => item.done) && verificationStatus === "not_applied";
+  const milestonesMet = verificationMilestones.every(item => item.done);
+  const canApplyForVerification = milestonesMet && verificationStatus === "not_applied" && platformSettings.verification_applications_enabled;
 
   const tabs: { id: Tab; label: string; icon: React.ElementType }[] = [
     { id: "overview", label: "Overview", icon: BarChart3 },
@@ -727,9 +731,17 @@ const HostDashboard = () => {
               <div className="space-y-4">
                 <div className="rounded-lg border border-primary/20 bg-card p-5 shadow-card" data-testid="host-verification-card">
                   <div className="flex items-center gap-2"><BadgeCheck className="h-5 w-5 text-primary" /><h3 className="font-bold">Host verification</h3></div>
-                  <p className="mt-1 text-xs text-muted-foreground">{verificationStatus === "verified" ? "Verified milestone badge earned." : verificationStatus === "pending" ? "Your application is under review." : "Complete each trust milestone to apply."}</p>
+                  <p className="mt-1 text-xs text-muted-foreground">{verificationStatus === "verified" ? "Verified milestone badge earned." : verificationStatus === "pending" ? "Your application is under review." : platformSettings.verification_applications_enabled ? "Complete each trust milestone to apply." : "Verification applications are currently closed."}</p>
+                  <div className="mt-3 flex flex-wrap gap-2" data-testid="host-verification-stickers">
+                    {verificationStatus === "verified" && <span className="inline-flex items-center gap-1 rounded-full bg-accent/15 px-2.5 py-1 text-[11px] font-bold text-accent"><BadgeCheck className="h-3.5 w-3.5" /> Verified host</span>}
+                    {verificationStatus === "pending" && <span className="inline-flex items-center gap-1 rounded-full bg-primary/15 px-2.5 py-1 text-[11px] font-bold text-primary"><ShieldCheck className="h-3.5 w-3.5" /> Under review</span>}
+                    {milestonesMet && verificationStatus === "not_applied" && <span className="inline-flex items-center gap-1 rounded-full bg-primary/15 px-2.5 py-1 text-[11px] font-bold text-primary"><Sparkles className="h-3.5 w-3.5" /> Milestones complete</span>}
+                    {completeness.score >= platformSettings.verification_min_profile_score && <span className="inline-flex items-center gap-1 rounded-full bg-secondary px-2.5 py-1 text-[11px] font-semibold text-foreground">🏅 Profile pro</span>}
+                    {completedBookings >= platformSettings.verification_min_completed_bookings && <span className="inline-flex items-center gap-1 rounded-full bg-secondary px-2.5 py-1 text-[11px] font-semibold text-foreground">🧳 Trusted host</span>}
+                    {platformSettings.verification_auto_approve && verificationStatus !== "verified" && <span className="inline-flex items-center gap-1 rounded-full bg-secondary px-2.5 py-1 text-[11px] font-semibold text-muted-foreground">⚡ Auto-approval on</span>}
+                  </div>
                   <ul className="mt-3 space-y-1.5">{verificationMilestones.map(item => <li key={item.label} className="flex items-center gap-2 text-xs"><ShieldCheck className={`h-3.5 w-3.5 ${item.done ? "text-accent" : "text-muted-foreground"}`} /><span className={item.done ? "text-foreground" : "text-muted-foreground"}>{item.label}</span></li>)}</ul>
-                  {verificationStatus !== "verified" && verificationStatus !== "pending" && <Button size="sm" className="mt-4 w-full" disabled={!canApplyForVerification} onClick={async () => { const { error } = await (supabase as any).rpc("apply_for_host_verification"); if (error) { toast({ title: "Couldn't apply", description: error.message, variant: "destructive" }); return; } setHostDbProfile((current: any) => ({ ...current, verification_status: "pending" })); toast({ title: "Verification application submitted" }); }}>Apply for verification</Button>}
+                  {verificationStatus !== "verified" && verificationStatus !== "pending" && <Button size="sm" className="mt-4 w-full" disabled={!canApplyForVerification} onClick={async () => { const { data, error } = await (supabase as any).rpc("apply_for_host_verification"); if (error) { toast({ title: "Couldn't apply", description: error.message, variant: "destructive" }); return; } const nextStatus = (Array.isArray(data) ? data[0]?.status : (data as any)?.status) || "pending"; setHostDbProfile((current: any) => ({ ...current, verification_status: nextStatus })); toast({ title: nextStatus === "verified" ? "You're verified! 🎉" : "Verification application submitted" }); }}>Apply for verification</Button>}
                 </div>
                 <div className="rounded-lg bg-card p-5 shadow-card">
                   <h3 className="text-sm font-bold text-foreground uppercase tracking-wider mb-3">Performance</h3>
@@ -800,6 +812,7 @@ const HostDashboard = () => {
                       <th className="px-4 py-2">Special requests</th>
                       <th className="px-4 py-2 text-right">Total</th>
                       <th className="px-4 py-2">Status</th>
+                      <th className="px-4 py-2">Traveler live status</th>
                       <th className="px-4 py-2" />
                     </tr>
                   </thead>
@@ -820,6 +833,11 @@ const HostDashboard = () => {
                           <td className="px-4 py-2 text-right font-semibold text-foreground">₹{Number(b.total_price || 0).toLocaleString("en-IN")}</td>
                           <td className="px-4 py-2">
                             <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${statusColors[b.status] || statusColors.pending}`}>{b.status}</span>
+                          </td>
+                          <td className="px-4 py-2">
+                            <span data-testid="host-traveler-status" className={`rounded-full px-2 py-0.5 text-xs font-medium ${travelerStatusClasses[b.traveler_status || "not_started"]}`}>
+                              {travelerStatusMeta(b.traveler_status).emoji} {travelerStatusMeta(b.traveler_status).label}
+                            </span>
                           </td>
                           <td className="px-4 py-2 text-right">
                             <Button size="sm" variant="outline" className="gap-1 rounded-full text-xs" onClick={() => setOpenBooking(b)}>
