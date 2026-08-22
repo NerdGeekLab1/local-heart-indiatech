@@ -8,6 +8,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 
 type PublicHostData = {
   profile: { id: string; username?: string; full_name: string; city?: string; tagline?: string; bio?: string; avatar_url?: string; cover_url?: string; services?: string[]; specialties?: string[]; languages?: string[]; response_time?: string; years_hosting?: number; social_links?: Record<string, string>; price_per_day?: number; host_since?: string; verification_status?: string };
@@ -29,7 +32,10 @@ export default function HostProfile() {
   const { id } = useParams();
   const { format } = useCurrency();
   const { toast } = useToast();
+  const { user } = useAuth();
   const [data, setData] = useState<PublicHostData | null>(null);
+  const [draft, setDraft] = useState<{ tagline: string; bio: string } | null>(null);
+  const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<TabKey>("overview");
 
@@ -50,6 +56,20 @@ export default function HostProfile() {
   if (!data) return <main className="min-h-screen bg-background flex items-center justify-center"><div className="text-center"><h1 className="text-2xl font-bold">Host not found</h1><Link className="mt-3 inline-block text-primary" to="/explore">Back to Explore</Link></div></main>;
 
   const { profile, experiences, reviews, properties, dishes, transports } = data;
+  const isOwner = Boolean(user && user.id === profile.id);
+  const editing = draft ?? { tagline: profile.tagline || "", bio: profile.bio || "" };
+  const dirty = editing.tagline !== (profile.tagline || "") || editing.bio !== (profile.bio || "");
+  /** Owners edit their own tagline/bio inline; everyone else sees a read-only profile. */
+  const saveProfile = async () => {
+    if (!user || !dirty) return;
+    setSaving(true);
+    const { error } = await supabase.from("profiles").update({ tagline: editing.tagline, bio: editing.bio }).eq("id", user.id);
+    setSaving(false);
+    if (error) { toast({ title: "Couldn't save profile", description: error.message, variant: "destructive" }); return; }
+    setData(current => current ? { ...current, profile: { ...current.profile, tagline: editing.tagline, bio: editing.bio } } : current);
+    setDraft(null);
+    toast({ title: "Profile saved" });
+  };
   const reels = data.reels ?? [];
   const avatar = profile.avatar_url || "/placeholder.svg";
   const cover = profile.cover_url || profile.avatar_url || "/placeholder.svg";
@@ -84,7 +104,16 @@ export default function HostProfile() {
             <div className="flex-1">
               <div className="flex flex-wrap items-center gap-2"><h1 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">{profile.full_name}</h1>{profile.verification_status === "verified" && <span className="inline-flex items-center gap-1 rounded-full bg-accent/10 px-2 py-1 text-xs font-semibold text-accent"><Verified className="h-4 w-4" /> Verified host</span>}</div>
               <p className="mt-1 flex items-center gap-1 text-muted-foreground"><MapPin className="h-4 w-4" />{profile.city || "Location not added"}</p>
-              {profile.tagline && <p className="mt-1 text-muted-foreground">{profile.tagline}</p>}
+              {isOwner ? (
+                <div className="mt-3 space-y-2" data-testid="host-profile-owner-editor">
+                  <Input value={editing.tagline} onChange={event => setDraft({ ...editing, tagline: event.target.value })} placeholder="Add a short tagline" aria-label="Tagline" />
+                  <Textarea value={editing.bio} onChange={event => setDraft({ ...editing, bio: event.target.value })} placeholder="Tell travelers about yourself" aria-label="Bio" className="min-h-[90px]" />
+                  <div className="flex items-center gap-2">
+                    <Button size="sm" className="rounded-full" onClick={saveProfile} disabled={saving || !dirty} data-testid="host-profile-save">{saving ? "Saving…" : "Save changes"}</Button>
+                    {dirty && !saving && <Button size="sm" variant="ghost" className="rounded-full" onClick={() => setDraft(null)}>Discard</Button>}
+                  </div>
+                </div>
+              ) : profile.tagline ? <p className="mt-1 text-muted-foreground">{profile.tagline}</p> : null}
               <div className="mt-3 flex flex-wrap items-center gap-3 text-sm">
                 <span className="flex items-center gap-1"><Star className="h-4 w-4 fill-primary text-primary" />{rating ? rating.toFixed(1) : "New"} ({reviews.length})</span>
                 <span className="text-muted-foreground">·</span>
@@ -139,7 +168,7 @@ export default function HostProfile() {
             {tab === "overview" && <>
               <section className="rounded-2xl border border-border bg-card p-5">
                 <h2 className="flex items-center gap-2 text-xl font-bold"><Sparkles className="h-5 w-5 text-primary" />About {profile.full_name}</h2>
-                <p className="mt-3 leading-relaxed text-muted-foreground">{profile.bio || "This host has not added a bio yet."}</p>
+                <p className="mt-3 leading-relaxed text-muted-foreground">{(isOwner ? editing.bio : profile.bio) || "This host has not added a bio yet."}</p>
                 {(profile.specialties || []).length ? <div className="mt-4 flex flex-wrap gap-2">{(profile.specialties || []).map(item => <span key={item} className="rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">{item}</span>)}</div> : <p className="mt-3 text-xs text-muted-foreground">Specialties will appear here once added.</p>}
               </section>
               <section data-testid="host-reels">
