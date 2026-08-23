@@ -688,7 +688,11 @@ const HostDashboard = () => {
 
         {activeTab === "overview" && (
           <>
-            <div className="mt-6 grid grid-cols-2 sm:grid-cols-4 gap-4">
+            <div className="mt-6 flex items-baseline justify-between">
+              <h2 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">At a glance</h2>
+              <span className="text-xs text-muted-foreground">Live data</span>
+            </div>
+            <div className="mt-3 grid grid-cols-2 sm:grid-cols-4 gap-4">
               {[
                 { label: "Total Earnings", value: `₹${totalEarnings.toLocaleString("en-IN")}`, icon: DollarSign, color: "text-accent" },
                 { label: "Total Bookings", value: `${hostBookings.length}`, icon: Calendar, color: "text-primary" },
