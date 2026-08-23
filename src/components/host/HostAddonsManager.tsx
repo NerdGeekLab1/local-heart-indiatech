@@ -17,6 +17,18 @@ export interface HostAddon {
 
 const blank = { name: "", emoji: "🍷", description: "", price: 0 };
 
+/** Ready-made add-ons hosts can drop in with one tap, then tweak price/description. */
+export const addonPresets = [
+  { emoji: "🍷", name: "Wine bottle", description: "A chilled local wine waiting in the room", price: 1500 },
+  { emoji: "🎂", name: "Celebration cake", description: "Fresh cake for a birthday or anniversary", price: 900 },
+  { emoji: "💐", name: "Fresh flowers", description: "Hand-tied seasonal bouquet on arrival", price: 600 },
+  { emoji: "🍮", name: "Dessert platter", description: "Regional sweets and desserts for the table", price: 750 },
+  { emoji: "🚗", name: "Airport pickup", description: "Private pickup and drop from the airport or station", price: 1200 },
+  { emoji: "🍳", name: "Home-cooked breakfast", description: "Traditional breakfast made by the host family", price: 400 },
+  { emoji: "📸", name: "Photo session", description: "One-hour local photoshoot with edited photos", price: 2500 },
+  { emoji: "💆", name: "Ayurvedic massage", description: "In-house relaxation massage after your travel day", price: 1800 },
+] as const;
+
 /**
  * Hosts curate the special-request add-ons (wine, cake, photography…) travelers
  * can pick during booking. Prices here drive the booking total — no demo values.
