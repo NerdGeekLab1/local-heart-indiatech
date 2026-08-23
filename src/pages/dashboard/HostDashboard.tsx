@@ -805,15 +805,7 @@ const HostDashboard = () => {
                   </div>
                   <p className="mt-3 text-[11px] text-muted-foreground">All figures come from your live bookings, reviews and messages.</p>
                 </div>
-                <ProfileCompleteness
-                  result={completeness}
-                  onJump={() => setActiveTab("settings")}
-                  onFix={(fix) => {
-                    setActiveTab(fix.tab as Tab);
-                    if (fix.section) setSettingsSection(fix.section);
-                    window.scrollTo({ top: 0, behavior: "smooth" });
-                  }}
-                />
+                <h2 className="pt-2 text-sm font-bold uppercase tracking-wider text-muted-foreground">Live activity</h2>
                 {user && <HostActivityFeed userId={user.id} earnings={totalEarnings} />}
               </div>
             </div>
