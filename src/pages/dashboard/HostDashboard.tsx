@@ -746,7 +746,8 @@ const HostDashboard = () => {
                     ))}
                 </div>
               </div>
-              <div className="space-y-4">
+              <div className="space-y-6">
+                <h2 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">Trust &amp; profile</h2>
                 <div className="rounded-lg border border-primary/20 bg-card p-5 shadow-card" data-testid="host-verification-card">
                   <div className="flex items-center gap-2"><BadgeCheck className="h-5 w-5 text-primary" /><h3 className="font-bold">Host verification</h3></div>
                   <p className="mt-1 text-xs text-muted-foreground">{verificationStatus === "verified" ? "Verified milestone badge earned." : verificationStatus === "pending" ? "Your application is under review." : platformSettings.verification_applications_enabled ? "Complete each trust milestone to apply." : "Verification applications are currently closed."}</p>
