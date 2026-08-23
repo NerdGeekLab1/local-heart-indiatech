@@ -158,7 +158,7 @@ const TravelerDashboard = () => {
     setReviewingBooking(null); setReviewText(""); setReviewRating(5); setVideoConsent(null);
   };
 
-  const actualSavedHosts = hosts.filter(h => savedHostIds.includes(h.id));
+  const actualSavedHosts: any[] = savedHosts;
 
   const tabs: { id: Tab; label: string; icon: React.ElementType }[] = [
     { id: "overview", label: "Overview", icon: Globe },
