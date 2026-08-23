@@ -94,6 +94,30 @@ export default function HostAddonsManager({ userId }: { userId: string }) {
       </div>
 
       <div className="rounded-2xl border border-dashed border-primary/30 bg-primary/5 p-4">
+        <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" className="justify-between gap-2 rounded-full sm:w-72" aria-label="Pick a ready-made add-on">
+                <span className="flex items-center gap-2"><Sparkles className="h-4 w-4 text-primary" /> Start from a popular add-on</span>
+                <ChevronDown className="h-4 w-4 opacity-60" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" className="w-80 bg-popover">
+              {addonPresets.map(preset => (
+                <DropdownMenuItem key={preset.name} className="items-start gap-3 py-2"
+                  onSelect={() => setDraft({ emoji: preset.emoji, name: preset.name, description: preset.description, price: preset.price })}>
+                  <span className="text-lg leading-none">{preset.emoji}</span>
+                  <span className="flex-1">
+                    <span className="block font-medium">{preset.name}</span>
+                    <span className="block text-xs text-muted-foreground">{preset.description}</span>
+                  </span>
+                  <span className="text-xs font-semibold text-primary">₹{preset.price}</span>
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+          <p className="text-xs text-muted-foreground">Pre-fills the fields below — adjust the price or wording before adding.</p>
+        </div>
         <div className="grid gap-3 sm:grid-cols-[70px_1fr_140px_120px]">
           <Input aria-label="Emoji" value={draft.emoji} onChange={e => setDraft(p => ({ ...p, emoji: e.target.value }))} className="text-center" />
           <Input aria-label="Add-on name" placeholder="Wine bottle" value={draft.name} onChange={e => setDraft(p => ({ ...p, name: e.target.value }))} />
