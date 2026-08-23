@@ -267,11 +267,13 @@ const Rewards = () => {
                         <span className="font-medium">{s.dest}</span>
                       </div>
                     ) : i === currentStreak ? (
-                      <Button size="sm" className="w-full mt-1 text-xs rounded-lg">
-                        <ArrowRight className="w-3 h-3 mr-1" /> Find Your Next Trip
+                      <Button asChild size="sm" className="w-full mt-1 text-xs rounded-lg">
+                        <Link to="/explore"><ArrowRight className="w-3 h-3 mr-1" /> Find Your Next Trip</Link>
                       </Button>
                     ) : (
-                      <p className="text-xs text-muted-foreground">Plan your {months[i]} adventure</p>
+                      <Link to="/experiences" className="text-xs text-muted-foreground hover:text-primary hover:underline">
+                        Plan your {months[i]} adventure
+                      </Link>
                     )}
                   </div>
                 ))}

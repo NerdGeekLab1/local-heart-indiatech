@@ -688,7 +688,11 @@ const HostDashboard = () => {
 
         {activeTab === "overview" && (
           <>
-            <div className="mt-6 grid grid-cols-2 sm:grid-cols-4 gap-4">
+            <div className="mt-6 flex items-baseline justify-between">
+              <h2 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">At a glance</h2>
+              <span className="text-xs text-muted-foreground">Live data</span>
+            </div>
+            <div className="mt-3 grid grid-cols-2 sm:grid-cols-4 gap-4">
               {[
                 { label: "Total Earnings", value: `₹${totalEarnings.toLocaleString("en-IN")}`, icon: DollarSign, color: "text-accent" },
                 { label: "Total Bookings", value: `${hostBookings.length}`, icon: Calendar, color: "text-primary" },
@@ -702,10 +706,24 @@ const HostDashboard = () => {
                 </div>
               ))}
             </div>
-            <div className="mt-8 grid grid-cols-1 lg:grid-cols-3 gap-8">
-              <div className="lg:col-span-2">
-                <h2 className="text-xl font-bold text-foreground mb-4">Recent Booking Requests</h2>
+            <div className="mt-8 grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8 items-start">
+              <div className="lg:col-span-2 space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h2 className="text-xl font-bold text-foreground">Recent booking requests</h2>
+                    <p className="text-xs text-muted-foreground">Newest first — accept or decline in one tap.</p>
+                  </div>
+                  {hostBookings.length > 3 && (
+                    <Button size="sm" variant="outline" className="rounded-full text-xs" onClick={() => setActiveTab("bookings")}>View all ({hostBookings.length})</Button>
+                  )}
+                </div>
                 <div className="space-y-3">
+                  {hostBookings.length === 0 && (
+                    <div className="rounded-lg border border-dashed border-border bg-card/50 p-8 text-center">
+                      <Calendar className="mx-auto mb-2 h-8 w-8 text-muted-foreground/40" />
+                      <p className="text-sm text-muted-foreground">No booking requests yet. Keep your listings and profile complete to get discovered.</p>
+                    </div>
+                  )}
                   {hostBookings.slice(0, 3).map(b => (
                       <div key={b.id} className="rounded-lg bg-card p-4 shadow-card flex justify-between items-center">
                         <div>
@@ -728,7 +746,8 @@ const HostDashboard = () => {
                     ))}
                 </div>
               </div>
-              <div className="space-y-4">
+              <div className="space-y-6">
+                <h2 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">Trust &amp; profile</h2>
                 <div className="rounded-lg border border-primary/20 bg-card p-5 shadow-card" data-testid="host-verification-card">
                   <div className="flex items-center gap-2"><BadgeCheck className="h-5 w-5 text-primary" /><h3 className="font-bold">Host verification</h3></div>
                   <p className="mt-1 text-xs text-muted-foreground">{verificationStatus === "verified" ? "Verified milestone badge earned." : verificationStatus === "pending" ? "Your application is under review." : platformSettings.verification_applications_enabled ? "Complete each trust milestone to apply." : "Verification applications are currently closed."}</p>
@@ -743,8 +762,18 @@ const HostDashboard = () => {
                   <ul className="mt-3 space-y-1.5">{verificationMilestones.map(item => <li key={item.label} className="flex items-center gap-2 text-xs"><ShieldCheck className={`h-3.5 w-3.5 ${item.done ? "text-accent" : "text-muted-foreground"}`} /><span className={item.done ? "text-foreground" : "text-muted-foreground"}>{item.label}</span></li>)}</ul>
                   {verificationStatus !== "verified" && verificationStatus !== "pending" && <Button size="sm" className="mt-4 w-full" disabled={!canApplyForVerification} onClick={async () => { const { data, error } = await (supabase as any).rpc("apply_for_host_verification"); if (error) { toast({ title: "Couldn't apply", description: error.message, variant: "destructive" }); return; } const nextStatus = (Array.isArray(data) ? data[0]?.status : (data as any)?.status) || "pending"; setHostDbProfile((current: any) => ({ ...current, verification_status: nextStatus })); toast({ title: nextStatus === "verified" ? "You're verified! 🎉" : "Verification application submitted" }); }}>Apply for verification</Button>}
                 </div>
+                <ProfileCompleteness
+                  result={completeness}
+                  onJump={() => setActiveTab("settings")}
+                  onFix={(fix) => {
+                    setActiveTab(fix.tab as Tab);
+                    if (fix.section) setSettingsSection(fix.section);
+                    window.scrollTo({ top: 0, behavior: "smooth" });
+                  }}
+                />
+                <h2 className="pt-2 text-sm font-bold uppercase tracking-wider text-muted-foreground">Performance</h2>
                 <div className="rounded-lg bg-card p-5 shadow-card">
-                  <h3 className="text-sm font-bold text-foreground uppercase tracking-wider mb-3">Performance</h3>
+                  <h3 className="mb-3 text-sm font-bold uppercase tracking-wider text-foreground">This month</h3>
                   <div className="space-y-3 text-sm">
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Response Rate</span>
@@ -776,15 +805,7 @@ const HostDashboard = () => {
                   </div>
                   <p className="mt-3 text-[11px] text-muted-foreground">All figures come from your live bookings, reviews and messages.</p>
                 </div>
-                <ProfileCompleteness
-                  result={completeness}
-                  onJump={() => setActiveTab("settings")}
-                  onFix={(fix) => {
-                    setActiveTab(fix.tab as Tab);
-                    if (fix.section) setSettingsSection(fix.section);
-                    window.scrollTo({ top: 0, behavior: "smooth" });
-                  }}
-                />
+                <h2 className="pt-2 text-sm font-bold uppercase tracking-wider text-muted-foreground">Live activity</h2>
                 {user && <HostActivityFeed userId={user.id} earnings={totalEarnings} />}
               </div>
             </div>

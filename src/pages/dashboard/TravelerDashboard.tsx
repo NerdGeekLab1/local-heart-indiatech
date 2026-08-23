@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { hosts, experiences } from "@/lib/data";
+import { experiences } from "@/lib/data";
 import { useLocalStorage } from "@/hooks/use-local-storage";
 import { useToast } from "@/hooks/use-toast";
 import VideoRecorder from "@/components/VideoRecorder";
@@ -56,7 +56,7 @@ const TravelerDashboard = () => {
   });
   const [socialMedia, setSocialMedia] = useState({ instagram: "", facebook: "", twitter: "", youtube: "", snapchat: "", tiktok: "", website: "" });
   const [notifSettings, setNotifSettings] = useLocalStorage("traveler_notifications", { bookings: true, messages: true, deals: true, reviews: true });
-  const [savedHostIds, setSavedHostIds] = useLocalStorage<string[]>("traveler_saved_hosts", hosts.slice(0, 4).map(h => h.id));
+  const [savedHosts, setSavedHosts] = useState<any[]>([]);
   const [reviewingBooking, setReviewingBooking] = useState<string | null>(null);
   const [reviewText, setReviewText] = useState("");
   const [reviewRating, setReviewRating] = useState(5);
@@ -109,12 +109,26 @@ const TravelerDashboard = () => {
       }
     });
     loadPosts();
+    loadSavedHosts();
     // eslint-disable-next-line
   }, [user]);
 
-  const toggleSaveHost = (hostId: string) => {
-    setSavedHostIds(p => p.includes(hostId) ? p.filter(id => id !== hostId) : [...p, hostId]);
-    toast({ title: savedHostIds.includes(hostId) ? "Removed" : "Saved!" });
+  /** Hosts a traveler marked as favourite on a public host profile. */
+  const loadSavedHosts = async () => {
+    if (!user) { setSavedHosts([]); return; }
+    const { data: rows } = await supabase.from("user_bookmarks").select("item_id").eq("user_id", user.id).eq("item_type", "host");
+    const ids = (rows || []).map((row: any) => row.item_id);
+    if (!ids.length) { setSavedHosts([]); return; }
+    const { data } = await supabase.rpc("get_public_profiles", { _ids: ids });
+    setSavedHosts((data as any[]) || []);
+  };
+
+  const removeSavedHost = async (hostId: string) => {
+    if (!user) return;
+    const { error } = await supabase.from("user_bookmarks").delete().eq("user_id", user.id).eq("item_type", "host").eq("item_id", hostId);
+    if (error) { toast({ title: "Couldn't remove", description: error.message, variant: "destructive" }); return; }
+    setSavedHosts(prev => prev.filter(host => host.id !== hostId));
+    toast({ title: "Removed from saved hosts" });
   };
 
   const upcomingBookings = bookings.filter(b => b.end_date && new Date(b.end_date) >= new Date() && b.status !== "cancelled");
@@ -145,7 +159,7 @@ const TravelerDashboard = () => {
     setReviewingBooking(null); setReviewText(""); setReviewRating(5); setVideoConsent(null);
   };
 
-  const actualSavedHosts = hosts.filter(h => savedHostIds.includes(h.id));
+  const actualSavedHosts: any[] = savedHosts;
 
   const tabs: { id: Tab; label: string; icon: React.ElementType }[] = [
     { id: "overview", label: "Overview", icon: Globe },
@@ -377,22 +391,28 @@ const TravelerDashboard = () => {
 
         {/* Saved Hosts */}
         {activeTab === "saved" && (
-          <div className="mt-6">
-            <h2 className="text-xl font-bold text-foreground mb-4">Saved Hosts</h2>
+          <div className="mt-6" data-testid="traveler-saved-hosts">
+            <h2 className="text-xl font-bold text-foreground mb-1">Saved Hosts</h2>
+            <p className="mb-4 text-sm text-muted-foreground">Hosts you saved from their public profile.</p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {actualSavedHosts.map(h => (
-                <div key={h.id} className="rounded-lg bg-card p-4 shadow-card flex items-center gap-4">
-                  <Link to={`/host/${h.id}`} className="flex items-center gap-4 flex-1">
-                    <img src={h.image} alt={h.name} className="w-14 h-14 rounded-full object-cover" />
-                    <div><p className="font-semibold text-foreground">{h.name}, {h.city}</p>
-                      <p className="text-sm text-muted-foreground">{h.rating} ★ · ${h.pricePerDay}/day</p></div>
-                  </Link>
-                  <button onClick={() => toggleSaveHost(h.id)} className="p-2 hover:bg-secondary rounded-md">
-                    <Heart className="w-5 h-5 fill-destructive text-destructive" />
-                  </button>
-                </div>
-              ))}
-              {actualSavedHosts.length === 0 && <p className="text-muted-foreground text-center py-8 col-span-2">No saved hosts yet.</p>}
+              {actualSavedHosts.map(h => {
+                const name = `${h.first_name || "Host"} ${h.last_name || ""}`.trim();
+                return (
+                  <div key={h.id} className="rounded-lg bg-card p-4 shadow-card flex items-center gap-4">
+                    <Link to={`/host/${h.id}`} className="flex items-center gap-4 flex-1">
+                      <img src={h.avatar_url || "/placeholder.svg"} alt={name} className="w-14 h-14 rounded-full object-cover" />
+                      <div>
+                        <p className="font-semibold text-foreground">{name}{h.nationality ? `, ${h.nationality}` : ""}</p>
+                        <p className="text-sm text-muted-foreground line-clamp-1">{h.bio || "View full host profile"}</p>
+                      </div>
+                    </Link>
+                    <button onClick={() => removeSavedHost(h.id)} aria-label={`Remove ${name}`} className="p-2 hover:bg-secondary rounded-md">
+                      <Heart className="w-5 h-5 fill-destructive text-destructive" />
+                    </button>
+                  </div>
+                );
+              })}
+              {actualSavedHosts.length === 0 && <p className="text-muted-foreground text-center py-8 col-span-2">No saved hosts yet — tap Save on any host profile.</p>}
             </div>
           </div>
         )}

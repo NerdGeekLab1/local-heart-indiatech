@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { Car, ChevronRight, Clock3, Compass, Home, Languages, MapPin, MessageCircle, Quote, Share2, ShieldCheck, Sparkles, Star, UtensilsCrossed, Verified } from "lucide-react";
+import { Car, ChevronRight, Clock3, Compass, Heart, Home, Languages, MapPin, MessageCircle, Quote, Share2, ShieldCheck, Sparkles, Star, UtensilsCrossed, Verified } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
@@ -38,6 +38,37 @@ export default function HostProfile() {
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<TabKey>("overview");
+  const [favorited, setFavorited] = useState(false);
+  const [favoriting, setFavoriting] = useState(false);
+
+  const hostId = data?.profile.id;
+  /** Travelers "save" a host — it becomes a favourite on their traveler dashboard. */
+  useEffect(() => {
+    if (!user || !hostId) { setFavorited(false); return; }
+    let active = true;
+    supabase.from("user_bookmarks").select("id").eq("user_id", user.id).eq("item_type", "host").eq("item_id", hostId).maybeSingle()
+      .then(({ data: row }) => { if (active) setFavorited(Boolean(row)); });
+    return () => { active = false; };
+  }, [user?.id, hostId]);
+
+  const toggleFavorite = async () => {
+    if (!user) { toast({ title: "Sign in to save hosts", variant: "destructive" }); return; }
+    if (!hostId) return;
+    setFavoriting(true);
+    if (favorited) {
+      const { error } = await supabase.from("user_bookmarks").delete().eq("user_id", user.id).eq("item_type", "host").eq("item_id", hostId);
+      setFavoriting(false);
+      if (error) { toast({ title: "Couldn't remove", description: error.message, variant: "destructive" }); return; }
+      setFavorited(false);
+      toast({ title: "Removed from your saved hosts" });
+      return;
+    }
+    const { error } = await supabase.from("user_bookmarks").insert({ user_id: user.id, item_type: "host", item_id: hostId });
+    setFavoriting(false);
+    if (error) { toast({ title: "Couldn't save", description: error.message, variant: "destructive" }); return; }
+    setFavorited(true);
+    toast({ title: "Saved to your dashboard ❤️" });
+  };
 
   useEffect(() => {
     let active = true;
@@ -123,8 +154,22 @@ export default function HostProfile() {
             <div className="flex items-center gap-3 sm:flex-col sm:items-end">
               <div className="flex gap-2">
                 <Button asChild className="gap-2"><Link to={`/book/${profile.username || profile.id}`}><MessageCircle className="h-4 w-4" />Book now</Link></Button>
+                {!isOwner && (
+                  <Button
+                    variant={favorited ? "default" : "outline"}
+                    className="gap-2"
+                    onClick={toggleFavorite}
+                    disabled={favoriting}
+                    data-testid="host-profile-favorite"
+                    aria-pressed={favorited}
+                  >
+                    <Heart className={`h-4 w-4 ${favorited ? "fill-current" : ""}`} />
+                    {favorited ? "Saved" : "Save"}
+                  </Button>
+                )}
                 <Button variant="outline" size="icon" onClick={share} aria-label="Share profile"><Share2 className="h-4 w-4" /></Button>
               </div>
+              {!isOwner && <p className="text-[11px] text-muted-foreground">{favorited ? "In your traveler dashboard → Saved" : "Save this host to your dashboard"}</p>}
             </div>
           </div>
 
