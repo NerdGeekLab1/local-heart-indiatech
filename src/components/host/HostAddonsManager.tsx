@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { Plus, Save, Trash2, Sparkles } from "lucide-react";
+import { ChevronDown, Plus, Save, Trash2, Sparkles } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
