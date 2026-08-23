@@ -109,6 +109,7 @@ const TravelerDashboard = () => {
       }
     });
     loadPosts();
+    loadSavedHosts();
     // eslint-disable-next-line
   }, [user]);
 
