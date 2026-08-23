@@ -762,8 +762,18 @@ const HostDashboard = () => {
                   <ul className="mt-3 space-y-1.5">{verificationMilestones.map(item => <li key={item.label} className="flex items-center gap-2 text-xs"><ShieldCheck className={`h-3.5 w-3.5 ${item.done ? "text-accent" : "text-muted-foreground"}`} /><span className={item.done ? "text-foreground" : "text-muted-foreground"}>{item.label}</span></li>)}</ul>
                   {verificationStatus !== "verified" && verificationStatus !== "pending" && <Button size="sm" className="mt-4 w-full" disabled={!canApplyForVerification} onClick={async () => { const { data, error } = await (supabase as any).rpc("apply_for_host_verification"); if (error) { toast({ title: "Couldn't apply", description: error.message, variant: "destructive" }); return; } const nextStatus = (Array.isArray(data) ? data[0]?.status : (data as any)?.status) || "pending"; setHostDbProfile((current: any) => ({ ...current, verification_status: nextStatus })); toast({ title: nextStatus === "verified" ? "You're verified! 🎉" : "Verification application submitted" }); }}>Apply for verification</Button>}
                 </div>
+                <ProfileCompleteness
+                  result={completeness}
+                  onJump={() => setActiveTab("settings")}
+                  onFix={(fix) => {
+                    setActiveTab(fix.tab as Tab);
+                    if (fix.section) setSettingsSection(fix.section);
+                    window.scrollTo({ top: 0, behavior: "smooth" });
+                  }}
+                />
+                <h2 className="pt-2 text-sm font-bold uppercase tracking-wider text-muted-foreground">Performance</h2>
                 <div className="rounded-lg bg-card p-5 shadow-card">
-                  <h3 className="text-sm font-bold text-foreground uppercase tracking-wider mb-3">Performance</h3>
+                  <h3 className="mb-3 text-sm font-bold uppercase tracking-wider text-foreground">This month</h3>
                   <div className="space-y-3 text-sm">
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Response Rate</span>
