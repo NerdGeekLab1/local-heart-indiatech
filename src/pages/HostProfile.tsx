@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { Car, ChevronRight, Clock3, Compass, Home, Languages, MapPin, MessageCircle, Quote, Share2, ShieldCheck, Sparkles, Star, UtensilsCrossed, Verified } from "lucide-react";
+import { Car, ChevronRight, Clock3, Compass, Heart, Home, Languages, MapPin, MessageCircle, Quote, Share2, ShieldCheck, Sparkles, Star, UtensilsCrossed, Verified } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
