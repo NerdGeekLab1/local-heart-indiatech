@@ -390,22 +390,28 @@ const TravelerDashboard = () => {
 
         {/* Saved Hosts */}
         {activeTab === "saved" && (
-          <div className="mt-6">
-            <h2 className="text-xl font-bold text-foreground mb-4">Saved Hosts</h2>
+          <div className="mt-6" data-testid="traveler-saved-hosts">
+            <h2 className="text-xl font-bold text-foreground mb-1">Saved Hosts</h2>
+            <p className="mb-4 text-sm text-muted-foreground">Hosts you saved from their public profile.</p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {actualSavedHosts.map(h => (
-                <div key={h.id} className="rounded-lg bg-card p-4 shadow-card flex items-center gap-4">
-                  <Link to={`/host/${h.id}`} className="flex items-center gap-4 flex-1">
-                    <img src={h.image} alt={h.name} className="w-14 h-14 rounded-full object-cover" />
-                    <div><p className="font-semibold text-foreground">{h.name}, {h.city}</p>
-                      <p className="text-sm text-muted-foreground">{h.rating} ★ · ${h.pricePerDay}/day</p></div>
-                  </Link>
-                  <button onClick={() => toggleSaveHost(h.id)} className="p-2 hover:bg-secondary rounded-md">
-                    <Heart className="w-5 h-5 fill-destructive text-destructive" />
-                  </button>
-                </div>
-              ))}
-              {actualSavedHosts.length === 0 && <p className="text-muted-foreground text-center py-8 col-span-2">No saved hosts yet.</p>}
+              {actualSavedHosts.map(h => {
+                const name = `${h.first_name || "Host"} ${h.last_name || ""}`.trim();
+                return (
+                  <div key={h.id} className="rounded-lg bg-card p-4 shadow-card flex items-center gap-4">
+                    <Link to={`/host/${h.id}`} className="flex items-center gap-4 flex-1">
+                      <img src={h.avatar_url || "/placeholder.svg"} alt={name} className="w-14 h-14 rounded-full object-cover" />
+                      <div>
+                        <p className="font-semibold text-foreground">{name}{h.nationality ? `, ${h.nationality}` : ""}</p>
+                        <p className="text-sm text-muted-foreground line-clamp-1">{h.bio || "View full host profile"}</p>
+                      </div>
+                    </Link>
+                    <button onClick={() => removeSavedHost(h.id)} aria-label={`Remove ${name}`} className="p-2 hover:bg-secondary rounded-md">
+                      <Heart className="w-5 h-5 fill-destructive text-destructive" />
+                    </button>
+                  </div>
+                );
+              })}
+              {actualSavedHosts.length === 0 && <p className="text-muted-foreground text-center py-8 col-span-2">No saved hosts yet — tap Save on any host profile.</p>}
             </div>
           </div>
         )}
