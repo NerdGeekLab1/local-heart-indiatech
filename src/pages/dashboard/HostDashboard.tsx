@@ -706,10 +706,24 @@ const HostDashboard = () => {
                 </div>
               ))}
             </div>
-            <div className="mt-8 grid grid-cols-1 lg:grid-cols-3 gap-8">
-              <div className="lg:col-span-2">
-                <h2 className="text-xl font-bold text-foreground mb-4">Recent Booking Requests</h2>
+            <div className="mt-8 grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8 items-start">
+              <div className="lg:col-span-2 space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h2 className="text-xl font-bold text-foreground">Recent booking requests</h2>
+                    <p className="text-xs text-muted-foreground">Newest first — accept or decline in one tap.</p>
+                  </div>
+                  {hostBookings.length > 3 && (
+                    <Button size="sm" variant="outline" className="rounded-full text-xs" onClick={() => setActiveTab("bookings")}>View all ({hostBookings.length})</Button>
+                  )}
+                </div>
                 <div className="space-y-3">
+                  {hostBookings.length === 0 && (
+                    <div className="rounded-lg border border-dashed border-border bg-card/50 p-8 text-center">
+                      <Calendar className="mx-auto mb-2 h-8 w-8 text-muted-foreground/40" />
+                      <p className="text-sm text-muted-foreground">No booking requests yet. Keep your listings and profile complete to get discovered.</p>
+                    </div>
+                  )}
                   {hostBookings.slice(0, 3).map(b => (
                       <div key={b.id} className="rounded-lg bg-card p-4 shadow-card flex justify-between items-center">
                         <div>
