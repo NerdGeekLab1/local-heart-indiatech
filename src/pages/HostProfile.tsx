@@ -38,6 +38,37 @@ export default function HostProfile() {
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<TabKey>("overview");
+  const [favorited, setFavorited] = useState(false);
+  const [favoriting, setFavoriting] = useState(false);
+
+  const hostId = data?.profile.id;
+  /** Travelers "save" a host — it becomes a favourite on their traveler dashboard. */
+  useEffect(() => {
+    if (!user || !hostId) { setFavorited(false); return; }
+    let active = true;
+    supabase.from("user_bookmarks").select("id").eq("user_id", user.id).eq("item_type", "host").eq("item_id", hostId).maybeSingle()
+      .then(({ data: row }) => { if (active) setFavorited(Boolean(row)); });
+    return () => { active = false; };
+  }, [user?.id, hostId]);
+
+  const toggleFavorite = async () => {
+    if (!user) { toast({ title: "Sign in to save hosts", variant: "destructive" }); return; }
+    if (!hostId) return;
+    setFavoriting(true);
+    if (favorited) {
+      const { error } = await supabase.from("user_bookmarks").delete().eq("user_id", user.id).eq("item_type", "host").eq("item_id", hostId);
+      setFavoriting(false);
+      if (error) { toast({ title: "Couldn't remove", description: error.message, variant: "destructive" }); return; }
+      setFavorited(false);
+      toast({ title: "Removed from your saved hosts" });
+      return;
+    }
+    const { error } = await supabase.from("user_bookmarks").insert({ user_id: user.id, item_type: "host", item_id: hostId });
+    setFavoriting(false);
+    if (error) { toast({ title: "Couldn't save", description: error.message, variant: "destructive" }); return; }
+    setFavorited(true);
+    toast({ title: "Saved to your dashboard ❤️" });
+  };
 
   useEffect(() => {
     let active = true;
