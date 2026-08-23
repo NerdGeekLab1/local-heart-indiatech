@@ -112,9 +112,22 @@ const TravelerDashboard = () => {
     // eslint-disable-next-line
   }, [user]);
 
-  const toggleSaveHost = (hostId: string) => {
-    setSavedHostIds(p => p.includes(hostId) ? p.filter(id => id !== hostId) : [...p, hostId]);
-    toast({ title: savedHostIds.includes(hostId) ? "Removed" : "Saved!" });
+  /** Hosts a traveler marked as favourite on a public host profile. */
+  const loadSavedHosts = async () => {
+    if (!user) { setSavedHosts([]); return; }
+    const { data: rows } = await supabase.from("user_bookmarks").select("item_id").eq("user_id", user.id).eq("item_type", "host");
+    const ids = (rows || []).map((row: any) => row.item_id);
+    if (!ids.length) { setSavedHosts([]); return; }
+    const { data } = await supabase.rpc("get_public_profiles", { _ids: ids });
+    setSavedHosts((data as any[]) || []);
+  };
+
+  const removeSavedHost = async (hostId: string) => {
+    if (!user) return;
+    const { error } = await supabase.from("user_bookmarks").delete().eq("user_id", user.id).eq("item_type", "host").eq("item_id", hostId);
+    if (error) { toast({ title: "Couldn't remove", description: error.message, variant: "destructive" }); return; }
+    setSavedHosts(prev => prev.filter(host => host.id !== hostId));
+    toast({ title: "Removed from saved hosts" });
   };
 
   const upcomingBookings = bookings.filter(b => b.end_date && new Date(b.end_date) >= new Date() && b.status !== "cancelled");
