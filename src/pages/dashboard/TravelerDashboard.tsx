@@ -56,7 +56,7 @@ const TravelerDashboard = () => {
   });
   const [socialMedia, setSocialMedia] = useState({ instagram: "", facebook: "", twitter: "", youtube: "", snapchat: "", tiktok: "", website: "" });
   const [notifSettings, setNotifSettings] = useLocalStorage("traveler_notifications", { bookings: true, messages: true, deals: true, reviews: true });
-  const [savedHostIds, setSavedHostIds] = useLocalStorage<string[]>("traveler_saved_hosts", hosts.slice(0, 4).map(h => h.id));
+  const [savedHosts, setSavedHosts] = useState<any[]>([]);
   const [reviewingBooking, setReviewingBooking] = useState<string | null>(null);
   const [reviewText, setReviewText] = useState("");
   const [reviewRating, setReviewRating] = useState(5);
