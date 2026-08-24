@@ -81,6 +81,8 @@ export default function HostActivityFeed({ userId, earnings }: { userId: string;
     }
   });
   const [showPrefs, setShowPrefs] = useState(false);
+  const [filter, setFilter] = useState<"all" | "bookings" | "messages" | "earnings">("all");
+  const [query, setQuery] = useState("");
   const prefsRef = useRef(prefs);
   prefsRef.current = prefs;
   const lastEarnings = useRef<number | null>(null);
@@ -156,6 +158,19 @@ export default function HostActivityFeed({ userId, earnings }: { userId: string;
 
   const unread = useMemo(() => events.filter(event => !event.read).length, [events]);
   const mutedCount = prefRows.filter(row => !prefs[row.key]).length;
+  const visible = useMemo(() => {
+    const needle = query.trim().toLowerCase();
+    return events.filter(event => {
+      const matchesFilter =
+        filter === "all" ||
+        (filter === "bookings" && (event.kind === "booking" || event.kind === "invoice")) ||
+        (filter === "messages" && event.kind === "message") ||
+        (filter === "earnings" && event.kind === "earnings");
+      if (!matchesFilter) return false;
+      if (!needle) return true;
+      return `${event.title} ${event.detail}`.toLowerCase().includes(needle);
+    });
+  }, [events, filter, query]);
 
   const markRead = (id: string) => setEvents(current => persist(current.map(event => event.id === id ? { ...event, read: true } : event)));
   const markAllRead = () => setEvents(current => persist(current.map(event => ({ ...event, read: true }))));
@@ -239,12 +254,41 @@ export default function HostActivityFeed({ userId, earnings }: { userId: string;
         </div>
       )}
 
+      {events.length > 0 && (
+        <div className="mt-3 space-y-2" data-testid="host-activity-controls">
+          <div className="flex gap-1 overflow-x-auto rounded-full border border-border bg-background p-1">
+            {([
+              { key: "all", label: "All" },
+              { key: "bookings", label: "Bookings & invoices" },
+              { key: "messages", label: "Messages" },
+              { key: "earnings", label: "Earnings" },
+            ] as const).map(tab => (
+              <button key={tab.key} onClick={() => setFilter(tab.key)} data-testid={`host-activity-filter-${tab.key}`}
+                className={`whitespace-nowrap rounded-full px-3 py-1 text-xs font-medium transition-colors ${filter === tab.key ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}>
+                {tab.label}
+              </button>
+            ))}
+          </div>
+          <input
+            type="search"
+            value={query}
+            onChange={e => setQuery(e.target.value)}
+            placeholder="Search activity…"
+            aria-label="Search activity"
+            data-testid="host-activity-search"
+            className="w-full rounded-xl border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground"
+          />
+        </div>
+      )}
+
       {events.length === 0 ? (
         <p className="mt-3 text-sm text-muted-foreground">Nothing yet. New bookings, messages, invoices and earnings changes appear here instantly.</p>
+      ) : visible.length === 0 ? (
+        <p className="mt-3 text-sm text-muted-foreground">No activity matches this filter or search.</p>
       ) : (
         <>
           <ul className="mt-3 space-y-2">
-            {events.map(event => {
+            {visible.map(event => {
               const Icon = icons[event.kind];
               const body = (
                 <>

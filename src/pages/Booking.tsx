@@ -18,6 +18,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import SpecialRequestEditor, { CustomRequest } from "@/components/booking/SpecialRequestEditor";
+import BookingMapPreview from "@/components/booking/BookingMapPreview";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { usePlatformSettings } from "@/hooks/usePlatformSettings";
 import { computeBookingCharges } from "@/lib/bookingCharges";
@@ -454,6 +455,8 @@ const Booking = () => {
                 <span className="flex items-center gap-1"><Star className="w-3 h-3 fill-primary text-primary" /> {host.rating}</span>
                 <span className="flex items-center gap-1"><Shield className="w-3 h-3 text-accent" /> Verified</span>
               </div>
+
+              <BookingMapPreview city={host.city} hostName={host.name} />
 
               {/* Pricing breakdown */}
               <div className="border-t border-border pt-4 space-y-2">

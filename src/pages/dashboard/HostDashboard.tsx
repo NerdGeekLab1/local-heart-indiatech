@@ -25,6 +25,7 @@ import ListingForm, { ListingModule } from "@/components/ListingForm";
 import type { TablesInsert } from "@/integrations/supabase/types";
 import HostReelsManager from "@/components/host/HostReelsManager";
 import HostActivityFeed from "@/components/host/HostActivityFeed";
+import HostPerformanceAnalytics from "@/components/host/HostPerformanceAnalytics";
 import HostAddonsManager from "@/components/host/HostAddonsManager";
 import HostMessageThreads from "@/components/host/HostMessageThreads";
 import BookingDetailDialog from "@/components/host/BookingDetailDialog";
@@ -40,7 +41,7 @@ const statusColors: Record<string, string> = {
 const HOST_CACHE_TTL = 5 * 60_000;
 const hostDashboardCache = new Map<string, { loadedAt: number; rows: any[] }>();
 
-type Tab = "overview" | "bookings" | "listings" | "experiences" | "food" | "addons" | "reels" | "reviews" | "earnings" | "invoices" | "messages" | "settings";
+type Tab = "overview" | "activity" | "analytics" | "bookings" | "listings" | "experiences" | "food" | "addons" | "reels" | "reviews" | "earnings" | "invoices" | "messages" | "settings";
 
 const profileFields: FieldConfig[] = [
   { key: "name", label: "Name", required: true },
@@ -597,6 +598,8 @@ const HostDashboard = () => {
     { id: "addons", label: "Add-ons", icon: Sparkles },
     { id: "reels", label: "Reels & Stories", icon: Film },
     { id: "reviews", label: "Reviews", icon: Star },
+    { id: "analytics", label: "Analytics", icon: TrendingUp },
+    { id: "activity", label: "Live Activity", icon: Bell },
     { id: "earnings", label: "Earnings", icon: DollarSign },
     { id: "invoices", label: "Invoices", icon: Receipt },
     
@@ -805,11 +808,23 @@ const HostDashboard = () => {
                   </div>
                   <p className="mt-3 text-[11px] text-muted-foreground">All figures come from your live bookings, reviews and messages.</p>
                 </div>
-                <h2 className="pt-2 text-sm font-bold uppercase tracking-wider text-muted-foreground">Live activity</h2>
-                {user && <HostActivityFeed userId={user.id} earnings={totalEarnings} />}
+                <button onClick={() => setActiveTab("activity")} className="flex w-full items-center justify-between gap-2 rounded-xl border border-border bg-card p-4 text-left shadow-card hover:border-primary">
+                  <span className="flex items-center gap-2 text-sm font-semibold text-foreground"><Bell className="h-4 w-4 text-primary" /> Live activity</span>
+                  <span className="text-xs text-muted-foreground">Open tab →</span>
+                </button>
               </div>
             </div>
           </>
+        )}
+
+        {activeTab === "activity" && user && (
+          <div className="mt-6">
+            <HostActivityFeed userId={user.id} earnings={totalEarnings} />
+          </div>
+        )}
+
+        {activeTab === "analytics" && (
+          <HostPerformanceAnalytics bookings={hostBookings} reviews={hostDbReviews} messages={hostMessages} userId={user?.id} />
         )}
 
         {activeTab === "bookings" && (
