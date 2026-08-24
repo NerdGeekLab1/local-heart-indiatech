@@ -36,7 +36,9 @@ export default function RequireAuth({ children, role }: RequireAuthProps) {
     return <Navigate to={`${loginPath}?next=${next}`} replace />;
   }
 
-  if (!hasRole) {
+  // A failed/empty role lookup must never bounce a host to the traveler dashboard —
+  // stay put and let the live role subscription resolve it.
+  if (!hasRole && userRole) {
     return <Navigate to={effectiveRole === "host" ? "/dashboard/host" : "/dashboard/traveler"} replace />;
   }
 
