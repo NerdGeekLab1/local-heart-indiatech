@@ -43,8 +43,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setUserRole(role);
         return role;
       } catch {
-        setUserRole(null);
-        setUserRoles([]);
+        // Keep the last known role: clearing it made guards redirect hosts to
+        // the traveler dashboard whenever a lookup timed out.
         return null;
       } finally {
         setRoleLoaded(true);
