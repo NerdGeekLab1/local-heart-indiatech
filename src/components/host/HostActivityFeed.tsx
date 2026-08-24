@@ -81,6 +81,8 @@ export default function HostActivityFeed({ userId, earnings }: { userId: string;
     }
   });
   const [showPrefs, setShowPrefs] = useState(false);
+  const [filter, setFilter] = useState<"all" | "bookings" | "messages" | "earnings">("all");
+  const [query, setQuery] = useState("");
   const prefsRef = useRef(prefs);
   prefsRef.current = prefs;
   const lastEarnings = useRef<number | null>(null);
