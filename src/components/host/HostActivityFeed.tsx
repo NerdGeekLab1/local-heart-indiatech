@@ -156,6 +156,19 @@ export default function HostActivityFeed({ userId, earnings }: { userId: string;
 
   const unread = useMemo(() => events.filter(event => !event.read).length, [events]);
   const mutedCount = prefRows.filter(row => !prefs[row.key]).length;
+  const visible = useMemo(() => {
+    const needle = query.trim().toLowerCase();
+    return events.filter(event => {
+      const matchesFilter =
+        filter === "all" ||
+        (filter === "bookings" && (event.kind === "booking" || event.kind === "invoice")) ||
+        (filter === "messages" && event.kind === "message") ||
+        (filter === "earnings" && event.kind === "earnings");
+      if (!matchesFilter) return false;
+      if (!needle) return true;
+      return `${event.title} ${event.detail}`.toLowerCase().includes(needle);
+    });
+  }, [events, filter, query]);
 
   const markRead = (id: string) => setEvents(current => persist(current.map(event => event.id === id ? { ...event, read: true } : event)));
   const markAllRead = () => setEvents(current => persist(current.map(event => ({ ...event, read: true }))));
