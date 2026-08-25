@@ -50,6 +50,20 @@ const BecomeHost = () => {
   const [showPassword, setShowPassword] = useState(false);
   const { toast } = useToast();
   const { user } = useAuth();
+  const [existing, setExisting] = useState<{ status: string | null; approved: boolean } | null>(null);
+
+  // A signed-in host who already applied should never see the application form again.
+  useEffect(() => {
+    if (!user) { setExisting(null); return; }
+    let cancelled = false;
+    (async () => {
+      const { data } = await (supabase as any).rpc("get_host_onboarding_status");
+      const row = Array.isArray(data) ? data[0] : data;
+      if (cancelled || !row?.application_submitted) return;
+      setExisting({ status: row.application_status ?? null, approved: !!row.admin_approved });
+    })();
+    return () => { cancelled = true; };
+  }, [user]);
 
   const [form, setForm] = useState({
     name: "", email: "", phone: "", country: "India", city: "", state: "", password: "", confirmPassword: "",
