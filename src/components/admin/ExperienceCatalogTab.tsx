@@ -214,7 +214,7 @@ const ExperienceCatalogTab = () => {
               <div>
                 <p className="font-medium text-foreground">{o.experience_catalog?.title} — {o.headline || "Untitled offering"}</p>
                 <p className="text-xs text-muted-foreground">
-                  {[o.profiles ? `${o.profiles.first_name ?? ""} ${o.profiles.last_name ?? ""}`.trim() || o.profiles.username : "Host", o.city, `₹${o.price} ${String(o.price_unit || "").replace(/_/g, " ")}`, `up to ${o.max_guests}`].filter(Boolean).join(" · ")}
+                  {[o.host ? `${o.host.first_name ?? ""} ${o.host.last_name ?? ""}`.trim() || "Host" : "Host", o.city, `₹${o.price} ${String(o.price_unit || "").replace(/_/g, " ")}`, `up to ${o.max_guests}`].filter(Boolean).join(" · ")}
                 </p>
                 {o.host_notes && <p className="mt-1 max-w-2xl text-sm text-muted-foreground">{o.host_notes}</p>}
               </div>
