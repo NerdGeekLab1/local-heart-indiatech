@@ -222,6 +222,37 @@ const BecomeHost = () => {
     </div>
   );
 
+  if (existing) {
+    const label = existing.approved ? "approved" : (existing.status ?? "in review").replace(/_/g, " ");
+    return (
+      <div className="min-h-screen bg-background">
+        <Navbar />
+        <div className="pt-24 pb-16 px-4 sm:px-6 lg:px-8 mx-auto max-w-2xl text-center">
+          <div className="bg-card rounded-lg p-10 shadow-card">
+            <div className="w-16 h-16 rounded-full bg-accent/10 flex items-center justify-center mx-auto mb-6">
+              <Check className="w-8 h-8 text-accent" />
+            </div>
+            <h1 className="text-3xl font-bold text-foreground">
+              {existing.approved ? "You're already an approved host" : "Your application is already with us"}
+            </h1>
+            <p className="mt-3 text-muted-foreground">
+              Current status: <span className="font-semibold text-foreground">{label}</span>. There's no need to apply again.
+            </p>
+            <div className="mt-6 flex flex-wrap justify-center gap-2">
+              {existing.approved ? (
+                <Button asChild className="rounded-full"><Link to="/dashboard/host">Go to Host dashboard</Link></Button>
+              ) : (
+                <Button asChild className="rounded-full"><Link to="/host-onboarding">Check application status</Link></Button>
+              )}
+              <Button asChild variant="outline" className="rounded-full"><Link to="/">Back to home</Link></Button>
+            </div>
+          </div>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
+
   if (submitted) {
     return (
       <div className="min-h-screen bg-background">
