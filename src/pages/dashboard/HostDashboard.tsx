@@ -900,6 +900,20 @@ const HostDashboard = () => {
           </div>
         )}
 
+        {activeTab === "catalog" && user && (
+          <div className="mt-6">
+            <HostCatalogOfferings hostId={user.id} hostCity={hostDbProfile?.city ?? undefined} />
+          </div>
+        )}
+
+        {activeTab === "schedule" && user && (
+          <div className="mt-6">
+            <HostScheduleManager hostId={user.id} hostCity={hostDbProfile?.city ?? undefined} />
+          </div>
+        )}
+
+
+
         {activeTab === "experiences" && (
           <div className="mt-6 space-y-8">
             {hostDbExperiences.length > 0 && (() => {
