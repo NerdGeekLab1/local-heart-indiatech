@@ -32,6 +32,8 @@ import BookingDetailDialog from "@/components/host/BookingDetailDialog";
 import ProfileCompleteness, { CompletenessRing } from "@/components/host/ProfileCompleteness";
 import { hostCompleteness } from "@/lib/hostCompleteness";
 import InvoiceDetail from "@/components/dashboard/InvoiceDetail";
+import HostCatalogOfferings from "@/components/host/HostCatalogOfferings";
+import HostScheduleManager from "@/components/host/HostScheduleManager";
 
 const statusColors: Record<string, string> = {
   pending: "bg-primary/10 text-primary", confirmed: "bg-accent/10 text-accent",
@@ -41,7 +43,7 @@ const statusColors: Record<string, string> = {
 const HOST_CACHE_TTL = 5 * 60_000;
 const hostDashboardCache = new Map<string, { loadedAt: number; rows: any[] }>();
 
-type Tab = "overview" | "activity" | "analytics" | "bookings" | "listings" | "experiences" | "food" | "addons" | "reels" | "reviews" | "earnings" | "invoices" | "messages" | "settings";
+type Tab = "overview" | "activity" | "analytics" | "bookings" | "listings" | "experiences" | "catalog" | "schedule" | "food" | "addons" | "reels" | "reviews" | "earnings" | "invoices" | "messages" | "settings";
 
 const profileFields: FieldConfig[] = [
   { key: "name", label: "Name", required: true },
@@ -593,6 +595,8 @@ const HostDashboard = () => {
     { id: "overview", label: "Overview", icon: BarChart3 },
     { id: "bookings", label: "Bookings", icon: Calendar },
     { id: "experiences", label: "Experiences", icon: Globe },
+    { id: "catalog", label: "Catalog Experiences", icon: Sparkles },
+    { id: "schedule", label: "Itinerary & Occasions", icon: Calendar },
     { id: "listings", label: "Property", icon: Home },
     { id: "food", label: "Food Menu", icon: UtensilsCrossed },
     { id: "addons", label: "Add-ons", icon: Sparkles },
@@ -895,6 +899,20 @@ const HostDashboard = () => {
             <HostAddonsManager userId={user.id} />
           </div>
         )}
+
+        {activeTab === "catalog" && user && (
+          <div className="mt-6">
+            <HostCatalogOfferings hostId={user.id} hostCity={hostDbProfile?.city ?? undefined} />
+          </div>
+        )}
+
+        {activeTab === "schedule" && user && (
+          <div className="mt-6">
+            <HostScheduleManager hostId={user.id} hostCity={hostDbProfile?.city ?? undefined} />
+          </div>
+        )}
+
+
 
         {activeTab === "experiences" && (
           <div className="mt-6 space-y-8">
