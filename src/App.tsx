@@ -122,6 +122,8 @@ const App = () => (
             <Route path="/explore" element={<Explore />} />
             <Route path="/experiences" element={<Experiences />} />
             <Route path="/experience/:id" element={<ExperienceDetail />} />
+            <Route path="/experience-types" element={<ExperienceTypes />} />
+            <Route path="/experience-type/:slug" element={<CatalogExperience />} />
             <Route path="/host/:id" element={<HostProfile />} />
             <Route path="/book/:id" element={<FormAvailabilityGate formKey="booking"><Booking /></FormAvailabilityGate>} />
             <Route path="/become-host" element={<FormAvailabilityGate formKey="become_host"><BecomeHost /></FormAvailabilityGate>} />
