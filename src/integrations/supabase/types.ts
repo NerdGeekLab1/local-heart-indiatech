@@ -277,6 +277,102 @@ export type Database = {
           },
         ]
       }
+      catalog_host_offerings: {
+        Row: {
+          addon_notes: string | null
+          admin_notes: string | null
+          available_from: string | null
+          available_to: string | null
+          catalog_id: string
+          city: string
+          created_at: string
+          duration: string | null
+          experience_id: string | null
+          headline: string
+          host_id: string
+          host_notes: string
+          id: string
+          is_active: boolean
+          latitude: number | null
+          longitude: number | null
+          max_guests: number
+          meeting_point: string | null
+          photos: string[]
+          price: number
+          price_unit: string
+          season_months: number[]
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          addon_notes?: string | null
+          admin_notes?: string | null
+          available_from?: string | null
+          available_to?: string | null
+          catalog_id: string
+          city?: string
+          created_at?: string
+          duration?: string | null
+          experience_id?: string | null
+          headline?: string
+          host_id: string
+          host_notes?: string
+          id?: string
+          is_active?: boolean
+          latitude?: number | null
+          longitude?: number | null
+          max_guests?: number
+          meeting_point?: string | null
+          photos?: string[]
+          price?: number
+          price_unit?: string
+          season_months?: number[]
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          addon_notes?: string | null
+          admin_notes?: string | null
+          available_from?: string | null
+          available_to?: string | null
+          catalog_id?: string
+          city?: string
+          created_at?: string
+          duration?: string | null
+          experience_id?: string | null
+          headline?: string
+          host_id?: string
+          host_notes?: string
+          id?: string
+          is_active?: boolean
+          latitude?: number | null
+          longitude?: number | null
+          max_guests?: number
+          meeting_point?: string | null
+          photos?: string[]
+          price?: number
+          price_unit?: string
+          season_months?: number[]
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "catalog_host_offerings_catalog_id_fkey"
+            columns: ["catalog_id"]
+            isOneToOne: false
+            referencedRelation: "experience_catalog"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "catalog_host_offerings_experience_id_fkey"
+            columns: ["experience_id"]
+            isOneToOne: false
+            referencedRelation: "experiences"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       cms_blogs: {
         Row: {
           author: string | null
@@ -711,6 +807,96 @@ export type Database = {
           id?: string
           token?: string
           used_at?: string | null
+        }
+        Relationships: []
+      }
+      experience_catalog: {
+        Row: {
+          admin_notes: string | null
+          category: string
+          created_at: string
+          description: string
+          difficulty: string | null
+          gallery: string[]
+          hero_image_url: string | null
+          highlights: string[]
+          id: string
+          includes: string[]
+          is_featured: boolean
+          occasion_type: string | null
+          price_max: number
+          price_min: number
+          reviewed_at: string | null
+          reviewed_by: string | null
+          season_label: string | null
+          season_months: number[]
+          slug: string
+          sort_order: number
+          status: string
+          sub_category: string | null
+          submitted_by: string | null
+          summary: string
+          title: string
+          typical_duration: string | null
+          updated_at: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          category: string
+          created_at?: string
+          description?: string
+          difficulty?: string | null
+          gallery?: string[]
+          hero_image_url?: string | null
+          highlights?: string[]
+          id?: string
+          includes?: string[]
+          is_featured?: boolean
+          occasion_type?: string | null
+          price_max?: number
+          price_min?: number
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          season_label?: string | null
+          season_months?: number[]
+          slug: string
+          sort_order?: number
+          status?: string
+          sub_category?: string | null
+          submitted_by?: string | null
+          summary?: string
+          title: string
+          typical_duration?: string | null
+          updated_at?: string
+        }
+        Update: {
+          admin_notes?: string | null
+          category?: string
+          created_at?: string
+          description?: string
+          difficulty?: string | null
+          gallery?: string[]
+          hero_image_url?: string | null
+          highlights?: string[]
+          id?: string
+          includes?: string[]
+          is_featured?: boolean
+          occasion_type?: string | null
+          price_max?: number
+          price_min?: number
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          season_label?: string | null
+          season_months?: number[]
+          slug?: string
+          sort_order?: number
+          status?: string
+          sub_category?: string | null
+          submitted_by?: string | null
+          summary?: string
+          title?: string
+          typical_duration?: string | null
+          updated_at?: string
         }
         Relationships: []
       }
@@ -1523,6 +1709,115 @@ export type Database = {
           weekly_rate?: number
         }
         Relationships: []
+      }
+      host_schedule_events: {
+        Row: {
+          city: string
+          cover_image_url: string | null
+          created_at: string
+          description: string
+          end_date: string | null
+          event_type: string | null
+          guest_capacity: number | null
+          host_id: string
+          id: string
+          is_public: boolean
+          kind: string
+          recurring_months: number[]
+          start_date: string | null
+          status: string
+          title: string
+          updated_at: string
+          venue: string | null
+        }
+        Insert: {
+          city?: string
+          cover_image_url?: string | null
+          created_at?: string
+          description?: string
+          end_date?: string | null
+          event_type?: string | null
+          guest_capacity?: number | null
+          host_id: string
+          id?: string
+          is_public?: boolean
+          kind?: string
+          recurring_months?: number[]
+          start_date?: string | null
+          status?: string
+          title: string
+          updated_at?: string
+          venue?: string | null
+        }
+        Update: {
+          city?: string
+          cover_image_url?: string | null
+          created_at?: string
+          description?: string
+          end_date?: string | null
+          event_type?: string | null
+          guest_capacity?: number | null
+          host_id?: string
+          id?: string
+          is_public?: boolean
+          kind?: string
+          recurring_months?: number[]
+          start_date?: string | null
+          status?: string
+          title?: string
+          updated_at?: string
+          venue?: string | null
+        }
+        Relationships: []
+      }
+      host_schedule_experiences: {
+        Row: {
+          catalog_id: string | null
+          created_at: string
+          id: string
+          note: string | null
+          offering_id: string | null
+          schedule_id: string
+        }
+        Insert: {
+          catalog_id?: string | null
+          created_at?: string
+          id?: string
+          note?: string | null
+          offering_id?: string | null
+          schedule_id: string
+        }
+        Update: {
+          catalog_id?: string | null
+          created_at?: string
+          id?: string
+          note?: string | null
+          offering_id?: string | null
+          schedule_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "host_schedule_experiences_catalog_id_fkey"
+            columns: ["catalog_id"]
+            isOneToOne: false
+            referencedRelation: "experience_catalog"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "host_schedule_experiences_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "catalog_host_offerings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "host_schedule_experiences_schedule_id_fkey"
+            columns: ["schedule_id"]
+            isOneToOne: false
+            referencedRelation: "host_schedule_events"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       host_transports: {
         Row: {
@@ -2656,6 +2951,33 @@ export type Database = {
         Args: { payload: Json; queue_name: string }
         Returns: number
       }
+      get_catalog_detail: { Args: { _identifier: string }; Returns: Json }
+      get_catalog_public: {
+        Args: never
+        Returns: {
+          avg_rating: number
+          category: string
+          cities: string[]
+          difficulty: string
+          hero_image_url: string
+          highlights: string[]
+          host_count: number
+          id: string
+          is_featured: boolean
+          occasion_type: string
+          offered_price_max: number
+          offered_price_min: number
+          price_max: number
+          price_min: number
+          season_label: string
+          season_months: number[]
+          slug: string
+          sub_category: string
+          summary: string
+          title: string
+          typical_duration: string
+        }[]
+      }
       get_host_onboarding_status: {
         Args: never
         Returns: {
@@ -2670,6 +2992,7 @@ export type Database = {
           submitted_at: string
         }[]
       }
+      get_host_schedule_public: { Args: { _host: string }; Returns: Json }
       get_my_role: { Args: never; Returns: string }
       get_public_host: { Args: { _identifier: string }; Returns: Json }
       get_public_host_directory: {
