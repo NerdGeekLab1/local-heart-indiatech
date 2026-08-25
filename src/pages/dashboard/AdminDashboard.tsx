@@ -803,6 +803,7 @@ const AdminDashboard = () => {
     { id: "leaderboard", label: "Leaderboard", icon: Trophy, group: "People" },
 
     { id: "experiences", label: "Experiences", icon: Globe, group: "Catalog" },
+    { id: "catalog", label: "Experience Catalog", icon: Sparkles, group: "Catalog" },
     { id: "destinations", label: "Destinations", icon: MapPin, group: "Catalog" },
     { id: "trips", label: "Trips", icon: Compass, badge: dbTrips.filter(t => t.status === "pending").length, group: "Catalog" },
     { id: "weddings", label: "Weddings", icon: Heart, group: "Catalog" },
