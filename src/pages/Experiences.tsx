@@ -156,6 +156,10 @@ const Experiences = () => {
           </motion.div>
           <h1 className="text-4xl sm:text-5xl font-bold text-foreground">Unforgettable Experiences</h1>
           <p className="mt-3 text-lg text-muted-foreground">Curated adventures, cultural immersions & bike tours across India</p>
+          <Link to="/experience-types"
+            className="mt-4 inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/5 px-4 py-2 text-sm font-semibold text-primary transition-colors hover:bg-primary/10">
+            <Sparkles className="h-4 w-4" /> Browse by experience type — no sign-in needed
+          </Link>
         </motion.div>
 
         {/* Search & Filter Bar */}
