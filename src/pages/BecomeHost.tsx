@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Check, MapPin, Camera, ArrowRight, Loader2, Eye, EyeOff } from "lucide-react";
 import { z } from "zod";
