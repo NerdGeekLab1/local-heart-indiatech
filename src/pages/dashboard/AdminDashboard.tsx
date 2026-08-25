@@ -44,7 +44,7 @@ import { Film, Heart, Menu, BookOpen, PanelLeftClose, PanelLeftOpen } from "luci
 import ApplicationDetailDialog from "@/components/admin/ApplicationDetailDialog";
 
 
-type Tab = "overview" | "hosts" | "hostWaitlist" | "bookings" | "experiences" | "destinations" | "trips" | "grievances" | "users" | "wanderers" | "missions" | "leaderboard" | "invoices" | "feedModeration" | "reelsModeration" | "reviewModeration" | "analytics" | "settings" | "configuration" | "emails" | "plans" | "weddings" | "audit" | "testmode" | "docs" | "websiteCms" | "content";
+type Tab = "overview" | "hosts" | "hostWaitlist" | "bookings" | "experiences" | "catalog" | "destinations" | "trips" | "grievances" | "users" | "wanderers" | "missions" | "leaderboard" | "invoices" | "feedModeration" | "reelsModeration" | "reviewModeration" | "analytics" | "settings" | "configuration" | "emails" | "plans" | "weddings" | "audit" | "testmode" | "docs" | "websiteCms" | "content";
 
 const ADMIN_TAB_KEY = "travelista.admin.activeTab";
 const ADMIN_NAV_KEY = "travelista.admin.navCollapsed";
