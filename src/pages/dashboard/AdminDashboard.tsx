@@ -27,6 +27,7 @@ import ConfigurationTab from "@/components/admin/ConfigurationTab";
 import EmailTemplatesTab from "@/components/admin/EmailTemplatesTab";
 import SubscriptionPlansTab from "@/components/admin/SubscriptionPlansTab";
 import WeddingsTab from "@/components/admin/WeddingsTab";
+import ExperienceCatalogTab from "@/components/admin/ExperienceCatalogTab";
 import BetaModerationTools from "@/components/admin/BetaModerationTools";
 import FeedModerationPanel from "@/components/admin/FeedModerationPanel";
 import ReelsModerationPanel from "@/components/admin/ReelsModerationPanel";
