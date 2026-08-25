@@ -23,6 +23,8 @@ import Index from "./pages/Index.tsx";
 // Lazy-loaded route components for code-splitting / perf
 const Explore = lazy(() => import("./pages/Explore.tsx"));
 const Experiences = lazy(() => import("./pages/Experiences.tsx"));
+const ExperienceTypes = lazy(() => import("./pages/ExperienceTypes.tsx"));
+const CatalogExperience = lazy(() => import("./pages/CatalogExperience.tsx"));
 const ExperienceDetail = lazy(() => import("./pages/ExperienceDetail.tsx"));
 const HostProfile = lazy(() => import("./pages/HostProfile.tsx"));
 const Booking = lazy(() => import("./pages/Booking.tsx"));
