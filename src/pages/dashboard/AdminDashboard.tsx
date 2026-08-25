@@ -27,6 +27,7 @@ import ConfigurationTab from "@/components/admin/ConfigurationTab";
 import EmailTemplatesTab from "@/components/admin/EmailTemplatesTab";
 import SubscriptionPlansTab from "@/components/admin/SubscriptionPlansTab";
 import WeddingsTab from "@/components/admin/WeddingsTab";
+import ExperienceCatalogTab from "@/components/admin/ExperienceCatalogTab";
 import BetaModerationTools from "@/components/admin/BetaModerationTools";
 import FeedModerationPanel from "@/components/admin/FeedModerationPanel";
 import ReelsModerationPanel from "@/components/admin/ReelsModerationPanel";
@@ -43,7 +44,7 @@ import { Film, Heart, Menu, BookOpen, PanelLeftClose, PanelLeftOpen } from "luci
 import ApplicationDetailDialog from "@/components/admin/ApplicationDetailDialog";
 
 
-type Tab = "overview" | "hosts" | "hostWaitlist" | "bookings" | "experiences" | "destinations" | "trips" | "grievances" | "users" | "wanderers" | "missions" | "leaderboard" | "invoices" | "feedModeration" | "reelsModeration" | "reviewModeration" | "analytics" | "settings" | "configuration" | "emails" | "plans" | "weddings" | "audit" | "testmode" | "docs" | "websiteCms" | "content";
+type Tab = "overview" | "hosts" | "hostWaitlist" | "bookings" | "experiences" | "catalog" | "destinations" | "trips" | "grievances" | "users" | "wanderers" | "missions" | "leaderboard" | "invoices" | "feedModeration" | "reelsModeration" | "reviewModeration" | "analytics" | "settings" | "configuration" | "emails" | "plans" | "weddings" | "audit" | "testmode" | "docs" | "websiteCms" | "content";
 
 const ADMIN_TAB_KEY = "travelista.admin.activeTab";
 const ADMIN_NAV_KEY = "travelista.admin.navCollapsed";
@@ -802,6 +803,7 @@ const AdminDashboard = () => {
     { id: "leaderboard", label: "Leaderboard", icon: Trophy, group: "People" },
 
     { id: "experiences", label: "Experiences", icon: Globe, group: "Catalog" },
+    { id: "catalog", label: "Experience Catalog", icon: Sparkles, group: "Catalog" },
     { id: "destinations", label: "Destinations", icon: MapPin, group: "Catalog" },
     { id: "trips", label: "Trips", icon: Compass, badge: dbTrips.filter(t => t.status === "pending").length, group: "Catalog" },
     { id: "weddings", label: "Weddings", icon: Heart, group: "Catalog" },
@@ -2404,6 +2406,7 @@ const AdminDashboard = () => {
 
         {activeTab === "plans" && <SubscriptionPlansTab />}
         {activeTab === "weddings" && <WeddingsTab admin />}
+        {activeTab === "catalog" && <div className="mt-2"><ExperienceCatalogTab /></div>}
         {activeTab === "testmode" && <div className="mt-2"><TestModePanel /></div>}
         {activeTab === "docs" && <DocsTab />}
         {activeTab === "websiteCms" && <WebsiteCMSTab />}

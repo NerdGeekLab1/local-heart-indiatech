@@ -23,6 +23,8 @@ import Index from "./pages/Index.tsx";
 // Lazy-loaded route components for code-splitting / perf
 const Explore = lazy(() => import("./pages/Explore.tsx"));
 const Experiences = lazy(() => import("./pages/Experiences.tsx"));
+const ExperienceTypes = lazy(() => import("./pages/ExperienceTypes.tsx"));
+const CatalogExperience = lazy(() => import("./pages/CatalogExperience.tsx"));
 const ExperienceDetail = lazy(() => import("./pages/ExperienceDetail.tsx"));
 const HostProfile = lazy(() => import("./pages/HostProfile.tsx"));
 const Booking = lazy(() => import("./pages/Booking.tsx"));
@@ -120,6 +122,8 @@ const App = () => (
             <Route path="/explore" element={<Explore />} />
             <Route path="/experiences" element={<Experiences />} />
             <Route path="/experience/:id" element={<ExperienceDetail />} />
+            <Route path="/experience-types" element={<ExperienceTypes />} />
+            <Route path="/experience-type/:slug" element={<CatalogExperience />} />
             <Route path="/host/:id" element={<HostProfile />} />
             <Route path="/book/:id" element={<FormAvailabilityGate formKey="booking"><Booking /></FormAvailabilityGate>} />
             <Route path="/become-host" element={<FormAvailabilityGate formKey="become_host"><BecomeHost /></FormAvailabilityGate>} />
