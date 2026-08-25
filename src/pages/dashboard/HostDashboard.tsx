@@ -43,7 +43,7 @@ const statusColors: Record<string, string> = {
 const HOST_CACHE_TTL = 5 * 60_000;
 const hostDashboardCache = new Map<string, { loadedAt: number; rows: any[] }>();
 
-type Tab = "overview" | "activity" | "analytics" | "bookings" | "listings" | "experiences" | "food" | "addons" | "reels" | "reviews" | "earnings" | "invoices" | "messages" | "settings";
+type Tab = "overview" | "activity" | "analytics" | "bookings" | "listings" | "experiences" | "catalog" | "schedule" | "food" | "addons" | "reels" | "reviews" | "earnings" | "invoices" | "messages" | "settings";
 
 const profileFields: FieldConfig[] = [
   { key: "name", label: "Name", required: true },
