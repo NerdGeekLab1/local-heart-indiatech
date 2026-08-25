@@ -56,11 +56,18 @@ const ExperienceCatalogTab = () => {
     const [c, o] = await Promise.all([
       (supabase as any).from("experience_catalog").select("*").order("sort_order"),
       (supabase as any).from("catalog_host_offerings")
-        .select("*, experience_catalog(title, slug), profiles!catalog_host_offerings_host_id_fkey(first_name, last_name, username)")
+        .select("*, experience_catalog(title, slug)")
         .order("created_at", { ascending: false }),
     ]);
     setRows(c.data ?? []);
-    setOfferings(o.data ?? []);
+    const rawOfferings = o.data ?? [];
+    const hostIds = Array.from(new Set(rawOfferings.map((r: any) => r.host_id)));
+    let hostMap: Record<string, any> = {};
+    if (hostIds.length) {
+      const { data: hostProfiles } = await (supabase as any).rpc("get_public_profiles", { _ids: hostIds });
+      hostMap = Object.fromEntries((hostProfiles ?? []).map((p: any) => [p.id, p]));
+    }
+    setOfferings(rawOfferings.map((r: any) => ({ ...r, host: hostMap[r.host_id] ?? null })));
     setLoading(false);
   }, []);
 
