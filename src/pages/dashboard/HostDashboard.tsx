@@ -595,6 +595,8 @@ const HostDashboard = () => {
     { id: "overview", label: "Overview", icon: BarChart3 },
     { id: "bookings", label: "Bookings", icon: Calendar },
     { id: "experiences", label: "Experiences", icon: Globe },
+    { id: "catalog", label: "Catalog Experiences", icon: Sparkles },
+    { id: "schedule", label: "Itinerary & Occasions", icon: Calendar },
     { id: "listings", label: "Property", icon: Home },
     { id: "food", label: "Food Menu", icon: UtensilsCrossed },
     { id: "addons", label: "Add-ons", icon: Sparkles },
