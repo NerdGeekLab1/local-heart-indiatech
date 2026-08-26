@@ -37,10 +37,39 @@ const heroImages = [
 
 const DestinationDetail = () => {
   const { name } = useParams();
-  const destination = destinations.find(d => d.name.toLowerCase() === name?.toLowerCase());
+  const { data: live, isLoading } = useDestinationDetail(name);
+  const staticDest = destinations.find(d => d.name.toLowerCase() === name?.toLowerCase());
   const [selectedSite, setSelectedSite] = useState<number | null>(null);
   const [activeHeroImg, setActiveHeroImg] = useState(0);
   const [liked, setLiked] = useState(false);
+
+  // Admin-managed content wins; the curated static entry is only a fallback.
+  const destination = live?.destination
+    ? {
+        name: live.destination.name,
+        state: live.destination.state,
+        tagline: live.destination.tagline,
+        description: live.destination.description,
+        highlights: live.destination.highlights || [],
+        bestSeason: live.destination.best_season || undefined,
+        avgTemp: live.destination.avg_temp || undefined,
+        hostCount: live.host_count ?? 0,
+        experienceTags: live.destination.experience_tags || [],
+        sites: (live.sites || []).map(s => ({
+          name: s.name, type: s.type, description: s.description,
+          lat: s.latitude ?? undefined, lng: s.longitude ?? undefined,
+          entryFee: s.entry_fee ?? undefined, bestTime: s.best_time ?? undefined, duration: s.duration ?? undefined,
+        })),
+      }
+    : staticDest;
+
+  if (isLoading && !staticDest) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="w-10 h-10 rounded-full border-2 border-primary/30 border-t-primary animate-spin" />
+      </div>
+    );
+  }
 
   if (!destination) {
     return (
@@ -53,9 +82,29 @@ const DestinationDetail = () => {
     );
   }
 
-  const cityHosts = hosts.filter(h => h.city === destination.name);
-  const cityExperiences = experiences.filter(e => e.hostCity === destination.name);
-  const cityReviews = reviews.filter(r => cityHosts.some(h => h.id === r.hostId));
+  const liveHosts = (live?.hosts || []).map(h => ({
+    id: h.username || h.id,
+    name: [h.first_name, h.last_name].filter(Boolean).join(" ") || h.username || "Local host",
+    image: h.avatar_url || "/placeholder.svg",
+    tagline: h.tagline || "Verified local host",
+    rating: 5,
+    pricePerDay: Number(h.price_per_day || 0),
+    services: h.services || [],
+  }));
+  const liveExperiences = (live?.experiences || []).map(e => ({
+    id: e.id,
+    title: e.title,
+    category: e.category,
+    image: e.image_url || "/placeholder.svg",
+    duration: e.duration || "Flexible",
+    price: Number(e.price),
+  }));
+
+  const cityHosts = liveHosts.length > 0 ? liveHosts : hosts.filter(h => h.city === destination.name);
+  const cityExperiences: any[] = liveExperiences.length > 0
+    ? liveExperiences
+    : experiences.filter(e => e.hostCity === destination.name);
+  const cityReviews = reviews.filter(r => cityHosts.some(h => String(h.id) === String(r.hostId)));
 
   // Build a fallback "sites" list from highlights when the dataset doesn't include detailed sites
   const fallbackSites = (destination.highlights || []).map((h, idx) => ({
@@ -67,19 +116,25 @@ const DestinationDetail = () => {
   }));
   const sitesToShow: any[] = (destination.sites && destination.sites.length > 0) ? destination.sites : fallbackSites;
 
-  // Build a 3-day sample itinerary from the available sites
-  const itinerary = sitesToShow.length > 0 ? [
-    { day: "Day 1 — Arrival & Iconic Sights", places: sitesToShow.slice(0, 2).map(s => s.name) },
-    { day: "Day 2 — Culture & Cuisine", places: sitesToShow.slice(2, 4).map(s => s.name).concat([`Local food trail in ${destination.name}`]) },
-    { day: "Day 3 — Hidden Gems", places: sitesToShow.slice(4, 6).map(s => s.name).concat([`Sunset point & local market`]) },
-  ].filter(d => d.places.length > 0) : [];
+  // Admin-authored itinerary, else a 3-day sample built from the available sites
+  const adminItinerary = (live?.destination?.itinerary || []).filter(d => d?.title || (d?.places || []).length);
+  const itinerary = adminItinerary.length > 0
+    ? adminItinerary.map((d, i) => ({ day: d.title || `Day ${i + 1}`, places: d.places || [] }))
+    : sitesToShow.length > 0 ? [
+      { day: "Day 1 — Arrival & Iconic Sights", places: sitesToShow.slice(0, 2).map(s => s.name) },
+      { day: "Day 2 — Culture & Cuisine", places: sitesToShow.slice(2, 4).map(s => s.name).concat([`Local food trail in ${destination.name}`]) },
+      { day: "Day 3 — Hidden Gems", places: sitesToShow.slice(4, 6).map(s => s.name).concat([`Sunset point & local market`]) },
+    ].filter(d => d.places.length > 0) : [];
 
   // Map embed (OpenStreetMap — no API key)
   const firstSite = sitesToShow.find((s: any) => s.lat && s.lng);
-  const mapCenter = firstSite ? `${firstSite.lat},${firstSite.lng}` : null;
-  const mapBbox = firstSite
-    ? `${firstSite.lng - 0.15},${firstSite.lat - 0.15},${firstSite.lng + 0.15},${firstSite.lat + 0.15}`
+  const centerLat = firstSite?.lat ?? live?.destination?.latitude ?? null;
+  const centerLng = firstSite?.lng ?? live?.destination?.longitude ?? null;
+  const mapCenter = centerLat && centerLng ? `${centerLat},${centerLng}` : null;
+  const mapBbox = centerLat && centerLng
+    ? `${centerLng - 0.15},${centerLat - 0.15},${centerLng + 0.15},${centerLat + 0.15}`
     : null;
+
 
   return (
     <div className="min-h-screen bg-background">
