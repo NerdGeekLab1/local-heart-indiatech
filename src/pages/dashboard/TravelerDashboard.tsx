@@ -25,6 +25,7 @@ import { Dialog, DialogTrigger } from "@/components/ui/dialog";
 import { CreatePostDialog } from "@/components/CreatePostDialog";
 import ChangePasswordDialog from "@/components/ChangePasswordDialog";
 import PhoneInput from "@/components/PhoneInput";
+import ChatPanel from "@/components/ChatPanel";
 import { isValidLocalPhone, splitPhone } from "@/lib/phone";
 
 const statusColors: Record<string, string> = {
@@ -39,6 +40,8 @@ const TravelerDashboard = () => {
   const [activeTab, setActiveTab] = useState<Tab>((searchParams.get("tab") as Tab) || "overview");
 
   useEffect(() => {
+    const thread = searchParams.get("thread");
+    if (thread) setChatWith(thread);
     const tab = searchParams.get("tab") as Tab;
     if (tab) setActiveTab(tab);
   }, [searchParams]);
@@ -48,6 +51,7 @@ const TravelerDashboard = () => {
   const recommendedExp = experiences.slice(0, 4);
   const [dbReviews, setDbReviews] = useState<any[]>([]);
   const [dbMessages, setDbMessages] = useState<any[]>([]);
+  const [chatWith, setChatWith] = useState<string | null>(null);
   const [dbProfile, setDbProfile] = useState<any>(null);
 
   const [profile, setProfile] = useLocalStorage("traveler_profile", {
@@ -609,7 +613,10 @@ const TravelerDashboard = () => {
             ) : (
               <div className="space-y-3">
                 {dbMessages.map(m => (
-                  <div key={m.id} className={`rounded-lg bg-card p-4 shadow-card flex items-center gap-4 ${!m.read && m.receiver_id === user?.id ? "border-l-4 border-primary" : ""}`}>
+                  <button
+                    key={m.id}
+                    onClick={() => setChatWith(m.sender_id === user?.id ? m.receiver_id : m.sender_id)}
+                    className={`w-full text-left rounded-lg bg-card p-4 shadow-card hover:shadow-card-hover transition-shadow flex items-center gap-4 ${!m.read && m.receiver_id === user?.id ? "border-l-4 border-primary" : ""}`}>
                     <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-sm font-bold text-primary">
                       {m.sender_id === user?.id ? "You" : "📨"}
                     </div>
@@ -620,11 +627,15 @@ const TravelerDashboard = () => {
                       <p className="text-sm text-muted-foreground truncate">{m.content}</p>
                     </div>
                     <span className="text-xs text-muted-foreground shrink-0">{new Date(m.created_at).toLocaleDateString()}</span>
-                  </div>
+                  </button>
                 ))}
               </div>
             )}
           </div>
+        )}
+
+        {chatWith && (
+          <ChatPanel receiverId={chatWith} receiverName="Conversation" isOpen onClose={() => setChatWith(null)} />
         )}
 
         {/* Reviews */}
