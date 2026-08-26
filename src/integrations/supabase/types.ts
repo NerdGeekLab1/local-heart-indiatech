@@ -10,7 +10,7 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "14.4"
+    PostgrestVersion: "14.17"
   }
   public: {
     Tables: {
@@ -612,6 +612,131 @@ export type Database = {
           slug?: string
           sort_order?: number
           title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      destination_sites: {
+        Row: {
+          best_time: string | null
+          created_at: string
+          description: string
+          destination_id: string
+          duration: string | null
+          entry_fee: string | null
+          id: string
+          image_url: string | null
+          latitude: number | null
+          longitude: number | null
+          name: string
+          sort_order: number
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          best_time?: string | null
+          created_at?: string
+          description?: string
+          destination_id: string
+          duration?: string | null
+          entry_fee?: string | null
+          id?: string
+          image_url?: string | null
+          latitude?: number | null
+          longitude?: number | null
+          name: string
+          sort_order?: number
+          type?: string
+          updated_at?: string
+        }
+        Update: {
+          best_time?: string | null
+          created_at?: string
+          description?: string
+          destination_id?: string
+          duration?: string | null
+          entry_fee?: string | null
+          id?: string
+          image_url?: string | null
+          latitude?: number | null
+          longitude?: number | null
+          name?: string
+          sort_order?: number
+          type?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "destination_sites_destination_id_fkey"
+            columns: ["destination_id"]
+            isOneToOne: false
+            referencedRelation: "destinations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      destinations: {
+        Row: {
+          avg_temp: string | null
+          best_season: string | null
+          created_at: string
+          created_by: string | null
+          description: string
+          experience_tags: string[]
+          hero_images: string[]
+          highlights: string[]
+          id: string
+          is_published: boolean
+          itinerary: Json
+          latitude: number | null
+          longitude: number | null
+          name: string
+          slug: string
+          sort_order: number
+          state: string
+          tagline: string
+          updated_at: string
+        }
+        Insert: {
+          avg_temp?: string | null
+          best_season?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string
+          experience_tags?: string[]
+          hero_images?: string[]
+          highlights?: string[]
+          id?: string
+          is_published?: boolean
+          itinerary?: Json
+          latitude?: number | null
+          longitude?: number | null
+          name: string
+          slug: string
+          sort_order?: number
+          state?: string
+          tagline?: string
+          updated_at?: string
+        }
+        Update: {
+          avg_temp?: string | null
+          best_season?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string
+          experience_tags?: string[]
+          hero_images?: string[]
+          highlights?: string[]
+          id?: string
+          is_published?: boolean
+          itinerary?: Json
+          latitude?: number | null
+          longitude?: number | null
+          name?: string
+          slug?: string
+          sort_order?: number
+          state?: string
+          tagline?: string
           updated_at?: string
         }
         Relationships: []
@@ -2978,6 +3103,7 @@ export type Database = {
           typical_duration: string
         }[]
       }
+      get_destination_public: { Args: { _identifier: string }; Returns: Json }
       get_host_onboarding_status: {
         Args: never
         Returns: {
@@ -3093,6 +3219,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      import_destinations: { Args: { _payload: Json }; Returns: number }
       join_beta_waitlist: {
         Args: {
           _city?: string
