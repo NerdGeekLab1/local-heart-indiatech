@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Bell, Calendar, MessageCircle, Target, CheckCircle, X, Clock, FileText, Users, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -20,6 +21,7 @@ interface Notification {
   description: string;
   time: string;
   read: boolean;
+  senderId?: string | null;
 }
 
 const typeConfig: Record<NotificationType, { icon: React.ElementType; color: string }> = {
@@ -44,7 +46,8 @@ function timeAgo(date: string) {
 }
 
 const NotificationPanel = () => {
-  const { user } = useAuth();
+  const { user, userRole } = useAuth();
+  const navigate = useNavigate();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [filter, setFilter] = useState<"all" | NotificationType>("all");
   const [loading, setLoading] = useState(true);
@@ -70,6 +73,7 @@ const NotificationPanel = () => {
             description: m.content.length > 80 ? m.content.slice(0, 80) + "…" : m.content,
             time: timeAgo(m.created_at),
             read: m.read ?? false,
+            senderId: m.sender_id,
           }));
         setNotifications(mapped);
       }
@@ -90,6 +94,7 @@ const NotificationPanel = () => {
           description: m.content.length > 80 ? m.content.slice(0, 80) + "…" : m.content,
           time: "just now",
           read: false,
+          senderId: m.sender_id,
         }, ...prev]);
       })
       .subscribe();
@@ -112,6 +117,15 @@ const NotificationPanel = () => {
   const markRead = async (id: string) => {
     setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
     await supabase.from("messages").update({ read: true }).eq("id", id);
+  };
+
+  /** Send the user to the right dashboard messages thread for this notification. */
+  const openNotification = (n: Notification) => {
+    markRead(n.id);
+    if (n.type !== "message") return;
+    const base = userRole === "host" ? "/dashboard/host" : userRole === "admin" ? "/dashboard/admin" : "/dashboard/traveler";
+    const thread = n.senderId ? `&thread=${n.senderId}` : "";
+    navigate(`${base}?tab=messages${thread}`);
   };
 
   const dismiss = (id: string) => setNotifications(prev => prev.filter(n => n.id !== id));
@@ -176,7 +190,7 @@ const NotificationPanel = () => {
                 return (
                   <div
                     key={n.id}
-                    onClick={() => markRead(n.id)}
+                    onClick={() => openNotification(n)}
                     className={cn(
                       "flex gap-3 p-2.5 rounded-lg cursor-pointer transition-colors group",
                       !n.read ? "bg-primary/5 hover:bg-primary/10" : "hover:bg-muted/50"
