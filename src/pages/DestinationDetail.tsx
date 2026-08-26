@@ -11,6 +11,7 @@ import VirtualTour from "@/components/VirtualTour";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { destinations, hosts, experiences, reviews } from "@/lib/data";
+import { useDestinationDetail } from "@/hooks/useDestinations";
 
 const siteIcons: Record<string, React.ElementType> = {
   monument: Landmark, temple: Landmark, palace: Landmark, fort: Landmark,
@@ -28,7 +29,7 @@ const siteGradients: Record<string, string> = {
   museum: "from-muted to-muted/50",
 };
 
-const heroImages = [
+const defaultHeroImages = [
   "https://images.unsplash.com/photo-1524492412937-b28074a5d7da?w=1200&q=80",
   "https://images.unsplash.com/photo-1564507592333-c60657eea523?w=800&q=80",
   "https://images.unsplash.com/photo-1585135497273-1a86b09fe70e?w=800&q=80",
@@ -81,6 +82,10 @@ const DestinationDetail = () => {
       </div>
     );
   }
+
+  const heroImages = (live?.destination?.hero_images || []).length > 0
+    ? live!.destination.hero_images
+    : defaultHeroImages;
 
   const liveHosts = (live?.hosts || []).map(h => ({
     id: h.username || h.id,
@@ -557,7 +562,7 @@ const DestinationDetail = () => {
                     <div className="p-4">
                       <div className="flex items-center justify-between">
                         <span className="text-sm text-muted-foreground">{exp.duration}</span>
-                        <span className="text-lg font-bold text-foreground">${exp.price}</span>
+                        <span className="text-lg font-bold text-foreground">₹{Number(exp.price).toLocaleString("en-IN")}</span>
                       </div>
                     </div>
                   </motion.div>
