@@ -1856,39 +1856,9 @@ const AdminDashboard = () => {
           </div>
         )}
 
-        {/* Destinations Tab */}
-        {activeTab === "destinations" && (
-          <div className="mt-6">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-bold text-foreground">Destinations ({allDestinations.length})</h2>
-              <Button size="sm" className="rounded-full gap-1 text-xs" onClick={() => setEditDialog({
-                open: true, title: "Add Destination", fields: destinationFields,
-                onSave: (d) => { setCustomDestinations(p => [...p, d]); toast({ title: "Destination added!" }); },
-              })}><Plus className="w-3 h-3" /> Add</Button>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {allDestinations.map((d, i) => {
-                const isCustom = i >= destinations.length;
-                return (
-                  <div key={`${d.name}-${i}`} className="rounded-lg bg-card p-4 shadow-card">
-                    <div className="flex items-center gap-2">
-                      <MapPin className="w-4 h-4 text-primary" />
-                      <h3 className="font-bold text-foreground">{d.name}</h3>
-                      <span className="text-xs bg-secondary text-muted-foreground px-2 py-0.5 rounded-full ml-auto">{d.state}</span>
-                    </div>
-                    <p className="text-sm text-primary mt-1">{d.tagline}</p>
-                    <p className="text-xs text-muted-foreground mt-1">{d.hostCount} hosts</p>
-                    <Button variant="outline" size="sm" className="rounded-full text-xs mt-2" onClick={() => setEditDialog({
-                      open: true, title: "Edit Destination", fields: destinationFields, data: d,
-                      onSave: (data) => { if (isCustom) { const ci = i - destinations.length; setCustomDestinations(p => p.map((x, j) => j === ci ? data : x)); } toast({ title: "Updated!" }); },
-                      onDelete: isCustom ? () => { setCustomDestinations(p => p.filter((_, j) => j !== i - destinations.length)); toast({ title: "Removed" }); } : undefined,
-                    })}>Edit</Button>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        )}
+        {/* Destinations Tab — fully database-backed */}
+        {activeTab === "destinations" && <DestinationsTab />}
+
 
         {/* Beta Wanderers Tab */}
         {activeTab === "wanderers" && (
