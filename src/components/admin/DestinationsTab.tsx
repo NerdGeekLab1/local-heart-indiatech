@@ -1,24 +1,41 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { MapPin, Plus, Trash2, Download, Landmark, CalendarDays, Search, Users, Sparkles, Eye, EyeOff, Save, ChevronLeft } from "lucide-react";
+import { MapPin, Plus, Trash2, Download, Landmark, CalendarDays, Search, Users, Sparkles, Eye, EyeOff, Save, ChevronLeft, Crosshair, Map as MapIcon, Image as ImageIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
+import ImageUpload from "@/components/ImageUpload";
+import SiteMarkerMap from "@/components/admin/SiteMarkerMap";
 import {
   useAdminDestinations, useDestinationSites, useDestinationDetail, slugify,
   type DestinationRow, type DestinationSite, type ItineraryDay,
 } from "@/hooks/useDestinations";
 import { destinations as staticDestinations } from "@/lib/data";
+import { buildDestinationSeed } from "@/lib/destinationSeed";
 
 const SITE_TYPES = ["monument", "temple", "palace", "fort", "nature", "beach", "market", "museum"];
 
 const csv = (v?: string[] | null) => (v || []).join(", ");
 const parseCsv = (v: string) => v.split(",").map(s => s.trim()).filter(Boolean);
 
+/** Free-form place lookup via OpenStreetMap Nominatim (same service used for booking maps). */
+export const geocodePlace = async (query: string): Promise<{ lat: number; lng: number } | null> => {
+  const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(query)}`, {
+    headers: { Accept: "application/json" },
+  });
+  if (!res.ok) return null;
+  const data = await res.json();
+  const hit = Array.isArray(data) ? data[0] : null;
+  if (!hit) return null;
+  return { lat: Number(Number(hit.lat).toFixed(6)), lng: Number(Number(hit.lon).toFixed(6)) };
+};
+
 type DetailTab = "basics" | "sites" | "itinerary" | "live";
+
 
 const emptyDraft = {
   name: "", slug: "", state: "", tagline: "", description: "",
