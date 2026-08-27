@@ -88,7 +88,47 @@ export function useDestinationDetail(identifier?: string) {
   });
 }
 
+export interface PublicDestination extends DestinationRow {
+  sites: DestinationSite[];
+}
+
+/** Published destinations with their sites, for the public /destinations directory. */
+export function usePublicDestinations() {
+  return useQuery({
+    queryKey: ["public-destinations"],
+    queryFn: async (): Promise<PublicDestination[]> => {
+      const [{ data: rows, error }, { data: siteRows, error: siteError }] = await Promise.all([
+        supabase
+          .from("destinations")
+          .select("*")
+          .eq("is_published", true)
+          .order("sort_order", { ascending: true })
+          .order("name", { ascending: true }),
+        supabase
+          .from("destination_sites")
+          .select("*")
+          .order("sort_order", { ascending: true }),
+      ]);
+      if (error) throw error;
+      if (siteError) throw siteError;
+
+      const byDestination = new Map<string, DestinationSite[]>();
+      for (const site of (siteRows || []) as unknown as DestinationSite[]) {
+        const list = byDestination.get(site.destination_id) || [];
+        list.push(site);
+        byDestination.set(site.destination_id, list);
+      }
+      return ((rows || []) as unknown as DestinationRow[]).map(d => ({
+        ...d,
+        sites: byDestination.get(d.id) || [],
+      }));
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
 /** Admin list of every destination row (published or not). */
+
 export function useAdminDestinations() {
   return useQuery({
     queryKey: ["admin-destinations"],

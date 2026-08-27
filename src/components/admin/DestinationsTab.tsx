@@ -1,24 +1,41 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { MapPin, Plus, Trash2, Download, Landmark, CalendarDays, Search, Users, Sparkles, Eye, EyeOff, Save, ChevronLeft } from "lucide-react";
+import { MapPin, Plus, Trash2, Download, Landmark, CalendarDays, Search, Users, Sparkles, Eye, EyeOff, Save, ChevronLeft, Crosshair, Map as MapIcon, Image as ImageIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
+import ImageUpload from "@/components/ImageUpload";
+import SiteMarkerMap from "@/components/admin/SiteMarkerMap";
 import {
   useAdminDestinations, useDestinationSites, useDestinationDetail, slugify,
   type DestinationRow, type DestinationSite, type ItineraryDay,
 } from "@/hooks/useDestinations";
 import { destinations as staticDestinations } from "@/lib/data";
+import { buildDestinationSeed } from "@/lib/destinationSeed";
 
 const SITE_TYPES = ["monument", "temple", "palace", "fort", "nature", "beach", "market", "museum"];
 
 const csv = (v?: string[] | null) => (v || []).join(", ");
 const parseCsv = (v: string) => v.split(",").map(s => s.trim()).filter(Boolean);
 
+/** Free-form place lookup via OpenStreetMap Nominatim (same service used for booking maps). */
+export const geocodePlace = async (query: string): Promise<{ lat: number; lng: number } | null> => {
+  const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(query)}`, {
+    headers: { Accept: "application/json" },
+  });
+  if (!res.ok) return null;
+  const data = await res.json();
+  const hit = Array.isArray(data) ? data[0] : null;
+  if (!hit) return null;
+  return { lat: Number(Number(hit.lat).toFixed(6)), lng: Number(Number(hit.lon).toFixed(6)) };
+};
+
 type DetailTab = "basics" | "sites" | "itinerary" | "live";
+
 
 const emptyDraft = {
   name: "", slug: "", state: "", tagline: "", description: "",
@@ -46,31 +63,15 @@ const DestinationsTab = () => {
 
   const importDefaults = async () => {
     setBusy(true);
-    const payload = staticDestinations.map((d: any, i: number) => ({
-      slug: slugify(d.name),
-      name: d.name,
-      state: d.state || "",
-      tagline: d.tagline || "",
-      description: d.description || "",
-      highlights: d.highlights || [],
-      best_season: d.bestSeason || null,
-      avg_temp: d.avgTemp || null,
-      hero_images: [],
-      experience_tags: d.experienceTags || [],
-      itinerary: [],
-      sites: (d.sites || []).map((s: any) => ({
-        name: s.name, type: s.type, description: s.description || "",
-        entry_fee: s.entryFee || null, best_time: s.bestTime || null, duration: s.duration || null,
-        latitude: s.lat ?? null, longitude: s.lng ?? null,
-      })),
-      sort_order: i,
-    }));
+    // buildDestinationSeed adds city coordinates, derived site markers and a default itinerary.
+    const payload = buildDestinationSeed(staticDestinations as any[]);
     const { data, error } = await supabase.rpc("import_destinations", { _payload: payload as any });
     setBusy(false);
     if (error) { toast({ title: "Import failed", description: error.message, variant: "destructive" }); return; }
     toast({ title: `Imported ${data ?? 0} destinations` });
     refresh();
   };
+
 
   if (selected) {
     return <DestinationEditor row={selected} onBack={() => setSelectedId(null)} onChanged={refresh} />;
@@ -211,11 +212,23 @@ const DestinationEditor = ({ row, onBack, onChanged }: { row: DestinationRow; on
     is_published: row.is_published, sort_order: row.sort_order,
   });
   const [itinerary, setItinerary] = useState<ItineraryDay[]>(Array.isArray(row.itinerary) ? row.itinerary : []);
+  const [activeSiteId, setActiveSiteId] = useState<string | null>(null);
+  /** Coordinates picked on the map, handed down to the matching site editor. */
+  const [pickedCoords, setPickedCoords] = useState<{ siteId: string; lat: number; lng: number } | null>(null);
 
   const { data: sites = [] } = useDestinationSites(row.id);
   const { data: live } = useDestinationDetail(row.slug);
 
+  const markers = useMemo(() => sites.flatMap(s => {
+    const picked = pickedCoords?.siteId === s.id ? pickedCoords : null;
+    const lat = picked ? picked.lat : s.latitude != null ? Number(s.latitude) : null;
+    const lng = picked ? picked.lng : s.longitude != null ? Number(s.longitude) : null;
+    if (lat == null || lng == null) return [];
+    return [{ id: s.id, name: s.name, type: s.type, latitude: lat, longitude: lng }];
+  }), [sites, pickedCoords]);
+
   const refreshSites = () => qc.invalidateQueries({ queryKey: ["destination-sites", row.id] });
+
 
   const saveBasics = async () => {
     setSaving(true);
@@ -308,7 +321,18 @@ const DestinationEditor = ({ row, onBack, onChanged }: { row: DestinationRow; on
             <Field label="Best season"><Input value={form.best_season} onChange={e => setForm({ ...form, best_season: e.target.value })} placeholder="Oct – Mar" /></Field>
             <Field label="Average temperature"><Input value={form.avg_temp} onChange={e => setForm({ ...form, avg_temp: e.target.value })} placeholder="25°C" /></Field>
             <Field label="Latitude (map centre)"><Input value={form.latitude} onChange={e => setForm({ ...form, latitude: e.target.value })} /></Field>
-            <Field label="Longitude (map centre)"><Input value={form.longitude} onChange={e => setForm({ ...form, longitude: e.target.value })} /></Field>
+            <Field label="Longitude (map centre)">
+              <div className="flex gap-2">
+                <Input value={form.longitude} onChange={e => setForm({ ...form, longitude: e.target.value })} />
+                <Button size="sm" variant="outline" className="rounded-full gap-1 text-xs shrink-0" onClick={async () => {
+                  const hit = await geocodePlace([form.name, form.state, "India"].filter(Boolean).join(", "));
+                  if (!hit) { toast({ title: "Location not found", variant: "destructive" }); return; }
+                  setForm({ ...form, latitude: String(hit.lat), longitude: String(hit.lng) });
+                }}>
+                  <Crosshair className="w-3 h-3" /> Locate
+                </Button>
+              </div>
+            </Field>
           </div>
           <Field label="Description"><Textarea rows={4} value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} /></Field>
           <Field label="Highlights (comma separated)"><Input value={form.highlights} onChange={e => setForm({ ...form, highlights: e.target.value })} /></Field>
@@ -320,25 +344,57 @@ const DestinationEditor = ({ row, onBack, onChanged }: { row: DestinationRow; on
 
       {tab === "sites" && (
         <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <p className="text-sm text-muted-foreground">{sites.length} sites — coordinates power the public map.</p>
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <p className="text-sm text-muted-foreground">
+              {sites.length} sites · {markers.length} placed on the map. Select a site, then click the map to drop or drag its pin.
+            </p>
             <Button size="sm" className="rounded-full gap-1 text-xs" onClick={addSite}><Plus className="w-3 h-3" /> Add site</Button>
           </div>
+
+          <div className="rounded-xl bg-card p-4 shadow-card space-y-3">
+            <div className="flex flex-wrap items-center gap-2">
+              <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
+                <MapIcon className="w-4 h-4 text-primary" /> Marker placement
+              </h3>
+              {activeSiteId
+                ? <span className="text-xs text-primary font-medium">Placing: {sites.find(s => s.id === activeSiteId)?.name || "site"}</span>
+                : <span className="text-xs text-muted-foreground">Pick a site below to place its marker</span>}
+              {activeSiteId && (
+                <Button size="sm" variant="ghost" className="rounded-full text-xs h-7" onClick={() => setActiveSiteId(null)}>Done</Button>
+              )}
+            </div>
+            <SiteMarkerMap
+              markers={markers}
+              activeId={activeSiteId ?? undefined}
+              center={form.latitude && form.longitude ? { lat: Number(form.latitude), lng: Number(form.longitude) } : null}
+              zoom={12}
+              height="360px"
+              onMarkerClick={(id) => setActiveSiteId(id)}
+              onPick={activeSiteId ? (lat, lng) => setPickedCoords({ siteId: activeSiteId, lat, lng }) : undefined}
+            />
+          </div>
+
           <div className="space-y-3">
-            {sites.map(site => <SiteEditor key={site.id} site={site} onChanged={refreshSites} />)}
+            {sites.map(site => (
+              <SiteEditor
+                key={site.id}
+                site={site}
+                destinationName={form.name}
+                isActive={activeSiteId === site.id}
+                pickedCoords={pickedCoords?.siteId === site.id ? pickedCoords : null}
+                onActivate={() => setActiveSiteId(activeSiteId === site.id ? null : site.id)}
+                onChanged={() => { setPickedCoords(null); refreshSites(); }}
+              />
+            ))}
             {sites.length === 0 && (
               <div className="rounded-xl border-2 border-dashed border-border p-8 text-center text-sm text-muted-foreground">
                 No sites yet. Add monuments, temples, markets or nature spots for this destination.
               </div>
             )}
           </div>
-          {sites.some(s => s.latitude && s.longitude) && (
-            <div className="rounded-xl overflow-hidden shadow-card aspect-[16/9] bg-secondary">
-              <MapFrame lat={Number(sites.find(s => s.latitude)?.latitude)} lng={Number(sites.find(s => s.longitude)?.longitude)} title={form.name} />
-            </div>
-          )}
         </div>
       )}
+
 
       {tab === "itinerary" && (
         <div className="rounded-xl bg-card p-5 shadow-card space-y-4">
@@ -430,8 +486,18 @@ export const MapFrame = ({ lat, lng, title }: { lat: number; lng: number; title:
   );
 };
 
-const SiteEditor = ({ site, onChanged }: { site: DestinationSite; onChanged: () => void }) => {
+interface SiteEditorProps {
+  site: DestinationSite;
+  destinationName: string;
+  isActive: boolean;
+  pickedCoords: { lat: number; lng: number } | null;
+  onActivate: () => void;
+  onChanged: () => void;
+}
+
+const SiteEditor = ({ site, destinationName, isActive, pickedCoords, onActivate, onChanged }: SiteEditorProps) => {
   const { toast } = useToast();
+  const { user } = useAuth();
   const [form, setForm] = useState({
     name: site.name, type: site.type, description: site.description,
     entry_fee: site.entry_fee || "", best_time: site.best_time || "", duration: site.duration || "",
@@ -439,6 +505,13 @@ const SiteEditor = ({ site, onChanged }: { site: DestinationSite; onChanged: () 
     image_url: site.image_url || "", sort_order: site.sort_order,
   });
   const [saving, setSaving] = useState(false);
+  const [locating, setLocating] = useState(false);
+
+  // Coordinates dropped on the shared map flow into this form.
+  useEffect(() => {
+    if (!pickedCoords) return;
+    setForm(f => ({ ...f, latitude: String(pickedCoords.lat), longitude: String(pickedCoords.lng) }));
+  }, [pickedCoords]);
 
   const save = async () => {
     setSaving(true);
@@ -455,14 +528,34 @@ const SiteEditor = ({ site, onChanged }: { site: DestinationSite; onChanged: () 
     onChanged();
   };
 
+  const locate = async () => {
+    setLocating(true);
+    const hit = await geocodePlace([form.name, destinationName, "India"].filter(Boolean).join(", "));
+    setLocating(false);
+    if (!hit) { toast({ title: "Could not find these coordinates", description: "Place the pin on the map instead.", variant: "destructive" }); return; }
+    setForm({ ...form, latitude: String(hit.lat), longitude: String(hit.lng) });
+  };
+
   const remove = async () => {
     const { error } = await supabase.from("destination_sites").delete().eq("id", site.id);
     if (error) { toast({ title: "Delete failed", description: error.message, variant: "destructive" }); return; }
     onChanged();
   };
 
+  const hasCoords = !!form.latitude && !!form.longitude;
+
   return (
-    <div className="rounded-xl bg-card p-4 shadow-card space-y-3">
+    <div className={`rounded-xl bg-card p-4 shadow-card space-y-3 transition-shadow ${isActive ? "ring-2 ring-primary/40" : ""}`}>
+      <div className="flex flex-wrap items-center gap-2">
+        <span className={`text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full ${hasCoords ? "bg-primary/10 text-primary" : "bg-secondary text-muted-foreground"}`}>
+          {hasCoords ? "Pinned" : "No pin"}
+        </span>
+        <span className="text-sm font-semibold text-foreground truncate">{form.name || "Untitled site"}</span>
+        <Button size="sm" variant={isActive ? "default" : "outline"} className="rounded-full gap-1 text-xs ml-auto" onClick={onActivate}>
+          <MapIcon className="w-3 h-3" /> {isActive ? "Placing on map" : "Place on map"}
+        </Button>
+      </div>
+
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <Field label="Name"><Input value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} /></Field>
         <Field label="Type">
@@ -479,9 +572,37 @@ const SiteEditor = ({ site, onChanged }: { site: DestinationSite; onChanged: () 
         <Field label="Best time"><Input value={form.best_time} onChange={e => setForm({ ...form, best_time: e.target.value })} placeholder="Morning" /></Field>
         <Field label="Duration"><Input value={form.duration} onChange={e => setForm({ ...form, duration: e.target.value })} placeholder="2 hrs" /></Field>
         <Field label="Latitude"><Input value={form.latitude} onChange={e => setForm({ ...form, latitude: e.target.value })} /></Field>
-        <Field label="Longitude"><Input value={form.longitude} onChange={e => setForm({ ...form, longitude: e.target.value })} /></Field>
-        <Field label="Image URL"><Input value={form.image_url} onChange={e => setForm({ ...form, image_url: e.target.value })} /></Field>
+        <Field label="Longitude">
+          <div className="flex gap-2">
+            <Input value={form.longitude} onChange={e => setForm({ ...form, longitude: e.target.value })} />
+            <Button size="sm" variant="outline" className="rounded-full gap-1 text-xs shrink-0" disabled={locating} onClick={locate}>
+              <Crosshair className="w-3 h-3" /> {locating ? "…" : "Locate"}
+            </Button>
+          </div>
+        </Field>
+        <Field label="Image URL"><Input value={form.image_url} onChange={e => setForm({ ...form, image_url: e.target.value })} placeholder="https://…" /></Field>
       </div>
+
+      <div className="rounded-lg bg-secondary/40 p-3">
+        <p className="text-[11px] uppercase tracking-wide text-muted-foreground font-semibold flex items-center gap-1.5 mb-2">
+          <ImageIcon className="w-3 h-3" /> Thumbnail shown on the public destination page
+        </p>
+        <div className="flex items-center gap-4">
+          {form.image_url
+            ? <img src={form.image_url} alt={form.name} className="w-16 h-16 rounded-lg object-cover shadow-card" />
+            : <div className="w-16 h-16 rounded-lg bg-secondary flex items-center justify-center text-muted-foreground"><ImageIcon className="w-5 h-5" /></div>}
+          {user?.id && (
+            <ImageUpload
+              bucket="experience-images"
+              folder={user.id}
+              currentUrl={form.image_url || null}
+              onUpload={(url) => setForm(f => ({ ...f, image_url: url }))}
+              className="flex-1"
+            />
+          )}
+        </div>
+      </div>
+
       <div className="flex gap-2">
         <Button size="sm" className="rounded-full text-xs" disabled={saving} onClick={save}>{saving ? "Saving…" : "Save site"}</Button>
         <Button size="sm" variant="outline" className="rounded-full text-xs text-destructive gap-1" onClick={remove}><Trash2 className="w-3 h-3" /> Remove</Button>
@@ -489,5 +610,7 @@ const SiteEditor = ({ site, onChanged }: { site: DestinationSite; onChanged: () 
     </div>
   );
 };
+
+
 
 export default DestinationsTab;
