@@ -486,8 +486,18 @@ export const MapFrame = ({ lat, lng, title }: { lat: number; lng: number; title:
   );
 };
 
-const SiteEditor = ({ site, onChanged }: { site: DestinationSite; onChanged: () => void }) => {
+interface SiteEditorProps {
+  site: DestinationSite;
+  destinationName: string;
+  isActive: boolean;
+  pickedCoords: { lat: number; lng: number } | null;
+  onActivate: () => void;
+  onChanged: () => void;
+}
+
+const SiteEditor = ({ site, destinationName, isActive, pickedCoords, onActivate, onChanged }: SiteEditorProps) => {
   const { toast } = useToast();
+  const { user } = useAuth();
   const [form, setForm] = useState({
     name: site.name, type: site.type, description: site.description,
     entry_fee: site.entry_fee || "", best_time: site.best_time || "", duration: site.duration || "",
@@ -495,6 +505,13 @@ const SiteEditor = ({ site, onChanged }: { site: DestinationSite; onChanged: () 
     image_url: site.image_url || "", sort_order: site.sort_order,
   });
   const [saving, setSaving] = useState(false);
+  const [locating, setLocating] = useState(false);
+
+  // Coordinates dropped on the shared map flow into this form.
+  useEffect(() => {
+    if (!pickedCoords) return;
+    setForm(f => ({ ...f, latitude: String(pickedCoords.lat), longitude: String(pickedCoords.lng) }));
+  }, [pickedCoords]);
 
   const save = async () => {
     setSaving(true);
@@ -511,14 +528,34 @@ const SiteEditor = ({ site, onChanged }: { site: DestinationSite; onChanged: () 
     onChanged();
   };
 
+  const locate = async () => {
+    setLocating(true);
+    const hit = await geocodePlace([form.name, destinationName, "India"].filter(Boolean).join(", "));
+    setLocating(false);
+    if (!hit) { toast({ title: "Could not find these coordinates", description: "Place the pin on the map instead.", variant: "destructive" }); return; }
+    setForm({ ...form, latitude: String(hit.lat), longitude: String(hit.lng) });
+  };
+
   const remove = async () => {
     const { error } = await supabase.from("destination_sites").delete().eq("id", site.id);
     if (error) { toast({ title: "Delete failed", description: error.message, variant: "destructive" }); return; }
     onChanged();
   };
 
+  const hasCoords = !!form.latitude && !!form.longitude;
+
   return (
-    <div className="rounded-xl bg-card p-4 shadow-card space-y-3">
+    <div className={`rounded-xl bg-card p-4 shadow-card space-y-3 transition-shadow ${isActive ? "ring-2 ring-primary/40" : ""}`}>
+      <div className="flex flex-wrap items-center gap-2">
+        <span className={`text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full ${hasCoords ? "bg-primary/10 text-primary" : "bg-secondary text-muted-foreground"}`}>
+          {hasCoords ? "Pinned" : "No pin"}
+        </span>
+        <span className="text-sm font-semibold text-foreground truncate">{form.name || "Untitled site"}</span>
+        <Button size="sm" variant={isActive ? "default" : "outline"} className="rounded-full gap-1 text-xs ml-auto" onClick={onActivate}>
+          <MapIcon className="w-3 h-3" /> {isActive ? "Placing on map" : "Place on map"}
+        </Button>
+      </div>
+
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <Field label="Name"><Input value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} /></Field>
         <Field label="Type">
@@ -535,9 +572,37 @@ const SiteEditor = ({ site, onChanged }: { site: DestinationSite; onChanged: () 
         <Field label="Best time"><Input value={form.best_time} onChange={e => setForm({ ...form, best_time: e.target.value })} placeholder="Morning" /></Field>
         <Field label="Duration"><Input value={form.duration} onChange={e => setForm({ ...form, duration: e.target.value })} placeholder="2 hrs" /></Field>
         <Field label="Latitude"><Input value={form.latitude} onChange={e => setForm({ ...form, latitude: e.target.value })} /></Field>
-        <Field label="Longitude"><Input value={form.longitude} onChange={e => setForm({ ...form, longitude: e.target.value })} /></Field>
-        <Field label="Image URL"><Input value={form.image_url} onChange={e => setForm({ ...form, image_url: e.target.value })} /></Field>
+        <Field label="Longitude">
+          <div className="flex gap-2">
+            <Input value={form.longitude} onChange={e => setForm({ ...form, longitude: e.target.value })} />
+            <Button size="sm" variant="outline" className="rounded-full gap-1 text-xs shrink-0" disabled={locating} onClick={locate}>
+              <Crosshair className="w-3 h-3" /> {locating ? "…" : "Locate"}
+            </Button>
+          </div>
+        </Field>
+        <Field label="Image URL"><Input value={form.image_url} onChange={e => setForm({ ...form, image_url: e.target.value })} placeholder="https://…" /></Field>
       </div>
+
+      <div className="rounded-lg bg-secondary/40 p-3">
+        <p className="text-[11px] uppercase tracking-wide text-muted-foreground font-semibold flex items-center gap-1.5 mb-2">
+          <ImageIcon className="w-3 h-3" /> Thumbnail shown on the public destination page
+        </p>
+        <div className="flex items-center gap-4">
+          {form.image_url
+            ? <img src={form.image_url} alt={form.name} className="w-16 h-16 rounded-lg object-cover shadow-card" />
+            : <div className="w-16 h-16 rounded-lg bg-secondary flex items-center justify-center text-muted-foreground"><ImageIcon className="w-5 h-5" /></div>}
+          {user?.id && (
+            <ImageUpload
+              bucket="experience-images"
+              folder={user.id}
+              currentUrl={form.image_url || null}
+              onUpload={(url) => setForm(f => ({ ...f, image_url: url }))}
+              className="flex-1"
+            />
+          )}
+        </div>
+      </div>
+
       <div className="flex gap-2">
         <Button size="sm" className="rounded-full text-xs" disabled={saving} onClick={save}>{saving ? "Saving…" : "Save site"}</Button>
         <Button size="sm" variant="outline" className="rounded-full text-xs text-destructive gap-1" onClick={remove}><Trash2 className="w-3 h-3" /> Remove</Button>
@@ -545,5 +610,7 @@ const SiteEditor = ({ site, onChanged }: { site: DestinationSite; onChanged: () 
     </div>
   );
 };
+
+
 
 export default DestinationsTab;
