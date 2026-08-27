@@ -63,31 +63,15 @@ const DestinationsTab = () => {
 
   const importDefaults = async () => {
     setBusy(true);
-    const payload = staticDestinations.map((d: any, i: number) => ({
-      slug: slugify(d.name),
-      name: d.name,
-      state: d.state || "",
-      tagline: d.tagline || "",
-      description: d.description || "",
-      highlights: d.highlights || [],
-      best_season: d.bestSeason || null,
-      avg_temp: d.avgTemp || null,
-      hero_images: [],
-      experience_tags: d.experienceTags || [],
-      itinerary: [],
-      sites: (d.sites || []).map((s: any) => ({
-        name: s.name, type: s.type, description: s.description || "",
-        entry_fee: s.entryFee || null, best_time: s.bestTime || null, duration: s.duration || null,
-        latitude: s.lat ?? null, longitude: s.lng ?? null,
-      })),
-      sort_order: i,
-    }));
+    // buildDestinationSeed adds city coordinates, derived site markers and a default itinerary.
+    const payload = buildDestinationSeed(staticDestinations as any[]);
     const { data, error } = await supabase.rpc("import_destinations", { _payload: payload as any });
     setBusy(false);
     if (error) { toast({ title: "Import failed", description: error.message, variant: "destructive" }); return; }
     toast({ title: `Imported ${data ?? 0} destinations` });
     refresh();
   };
+
 
   if (selected) {
     return <DestinationEditor row={selected} onBack={() => setSelectedId(null)} onChanged={refresh} />;
