@@ -321,7 +321,18 @@ const DestinationEditor = ({ row, onBack, onChanged }: { row: DestinationRow; on
             <Field label="Best season"><Input value={form.best_season} onChange={e => setForm({ ...form, best_season: e.target.value })} placeholder="Oct – Mar" /></Field>
             <Field label="Average temperature"><Input value={form.avg_temp} onChange={e => setForm({ ...form, avg_temp: e.target.value })} placeholder="25°C" /></Field>
             <Field label="Latitude (map centre)"><Input value={form.latitude} onChange={e => setForm({ ...form, latitude: e.target.value })} /></Field>
-            <Field label="Longitude (map centre)"><Input value={form.longitude} onChange={e => setForm({ ...form, longitude: e.target.value })} /></Field>
+            <Field label="Longitude (map centre)">
+              <div className="flex gap-2">
+                <Input value={form.longitude} onChange={e => setForm({ ...form, longitude: e.target.value })} />
+                <Button size="sm" variant="outline" className="rounded-full gap-1 text-xs shrink-0" onClick={async () => {
+                  const hit = await geocodePlace([form.name, form.state, "India"].filter(Boolean).join(", "));
+                  if (!hit) { toast({ title: "Location not found", variant: "destructive" }); return; }
+                  setForm({ ...form, latitude: String(hit.lat), longitude: String(hit.lng) });
+                }}>
+                  <Crosshair className="w-3 h-3" /> Locate
+                </Button>
+              </div>
+            </Field>
           </div>
           <Field label="Description"><Textarea rows={4} value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} /></Field>
           <Field label="Highlights (comma separated)"><Input value={form.highlights} onChange={e => setForm({ ...form, highlights: e.target.value })} /></Field>
@@ -333,25 +344,57 @@ const DestinationEditor = ({ row, onBack, onChanged }: { row: DestinationRow; on
 
       {tab === "sites" && (
         <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <p className="text-sm text-muted-foreground">{sites.length} sites — coordinates power the public map.</p>
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <p className="text-sm text-muted-foreground">
+              {sites.length} sites · {markers.length} placed on the map. Select a site, then click the map to drop or drag its pin.
+            </p>
             <Button size="sm" className="rounded-full gap-1 text-xs" onClick={addSite}><Plus className="w-3 h-3" /> Add site</Button>
           </div>
+
+          <div className="rounded-xl bg-card p-4 shadow-card space-y-3">
+            <div className="flex flex-wrap items-center gap-2">
+              <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
+                <MapIcon className="w-4 h-4 text-primary" /> Marker placement
+              </h3>
+              {activeSiteId
+                ? <span className="text-xs text-primary font-medium">Placing: {sites.find(s => s.id === activeSiteId)?.name || "site"}</span>
+                : <span className="text-xs text-muted-foreground">Pick a site below to place its marker</span>}
+              {activeSiteId && (
+                <Button size="sm" variant="ghost" className="rounded-full text-xs h-7" onClick={() => setActiveSiteId(null)}>Done</Button>
+              )}
+            </div>
+            <SiteMarkerMap
+              markers={markers}
+              activeId={activeSiteId ?? undefined}
+              center={form.latitude && form.longitude ? { lat: Number(form.latitude), lng: Number(form.longitude) } : null}
+              zoom={12}
+              height="360px"
+              onMarkerClick={(id) => setActiveSiteId(id)}
+              onPick={activeSiteId ? (lat, lng) => setPickedCoords({ siteId: activeSiteId, lat, lng }) : undefined}
+            />
+          </div>
+
           <div className="space-y-3">
-            {sites.map(site => <SiteEditor key={site.id} site={site} onChanged={refreshSites} />)}
+            {sites.map(site => (
+              <SiteEditor
+                key={site.id}
+                site={site}
+                destinationName={form.name}
+                isActive={activeSiteId === site.id}
+                pickedCoords={pickedCoords?.siteId === site.id ? pickedCoords : null}
+                onActivate={() => setActiveSiteId(activeSiteId === site.id ? null : site.id)}
+                onChanged={() => { setPickedCoords(null); refreshSites(); }}
+              />
+            ))}
             {sites.length === 0 && (
               <div className="rounded-xl border-2 border-dashed border-border p-8 text-center text-sm text-muted-foreground">
                 No sites yet. Add monuments, temples, markets or nature spots for this destination.
               </div>
             )}
           </div>
-          {sites.some(s => s.latitude && s.longitude) && (
-            <div className="rounded-xl overflow-hidden shadow-card aspect-[16/9] bg-secondary">
-              <MapFrame lat={Number(sites.find(s => s.latitude)?.latitude)} lng={Number(sites.find(s => s.longitude)?.longitude)} title={form.name} />
-            </div>
-          )}
         </div>
       )}
+
 
       {tab === "itinerary" && (
         <div className="rounded-xl bg-card p-5 shadow-card space-y-4">
