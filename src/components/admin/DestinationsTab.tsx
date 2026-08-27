@@ -212,11 +212,23 @@ const DestinationEditor = ({ row, onBack, onChanged }: { row: DestinationRow; on
     is_published: row.is_published, sort_order: row.sort_order,
   });
   const [itinerary, setItinerary] = useState<ItineraryDay[]>(Array.isArray(row.itinerary) ? row.itinerary : []);
+  const [activeSiteId, setActiveSiteId] = useState<string | null>(null);
+  /** Coordinates picked on the map, handed down to the matching site editor. */
+  const [pickedCoords, setPickedCoords] = useState<{ siteId: string; lat: number; lng: number } | null>(null);
 
   const { data: sites = [] } = useDestinationSites(row.id);
   const { data: live } = useDestinationDetail(row.slug);
 
+  const markers = useMemo(() => sites.flatMap(s => {
+    const picked = pickedCoords?.siteId === s.id ? pickedCoords : null;
+    const lat = picked ? picked.lat : s.latitude != null ? Number(s.latitude) : null;
+    const lng = picked ? picked.lng : s.longitude != null ? Number(s.longitude) : null;
+    if (lat == null || lng == null) return [];
+    return [{ id: s.id, name: s.name, type: s.type, latitude: lat, longitude: lng }];
+  }), [sites, pickedCoords]);
+
   const refreshSites = () => qc.invalidateQueries({ queryKey: ["destination-sites", row.id] });
+
 
   const saveBasics = async () => {
     setSaving(true);
