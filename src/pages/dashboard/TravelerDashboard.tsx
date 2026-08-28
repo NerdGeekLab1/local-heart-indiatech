@@ -20,6 +20,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import AIRecommendWidget from "@/components/AIRecommendWidget";
 import ImageUpload from "@/components/ImageUpload";
 import StampCollection from "@/components/StampCollection";
+import ReferralsPanel from "@/components/ReferralsPanel";
+
 import { Award } from "lucide-react";
 import { Dialog, DialogTrigger } from "@/components/ui/dialog";
 import { CreatePostDialog } from "@/components/CreatePostDialog";
@@ -33,7 +35,7 @@ const statusColors: Record<string, string> = {
   completed: "bg-secondary text-muted-foreground", cancelled: "bg-destructive/10 text-destructive",
 };
 
-type Tab = "overview" | "bookings" | "trips" | "saved" | "wanderer" | "grievances" | "messages" | "reviews" | "invoices" | "rewards" | "stamps" | "settings";
+type Tab = "overview" | "bookings" | "trips" | "saved" | "wanderer" | "grievances" | "messages" | "reviews" | "invoices" | "rewards" | "stamps" | "referrals" | "settings";
 
 const TravelerDashboard = () => {
   const [searchParams] = useSearchParams();
@@ -172,6 +174,8 @@ const TravelerDashboard = () => {
     { id: "invoices", label: "Invoices", icon: Receipt },
     { id: "rewards", label: "Rewards", icon: Trophy },
     { id: "stamps", label: "Stamps", icon: Award },
+    { id: "referrals", label: "Referrals", icon: Gift },
+
     { id: "saved", label: "Saved", icon: Heart },
     { id: "wanderer", label: "🧭 Wanderer", icon: Target },
     { id: "grievances", label: "Grievances", icon: AlertTriangle },
@@ -600,6 +604,20 @@ const TravelerDashboard = () => {
             <StampCollection />
           </div>
         )}
+
+        {/* Referrals */}
+        {activeTab === "referrals" && (
+          <div className="mt-6">
+            <div className="rounded-2xl bg-gradient-to-br from-primary/10 via-accent/5 to-secondary p-6 mb-6">
+              <h2 className="text-2xl font-bold text-foreground flex items-center gap-2"><Gift className="w-6 h-6 text-primary" /> Invite &amp; Earn</h2>
+              <p className="text-sm text-muted-foreground mt-1">
+                Share your link — when friends sign up and book, you both earn reward points that unlock credits and membership tiers.
+              </p>
+            </div>
+            <ReferralsPanel compact />
+          </div>
+        )}
+
 
         {/* Messages */}
         {activeTab === "messages" && (
