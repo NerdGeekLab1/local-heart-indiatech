@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useSearchParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   MapPin, ArrowLeft, Clock, IndianRupee, Camera, Sun, Thermometer,
@@ -11,7 +11,7 @@ import VirtualTour from "@/components/VirtualTour";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { destinations, hosts, experiences, reviews } from "@/lib/data";
-import { useDestinationDetail } from "@/hooks/useDestinations";
+import { useDestinationDetail, useDestinationPreview } from "@/hooks/useDestinations";
 
 const siteIcons: Record<string, React.ElementType> = {
   monument: Landmark, temple: Landmark, palace: Landmark, fort: Landmark,
@@ -38,7 +38,14 @@ const defaultHeroImages = [
 
 const DestinationDetail = () => {
   const { name } = useParams();
-  const { data: live, isLoading } = useDestinationDetail(name);
+  const [searchParams] = useSearchParams();
+  const previewMode = searchParams.get("preview") === "draft";
+  const { data: published, isLoading } = useDestinationDetail(name);
+  // Admin-only draft preview: unpublished edits merged over the live row.
+  const { data: preview } = useDestinationPreview(name, previewMode);
+  const live = previewMode && preview
+    ? { ...(published || { host_count: 0, hosts: [], experiences: [] } as any), destination: preview.destination, sites: preview.sites }
+    : published;
   const staticDest = destinations.find(d => d.name.toLowerCase() === name?.toLowerCase());
   const [selectedSite, setSelectedSite] = useState<number | null>(null);
   const [activeHeroImg, setActiveHeroImg] = useState(0);
@@ -144,6 +151,11 @@ const DestinationDetail = () => {
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
+      {previewMode && (
+        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 rounded-full bg-primary text-primary-foreground px-4 py-2 text-xs font-semibold shadow-elevated">
+          Draft preview — unpublished changes {preview?.hasDraft ? "included" : "(no draft staged)"}
+        </div>
+      )}
 
       {/* Immersive Hero */}
       <div className="relative h-[70vh] min-h-[500px] overflow-hidden">
