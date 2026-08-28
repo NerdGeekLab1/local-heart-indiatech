@@ -809,7 +809,7 @@ const AdminDashboard = () => {
     { id: "experiences", label: "Experiences", icon: Globe, group: "Catalog" },
     { id: "catalog", label: "Experience Catalog", icon: Sparkles, group: "Catalog" },
     { id: "destinations", label: "Destinations", icon: MapPin, group: "Catalog" },
-    { id: "destinationQa", label: "Destination QA", icon: Shield, group: "Catalog" },
+    { id: "destinationQa", label: "Destination QA", icon: ShieldCheck, group: "Catalog" },
     { id: "trips", label: "Trips", icon: Compass, badge: dbTrips.filter(t => t.status === "pending").length, group: "Catalog" },
     { id: "weddings", label: "Weddings", icon: Heart, group: "Catalog" },
 
