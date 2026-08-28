@@ -593,10 +593,11 @@ interface SiteEditorProps {
   isActive: boolean;
   pickedCoords: { lat: number; lng: number } | null;
   onActivate: () => void;
+  draftPayload?: Record<string, any> | null;
   onChanged: () => void;
 }
 
-const SiteEditor = ({ site, destinationName, isActive, pickedCoords, onActivate, onChanged }: SiteEditorProps) => {
+const SiteEditor = ({ site, destinationName, isActive, pickedCoords, onActivate, draftPayload, onChanged }: SiteEditorProps) => {
   const { toast } = useToast();
   const { user } = useAuth();
   const [form, setForm] = useState({
@@ -604,6 +605,8 @@ const SiteEditor = ({ site, destinationName, isActive, pickedCoords, onActivate,
     entry_fee: site.entry_fee || "", best_time: site.best_time || "", duration: site.duration || "",
     latitude: site.latitude?.toString() || "", longitude: site.longitude?.toString() || "",
     image_url: site.image_url || "", sort_order: site.sort_order,
+    is_published: site.is_published !== false,
+    ...(draftPayload || {}),
   });
   const [saving, setSaving] = useState(false);
   const [locating, setLocating] = useState(false);
@@ -614,6 +617,25 @@ const SiteEditor = ({ site, destinationName, isActive, pickedCoords, onActivate,
     setForm(f => ({ ...f, latitude: String(pickedCoords.lat), longitude: String(pickedCoords.lng) }));
   }, [pickedCoords]);
 
+  const payload = () => ({
+    name: form.name, type: form.type, description: form.description,
+    entry_fee: form.entry_fee || null, best_time: form.best_time || null, duration: form.duration || null,
+    latitude: form.latitude ? Number(form.latitude) : null,
+    longitude: form.longitude ? Number(form.longitude) : null,
+    image_url: form.image_url || null, sort_order: Number(form.sort_order) || 0,
+    is_published: form.is_published,
+  });
+
+  /** Stage the site edit; the public map keeps showing the published version. */
+  const saveSiteDraft = async () => {
+    setSaving(true);
+    const { error } = await stageDraft(site.destination_id, site.id, { ...form }, user?.id);
+    setSaving(false);
+    if (error) { toast({ title: "Could not save draft", description: error.message, variant: "destructive" }); return; }
+    toast({ title: "Site draft saved" });
+    onChanged();
+  };
+
   const save = async () => {
     setSaving(true);
     const { error } = await supabase.from("destination_sites").update({
@@ -622,10 +644,12 @@ const SiteEditor = ({ site, destinationName, isActive, pickedCoords, onActivate,
       latitude: form.latitude ? Number(form.latitude) : null,
       longitude: form.longitude ? Number(form.longitude) : null,
       image_url: form.image_url || null, sort_order: Number(form.sort_order) || 0,
+      is_published: form.is_published,
     }).eq("id", site.id);
     setSaving(false);
     if (error) { toast({ title: "Save failed", description: error.message, variant: "destructive" }); return; }
-    toast({ title: "Site saved" });
+    await clearDraft(site.destination_id, site.id);
+    toast({ title: form.is_published ? "Site published" : "Site saved (hidden from public map)" });
     onChanged();
   };
 
@@ -652,6 +676,7 @@ const SiteEditor = ({ site, destinationName, isActive, pickedCoords, onActivate,
           {hasCoords ? "Pinned" : "No pin"}
         </span>
         <span className="text-sm font-semibold text-foreground truncate">{form.name || "Untitled site"}</span>
+        {draftPayload && <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full bg-primary/10 text-primary">Draft</span>}
         <Button size="sm" variant={isActive ? "default" : "outline"} className="rounded-full gap-1 text-xs ml-auto" onClick={onActivate}>
           <MapIcon className="w-3 h-3" /> {isActive ? "Placing on map" : "Place on map"}
         </Button>
@@ -704,8 +729,17 @@ const SiteEditor = ({ site, destinationName, isActive, pickedCoords, onActivate,
         </div>
       </div>
 
-      <div className="flex gap-2">
-        <Button size="sm" className="rounded-full text-xs" disabled={saving} onClick={save}>{saving ? "Saving…" : "Save site"}</Button>
+      <div className="flex flex-wrap items-center gap-2">
+        <label className="flex items-center gap-2 text-xs text-muted-foreground mr-2">
+          <Switch checked={form.is_published} onCheckedChange={v => setForm({ ...form, is_published: v })} />
+          {form.is_published ? "Visible on public map" : "Hidden (draft)"}
+        </label>
+        <Button size="sm" variant="outline" className="rounded-full text-xs gap-1" disabled={saving} onClick={saveSiteDraft}>
+          <FileEdit className="w-3 h-3" /> Save draft
+        </Button>
+        <Button size="sm" className="rounded-full text-xs gap-1" disabled={saving} onClick={save}>
+          <Rocket className="w-3 h-3" /> {saving ? "Saving…" : "Publish site"}
+        </Button>
         <Button size="sm" variant="outline" className="rounded-full text-xs text-destructive gap-1" onClick={remove}><Trash2 className="w-3 h-3" /> Remove</Button>
       </div>
     </div>
