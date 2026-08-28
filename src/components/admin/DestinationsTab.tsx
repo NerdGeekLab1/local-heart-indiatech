@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { MapPin, Plus, Trash2, Download, Landmark, CalendarDays, Search, Users, Sparkles, Eye, EyeOff, Save, ChevronLeft, Crosshair, Map as MapIcon, Image as ImageIcon } from "lucide-react";
+import { MapPin, Plus, Trash2, Download, Landmark, CalendarDays, Search, Users, Sparkles, Eye, EyeOff, Save, ChevronLeft, Crosshair, Map as MapIcon, Image as ImageIcon, FileEdit, Rocket, Undo2, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -11,7 +11,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import ImageUpload from "@/components/ImageUpload";
 import SiteMarkerMap from "@/components/admin/SiteMarkerMap";
 import {
-  useAdminDestinations, useDestinationSites, useDestinationDetail, slugify,
+  useAdminDestinations, useDestinationSites, useDestinationDetail, useDestinationDrafts, slugify,
   type DestinationRow, type DestinationSite, type ItineraryDay,
 } from "@/hooks/useDestinations";
 import { destinations as staticDestinations } from "@/lib/data";
@@ -32,6 +32,21 @@ export const geocodePlace = async (query: string): Promise<{ lat: number; lng: n
   const hit = Array.isArray(data) ? data[0] : null;
   if (!hit) return null;
   return { lat: Number(Number(hit.lat).toFixed(6)), lng: Number(Number(hit.lon).toFixed(6)) };
+};
+
+/** Upsert a staged draft payload for a destination (site_id null) or one of its sites. */
+export const stageDraft = async (destinationId: string, siteId: string | null, payload: Record<string, any>, updatedBy?: string) => {
+  const q = supabase.from("destination_drafts").select("id").eq("destination_id", destinationId);
+  const { data: existing } = siteId ? await q.eq("site_id", siteId).maybeSingle() : await q.is("site_id", null).maybeSingle();
+  if (existing?.id) {
+    return supabase.from("destination_drafts").update({ payload: payload as any, updated_by: updatedBy || null }).eq("id", existing.id);
+  }
+  return supabase.from("destination_drafts").insert({ destination_id: destinationId, site_id: siteId, payload: payload as any, updated_by: updatedBy || null });
+};
+
+export const clearDraft = async (destinationId: string, siteId: string | null) => {
+  const q = supabase.from("destination_drafts").delete().eq("destination_id", destinationId);
+  return siteId ? await q.eq("site_id", siteId) : await q.is("site_id", null);
 };
 
 type DetailTab = "basics" | "sites" | "itinerary" | "live";
@@ -202,6 +217,7 @@ const Field = ({ label, children }: { label: string; children: React.ReactNode }
 const DestinationEditor = ({ row, onBack, onChanged }: { row: DestinationRow; onBack: () => void; onChanged: () => void }) => {
   const { toast } = useToast();
   const qc = useQueryClient();
+  const { user } = useAuth();
   const [tab, setTab] = useState<DetailTab>("basics");
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({
@@ -218,6 +234,18 @@ const DestinationEditor = ({ row, onBack, onChanged }: { row: DestinationRow; on
 
   const { data: sites = [] } = useDestinationSites(row.id);
   const { data: live } = useDestinationDetail(row.slug);
+  const { data: drafts = [] } = useDestinationDrafts(row.id);
+  const destDraft = drafts.find(d => !d.site_id) || null;
+  const siteDraftIds = drafts.filter(d => d.site_id).map(d => d.site_id as string);
+
+  const refreshDrafts = () => qc.invalidateQueries({ queryKey: ["destination-drafts", row.id] });
+
+  // Staged edits win in the editor so admins continue where they left off.
+  useEffect(() => {
+    if (!destDraft) return;
+    setForm(f => ({ ...f, ...(destDraft.payload as any) }));
+    if (Array.isArray((destDraft.payload as any).itinerary)) setItinerary((destDraft.payload as any).itinerary);
+  }, [destDraft?.id]);
 
   const markers = useMemo(() => sites.flatMap(s => {
     const picked = pickedCoords?.siteId === s.id ? pickedCoords : null;
@@ -254,6 +282,55 @@ const DestinationEditor = ({ row, onBack, onChanged }: { row: DestinationRow; on
     toast({ title: "Destination saved" });
     onChanged();
     qc.invalidateQueries({ queryKey: ["destination-public", row.slug] });
+  };
+
+  const draftPayload = () => ({
+    name: form.name.trim(),
+    slug: slugify(form.slug || form.name),
+    state: form.state,
+    tagline: form.tagline,
+    description: form.description,
+    highlights: parseCsv(form.highlights),
+    best_season: form.best_season || null,
+    avg_temp: form.avg_temp || null,
+    hero_images: parseCsv(form.hero_images),
+    experience_tags: parseCsv(form.experience_tags),
+    latitude: form.latitude ? Number(form.latitude) : null,
+    longitude: form.longitude ? Number(form.longitude) : null,
+    sort_order: Number(form.sort_order) || 0,
+    itinerary,
+  });
+
+  /** Stage changes without touching the live public page. */
+  const saveDraft = async () => {
+    setSaving(true);
+    const { error } = await stageDraft(row.id, null, draftPayload(), user?.id);
+    setSaving(false);
+    if (error) { toast({ title: "Could not save draft", description: error.message, variant: "destructive" }); return; }
+    toast({ title: "Draft saved", description: "Preview it, then publish when you are happy." });
+    refreshDrafts();
+  };
+
+  /** Apply the staged draft to the live destination and clear it. */
+  const publishDraft = async () => {
+    await saveBasics();
+    await clearDraft(row.id, null);
+    refreshDrafts();
+    toast({ title: "Published to the public map" });
+  };
+
+  const discardDraft = async () => {
+    await clearDraft(row.id, null);
+    refreshDrafts();
+    setForm({
+      name: row.name, slug: row.slug, state: row.state, tagline: row.tagline, description: row.description,
+      highlights: csv(row.highlights), best_season: row.best_season || "", avg_temp: row.avg_temp || "",
+      hero_images: csv(row.hero_images), experience_tags: csv(row.experience_tags),
+      latitude: row.latitude?.toString() || "", longitude: row.longitude?.toString() || "",
+      is_published: row.is_published, sort_order: row.sort_order,
+    });
+    setItinerary(Array.isArray(row.itinerary) ? row.itinerary : []);
+    toast({ title: "Draft discarded" });
   };
 
   const removeDestination = async () => {
@@ -293,14 +370,37 @@ const DestinationEditor = ({ row, onBack, onChanged }: { row: DestinationRow; on
           <label className="flex items-center gap-2 text-xs text-muted-foreground">
             <Switch checked={form.is_published} onCheckedChange={v => setForm({ ...form, is_published: v })} /> Published
           </label>
-          <Button size="sm" className="rounded-full gap-1" disabled={saving} onClick={saveBasics}>
-            <Save className="w-3.5 h-3.5" /> {saving ? "Saving…" : "Save changes"}
+          <Button size="sm" variant="outline" className="rounded-full gap-1" disabled={saving} onClick={saveDraft}>
+            <FileEdit className="w-3.5 h-3.5" /> Save draft
           </Button>
+          <a href={`/destination/${slugify(form.slug || form.name)}?preview=draft`} target="_blank" rel="noreferrer">
+            <Button size="sm" variant="outline" className="rounded-full gap-1">
+              <ExternalLink className="w-3.5 h-3.5" /> Preview
+            </Button>
+          </a>
+          <Button size="sm" className="rounded-full gap-1" disabled={saving} onClick={destDraft ? publishDraft : saveBasics}>
+            <Rocket className="w-3.5 h-3.5" /> {saving ? "Saving…" : destDraft ? "Publish draft" : "Publish changes"}
+          </Button>
+          {destDraft && (
+            <Button size="sm" variant="ghost" className="rounded-full gap-1 text-xs" onClick={discardDraft}>
+              <Undo2 className="w-3.5 h-3.5" /> Discard
+            </Button>
+          )}
           <Button size="sm" variant="outline" className="rounded-full gap-1 text-destructive" onClick={removeDestination}>
             <Trash2 className="w-3.5 h-3.5" /> Delete
           </Button>
         </div>
       </div>
+
+      {(destDraft || siteDraftIds.length > 0) && (
+        <div className="rounded-xl border border-primary/40 bg-primary/5 p-3 text-sm text-foreground flex flex-wrap items-center gap-2">
+          <FileEdit className="w-4 h-4 text-primary" />
+          <span>
+            Unpublished draft in progress{destDraft ? " for this destination" : ""}
+            {siteDraftIds.length > 0 ? ` · ${siteDraftIds.length} site draft(s)` : ""}. The public map still shows the last published version.
+          </span>
+        </div>
+      )}
 
       <div className="flex gap-1 border-b border-border overflow-x-auto">
         {tabs.map(t => (
@@ -383,7 +483,8 @@ const DestinationEditor = ({ row, onBack, onChanged }: { row: DestinationRow; on
                 isActive={activeSiteId === site.id}
                 pickedCoords={pickedCoords?.siteId === site.id ? pickedCoords : null}
                 onActivate={() => setActiveSiteId(activeSiteId === site.id ? null : site.id)}
-                onChanged={() => { setPickedCoords(null); refreshSites(); }}
+                draftPayload={(drafts.find(d => d.site_id === site.id)?.payload as any) || null}
+                onChanged={() => { setPickedCoords(null); refreshSites(); refreshDrafts(); }}
               />
             ))}
             {sites.length === 0 && (
@@ -492,10 +593,11 @@ interface SiteEditorProps {
   isActive: boolean;
   pickedCoords: { lat: number; lng: number } | null;
   onActivate: () => void;
+  draftPayload?: Record<string, any> | null;
   onChanged: () => void;
 }
 
-const SiteEditor = ({ site, destinationName, isActive, pickedCoords, onActivate, onChanged }: SiteEditorProps) => {
+const SiteEditor = ({ site, destinationName, isActive, pickedCoords, onActivate, draftPayload, onChanged }: SiteEditorProps) => {
   const { toast } = useToast();
   const { user } = useAuth();
   const [form, setForm] = useState({
@@ -503,6 +605,8 @@ const SiteEditor = ({ site, destinationName, isActive, pickedCoords, onActivate,
     entry_fee: site.entry_fee || "", best_time: site.best_time || "", duration: site.duration || "",
     latitude: site.latitude?.toString() || "", longitude: site.longitude?.toString() || "",
     image_url: site.image_url || "", sort_order: site.sort_order,
+    is_published: site.is_published !== false,
+    ...(draftPayload || {}),
   });
   const [saving, setSaving] = useState(false);
   const [locating, setLocating] = useState(false);
@@ -513,6 +617,25 @@ const SiteEditor = ({ site, destinationName, isActive, pickedCoords, onActivate,
     setForm(f => ({ ...f, latitude: String(pickedCoords.lat), longitude: String(pickedCoords.lng) }));
   }, [pickedCoords]);
 
+  const payload = () => ({
+    name: form.name, type: form.type, description: form.description,
+    entry_fee: form.entry_fee || null, best_time: form.best_time || null, duration: form.duration || null,
+    latitude: form.latitude ? Number(form.latitude) : null,
+    longitude: form.longitude ? Number(form.longitude) : null,
+    image_url: form.image_url || null, sort_order: Number(form.sort_order) || 0,
+    is_published: form.is_published,
+  });
+
+  /** Stage the site edit; the public map keeps showing the published version. */
+  const saveSiteDraft = async () => {
+    setSaving(true);
+    const { error } = await stageDraft(site.destination_id, site.id, { ...form }, user?.id);
+    setSaving(false);
+    if (error) { toast({ title: "Could not save draft", description: error.message, variant: "destructive" }); return; }
+    toast({ title: "Site draft saved" });
+    onChanged();
+  };
+
   const save = async () => {
     setSaving(true);
     const { error } = await supabase.from("destination_sites").update({
@@ -521,10 +644,12 @@ const SiteEditor = ({ site, destinationName, isActive, pickedCoords, onActivate,
       latitude: form.latitude ? Number(form.latitude) : null,
       longitude: form.longitude ? Number(form.longitude) : null,
       image_url: form.image_url || null, sort_order: Number(form.sort_order) || 0,
+      is_published: form.is_published,
     }).eq("id", site.id);
     setSaving(false);
     if (error) { toast({ title: "Save failed", description: error.message, variant: "destructive" }); return; }
-    toast({ title: "Site saved" });
+    await clearDraft(site.destination_id, site.id);
+    toast({ title: form.is_published ? "Site published" : "Site saved (hidden from public map)" });
     onChanged();
   };
 
@@ -551,6 +676,7 @@ const SiteEditor = ({ site, destinationName, isActive, pickedCoords, onActivate,
           {hasCoords ? "Pinned" : "No pin"}
         </span>
         <span className="text-sm font-semibold text-foreground truncate">{form.name || "Untitled site"}</span>
+        {draftPayload && <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full bg-primary/10 text-primary">Draft</span>}
         <Button size="sm" variant={isActive ? "default" : "outline"} className="rounded-full gap-1 text-xs ml-auto" onClick={onActivate}>
           <MapIcon className="w-3 h-3" /> {isActive ? "Placing on map" : "Place on map"}
         </Button>
@@ -603,8 +729,17 @@ const SiteEditor = ({ site, destinationName, isActive, pickedCoords, onActivate,
         </div>
       </div>
 
-      <div className="flex gap-2">
-        <Button size="sm" className="rounded-full text-xs" disabled={saving} onClick={save}>{saving ? "Saving…" : "Save site"}</Button>
+      <div className="flex flex-wrap items-center gap-2">
+        <label className="flex items-center gap-2 text-xs text-muted-foreground mr-2">
+          <Switch checked={form.is_published} onCheckedChange={v => setForm({ ...form, is_published: v })} />
+          {form.is_published ? "Visible on public map" : "Hidden (draft)"}
+        </label>
+        <Button size="sm" variant="outline" className="rounded-full text-xs gap-1" disabled={saving} onClick={saveSiteDraft}>
+          <FileEdit className="w-3 h-3" /> Save draft
+        </Button>
+        <Button size="sm" className="rounded-full text-xs gap-1" disabled={saving} onClick={save}>
+          <Rocket className="w-3 h-3" /> {saving ? "Saving…" : "Publish site"}
+        </Button>
         <Button size="sm" variant="outline" className="rounded-full text-xs text-destructive gap-1" onClick={remove}><Trash2 className="w-3 h-3" /> Remove</Button>
       </div>
     </div>

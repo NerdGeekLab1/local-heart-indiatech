@@ -616,6 +616,54 @@ export type Database = {
         }
         Relationships: []
       }
+      destination_drafts: {
+        Row: {
+          created_at: string
+          destination_id: string
+          id: string
+          note: string | null
+          payload: Json
+          site_id: string | null
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          destination_id: string
+          id?: string
+          note?: string | null
+          payload?: Json
+          site_id?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          destination_id?: string
+          id?: string
+          note?: string | null
+          payload?: Json
+          site_id?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "destination_drafts_destination_id_fkey"
+            columns: ["destination_id"]
+            isOneToOne: false
+            referencedRelation: "destinations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "destination_drafts_site_id_fkey"
+            columns: ["site_id"]
+            isOneToOne: false
+            referencedRelation: "destination_sites"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       destination_sites: {
         Row: {
           best_time: string | null
@@ -626,6 +674,7 @@ export type Database = {
           entry_fee: string | null
           id: string
           image_url: string | null
+          is_published: boolean
           latitude: number | null
           longitude: number | null
           name: string
@@ -642,6 +691,7 @@ export type Database = {
           entry_fee?: string | null
           id?: string
           image_url?: string | null
+          is_published?: boolean
           latitude?: number | null
           longitude?: number | null
           name: string
@@ -658,6 +708,7 @@ export type Database = {
           entry_fee?: string | null
           id?: string
           image_url?: string | null
+          is_published?: boolean
           latitude?: number | null
           longitude?: number | null
           name?: string
