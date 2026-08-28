@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { MapPin, Plus, Trash2, Download, Landmark, CalendarDays, Search, Users, Sparkles, Eye, EyeOff, Save, ChevronLeft, Crosshair, Map as MapIcon, Image as ImageIcon } from "lucide-react";
+import { MapPin, Plus, Trash2, Download, Landmark, CalendarDays, Search, Users, Sparkles, Eye, EyeOff, Save, ChevronLeft, Crosshair, Map as MapIcon, Image as ImageIcon, FileEdit, Rocket, Undo2, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -11,7 +11,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import ImageUpload from "@/components/ImageUpload";
 import SiteMarkerMap from "@/components/admin/SiteMarkerMap";
 import {
-  useAdminDestinations, useDestinationSites, useDestinationDetail, slugify,
+  useAdminDestinations, useDestinationSites, useDestinationDetail, useDestinationDrafts, slugify,
   type DestinationRow, type DestinationSite, type ItineraryDay,
 } from "@/hooks/useDestinations";
 import { destinations as staticDestinations } from "@/lib/data";
@@ -32,6 +32,21 @@ export const geocodePlace = async (query: string): Promise<{ lat: number; lng: n
   const hit = Array.isArray(data) ? data[0] : null;
   if (!hit) return null;
   return { lat: Number(Number(hit.lat).toFixed(6)), lng: Number(Number(hit.lon).toFixed(6)) };
+};
+
+/** Upsert a staged draft payload for a destination (site_id null) or one of its sites. */
+export const stageDraft = async (destinationId: string, siteId: string | null, payload: Record<string, any>, updatedBy?: string) => {
+  const q = supabase.from("destination_drafts").select("id").eq("destination_id", destinationId);
+  const { data: existing } = siteId ? await q.eq("site_id", siteId).maybeSingle() : await q.is("site_id", null).maybeSingle();
+  if (existing?.id) {
+    return supabase.from("destination_drafts").update({ payload: payload as any, updated_by: updatedBy || null }).eq("id", existing.id);
+  }
+  return supabase.from("destination_drafts").insert({ destination_id: destinationId, site_id: siteId, payload: payload as any, updated_by: updatedBy || null });
+};
+
+export const clearDraft = async (destinationId: string, siteId: string | null) => {
+  const q = supabase.from("destination_drafts").delete().eq("destination_id", destinationId);
+  return siteId ? await q.eq("site_id", siteId) : await q.is("site_id", null);
 };
 
 type DetailTab = "basics" | "sites" | "itinerary" | "live";
