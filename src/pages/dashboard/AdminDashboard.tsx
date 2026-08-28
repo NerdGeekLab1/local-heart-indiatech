@@ -40,13 +40,15 @@ import DocsTab from "@/components/admin/DocsTab";
 import WebsiteCMSTab from "@/components/admin/WebsiteCMSTab";
 import ContentManagerTab from "@/components/admin/ContentManagerTab";
 import DestinationsTab from "@/components/admin/DestinationsTab";
+import DestinationQaTab from "@/components/admin/DestinationQaTab";
+import RewardsReferralsTab from "@/components/admin/RewardsReferralsTab";
 
 import ChatPanel from "@/components/ChatPanel";
 import { Film, Heart, Menu, BookOpen, PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import ApplicationDetailDialog from "@/components/admin/ApplicationDetailDialog";
 
 
-type Tab = "overview" | "hosts" | "hostWaitlist" | "bookings" | "experiences" | "catalog" | "destinations" | "trips" | "grievances" | "users" | "wanderers" | "missions" | "leaderboard" | "invoices" | "feedModeration" | "reelsModeration" | "reviewModeration" | "analytics" | "settings" | "configuration" | "emails" | "plans" | "weddings" | "audit" | "testmode" | "docs" | "websiteCms" | "content";
+type Tab = "overview" | "hosts" | "hostWaitlist" | "bookings" | "experiences" | "catalog" | "destinations" | "destinationQa" | "rewards" | "trips" | "grievances" | "users" | "wanderers" | "missions" | "leaderboard" | "invoices" | "feedModeration" | "reelsModeration" | "reviewModeration" | "analytics" | "settings" | "configuration" | "emails" | "plans" | "weddings" | "audit" | "testmode" | "docs" | "websiteCms" | "content";
 
 const ADMIN_TAB_KEY = "travelista.admin.activeTab";
 const ADMIN_NAV_KEY = "travelista.admin.navCollapsed";
@@ -807,12 +809,14 @@ const AdminDashboard = () => {
     { id: "experiences", label: "Experiences", icon: Globe, group: "Catalog" },
     { id: "catalog", label: "Experience Catalog", icon: Sparkles, group: "Catalog" },
     { id: "destinations", label: "Destinations", icon: MapPin, group: "Catalog" },
+    { id: "destinationQa", label: "Destination QA", icon: Shield, group: "Catalog" },
     { id: "trips", label: "Trips", icon: Compass, badge: dbTrips.filter(t => t.status === "pending").length, group: "Catalog" },
     { id: "weddings", label: "Weddings", icon: Heart, group: "Catalog" },
 
     { id: "bookings", label: "Bookings", icon: Calendar, group: "Operations" },
     { id: "invoices", label: "Invoices", icon: Receipt, group: "Operations" },
     { id: "missions", label: "Missions", icon: Crosshair, group: "Operations" },
+    { id: "rewards", label: "Rewards & Referrals", icon: Gift, group: "Operations" },
     { id: "grievances", label: "Grievances", icon: MessageSquare, badge: dbGrievances.filter(g => g.status === "open").length, group: "Operations" },
     { id: "feedModeration", label: "Feed Moderation", icon: Shield, badge: dbFeedPosts.filter(p => p.status === "pending").length, group: "Moderation" },
     { id: "reelsModeration", label: "Reels & Stories", icon: Film, badge: dbFeedPosts.filter(p => (p.reel_status || "pending") === "pending").length, group: "Moderation" },
@@ -1860,6 +1864,8 @@ const AdminDashboard = () => {
 
         {/* Destinations Tab — fully database-backed */}
         {activeTab === "destinations" && <DestinationsTab />}
+        {activeTab === "destinationQa" && <DestinationQaTab />}
+        {activeTab === "rewards" && <RewardsReferralsTab />}
 
 
         {/* Beta Wanderers Tab */}
