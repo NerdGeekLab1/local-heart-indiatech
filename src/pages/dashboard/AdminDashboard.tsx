@@ -9,7 +9,7 @@ import {
   Users, DollarSign, TrendingUp, Shield, AlertTriangle, Star, MapPin, Calendar, Settings, FileText,
   BarChart3, Globe, Flag, Eye, Plus, Trash2, UtensilsCrossed, Video, ChevronDown, Ban, CheckCircle,
   Edit, Compass, MessageSquare, Target, Lock, Receipt, Trophy, Crosshair, Search, Bell, Mail,
-  Crown, Gem, Sparkles, UserX, UserCheck, Filter, Key, Clock, Beaker
+  Crown, Gem, Sparkles, UserX, UserCheck, Filter, Key, Clock, Beaker, Gift, ShieldCheck
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
