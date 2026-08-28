@@ -217,6 +217,7 @@ const Field = ({ label, children }: { label: string; children: React.ReactNode }
 const DestinationEditor = ({ row, onBack, onChanged }: { row: DestinationRow; onBack: () => void; onChanged: () => void }) => {
   const { toast } = useToast();
   const qc = useQueryClient();
+  const { user } = useAuth();
   const [tab, setTab] = useState<DetailTab>("basics");
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({
@@ -233,6 +234,18 @@ const DestinationEditor = ({ row, onBack, onChanged }: { row: DestinationRow; on
 
   const { data: sites = [] } = useDestinationSites(row.id);
   const { data: live } = useDestinationDetail(row.slug);
+  const { data: drafts = [] } = useDestinationDrafts(row.id);
+  const destDraft = drafts.find(d => !d.site_id) || null;
+  const siteDraftIds = drafts.filter(d => d.site_id).map(d => d.site_id as string);
+
+  const refreshDrafts = () => qc.invalidateQueries({ queryKey: ["destination-drafts", row.id] });
+
+  // Staged edits win in the editor so admins continue where they left off.
+  useEffect(() => {
+    if (!destDraft) return;
+    setForm(f => ({ ...f, ...(destDraft.payload as any) }));
+    if (Array.isArray((destDraft.payload as any).itinerary)) setItinerary((destDraft.payload as any).itinerary);
+  }, [destDraft?.id]);
 
   const markers = useMemo(() => sites.flatMap(s => {
     const picked = pickedCoords?.siteId === s.id ? pickedCoords : null;
@@ -269,6 +282,55 @@ const DestinationEditor = ({ row, onBack, onChanged }: { row: DestinationRow; on
     toast({ title: "Destination saved" });
     onChanged();
     qc.invalidateQueries({ queryKey: ["destination-public", row.slug] });
+  };
+
+  const draftPayload = () => ({
+    name: form.name.trim(),
+    slug: slugify(form.slug || form.name),
+    state: form.state,
+    tagline: form.tagline,
+    description: form.description,
+    highlights: parseCsv(form.highlights),
+    best_season: form.best_season || null,
+    avg_temp: form.avg_temp || null,
+    hero_images: parseCsv(form.hero_images),
+    experience_tags: parseCsv(form.experience_tags),
+    latitude: form.latitude ? Number(form.latitude) : null,
+    longitude: form.longitude ? Number(form.longitude) : null,
+    sort_order: Number(form.sort_order) || 0,
+    itinerary,
+  });
+
+  /** Stage changes without touching the live public page. */
+  const saveDraft = async () => {
+    setSaving(true);
+    const { error } = await stageDraft(row.id, null, draftPayload(), user?.id);
+    setSaving(false);
+    if (error) { toast({ title: "Could not save draft", description: error.message, variant: "destructive" }); return; }
+    toast({ title: "Draft saved", description: "Preview it, then publish when you are happy." });
+    refreshDrafts();
+  };
+
+  /** Apply the staged draft to the live destination and clear it. */
+  const publishDraft = async () => {
+    await saveBasics();
+    await clearDraft(row.id, null);
+    refreshDrafts();
+    toast({ title: "Published to the public map" });
+  };
+
+  const discardDraft = async () => {
+    await clearDraft(row.id, null);
+    refreshDrafts();
+    setForm({
+      name: row.name, slug: row.slug, state: row.state, tagline: row.tagline, description: row.description,
+      highlights: csv(row.highlights), best_season: row.best_season || "", avg_temp: row.avg_temp || "",
+      hero_images: csv(row.hero_images), experience_tags: csv(row.experience_tags),
+      latitude: row.latitude?.toString() || "", longitude: row.longitude?.toString() || "",
+      is_published: row.is_published, sort_order: row.sort_order,
+    });
+    setItinerary(Array.isArray(row.itinerary) ? row.itinerary : []);
+    toast({ title: "Draft discarded" });
   };
 
   const removeDestination = async () => {
@@ -308,14 +370,37 @@ const DestinationEditor = ({ row, onBack, onChanged }: { row: DestinationRow; on
           <label className="flex items-center gap-2 text-xs text-muted-foreground">
             <Switch checked={form.is_published} onCheckedChange={v => setForm({ ...form, is_published: v })} /> Published
           </label>
-          <Button size="sm" className="rounded-full gap-1" disabled={saving} onClick={saveBasics}>
-            <Save className="w-3.5 h-3.5" /> {saving ? "Saving…" : "Save changes"}
+          <Button size="sm" variant="outline" className="rounded-full gap-1" disabled={saving} onClick={saveDraft}>
+            <FileEdit className="w-3.5 h-3.5" /> Save draft
           </Button>
+          <a href={`/destination/${slugify(form.slug || form.name)}?preview=draft`} target="_blank" rel="noreferrer">
+            <Button size="sm" variant="outline" className="rounded-full gap-1">
+              <ExternalLink className="w-3.5 h-3.5" /> Preview
+            </Button>
+          </a>
+          <Button size="sm" className="rounded-full gap-1" disabled={saving} onClick={destDraft ? publishDraft : saveBasics}>
+            <Rocket className="w-3.5 h-3.5" /> {saving ? "Saving…" : destDraft ? "Publish draft" : "Publish changes"}
+          </Button>
+          {destDraft && (
+            <Button size="sm" variant="ghost" className="rounded-full gap-1 text-xs" onClick={discardDraft}>
+              <Undo2 className="w-3.5 h-3.5" /> Discard
+            </Button>
+          )}
           <Button size="sm" variant="outline" className="rounded-full gap-1 text-destructive" onClick={removeDestination}>
             <Trash2 className="w-3.5 h-3.5" /> Delete
           </Button>
         </div>
       </div>
+
+      {(destDraft || siteDraftIds.length > 0) && (
+        <div className="rounded-xl border border-primary/40 bg-primary/5 p-3 text-sm text-foreground flex flex-wrap items-center gap-2">
+          <FileEdit className="w-4 h-4 text-primary" />
+          <span>
+            Unpublished draft in progress{destDraft ? " for this destination" : ""}
+            {siteDraftIds.length > 0 ? ` · ${siteDraftIds.length} site draft(s)` : ""}. The public map still shows the last published version.
+          </span>
+        </div>
+      )}
 
       <div className="flex gap-1 border-b border-border overflow-x-auto">
         {tabs.map(t => (
@@ -398,7 +483,8 @@ const DestinationEditor = ({ row, onBack, onChanged }: { row: DestinationRow; on
                 isActive={activeSiteId === site.id}
                 pickedCoords={pickedCoords?.siteId === site.id ? pickedCoords : null}
                 onActivate={() => setActiveSiteId(activeSiteId === site.id ? null : site.id)}
-                onChanged={() => { setPickedCoords(null); refreshSites(); }}
+                draftPayload={(drafts.find(d => d.site_id === site.id)?.payload as any) || null}
+                onChanged={() => { setPickedCoords(null); refreshSites(); refreshDrafts(); }}
               />
             ))}
             {sites.length === 0 && (
