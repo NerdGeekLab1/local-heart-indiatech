@@ -69,7 +69,7 @@ const RewardsReferralsTab = () => {
   }), [referrals, streaks, stamps]);
 
   const saveReferral = async (row: Row, patch: Row) => {
-    const { error } = await supabase.from("referrals").update(patch).eq("id", row.id);
+    const { error } = await supabase.from("referrals").update(patch as never).eq("id", row.id);
     if (error) { toast({ title: "Update failed", description: error.message, variant: "destructive" }); return; }
     setReferrals(prev => prev.map(r => r.id === row.id ? { ...r, ...patch } : r));
     toast({ title: "Referral updated" });
