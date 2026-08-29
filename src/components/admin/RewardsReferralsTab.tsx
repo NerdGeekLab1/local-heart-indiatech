@@ -29,6 +29,17 @@ const RewardsReferralsTab = () => {
   const [stamps, setStamps] = useState<Row[]>([]);
   const [people, setPeople] = useState<Row[]>([]);
   const [query, setQuery] = useState("");
+  const [page, setPage] = useState(0);
+  const [pageSize, setPageSize] = useState(25);
+  const { data: ledger = [], refetch: refetchLedger } = useRewardLedger({ all: true });
+  const { data: codes = [] } = useReferralCodes("all");
+  const reviewLedger = useReviewLedger();
+  const regenerateCode = useRegenerateReferralCode();
+
+  useEffect(() => { setPage(0); }, [section, query]);
+  /** Paginates any filtered list with the shared admin pager. */
+  const paginate = <T,>(rows: T[]) => rows.slice(page * pageSize, page * pageSize + pageSize);
+
 
   const load = async () => {
     setLoading(true);
