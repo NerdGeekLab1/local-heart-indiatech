@@ -1,17 +1,22 @@
 import { useEffect, useMemo, useState } from "react";
-import { Award, Flame, Gift, Search, Save, Trash2, Users, Plus, RefreshCw } from "lucide-react";
+import { Award, Flame, Gift, Search, Save, Trash2, Users, Plus, RefreshCw, Coins, Ticket } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { STAMP_CATALOG, TIER_STYLES, type StampTier } from "@/lib/stampsCatalog";
+import { EVENT_LABELS, LEDGER_STATUS_STYLES } from "@/lib/rewardsEngine";
+import { useReferralCodes, useRegenerateReferralCode, useReviewLedger, useRewardLedger } from "@/hooks/useRewards";
+import AdminPagination from "@/components/admin/AdminPagination";
 
-type Section = "referrals" | "streaks" | "stamps";
+type Section = "referrals" | "ledger" | "codes" | "streaks" | "stamps";
 
 interface Row { [k: string]: any }
 
 const referralStatuses = ["pending", "active", "completed", "cancelled"];
+const ledgerStatuses = ["pending", "approved", "paid", "rejected"];
+
 
 /** Admin control centre for referrals, travel streaks and traveler stamps. */
 const RewardsReferralsTab = () => {
