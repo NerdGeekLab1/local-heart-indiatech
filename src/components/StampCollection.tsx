@@ -1,34 +1,34 @@
-import { useEffect, useState, useMemo } from "react";
+import { useMemo, useState } from "react";
 import { motion } from "framer-motion";
-import { Award, Lock, Sparkles } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/contexts/AuthContext";
+import { Award, Lock, Sparkles, Loader2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/use-toast";
 import { STAMP_CATALOG, TIER_STYLES, CATEGORY_META, type StampCategory } from "@/lib/stampsCatalog";
-
-interface EarnedStamp {
-  stamp_key: string;
-  tier: string;
-  progress: number;
-  earned_at: string;
-}
+import { TIER_POINTS } from "@/lib/rewardsEngine";
+import { useClaimStamp, useMyStamps } from "@/hooks/useRewards";
 
 const StampCollection = () => {
-  const { user } = useAuth();
-  const [earned, setEarned] = useState<EarnedStamp[]>([]);
+  const { toast } = useToast();
+  const { data: earned = [], isLoading: loading } = useMyStamps();
+  const claim = useClaimStamp();
   const [activeCat, setActiveCat] = useState<StampCategory | "all">("all");
-  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    if (!user) { setLoading(false); return; }
-    supabase.from("traveler_stamps").select("stamp_key,tier,progress,earned_at").eq("user_id", user.id)
-      .then(({ data }) => { setEarned(data || []); setLoading(false); });
-  }, [user]);
-
-  const earnedMap = useMemo(() => new Map(earned.map(e => [e.stamp_key, e])), [earned]);
+  const earnedMap = useMemo(() => new Map(earned.map((e: any) => [e.stamp_key, e])), [earned]);
   const filtered = activeCat === "all" ? STAMP_CATALOG : STAMP_CATALOG.filter(s => s.category === activeCat);
   const earnedCount = earned.length;
   const totalCount = STAMP_CATALOG.length;
   const pct = Math.round((earnedCount / totalCount) * 100);
+
+  const claimStamp = async (stamp: (typeof STAMP_CATALOG)[number]) => {
+    const points = TIER_POINTS[stamp.tier] ?? 50;
+    try {
+      await claim.mutateAsync({ stampKey: stamp.key, points, title: `${stamp.title} stamp reward` });
+      toast({ title: `+${points} points claimed! 🎉`, description: stamp.title });
+    } catch (e: any) {
+      toast({ title: "Couldn't claim", description: e.message, variant: "destructive" });
+    }
+  };
+
 
   return (
     <div className="space-y-6">
