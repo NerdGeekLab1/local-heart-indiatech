@@ -109,6 +109,15 @@ const StampCollection = () => {
                 {!isEarned && (
                   <p className="text-[9px] text-muted-foreground mt-1">Goal: {s.threshold} {s.metric.replace(/_/g, " ")}</p>
                 )}
+                {isEarned && !(e as any).claimed && (
+                  <Button size="sm" className="mt-2 h-7 w-full rounded-full text-[10px]" disabled={claim.isPending} onClick={() => claimStamp(s)}>
+                    {claim.isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : `Claim +${TIER_POINTS[s.tier] ?? 50} pts`}
+                  </Button>
+                )}
+                {isEarned && (e as any).claimed && (
+                  <p className="text-[9px] text-muted-foreground mt-2">Claimed · +{TIER_POINTS[s.tier] ?? 50} pts</p>
+                )}
+
               </motion.div>
             );
           })}
