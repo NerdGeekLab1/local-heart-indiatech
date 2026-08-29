@@ -339,7 +339,9 @@ const RewardsReferralsTab = () => {
                 </div>
               );
             })}
-            {!loading && stamps.length === 0 && <p className="text-sm text-muted-foreground">No stamps awarded yet.</p>}
+            {!loading && filteredStamps.length === 0 && <p className="text-sm text-muted-foreground">No stamps awarded yet.</p>}
+            <AdminPagination page={page} total={filteredStamps.length} pageSize={pageSize} onPage={setPage} onPageSize={setPageSize} />
+
           </div>
         </div>
       )}
