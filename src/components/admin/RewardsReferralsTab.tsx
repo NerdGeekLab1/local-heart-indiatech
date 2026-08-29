@@ -129,9 +129,28 @@ const RewardsReferralsTab = () => {
 
   const sections: { id: Section; label: string; icon: React.ElementType; count: number }[] = [
     { id: "referrals", label: "Referrals", icon: Gift, count: referrals.length },
+    { id: "ledger", label: "Reward Ledger", icon: Coins, count: ledger.length },
+    { id: "codes", label: "Referral Codes", icon: Ticket, count: codes.length },
     { id: "streaks", label: "Travel Streaks", icon: Flame, count: streaks.length },
     { id: "stamps", label: "Stamps", icon: Award, count: stamps.length },
   ];
+
+  const filteredLedger = ledger.filter(l => matches(l.user_id, `${l.title} ${l.event_type} ${l.status}`));
+  const filteredCodes = codes.filter(c => matches(c.user_id, c.code));
+  const filteredReferrals = referrals.filter(r => matches(r.referrer_id, r.referral_code));
+  const filteredStreaks = streaks.filter(s => matches(s.user_id));
+  const filteredStamps = stamps.filter(s => matches(s.user_id, s.stamp_key));
+
+  const setLedgerStatus = async (id: string, status: string) => {
+    try {
+      await reviewLedger.mutateAsync({ id, status });
+      toast({ title: `Marked ${status}` });
+      refetchLedger();
+    } catch (e: any) {
+      toast({ title: "Update failed", description: e.message, variant: "destructive" });
+    }
+  };
+
 
   return (
     <div className="mt-4 space-y-4" data-testid="admin-rewards-tab">
