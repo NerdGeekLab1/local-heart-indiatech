@@ -292,7 +292,9 @@ const RewardsReferralsTab = () => {
               </div>
             </div>
           ))}
-          {!loading && streaks.length === 0 && <p className="text-sm text-muted-foreground">No streak months recorded yet.</p>}
+          {!loading && filteredStreaks.length === 0 && <p className="text-sm text-muted-foreground">No streak months recorded yet.</p>}
+          <AdminPagination page={page} total={filteredStreaks.length} pageSize={pageSize} onPage={setPage} onPageSize={setPageSize} />
+
         </div>
       )}
 
@@ -314,7 +316,7 @@ const RewardsReferralsTab = () => {
           </div>
 
           <div className="space-y-2">
-            {stamps.filter(s => matches(s.user_id, s.stamp_key)).map(s => {
+            {paginate(filteredStamps).map(s => {
               const def = STAMP_CATALOG.find(d => d.key === s.stamp_key);
               const tier = TIER_STYLES[(s.tier as StampTier) || "bronze"];
               return (
