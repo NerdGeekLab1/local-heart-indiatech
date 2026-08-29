@@ -1,0 +1,10 @@
+REVOKE EXECUTE ON FUNCTION public.get_reward_balance(uuid) FROM anon, public;
+REVOKE EXECUTE ON FUNCTION public.claim_stamp_reward(text, integer, text) FROM anon, public;
+REVOKE EXECUTE ON FUNCTION public.redeem_reward(text, integer, text) FROM anon, public;
+REVOKE EXECUTE ON FUNCTION public.regenerate_referral_code(uuid) FROM anon, public;
+REVOKE EXECUTE ON FUNCTION public.review_reward_ledger(uuid, text, text) FROM anon, public;
+GRANT EXECUTE ON FUNCTION public.get_reward_balance(uuid) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.claim_stamp_reward(text, integer, text) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.redeem_reward(text, integer, text) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.regenerate_referral_code(uuid) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.review_reward_ledger(uuid, text, text) TO authenticated;

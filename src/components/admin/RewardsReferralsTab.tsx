@@ -1,17 +1,22 @@
 import { useEffect, useMemo, useState } from "react";
-import { Award, Flame, Gift, Search, Save, Trash2, Users, Plus, RefreshCw } from "lucide-react";
+import { Award, Flame, Gift, Search, Save, Trash2, Users, Plus, RefreshCw, Coins, Ticket } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { STAMP_CATALOG, TIER_STYLES, type StampTier } from "@/lib/stampsCatalog";
+import { EVENT_LABELS, LEDGER_STATUS_STYLES } from "@/lib/rewardsEngine";
+import { useReferralCodes, useRegenerateReferralCode, useReviewLedger, useRewardLedger } from "@/hooks/useRewards";
+import AdminPagination from "@/components/admin/AdminPagination";
 
-type Section = "referrals" | "streaks" | "stamps";
+type Section = "referrals" | "ledger" | "codes" | "streaks" | "stamps";
 
 interface Row { [k: string]: any }
 
 const referralStatuses = ["pending", "active", "completed", "cancelled"];
+const ledgerStatuses = ["pending", "approved", "paid", "rejected"];
+
 
 /** Admin control centre for referrals, travel streaks and traveler stamps. */
 const RewardsReferralsTab = () => {
@@ -24,6 +29,17 @@ const RewardsReferralsTab = () => {
   const [stamps, setStamps] = useState<Row[]>([]);
   const [people, setPeople] = useState<Row[]>([]);
   const [query, setQuery] = useState("");
+  const [page, setPage] = useState(0);
+  const [pageSize, setPageSize] = useState(25);
+  const { data: ledger = [], refetch: refetchLedger } = useRewardLedger({ all: true });
+  const { data: codes = [] } = useReferralCodes("all");
+  const reviewLedger = useReviewLedger();
+  const regenerateCode = useRegenerateReferralCode();
+
+  useEffect(() => { setPage(0); }, [section, query]);
+  /** Paginates any filtered list with the shared admin pager. */
+  const paginate = <T,>(rows: T[]) => rows.slice(page * pageSize, page * pageSize + pageSize);
+
 
   const load = async () => {
     setLoading(true);
@@ -113,9 +129,28 @@ const RewardsReferralsTab = () => {
 
   const sections: { id: Section; label: string; icon: React.ElementType; count: number }[] = [
     { id: "referrals", label: "Referrals", icon: Gift, count: referrals.length },
+    { id: "ledger", label: "Reward Ledger", icon: Coins, count: ledger.length },
+    { id: "codes", label: "Referral Codes", icon: Ticket, count: codes.length },
     { id: "streaks", label: "Travel Streaks", icon: Flame, count: streaks.length },
     { id: "stamps", label: "Stamps", icon: Award, count: stamps.length },
   ];
+
+  const filteredLedger = ledger.filter(l => matches(l.user_id, `${l.title} ${l.event_type} ${l.status}`));
+  const filteredCodes = codes.filter(c => matches(c.user_id, c.code));
+  const filteredReferrals = referrals.filter(r => matches(r.referrer_id, r.referral_code));
+  const filteredStreaks = streaks.filter(s => matches(s.user_id));
+  const filteredStamps = stamps.filter(s => matches(s.user_id, s.stamp_key));
+
+  const setLedgerStatus = async (id: string, status: string) => {
+    try {
+      await reviewLedger.mutateAsync({ id, status });
+      toast({ title: `Marked ${status}` });
+      refetchLedger();
+    } catch (e: any) {
+      toast({ title: "Update failed", description: e.message, variant: "destructive" });
+    }
+  };
+
 
   return (
     <div className="mt-4 space-y-4" data-testid="admin-rewards-tab">
@@ -165,16 +200,80 @@ const RewardsReferralsTab = () => {
 
       {section === "referrals" && (
         <div className="space-y-2">
-          {referrals.filter(r => matches(r.referrer_id, r.referral_code)).map(r => (
+          {paginate(filteredReferrals).map(r => (
             <ReferralRow key={r.id} row={r} nameFor={nameFor} onSave={saveReferral} onDelete={deleteReferral} />
           ))}
-          {!loading && referrals.length === 0 && <p className="text-sm text-muted-foreground">No referral links generated yet.</p>}
+          {!loading && filteredReferrals.length === 0 && <p className="text-sm text-muted-foreground">No referral links generated yet.</p>}
+          <AdminPagination page={page} total={filteredReferrals.length} pageSize={pageSize} onPage={setPage} onPageSize={setPageSize} />
+        </div>
+      )}
+
+      {section === "ledger" && (
+        <div className="space-y-2">
+          <p className="text-xs text-muted-foreground">
+            Every referral, stamp claim, redemption and payout event. Move pending events to approved, then paid once fulfilled.
+          </p>
+          {paginate(filteredLedger).map(l => (
+            <div key={l.id} className="rounded-lg bg-card p-3 shadow-card flex flex-wrap items-center justify-between gap-3">
+              <div className="min-w-0">
+                <p className="text-sm font-semibold text-foreground truncate">{l.title}</p>
+                <p className="text-xs text-muted-foreground truncate">
+                  {nameFor(l.user_id)} · {EVENT_LABELS[l.event_type] || l.event_type} · {new Date(l.created_at).toLocaleString()}
+                  {l.notes ? ` · ${l.notes}` : ""}
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className={`text-sm font-bold ${l.points < 0 ? "text-destructive" : "text-accent"}`}>{l.points > 0 ? "+" : ""}{l.points}</span>
+                <span className={`text-[11px] font-medium px-2 py-0.5 rounded-full ${LEDGER_STATUS_STYLES[l.status] || "bg-secondary text-muted-foreground"}`}>{l.status}</span>
+                <select value={l.status} onChange={e => setLedgerStatus(l.id, e.target.value)}
+                  aria-label="Ledger status" className="h-8 rounded-md border border-input bg-background px-2 text-xs">
+                  {ledgerStatuses.map(s => <option key={s} value={s}>{s}</option>)}
+                </select>
+              </div>
+            </div>
+          ))}
+          {filteredLedger.length === 0 && <p className="text-sm text-muted-foreground">No reward events recorded yet.</p>}
+          <AdminPagination page={page} total={filteredLedger.length} pageSize={pageSize} onPage={setPage} onPageSize={setPageSize} />
+        </div>
+      )}
+
+      {section === "codes" && (
+        <div className="space-y-2">
+          <p className="text-xs text-muted-foreground">Active and retired referral codes. Regenerating retires the current code and issues a fresh one.</p>
+          {paginate(filteredCodes).map(c => (
+            <div key={c.id} className="rounded-lg bg-card p-3 shadow-card flex flex-wrap items-center justify-between gap-3">
+              <div className="min-w-0">
+                <p className="text-sm font-semibold text-foreground font-mono">{c.code}</p>
+                <p className="text-xs text-muted-foreground truncate">
+                  {nameFor(c.user_id)} · {c.uses} sign-ups · created {new Date(c.created_at).toLocaleDateString()}
+                  {c.retired_at ? ` · retired ${new Date(c.retired_at).toLocaleDateString()}` : ""}
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className={`text-[11px] font-medium px-2 py-0.5 rounded-full ${c.is_active ? "bg-accent/10 text-accent" : "bg-secondary text-muted-foreground"}`}>
+                  {c.is_active ? "Active" : "Retired"}
+                </span>
+                {c.is_active && (
+                  <Button size="sm" variant="outline" className="rounded-full text-xs gap-1" disabled={regenerateCode.isPending}
+                    onClick={async () => {
+                      try { const row = await regenerateCode.mutateAsync(c.user_id); toast({ title: "New code issued", description: row?.code }); }
+                      catch (e: any) { toast({ title: "Failed", description: e.message, variant: "destructive" }); }
+                    }}>
+                    <RefreshCw className="w-3 h-3" /> Regenerate
+                  </Button>
+                )}
+              </div>
+            </div>
+          ))}
+          {filteredCodes.length === 0 && <p className="text-sm text-muted-foreground">No referral codes created yet.</p>}
+          <AdminPagination page={page} total={filteredCodes.length} pageSize={pageSize} onPage={setPage} onPageSize={setPageSize} />
         </div>
       )}
 
       {section === "streaks" && (
         <div className="space-y-2">
-          {streaks.filter(s => matches(s.user_id)).map(s => (
+          {paginate(filteredStreaks).map(s => (
+
             <div key={s.id} className="rounded-lg bg-card p-3 shadow-card flex flex-wrap items-center justify-between gap-3">
               <div>
                 <p className="text-sm font-semibold text-foreground">{nameFor(s.user_id)}</p>
@@ -193,7 +292,9 @@ const RewardsReferralsTab = () => {
               </div>
             </div>
           ))}
-          {!loading && streaks.length === 0 && <p className="text-sm text-muted-foreground">No streak months recorded yet.</p>}
+          {!loading && filteredStreaks.length === 0 && <p className="text-sm text-muted-foreground">No streak months recorded yet.</p>}
+          <AdminPagination page={page} total={filteredStreaks.length} pageSize={pageSize} onPage={setPage} onPageSize={setPageSize} />
+
         </div>
       )}
 
@@ -215,7 +316,7 @@ const RewardsReferralsTab = () => {
           </div>
 
           <div className="space-y-2">
-            {stamps.filter(s => matches(s.user_id, s.stamp_key)).map(s => {
+            {paginate(filteredStamps).map(s => {
               const def = STAMP_CATALOG.find(d => d.key === s.stamp_key);
               const tier = TIER_STYLES[(s.tier as StampTier) || "bronze"];
               return (
@@ -238,7 +339,9 @@ const RewardsReferralsTab = () => {
                 </div>
               );
             })}
-            {!loading && stamps.length === 0 && <p className="text-sm text-muted-foreground">No stamps awarded yet.</p>}
+            {!loading && filteredStamps.length === 0 && <p className="text-sm text-muted-foreground">No stamps awarded yet.</p>}
+            <AdminPagination page={page} total={filteredStamps.length} pageSize={pageSize} onPage={setPage} onPageSize={setPageSize} />
+
           </div>
         </div>
       )}

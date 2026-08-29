@@ -21,6 +21,10 @@ import AIRecommendWidget from "@/components/AIRecommendWidget";
 import ImageUpload from "@/components/ImageUpload";
 import StampCollection from "@/components/StampCollection";
 import ReferralsPanel from "@/components/ReferralsPanel";
+import RewardWallet from "@/components/rewards/RewardWallet";
+import AchievementsStrip from "@/components/rewards/AchievementsStrip";
+import ReferralCodeCard from "@/components/rewards/ReferralCodeCard";
+
 
 import { Award } from "lucide-react";
 import { Dialog, DialogTrigger } from "@/components/ui/dialog";
@@ -250,7 +254,11 @@ const TravelerDashboard = () => {
                 </div>
               ))}
             </div>
+            <div className="mt-6">
+              <AchievementsStrip onOpenRewards={() => setActiveTab("rewards")} />
+            </div>
             <div className="mt-8">
+
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-xl font-bold text-foreground">Upcoming Trips</h2>
                 <button onClick={() => setActiveTab("bookings")} className="text-sm text-primary hover:underline">View all</button>
@@ -525,6 +533,8 @@ const TravelerDashboard = () => {
         {/* Rewards */}
         {activeTab === "rewards" && (
           <div className="mt-6 space-y-6">
+            <RewardWallet />
+
             <div className="rounded-2xl bg-gradient-to-br from-primary/10 via-accent/5 to-secondary p-8 text-center">
               <Flame className="w-10 h-10 text-primary mx-auto mb-2" />
               <h2 className="text-2xl font-bold text-foreground">Travel Streak Challenge</h2>
@@ -614,7 +624,9 @@ const TravelerDashboard = () => {
                 Share your link — when friends sign up and book, you both earn reward points that unlock credits and membership tiers.
               </p>
             </div>
+            <div className="mb-6"><ReferralCodeCard /></div>
             <ReferralsPanel compact />
+
           </div>
         )}
 
@@ -679,6 +691,8 @@ const TravelerDashboard = () => {
         {activeTab === "settings" && (
           <div className="mt-6 space-y-6 max-w-xl">
             <h2 className="text-xl font-bold text-foreground mb-4">Account Settings</h2>
+            <ReferralCodeCard />
+
             <div className="rounded-lg bg-card p-5 shadow-card space-y-4">
               <h3 className="font-bold text-foreground flex items-center gap-2"><Settings className="w-4 h-4 text-primary" /> Profile</h3>
               <div className="flex items-center gap-4 mb-2">

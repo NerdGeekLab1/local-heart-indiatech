@@ -10,7 +10,7 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "14.17"
+    PostgrestVersion: "14.5"
   }
   public: {
     Tables: {
@@ -2323,6 +2323,42 @@ export type Database = {
         }
         Relationships: []
       }
+      referral_codes: {
+        Row: {
+          code: string
+          created_at: string
+          created_by: string | null
+          id: string
+          is_active: boolean
+          retired_at: string | null
+          updated_at: string
+          user_id: string
+          uses: number
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean
+          retired_at?: string | null
+          updated_at?: string
+          user_id: string
+          uses?: number
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean
+          retired_at?: string | null
+          updated_at?: string
+          user_id?: string
+          uses?: number
+        }
+        Relationships: []
+      }
       referrals: {
         Row: {
           created_at: string
@@ -2399,6 +2435,57 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      reward_ledger: {
+        Row: {
+          created_at: string
+          event_type: string
+          id: string
+          metadata: Json
+          notes: string | null
+          points: number
+          reference_id: string | null
+          reference_key: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          event_type: string
+          id?: string
+          metadata?: Json
+          notes?: string | null
+          points?: number
+          reference_id?: string | null
+          reference_key?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          title?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          event_type?: string
+          id?: string
+          metadata?: Json
+          notes?: string | null
+          points?: number
+          reference_id?: string | null
+          reference_key?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       site_settings: {
         Row: {
@@ -2624,6 +2711,8 @@ export type Database = {
       traveler_stamps: {
         Row: {
           category: string
+          claimed: boolean
+          claimed_at: string | null
           created_at: string
           earned_at: string
           id: string
@@ -2636,6 +2725,8 @@ export type Database = {
         }
         Insert: {
           category: string
+          claimed?: boolean
+          claimed_at?: string | null
           created_at?: string
           earned_at?: string
           id?: string
@@ -2648,6 +2739,8 @@ export type Database = {
         }
         Update: {
           category?: string
+          claimed?: boolean
+          claimed_at?: string | null
           created_at?: string
           earned_at?: string
           id?: string
@@ -3107,6 +3200,31 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      claim_stamp_reward: {
+        Args: { _points: number; _stamp_key: string; _title: string }
+        Returns: {
+          created_at: string
+          event_type: string
+          id: string
+          metadata: Json
+          notes: string | null
+          points: number
+          reference_id: string | null
+          reference_key: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "reward_ledger"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       confirm_beta_waitlist: {
         Args: { _token: string }
         Returns: {
@@ -3263,6 +3381,15 @@ export type Database = {
           video_url: string
         }[]
       }
+      get_reward_balance: {
+        Args: { _user?: string }
+        Returns: {
+          approved_points: number
+          paid_points: number
+          pending_points: number
+          spent_points: number
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -3306,6 +3433,51 @@ export type Database = {
           read_ct: number
         }[]
       }
+      redeem_reward: {
+        Args: { _points: number; _reward_key: string; _title: string }
+        Returns: {
+          created_at: string
+          event_type: string
+          id: string
+          metadata: Json
+          notes: string | null
+          points: number
+          reference_id: string | null
+          reference_key: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "reward_ledger"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      regenerate_referral_code: {
+        Args: { _user?: string }
+        Returns: {
+          code: string
+          created_at: string
+          created_by: string | null
+          id: string
+          is_active: boolean
+          retired_at: string | null
+          updated_at: string
+          user_id: string
+          uses: number
+        }
+        SetofOptions: {
+          from: "*"
+          to: "referral_codes"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       repair_my_host_role: {
         Args: never
         Returns: {
@@ -3331,6 +3503,31 @@ export type Database = {
         SetofOptions: {
           from: "*"
           to: "host_verification_applications"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      review_reward_ledger: {
+        Args: { _id: string; _notes?: string; _status: string }
+        Returns: {
+          created_at: string
+          event_type: string
+          id: string
+          metadata: Json
+          notes: string | null
+          points: number
+          reference_id: string | null
+          reference_key: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "reward_ledger"
           isOneToOne: true
           isSetofReturn: false
         }
