@@ -200,16 +200,80 @@ const RewardsReferralsTab = () => {
 
       {section === "referrals" && (
         <div className="space-y-2">
-          {referrals.filter(r => matches(r.referrer_id, r.referral_code)).map(r => (
+          {paginate(filteredReferrals).map(r => (
             <ReferralRow key={r.id} row={r} nameFor={nameFor} onSave={saveReferral} onDelete={deleteReferral} />
           ))}
-          {!loading && referrals.length === 0 && <p className="text-sm text-muted-foreground">No referral links generated yet.</p>}
+          {!loading && filteredReferrals.length === 0 && <p className="text-sm text-muted-foreground">No referral links generated yet.</p>}
+          <AdminPagination page={page} total={filteredReferrals.length} pageSize={pageSize} onPage={setPage} onPageSize={setPageSize} />
+        </div>
+      )}
+
+      {section === "ledger" && (
+        <div className="space-y-2">
+          <p className="text-xs text-muted-foreground">
+            Every referral, stamp claim, redemption and payout event. Move pending events to approved, then paid once fulfilled.
+          </p>
+          {paginate(filteredLedger).map(l => (
+            <div key={l.id} className="rounded-lg bg-card p-3 shadow-card flex flex-wrap items-center justify-between gap-3">
+              <div className="min-w-0">
+                <p className="text-sm font-semibold text-foreground truncate">{l.title}</p>
+                <p className="text-xs text-muted-foreground truncate">
+                  {nameFor(l.user_id)} · {EVENT_LABELS[l.event_type] || l.event_type} · {new Date(l.created_at).toLocaleString()}
+                  {l.notes ? ` · ${l.notes}` : ""}
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className={`text-sm font-bold ${l.points < 0 ? "text-destructive" : "text-accent"}`}>{l.points > 0 ? "+" : ""}{l.points}</span>
+                <span className={`text-[11px] font-medium px-2 py-0.5 rounded-full ${LEDGER_STATUS_STYLES[l.status] || "bg-secondary text-muted-foreground"}`}>{l.status}</span>
+                <select value={l.status} onChange={e => setLedgerStatus(l.id, e.target.value)}
+                  aria-label="Ledger status" className="h-8 rounded-md border border-input bg-background px-2 text-xs">
+                  {ledgerStatuses.map(s => <option key={s} value={s}>{s}</option>)}
+                </select>
+              </div>
+            </div>
+          ))}
+          {filteredLedger.length === 0 && <p className="text-sm text-muted-foreground">No reward events recorded yet.</p>}
+          <AdminPagination page={page} total={filteredLedger.length} pageSize={pageSize} onPage={setPage} onPageSize={setPageSize} />
+        </div>
+      )}
+
+      {section === "codes" && (
+        <div className="space-y-2">
+          <p className="text-xs text-muted-foreground">Active and retired referral codes. Regenerating retires the current code and issues a fresh one.</p>
+          {paginate(filteredCodes).map(c => (
+            <div key={c.id} className="rounded-lg bg-card p-3 shadow-card flex flex-wrap items-center justify-between gap-3">
+              <div className="min-w-0">
+                <p className="text-sm font-semibold text-foreground font-mono">{c.code}</p>
+                <p className="text-xs text-muted-foreground truncate">
+                  {nameFor(c.user_id)} · {c.uses} sign-ups · created {new Date(c.created_at).toLocaleDateString()}
+                  {c.retired_at ? ` · retired ${new Date(c.retired_at).toLocaleDateString()}` : ""}
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className={`text-[11px] font-medium px-2 py-0.5 rounded-full ${c.is_active ? "bg-accent/10 text-accent" : "bg-secondary text-muted-foreground"}`}>
+                  {c.is_active ? "Active" : "Retired"}
+                </span>
+                {c.is_active && (
+                  <Button size="sm" variant="outline" className="rounded-full text-xs gap-1" disabled={regenerateCode.isPending}
+                    onClick={async () => {
+                      try { const row = await regenerateCode.mutateAsync(c.user_id); toast({ title: "New code issued", description: row?.code }); }
+                      catch (e: any) { toast({ title: "Failed", description: e.message, variant: "destructive" }); }
+                    }}>
+                    <RefreshCw className="w-3 h-3" /> Regenerate
+                  </Button>
+                )}
+              </div>
+            </div>
+          ))}
+          {filteredCodes.length === 0 && <p className="text-sm text-muted-foreground">No referral codes created yet.</p>}
+          <AdminPagination page={page} total={filteredCodes.length} pageSize={pageSize} onPage={setPage} onPageSize={setPageSize} />
         </div>
       )}
 
       {section === "streaks" && (
         <div className="space-y-2">
-          {streaks.filter(s => matches(s.user_id)).map(s => (
+          {paginate(filteredStreaks).map(s => (
+
             <div key={s.id} className="rounded-lg bg-card p-3 shadow-card flex flex-wrap items-center justify-between gap-3">
               <div>
                 <p className="text-sm font-semibold text-foreground">{nameFor(s.user_id)}</p>
