@@ -168,6 +168,8 @@ const invalidateRewards = (qc: ReturnType<typeof useQueryClient>) => {
   qc.invalidateQueries({ queryKey: ["reward-balance"] });
   qc.invalidateQueries({ queryKey: ["reward-ledger"] });
   qc.invalidateQueries({ queryKey: ["my-stamps"] });
+  qc.invalidateQueries({ queryKey: ["reward-claim-attempts"] });
+
 };
 
 /** Convert an earned stamp into reward points (one claim per stamp). */
