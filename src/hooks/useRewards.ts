@@ -109,6 +109,43 @@ export const useMyStamps = () => {
   });
 };
 
+/** Server-side redemption price list — the source of truth for point costs. */
+export const useRedemptionCatalog = () =>
+  useQuery({
+    queryKey: ["redemption-catalog"],
+    staleTime: 5 * 60_000,
+    queryFn: async (): Promise<RedemptionCatalogRow[]> => {
+      const { data, error } = await db
+        .from("reward_redemption_catalog")
+        .select("id,reward_key,title,points,kind,is_active")
+        .eq("is_active", true)
+        .order("points", { ascending: true });
+      if (error) throw error;
+      return (data || []) as RedemptionCatalogRow[];
+    },
+  });
+
+/** Claim/redemption attempts (including blocked ones) for the signed-in traveler. */
+export const useClaimAttempts = () => {
+  const { user } = useAuth();
+  return useQuery({
+    queryKey: ["reward-claim-attempts", user?.id],
+    enabled: !!user,
+    staleTime: 20_000,
+    queryFn: async (): Promise<ClaimAttemptRow[]> => {
+      const { data, error } = await db
+        .from("reward_claim_attempts")
+        .select("id,action,reference_key,allowed,reason,points,created_at")
+        .eq("user_id", user!.id)
+        .order("created_at", { ascending: false })
+        .limit(50);
+      if (error) throw error;
+      return (data || []) as ClaimAttemptRow[];
+    },
+  });
+};
+
+
 /** Referral codes (active + retired history). Admins can pass a target user. */
 export const useReferralCodes = (userId?: string) => {
   const { user } = useAuth();
