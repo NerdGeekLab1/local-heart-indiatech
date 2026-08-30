@@ -2436,6 +2436,39 @@ export type Database = {
           },
         ]
       }
+      reward_claim_attempts: {
+        Row: {
+          action: string
+          allowed: boolean
+          created_at: string
+          id: string
+          points: number | null
+          reason: string | null
+          reference_key: string | null
+          user_id: string
+        }
+        Insert: {
+          action: string
+          allowed?: boolean
+          created_at?: string
+          id?: string
+          points?: number | null
+          reason?: string | null
+          reference_key?: string | null
+          user_id: string
+        }
+        Update: {
+          action?: string
+          allowed?: boolean
+          created_at?: string
+          id?: string
+          points?: number | null
+          reason?: string | null
+          reference_key?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       reward_ledger: {
         Row: {
           created_at: string
@@ -2444,6 +2477,7 @@ export type Database = {
           metadata: Json
           notes: string | null
           points: number
+          receipt_code: string | null
           reference_id: string | null
           reference_key: string | null
           reviewed_at: string | null
@@ -2460,6 +2494,7 @@ export type Database = {
           metadata?: Json
           notes?: string | null
           points?: number
+          receipt_code?: string | null
           reference_id?: string | null
           reference_key?: string | null
           reviewed_at?: string | null
@@ -2476,6 +2511,7 @@ export type Database = {
           metadata?: Json
           notes?: string | null
           points?: number
+          receipt_code?: string | null
           reference_id?: string | null
           reference_key?: string | null
           reviewed_at?: string | null
@@ -2484,6 +2520,39 @@ export type Database = {
           title?: string
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      reward_redemption_catalog: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          kind: string
+          points: number
+          reward_key: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          kind?: string
+          points: number
+          reward_key: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          kind?: string
+          points?: number
+          reward_key?: string
+          title?: string
+          updated_at?: string
         }
         Relationships: []
       }
@@ -3209,6 +3278,7 @@ export type Database = {
           metadata: Json
           notes: string | null
           points: number
+          receipt_code: string | null
           reference_id: string | null
           reference_key: string | null
           reviewed_at: string | null
@@ -3442,6 +3512,7 @@ export type Database = {
           metadata: Json
           notes: string | null
           points: number
+          receipt_code: string | null
           reference_id: string | null
           reference_key: string | null
           reviewed_at: string | null
@@ -3516,6 +3587,7 @@ export type Database = {
           metadata: Json
           notes: string | null
           points: number
+          receipt_code: string | null
           reference_id: string | null
           reference_key: string | null
           reviewed_at: string | null
@@ -3532,6 +3604,7 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      stamp_tier_points: { Args: { _tier: string }; Returns: number }
     }
     Enums: {
       app_role: "admin" | "host" | "traveler"
