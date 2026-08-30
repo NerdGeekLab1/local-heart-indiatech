@@ -13,10 +13,31 @@ export interface RewardLedgerRow {
   title: string;
   notes: string | null;
   metadata: any;
+  receipt_code: string | null;
   reviewed_by: string | null;
   reviewed_at: string | null;
   created_at: string;
 }
+
+export interface RedemptionCatalogRow {
+  id: string;
+  reward_key: string;
+  title: string;
+  points: number;
+  kind: string;
+  is_active: boolean;
+}
+
+export interface ClaimAttemptRow {
+  id: string;
+  action: string;
+  reference_key: string | null;
+  allowed: boolean;
+  reason: string | null;
+  points: number | null;
+  created_at: string;
+}
+
 
 export interface ReferralCodeRow {
   id: string;
@@ -88,6 +109,43 @@ export const useMyStamps = () => {
   });
 };
 
+/** Server-side redemption price list — the source of truth for point costs. */
+export const useRedemptionCatalog = () =>
+  useQuery({
+    queryKey: ["redemption-catalog"],
+    staleTime: 5 * 60_000,
+    queryFn: async (): Promise<RedemptionCatalogRow[]> => {
+      const { data, error } = await db
+        .from("reward_redemption_catalog")
+        .select("id,reward_key,title,points,kind,is_active")
+        .eq("is_active", true)
+        .order("points", { ascending: true });
+      if (error) throw error;
+      return (data || []) as RedemptionCatalogRow[];
+    },
+  });
+
+/** Claim/redemption attempts (including blocked ones) for the signed-in traveler. */
+export const useClaimAttempts = () => {
+  const { user } = useAuth();
+  return useQuery({
+    queryKey: ["reward-claim-attempts", user?.id],
+    enabled: !!user,
+    staleTime: 20_000,
+    queryFn: async (): Promise<ClaimAttemptRow[]> => {
+      const { data, error } = await db
+        .from("reward_claim_attempts")
+        .select("id,action,reference_key,allowed,reason,points,created_at")
+        .eq("user_id", user!.id)
+        .order("created_at", { ascending: false })
+        .limit(50);
+      if (error) throw error;
+      return (data || []) as ClaimAttemptRow[];
+    },
+  });
+};
+
+
 /** Referral codes (active + retired history). Admins can pass a target user. */
 export const useReferralCodes = (userId?: string) => {
   const { user } = useAuth();
@@ -110,6 +168,8 @@ const invalidateRewards = (qc: ReturnType<typeof useQueryClient>) => {
   qc.invalidateQueries({ queryKey: ["reward-balance"] });
   qc.invalidateQueries({ queryKey: ["reward-ledger"] });
   qc.invalidateQueries({ queryKey: ["my-stamps"] });
+  qc.invalidateQueries({ queryKey: ["reward-claim-attempts"] });
+
 };
 
 /** Convert an earned stamp into reward points (one claim per stamp). */

@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { motion } from "framer-motion";
-import { Coins, Gift, Sparkles, Trophy, History, Loader2 } from "lucide-react";
+import { Coins, Gift, Sparkles, Trophy, Loader2, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
@@ -8,21 +8,38 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
 import { STAMP_CATALOG, TIER_STYLES, type StampTier } from "@/lib/stampsCatalog";
-import { EVENT_LABELS, LEDGER_STATUS_STYLES, REDEMPTION_CATALOG, TIER_POINTS, type RedemptionOption } from "@/lib/rewardsEngine";
-import { useClaimStamp, useMyStamps, useRedeemReward, useRewardBalance, useRewardLedger } from "@/hooks/useRewards";
+import { REDEMPTION_CATALOG, TIER_POINTS, type RedemptionOption } from "@/lib/rewardsEngine";
+import { useClaimStamp, useMyStamps, useRedeemReward, useRedemptionCatalog, useRewardBalance } from "@/hooks/useRewards";
+import RewardHistory from "@/components/rewards/RewardHistory";
 
 /** Traveler reward wallet: claim earned stamps for points, redeem points, and audit every event. */
 const RewardWallet = () => {
   const { toast } = useToast();
   const { data: balance } = useRewardBalance();
   const { data: stamps = [], isLoading: stampsLoading } = useMyStamps();
-  const { data: ledger = [] } = useRewardLedger();
+  const { data: serverCatalog = [] } = useRedemptionCatalog();
   const claim = useClaimStamp();
   const redeem = useRedeemReward();
   const [confirming, setConfirming] = useState<RedemptionOption | null>(null);
 
   const available = Math.max(balance?.approved_points ?? 0, 0);
   const pending = balance?.pending_points ?? 0;
+
+  /** Prices come from the server catalog; local entries only supply copy/emoji. */
+  const options: RedemptionOption[] = useMemo(() => {
+    if (!serverCatalog.length) return REDEMPTION_CATALOG;
+    return serverCatalog.map(row => {
+      const local = REDEMPTION_CATALOG.find(o => o.key === row.reward_key);
+      return {
+        key: row.reward_key,
+        points: row.points,
+        title: local?.title || row.title,
+        description: local?.description || "Applied after our team confirms your request",
+        emoji: local?.emoji || "🎁",
+        kind: (local?.kind || row.kind) as RedemptionOption["kind"],
+      };
+    });
+  }, [serverCatalog]);
 
   const claimable = useMemo(
     () => stamps.filter(s => !s.claimed).map(s => ({
@@ -35,12 +52,15 @@ const RewardWallet = () => {
 
   const claimStamp = async (row: any) => {
     try {
-      await claim.mutateAsync({
+      const result: any = await claim.mutateAsync({
         stampKey: row.stamp_key,
         points: row.points,
         title: `${row.def?.title || row.stamp_key} stamp reward`,
       });
-      toast({ title: `+${row.points} points claimed! 🎉`, description: row.def?.title || row.stamp_key });
+      toast({
+        title: `+${result?.points ?? row.points} points claimed! 🎉`,
+        description: `${row.def?.title || row.stamp_key}${result?.receipt_code ? ` · Receipt ${result.receipt_code}` : ""}`,
+      });
     } catch (e: any) {
       toast({ title: "Couldn't claim", description: e.message, variant: "destructive" });
     }
@@ -49,13 +69,17 @@ const RewardWallet = () => {
   const confirmRedeem = async () => {
     if (!confirming) return;
     try {
-      await redeem.mutateAsync({ rewardKey: confirming.key, points: confirming.points, title: confirming.title });
-      toast({ title: "Redemption requested", description: `${confirming.title} — pending admin approval.` });
+      const result: any = await redeem.mutateAsync({ rewardKey: confirming.key, points: confirming.points, title: confirming.title });
+      toast({
+        title: "Redemption requested",
+        description: `${confirming.title} — pending approval${result?.receipt_code ? ` · Receipt ${result.receipt_code}` : ""}.`,
+      });
       setConfirming(null);
     } catch (e: any) {
       toast({ title: "Redemption failed", description: e.message, variant: "destructive" });
     }
   };
+
 
   return (
     <div className="space-y-6" data-testid="reward-wallet">
@@ -113,9 +137,11 @@ const RewardWallet = () => {
       {/* Redemption catalog */}
       <div>
         <h3 className="font-bold text-foreground flex items-center gap-2"><Gift className="w-4 h-4 text-primary" /> Redeem your points</h3>
-        <p className="text-xs text-muted-foreground mt-0.5">Redemptions are confirmed by our team, then applied to your next booking.</p>
+        <p className="text-xs text-muted-foreground mt-0.5 flex items-center gap-1">
+          <ShieldCheck className="w-3.5 h-3.5 text-accent" /> Prices are verified on our servers. Redemptions are confirmed by our team, then applied to your next booking.
+        </p>
         <div className="mt-3 grid grid-cols-2 lg:grid-cols-3 gap-3">
-          {REDEMPTION_CATALOG.map(opt => {
+          {options.map(opt => {
             const affordable = available >= opt.points;
             return (
               <div key={opt.key} className={`rounded-xl border p-4 text-center transition-all ${affordable ? "border-primary bg-primary/5" : "border-border bg-card opacity-70"}`}>
@@ -133,35 +159,9 @@ const RewardWallet = () => {
         </div>
       </div>
 
-      {/* Ledger */}
-      <div>
-        <h3 className="font-bold text-foreground flex items-center gap-2"><History className="w-4 h-4 text-primary" /> Reward ledger</h3>
-        {ledger.length === 0 ? (
-          <p className="text-sm text-muted-foreground mt-2">No reward activity yet.</p>
-        ) : (
-          <div className="mt-3 space-y-2">
-            {ledger.slice(0, 25).map(row => (
-              <div key={row.id} className="rounded-lg bg-card p-3 shadow-card flex items-center justify-between gap-3">
-                <div className="min-w-0">
-                  <p className="text-sm font-medium text-foreground truncate">{row.title}</p>
-                  <p className="text-[11px] text-muted-foreground">
-                    {EVENT_LABELS[row.event_type] || row.event_type} · {new Date(row.created_at).toLocaleDateString()}
-                    {row.notes ? ` · ${row.notes}` : ""}
-                  </p>
-                </div>
-                <div className="text-right shrink-0">
-                  <p className={`text-sm font-bold ${row.points < 0 ? "text-destructive" : "text-accent"}`}>
-                    {row.points > 0 ? "+" : ""}{row.points} pts
-                  </p>
-                  <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full ${LEDGER_STATUS_STYLES[row.status] || "bg-secondary text-muted-foreground"}`}>
-                    {row.status}
-                  </span>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
+      {/* History with receipts */}
+      <RewardHistory />
+
 
       <AlertDialog open={!!confirming} onOpenChange={open => !open && setConfirming(null)}>
         <AlertDialogContent>
