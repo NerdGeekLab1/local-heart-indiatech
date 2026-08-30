@@ -13,10 +13,31 @@ export interface RewardLedgerRow {
   title: string;
   notes: string | null;
   metadata: any;
+  receipt_code: string | null;
   reviewed_by: string | null;
   reviewed_at: string | null;
   created_at: string;
 }
+
+export interface RedemptionCatalogRow {
+  id: string;
+  reward_key: string;
+  title: string;
+  points: number;
+  kind: string;
+  is_active: boolean;
+}
+
+export interface ClaimAttemptRow {
+  id: string;
+  action: string;
+  reference_key: string | null;
+  allowed: boolean;
+  reason: string | null;
+  points: number | null;
+  created_at: string;
+}
+
 
 export interface ReferralCodeRow {
   id: string;
