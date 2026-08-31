@@ -229,3 +229,94 @@ export const useReviewLedger = () => {
     onSuccess: () => invalidateRewards(qc),
   });
 };
+
+export interface RewardAppealRow {
+  id: string;
+  user_id: string;
+  attempt_id: string | null;
+  action: string;
+  reference_key: string | null;
+  block_reason: string | null;
+  points: number;
+  reason: string;
+  evidence_url: string | null;
+  status: string;
+  decision_notes: string | null;
+  reviewed_by: string | null;
+  reviewed_at: string | null;
+  timeline: { at: string; status: string; note?: string }[];
+  created_at: string;
+  updated_at: string;
+}
+
+/** Appeals raised against blocked reward attempts. Admins can request every row. */
+export const useRewardAppeals = (opts?: { all?: boolean }) => {
+  const { user } = useAuth();
+  return useQuery({
+    queryKey: ["reward-appeals", opts?.all ? "all" : user?.id],
+    enabled: opts?.all ? true : !!user,
+    staleTime: 20_000,
+    queryFn: async (): Promise<RewardAppealRow[]> => {
+      let q = db.from("reward_appeals").select("*").order("created_at", { ascending: false }).limit(500);
+      if (!opts?.all && user) q = q.eq("user_id", user.id);
+      const { data, error } = await q;
+      if (error) throw error;
+      return (data || []).map((row: any) => ({
+        ...row,
+        timeline: Array.isArray(row.timeline) ? row.timeline : [],
+      })) as RewardAppealRow[];
+    },
+  });
+};
+
+/** Traveler: ask for a human review of a blocked stamp claim or redemption. */
+export const useSubmitAppeal = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: { attemptId: string; reason: string; evidenceUrl?: string }) => {
+      const { data, error } = await db.rpc("submit_reward_appeal", {
+        _attempt_id: input.attemptId,
+        _reason: input.reason,
+        _evidence_url: input.evidenceUrl ?? null,
+      });
+      if (error) throw error;
+      return data as RewardAppealRow;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["reward-appeals"] }),
+  });
+};
+
+/** Admin: decide an appeal (under_review → approved / denied). */
+export const useReviewAppeal = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: { id: string; status: string; notes?: string }) => {
+      const { data, error } = await db.rpc("review_reward_appeal", {
+        _appeal_id: input.id, _status: input.status, _notes: input.notes ?? null,
+      });
+      if (error) throw error;
+      return data as RewardAppealRow;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["reward-appeals"] });
+      invalidateRewards(qc);
+    },
+  });
+};
+
+/** Admin: every reward claim attempt (blocked and allowed) for the fraud queue. */
+export const useAllClaimAttempts = () =>
+  useQuery({
+    queryKey: ["reward-claim-attempts", "all"],
+    staleTime: 20_000,
+    queryFn: async (): Promise<(ClaimAttemptRow & { user_id: string })[]> => {
+      const { data, error } = await db
+        .from("reward_claim_attempts")
+        .select("id,user_id,action,reference_key,allowed,reason,points,created_at")
+        .order("created_at", { ascending: false })
+        .limit(500);
+      if (error) throw error;
+      return (data || []) as (ClaimAttemptRow & { user_id: string })[];
+    },
+  });
+
