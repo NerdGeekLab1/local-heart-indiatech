@@ -2436,6 +2436,71 @@ export type Database = {
           },
         ]
       }
+      reward_appeals: {
+        Row: {
+          action: string
+          attempt_id: string | null
+          block_reason: string | null
+          created_at: string
+          decision_notes: string | null
+          evidence_url: string | null
+          id: string
+          points: number
+          reason: string
+          reference_key: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          timeline: Json
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          action: string
+          attempt_id?: string | null
+          block_reason?: string | null
+          created_at?: string
+          decision_notes?: string | null
+          evidence_url?: string | null
+          id?: string
+          points?: number
+          reason: string
+          reference_key?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          timeline?: Json
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          action?: string
+          attempt_id?: string | null
+          block_reason?: string | null
+          created_at?: string
+          decision_notes?: string | null
+          evidence_url?: string | null
+          id?: string
+          points?: number
+          reason?: string
+          reference_key?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          timeline?: Json
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reward_appeals_attempt_id_fkey"
+            columns: ["attempt_id"]
+            isOneToOne: false
+            referencedRelation: "reward_claim_attempts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       reward_claim_attempts: {
         Row: {
           action: string
@@ -3060,7 +3125,7 @@ export type Database = {
       }
       wanderer_missions: {
         Row: {
-          assigned_by: string
+          assigned_by: string | null
           completed_at: string | null
           created_at: string
           deadline: string | null
@@ -3074,7 +3139,7 @@ export type Database = {
           wanderer_id: string
         }
         Insert: {
-          assigned_by: string
+          assigned_by?: string | null
           completed_at?: string | null
           created_at?: string
           deadline?: string | null
@@ -3088,7 +3153,7 @@ export type Database = {
           wanderer_id: string
         }
         Update: {
-          assigned_by?: string
+          assigned_by?: string | null
           completed_at?: string | null
           created_at?: string
           deadline?: string | null
@@ -3578,6 +3643,33 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      review_reward_appeal: {
+        Args: { _appeal_id: string; _notes?: string; _status: string }
+        Returns: {
+          action: string
+          attempt_id: string | null
+          block_reason: string | null
+          created_at: string
+          decision_notes: string | null
+          evidence_url: string | null
+          id: string
+          points: number
+          reason: string
+          reference_key: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          timeline: Json
+          updated_at: string
+          user_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "reward_appeals"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       review_reward_ledger: {
         Args: { _id: string; _notes?: string; _status: string }
         Returns: {
@@ -3605,6 +3697,33 @@ export type Database = {
         }
       }
       stamp_tier_points: { Args: { _tier: string }; Returns: number }
+      submit_reward_appeal: {
+        Args: { _attempt_id: string; _evidence_url?: string; _reason: string }
+        Returns: {
+          action: string
+          attempt_id: string | null
+          block_reason: string | null
+          created_at: string
+          decision_notes: string | null
+          evidence_url: string | null
+          id: string
+          points: number
+          reason: string
+          reference_key: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          timeline: Json
+          updated_at: string
+          user_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "reward_appeals"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
     }
     Enums: {
       app_role: "admin" | "host" | "traveler"
