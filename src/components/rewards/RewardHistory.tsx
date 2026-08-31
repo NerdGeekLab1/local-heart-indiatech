@@ -117,15 +117,96 @@ const RewardHistory = () => {
           <p className="text-xs font-bold text-destructive flex items-center gap-1.5">
             <ShieldAlert className="w-3.5 h-3.5" /> Security checks on recent attempts
           </p>
-          <ul className="mt-2 space-y-1">
-            {blocked.map(a => (
-              <li key={a.id} className="text-[11px] text-muted-foreground">
-                {formatDate(a.created_at)} · {a.reference_key || a.action} — {BLOCK_REASONS[a.reason || ""] || "Blocked by fraud checks"}
-              </li>
-            ))}
+          <ul className="mt-2 space-y-2">
+            {blocked.map(a => {
+              const appeal = appealByAttempt[a.id];
+              return (
+                <li key={a.id} className="flex flex-wrap items-center justify-between gap-2">
+                  <span className="text-[11px] text-muted-foreground">
+                    {formatDate(a.created_at)} · {a.reference_key || a.action} — {BLOCK_REASONS[a.reason || ""] || "Blocked by fraud checks"}
+                  </span>
+                  {appeal ? (
+                    <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${APPEAL_STATUS_STYLES[appeal.status] || "bg-secondary text-muted-foreground"}`}>
+                      Appeal {appeal.status.replace("_", " ")}
+                    </span>
+                  ) : (
+                    <Button size="sm" variant="outline" className="h-7 rounded-full text-[11px] gap-1"
+                      data-testid="appeal-button" onClick={() => { setAppealFor(a.id); setAppealReason(""); setEvidence(""); }}>
+                      <Gavel className="w-3 h-3" /> Request review
+                    </Button>
+                  )}
+                </li>
+              );
+            })}
           </ul>
         </div>
       )}
+
+      {appeals.length > 0 && (
+        <div className="rounded-xl bg-card p-4 shadow-card space-y-3" data-testid="appeal-list">
+          <p className="text-xs font-bold text-foreground flex items-center gap-1.5">
+            <Gavel className="w-3.5 h-3.5 text-primary" /> My appeals
+          </p>
+          {appeals.map(ap => (
+            <div key={ap.id} className="rounded-lg border border-border p-3">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <p className="text-sm font-medium text-foreground">
+                  {ap.reference_key || ap.action} · {ap.points > 0 ? `${ap.points} pts` : "review"}
+                </p>
+                <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${APPEAL_STATUS_STYLES[ap.status] || "bg-secondary text-muted-foreground"}`}>
+                  {ap.status.replace("_", " ")}
+                </span>
+              </div>
+              <p className="text-[11px] text-muted-foreground mt-1">“{ap.reason}”</p>
+              <ol className="mt-2 space-y-1 border-l border-border pl-3">
+                {ap.timeline.map((step, i) => (
+                  <li key={i} className="text-[11px] text-muted-foreground">
+                    <span className="font-semibold capitalize text-foreground">{step.status.replace("_", " ")}</span>
+                    {" · "}{formatDate(step.at)}{step.note ? ` — ${step.note}` : ""}
+                  </li>
+                ))}
+              </ol>
+              {ap.decision_notes && <p className="text-[11px] mt-2 text-foreground">Decision: {ap.decision_notes}</p>}
+            </div>
+          ))}
+        </div>
+      )}
+
+      <Dialog open={!!appealFor} onOpenChange={open => !open && setAppealFor(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2"><Gavel className="w-4 h-4 text-primary" /> Appeal this decision</DialogTitle>
+            <DialogDescription>Tell us why this claim should be reviewed. Our team responds within 48 hours.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            <textarea
+              value={appealReason}
+              onChange={e => setAppealReason(e.target.value)}
+              placeholder="Explain what happened (minimum 10 characters)"
+              className="w-full min-h-[100px] rounded-md border border-input bg-background px-3 py-2 text-sm"
+            />
+            <input
+              value={evidence}
+              onChange={e => setEvidence(e.target.value)}
+              placeholder="Optional evidence link (booking, photo, receipt)"
+              className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+            />
+            <Button className="w-full rounded-full" disabled={appealReason.trim().length < 10 || submitAppeal.isPending}
+              onClick={async () => {
+                try {
+                  await submitAppeal.mutateAsync({ attemptId: appealFor!, reason: appealReason.trim(), evidenceUrl: evidence.trim() || undefined });
+                  toast({ title: "Appeal submitted", description: "You'll see the decision timeline here." });
+                  setAppealFor(null);
+                } catch (e: any) {
+                  toast({ title: "Could not submit appeal", description: e.message, variant: "destructive" });
+                }
+              }}>
+              Submit appeal
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
 
       <Dialog open={!!receipt} onOpenChange={open => !open && setReceipt(null)}>
         <DialogContent className="max-w-md">
