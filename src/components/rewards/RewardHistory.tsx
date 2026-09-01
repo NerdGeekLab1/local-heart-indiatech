@@ -38,10 +38,16 @@ const formatDate = (value: string) =>
 
 /** Traveler-facing rewards history: every claim and redemption with status tracking and a printable receipt. */
 const RewardHistory = () => {
+  const { toast } = useToast();
   const { data: ledger = [], isLoading } = useRewardLedger();
   const { data: attempts = [] } = useClaimAttempts();
+  const { data: appeals = [] } = useRewardAppeals();
+  const submitAppeal = useSubmitAppeal();
   const [filter, setFilter] = useState<(typeof FILTERS)[number]["key"]>("all");
   const [receipt, setReceipt] = useState<RewardLedgerRow | null>(null);
+  const [appealFor, setAppealFor] = useState<string | null>(null);
+  const [appealReason, setAppealReason] = useState("");
+  const [evidence, setEvidence] = useState("");
 
   const rows = useMemo(
     () => (filter === "all" ? ledger : ledger.filter(r => r.event_type === filter)),
@@ -49,6 +55,11 @@ const RewardHistory = () => {
   );
 
   const blocked = useMemo(() => attempts.filter(a => !a.allowed).slice(0, 5), [attempts]);
+  const appealByAttempt = useMemo(
+    () => Object.fromEntries(appeals.filter(a => a.attempt_id).map(a => [a.attempt_id as string, a])),
+    [appeals],
+  );
+
 
   return (
     <div className="space-y-4" data-testid="reward-history">
