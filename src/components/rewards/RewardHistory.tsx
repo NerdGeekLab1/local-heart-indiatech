@@ -1,10 +1,11 @@
 import { useMemo, useState } from "react";
 import { motion } from "framer-motion";
-import { History, Receipt, ShieldAlert, Filter, Coins, CheckCircle2, Clock, XCircle, BadgeCheck } from "lucide-react";
+import { History, Receipt, ShieldAlert, Filter, Coins, CheckCircle2, Clock, XCircle, BadgeCheck, Gavel } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { EVENT_LABELS, LEDGER_STATUS_STYLES } from "@/lib/rewardsEngine";
-import { useClaimAttempts, useRewardLedger, type RewardLedgerRow } from "@/hooks/useRewards";
+import { useToast } from "@/hooks/use-toast";
+import { EVENT_LABELS, LEDGER_STATUS_STYLES, APPEAL_STATUS_STYLES } from "@/lib/rewardsEngine";
+import { useClaimAttempts, useRewardLedger, useRewardAppeals, useSubmitAppeal, type RewardLedgerRow } from "@/hooks/useRewards";
 
 const FILTERS = [
   { key: "all", label: "All activity" },
