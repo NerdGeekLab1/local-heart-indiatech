@@ -43,3 +43,23 @@ export const EVENT_LABELS: Record<string, string> = {
   payout: "Payout",
   adjustment: "Adjustment",
 };
+
+/** Status chips for reward appeals (traveler-facing and admin fraud queue). */
+export const APPEAL_STATUS_STYLES: Record<string, string> = {
+  pending: "bg-primary/10 text-primary",
+  under_review: "bg-chart-4/10 text-chart-4",
+  approved: "bg-accent/10 text-accent",
+  denied: "bg-destructive/10 text-destructive",
+};
+
+/** Plain-English explanations for why a reward attempt was blocked. */
+export const BLOCK_REASON_LABELS: Record<string, string> = {
+  rate_limited: "Hourly claim limit reached",
+  not_earned: "Stamp not earned yet",
+  already_claimed: "Already claimed",
+  duplicate_ledger_entry: "Duplicate claim",
+  duplicate_submission: "Duplicate submission",
+  insufficient_points: "Not enough points",
+  unknown_reward: "Reward unavailable",
+};
+

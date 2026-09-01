@@ -1,10 +1,11 @@
 import { useMemo, useState } from "react";
 import { motion } from "framer-motion";
-import { History, Receipt, ShieldAlert, Filter, Coins, CheckCircle2, Clock, XCircle, BadgeCheck } from "lucide-react";
+import { History, Receipt, ShieldAlert, Filter, Coins, CheckCircle2, Clock, XCircle, BadgeCheck, Gavel } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { EVENT_LABELS, LEDGER_STATUS_STYLES } from "@/lib/rewardsEngine";
-import { useClaimAttempts, useRewardLedger, type RewardLedgerRow } from "@/hooks/useRewards";
+import { useToast } from "@/hooks/use-toast";
+import { EVENT_LABELS, LEDGER_STATUS_STYLES, APPEAL_STATUS_STYLES } from "@/lib/rewardsEngine";
+import { useClaimAttempts, useRewardLedger, useRewardAppeals, useSubmitAppeal, type RewardLedgerRow } from "@/hooks/useRewards";
 
 const FILTERS = [
   { key: "all", label: "All activity" },
@@ -37,10 +38,16 @@ const formatDate = (value: string) =>
 
 /** Traveler-facing rewards history: every claim and redemption with status tracking and a printable receipt. */
 const RewardHistory = () => {
+  const { toast } = useToast();
   const { data: ledger = [], isLoading } = useRewardLedger();
   const { data: attempts = [] } = useClaimAttempts();
+  const { data: appeals = [] } = useRewardAppeals();
+  const submitAppeal = useSubmitAppeal();
   const [filter, setFilter] = useState<(typeof FILTERS)[number]["key"]>("all");
   const [receipt, setReceipt] = useState<RewardLedgerRow | null>(null);
+  const [appealFor, setAppealFor] = useState<string | null>(null);
+  const [appealReason, setAppealReason] = useState("");
+  const [evidence, setEvidence] = useState("");
 
   const rows = useMemo(
     () => (filter === "all" ? ledger : ledger.filter(r => r.event_type === filter)),
@@ -48,6 +55,11 @@ const RewardHistory = () => {
   );
 
   const blocked = useMemo(() => attempts.filter(a => !a.allowed).slice(0, 5), [attempts]);
+  const appealByAttempt = useMemo(
+    () => Object.fromEntries(appeals.filter(a => a.attempt_id).map(a => [a.attempt_id as string, a])),
+    [appeals],
+  );
+
 
   return (
     <div className="space-y-4" data-testid="reward-history">
