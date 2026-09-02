@@ -118,6 +118,8 @@ const Booking = () => {
   const [customRequests, setCustomRequests] = useState<CustomRequest[]>([]);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
+  const [createdBooking, setCreatedBooking] = useState<ItineraryBooking | null>(null);
+  const [itineraryOpen, setItineraryOpen] = useState(false);
   const [draftReady, setDraftReady] = useState(false);
 
   const draftKey = user && id ? `travelista-booking-draft:${user.id}:${id}` : null;
