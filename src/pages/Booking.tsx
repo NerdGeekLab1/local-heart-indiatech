@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useParams, useSearchParams, Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { format } from "date-fns";
-import { CalendarIcon, ArrowLeft, Users, MessageCircle, Check, MapPin, Star, Shield, Lock, ChevronDown, Share2, Image as ImageIcon } from "lucide-react";
+import { CalendarIcon, CalendarDays, ArrowLeft, Users, MessageCircle, Check, MapPin, Star, Shield, Lock, ChevronDown, Share2, Image as ImageIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
