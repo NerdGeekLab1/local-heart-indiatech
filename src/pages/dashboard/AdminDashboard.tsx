@@ -1960,7 +1960,14 @@ const AdminDashboard = () => {
         {activeTab === "missions" && (
           <div className="mt-6">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-bold text-foreground">Mission Assignments ({dbMissions.length})</h2>
+              <h2 className="text-xl font-bold text-foreground">
+                Mission Assignments ({dbMissions.length})
+                {dbMissions.filter(m => m.status === "requested").length > 0 && (
+                  <span className="ml-2 text-xs font-medium px-2 py-0.5 rounded-full bg-primary/10 text-primary align-middle">
+                    {dbMissions.filter(m => m.status === "requested").length} requested
+                  </span>
+                )}
+              </h2>
               <Button size="sm" className="rounded-full gap-1 text-xs" onClick={() => setShowMissionForm(!showMissionForm)}>
                 <Plus className="w-3 h-3" /> Assign Mission
               </Button>
