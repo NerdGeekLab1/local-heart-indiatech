@@ -7,10 +7,11 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { STAMP_CATALOG, TIER_STYLES, type StampTier } from "@/lib/stampsCatalog";
 import { EVENT_LABELS, LEDGER_STATUS_STYLES } from "@/lib/rewardsEngine";
-import { useReferralCodes, useRegenerateReferralCode, useReviewLedger, useRewardLedger } from "@/hooks/useRewards";
+import { useReferralCodes, useRegenerateReferralCode, useReviewLedger, useRewardLedger, useAllClaimAttempts, useRewardAppeals } from "@/hooks/useRewards";
 import AdminPagination from "@/components/admin/AdminPagination";
+import RewardFraudQueue from "@/components/admin/RewardFraudQueue";
 
-type Section = "referrals" | "ledger" | "codes" | "streaks" | "stamps";
+type Section = "referrals" | "ledger" | "codes" | "streaks" | "stamps" | "fraud";
 
 interface Row { [k: string]: any }
 
