@@ -350,6 +350,8 @@ const RewardsReferralsTab = () => {
           </div>
         </div>
       )}
+
+      {section === "fraud" && <RewardFraudQueue nameFor={nameFor} />}
     </div>
   );
 };
