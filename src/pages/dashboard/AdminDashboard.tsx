@@ -2031,6 +2031,11 @@ const AdminDashboard = () => {
                           {m.description && <p className="text-xs text-muted-foreground mt-1">{m.description}</p>}
                         </div>
                         <div className="flex gap-2 shrink-0">
+                          {m.status === "requested" && (
+                            <Button size="sm" className="rounded-full text-xs" onClick={() => updateMissionStatus(m.id, "assigned")}>
+                              <CheckCircle className="w-3 h-3 mr-1" /> Approve request
+                            </Button>
+                          )}
                           {m.status === "assigned" && (
                             <Button size="sm" className="rounded-full text-xs bg-accent text-accent-foreground" onClick={() => updateMissionStatus(m.id, "completed")}>
                               <CheckCircle className="w-3 h-3 mr-1" /> Complete
@@ -2038,10 +2043,11 @@ const AdminDashboard = () => {
                           )}
                           {m.status !== "cancelled" && m.status !== "completed" && (
                             <Button size="sm" variant="outline" className="rounded-full text-xs text-destructive" onClick={() => updateMissionStatus(m.id, "cancelled")}>
-                              Cancel
+                              {m.status === "requested" ? "Decline" : "Cancel"}
                             </Button>
                           )}
                         </div>
+
                       </div>
                     </div>
                   );
