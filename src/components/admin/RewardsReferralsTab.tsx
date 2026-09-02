@@ -137,6 +137,7 @@ const RewardsReferralsTab = () => {
     { id: "codes", label: "Referral Codes", icon: Ticket, count: codes.length },
     { id: "streaks", label: "Travel Streaks", icon: Flame, count: streaks.length },
     { id: "stamps", label: "Stamps", icon: Award, count: stamps.length },
+    { id: "fraud", label: "Fraud review", icon: ShieldAlert, count: openFraudCount },
   ];
 
   const filteredLedger = ledger.filter(l => matches(l.user_id, `${l.title} ${l.event_type} ${l.status}`));
