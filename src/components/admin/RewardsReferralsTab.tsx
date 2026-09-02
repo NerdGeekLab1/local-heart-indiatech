@@ -34,8 +34,11 @@ const RewardsReferralsTab = () => {
   const [pageSize, setPageSize] = useState(25);
   const { data: ledger = [], refetch: refetchLedger } = useRewardLedger({ all: true });
   const { data: codes = [] } = useReferralCodes("all");
+  const { data: allAttempts = [] } = useAllClaimAttempts();
+  const { data: allAppeals = [] } = useRewardAppeals({ all: true });
   const reviewLedger = useReviewLedger();
   const regenerateCode = useRegenerateReferralCode();
+  const openFraudCount = allAttempts.filter(a => !a.allowed).length + allAppeals.filter(a => a.status === "pending").length;
 
   useEffect(() => { setPage(0); }, [section, query]);
   /** Paginates any filtered list with the shared admin pager. */
