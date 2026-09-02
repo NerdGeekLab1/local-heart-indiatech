@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Award, Flame, Gift, Search, Save, Trash2, Users, Plus, RefreshCw, Coins, Ticket } from "lucide-react";
+import { Award, Flame, Gift, Search, Save, Trash2, Users, Plus, RefreshCw, Coins, Ticket, ShieldAlert } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
