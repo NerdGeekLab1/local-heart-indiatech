@@ -781,9 +781,11 @@ const TravelerDashboard = () => {
           </div>
         )}
       </div>
+      <BookingItineraryDialog booking={itineraryBooking} open={!!itineraryBooking} onOpenChange={open => !open && setItineraryBooking(null)} />
       <Footer />
     </div>
   );
 };
+
 
 export default TravelerDashboard;
