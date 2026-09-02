@@ -325,6 +325,10 @@ const TravelerDashboard = () => {
                         <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${statusColors[b.status] || "bg-secondary text-muted-foreground"}`}>{b.status}</span>
                       </div>
                       <p className="text-sm text-muted-foreground">{b.start_date} → {b.end_date} · {(b.services || []).join(", ")}</p>
+                      <Button size="sm" variant="outline" className="rounded-full text-xs gap-1 mt-2"
+                        data-testid="view-itinerary" onClick={() => setItineraryBooking(b as ItineraryBooking)}>
+                        <Calendar className="w-3 h-3" /> View full itinerary
+                      </Button>
                     </div>
                     <div className="text-right shrink-0">
                       <p className="font-bold text-foreground">₹{Number(b.total_price).toLocaleString()}</p>
@@ -335,6 +339,7 @@ const TravelerDashboard = () => {
                       )}
                       {hasReview && <span className="text-xs text-accent block mt-1">✓ Reviewed</span>}
                     </div>
+
                   </div>
                   {["confirmed", "completed"].includes(b.status) && (
                     <div className="mt-3 border-t border-border pt-3">
