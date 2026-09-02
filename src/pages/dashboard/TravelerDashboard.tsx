@@ -70,6 +70,7 @@ const TravelerDashboard = () => {
   const [notifSettings, setNotifSettings] = useLocalStorage("traveler_notifications", { bookings: true, messages: true, deals: true, reviews: true });
   const [savedHosts, setSavedHosts] = useState<any[]>([]);
   const [reviewingBooking, setReviewingBooking] = useState<string | null>(null);
+  const [itineraryBooking, setItineraryBooking] = useState<ItineraryBooking | null>(null);
   const [reviewText, setReviewText] = useState("");
   const [reviewRating, setReviewRating] = useState(5);
   const [videoConsent, setVideoConsent] = useState<string | null>(null);
