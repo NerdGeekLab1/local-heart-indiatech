@@ -292,6 +292,12 @@ const Booking = () => {
               <p className="text-sm font-semibold"><strong>Total:</strong> {formatCurrency(total)}</p>
             </div>
             <div className="mt-8 flex gap-3 justify-center flex-wrap">
+            <div className="mt-8 flex gap-3 justify-center flex-wrap">
+              {createdBooking && (
+                <Button variant="outline" className="rounded-full px-6" onClick={() => setItineraryOpen(true)}>
+                  <CalendarDays className="w-4 h-4 mr-2" /> View full itinerary
+                </Button>
+              )}
               <Button variant="outline" className="rounded-full px-6" onClick={() => setChatOpen(true)}>
                 <MessageCircle className="w-4 h-4 mr-2" /> Chat with {host.name}
               </Button>
@@ -300,8 +306,10 @@ const Booking = () => {
           </motion.div>
         </div>
         <Footer />
+        <BookingItineraryDialog booking={createdBooking} hostName={host.name} open={itineraryOpen} onOpenChange={setItineraryOpen} />
         {isRealHost && <ChatPanel receiverId={host.id} receiverName={host.name} receiverImage={host.image} isOpen={chatOpen} onClose={() => setChatOpen(false)} />}
       </div>
+
     );
   }
 
