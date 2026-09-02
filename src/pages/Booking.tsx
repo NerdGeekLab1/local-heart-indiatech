@@ -19,6 +19,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import SpecialRequestEditor, { CustomRequest } from "@/components/booking/SpecialRequestEditor";
 import BookingMapPreview from "@/components/booking/BookingMapPreview";
+import BookingItineraryDialog, { type ItineraryBooking } from "@/components/booking/BookingItineraryDialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { usePlatformSettings } from "@/hooks/usePlatformSettings";
 import { computeBookingCharges } from "@/lib/bookingCharges";
