@@ -266,15 +266,16 @@ const Rewards = () => {
                         <MapPin className="w-3.5 h-3.5 text-primary" />
                         <span className="font-medium">{s.dest}</span>
                       </div>
-                    ) : i === currentStreak ? (
+                    ) : i === thisMonth || i === nextMonth ? (
                       <Button asChild size="sm" className="w-full mt-1 text-xs rounded-lg">
-                        <Link to="/explore"><ArrowRight className="w-3 h-3 mr-1" /> Find Your Next Trip</Link>
+                        <Link to={`/explore?month=${i + 1}`}><ArrowRight className="w-3 h-3 mr-1" /> Find Your Next Trip</Link>
                       </Button>
+                    ) : i < thisMonth ? (
+                      <p className="text-xs text-muted-foreground">Month closed — no trip recorded</p>
                     ) : (
-                      <Link to="/experiences" className="text-xs text-muted-foreground hover:text-primary hover:underline">
-                        Plan your {months[i]} adventure
-                      </Link>
+                      <p className="text-xs text-muted-foreground">Opens closer to {months[i]}</p>
                     )}
+
                   </div>
                 ))}
               </div>
