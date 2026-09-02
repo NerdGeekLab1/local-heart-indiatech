@@ -24,6 +24,8 @@ import ReferralsPanel from "@/components/ReferralsPanel";
 import RewardWallet from "@/components/rewards/RewardWallet";
 import AchievementsStrip from "@/components/rewards/AchievementsStrip";
 import ReferralCodeCard from "@/components/rewards/ReferralCodeCard";
+import WandererPanel from "@/components/rewards/WandererPanel";
+import BookingItineraryDialog, { type ItineraryBooking } from "@/components/booking/BookingItineraryDialog";
 
 
 import { Award } from "lucide-react";
@@ -68,6 +70,7 @@ const TravelerDashboard = () => {
   const [notifSettings, setNotifSettings] = useLocalStorage("traveler_notifications", { bookings: true, messages: true, deals: true, reviews: true });
   const [savedHosts, setSavedHosts] = useState<any[]>([]);
   const [reviewingBooking, setReviewingBooking] = useState<string | null>(null);
+  const [itineraryBooking, setItineraryBooking] = useState<ItineraryBooking | null>(null);
   const [reviewText, setReviewText] = useState("");
   const [reviewRating, setReviewRating] = useState(5);
   const [videoConsent, setVideoConsent] = useState<string | null>(null);
@@ -322,6 +325,10 @@ const TravelerDashboard = () => {
                         <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${statusColors[b.status] || "bg-secondary text-muted-foreground"}`}>{b.status}</span>
                       </div>
                       <p className="text-sm text-muted-foreground">{b.start_date} → {b.end_date} · {(b.services || []).join(", ")}</p>
+                      <Button size="sm" variant="outline" className="rounded-full text-xs gap-1 mt-2"
+                        data-testid="view-itinerary" onClick={() => setItineraryBooking(b as ItineraryBooking)}>
+                        <Calendar className="w-3 h-3" /> View full itinerary
+                      </Button>
                     </div>
                     <div className="text-right shrink-0">
                       <p className="font-bold text-foreground">₹{Number(b.total_price).toLocaleString()}</p>
@@ -332,6 +339,7 @@ const TravelerDashboard = () => {
                       )}
                       {hasReview && <span className="text-xs text-accent block mt-1">✓ Reviewed</span>}
                     </div>
+
                   </div>
                   {["confirmed", "completed"].includes(b.status) && (
                     <div className="mt-3 border-t border-border pt-3">
@@ -434,34 +442,8 @@ const TravelerDashboard = () => {
         )}
 
         {/* Beta Wanderer */}
-        {activeTab === "wanderer" && (
-          <div className="mt-6">
-            <div className="rounded-2xl bg-gradient-to-br from-primary/10 via-accent/5 to-secondary p-8 text-center mb-6">
-              <div className="text-4xl mb-3">🧭</div>
-              <h2 className="text-2xl font-bold text-foreground">Beta Wanderer Program</h2>
-              <p className="text-muted-foreground mt-2 max-w-lg mx-auto">
-                Travel to unexplored destinations, shoot videos, share feedback, and earn rewards as a community explorer.
-              </p>
-              <div className="flex gap-3 justify-center mt-4">
-                <Link to="/beta-wanderer-apply"><Button className="rounded-full gap-2"><Target className="w-4 h-4" /> Apply Now</Button></Link>
-                <Link to="/beta-wanderers"><Button variant="outline" className="rounded-full">View All Wanderers</Button></Link>
-              </div>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              {[
-                { icon: "📸", title: "Shoot Videos", desc: "Document your travels with authentic video content" },
-                { icon: "🗺️", title: "Explore Places", desc: "Visit new and offbeat destinations across India" },
-                { icon: "🏆", title: "Earn Rewards", desc: "Build your score, earn badges, and get featured" },
-              ].map(b => (
-                <div key={b.title} className="rounded-xl bg-card p-5 shadow-card text-center">
-                  <span className="text-3xl">{b.icon}</span>
-                  <h3 className="font-bold text-foreground mt-2">{b.title}</h3>
-                  <p className="text-xs text-muted-foreground mt-1">{b.desc}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
+        {activeTab === "wanderer" && <WandererPanel />}
+
 
         {/* Grievances */}
         {activeTab === "grievances" && (
@@ -799,9 +781,11 @@ const TravelerDashboard = () => {
           </div>
         )}
       </div>
+      <BookingItineraryDialog booking={itineraryBooking} open={!!itineraryBooking} onOpenChange={open => !open && setItineraryBooking(null)} />
       <Footer />
     </div>
   );
 };
+
 
 export default TravelerDashboard;

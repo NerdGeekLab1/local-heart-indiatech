@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useParams, useSearchParams, Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { format } from "date-fns";
-import { CalendarIcon, ArrowLeft, Users, MessageCircle, Check, MapPin, Star, Shield, Lock, ChevronDown, Share2, Image as ImageIcon } from "lucide-react";
+import { CalendarIcon, CalendarDays, ArrowLeft, Users, MessageCircle, Check, MapPin, Star, Shield, Lock, ChevronDown, Share2, Image as ImageIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -19,6 +19,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import SpecialRequestEditor, { CustomRequest } from "@/components/booking/SpecialRequestEditor";
 import BookingMapPreview from "@/components/booking/BookingMapPreview";
+import BookingItineraryDialog, { type ItineraryBooking } from "@/components/booking/BookingItineraryDialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { usePlatformSettings } from "@/hooks/usePlatformSettings";
 import { computeBookingCharges } from "@/lib/bookingCharges";
@@ -117,6 +118,8 @@ const Booking = () => {
   const [customRequests, setCustomRequests] = useState<CustomRequest[]>([]);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
+  const [createdBooking, setCreatedBooking] = useState<ItineraryBooking | null>(null);
+  const [itineraryOpen, setItineraryOpen] = useState(false);
   const [draftReady, setDraftReady] = useState(false);
 
   const draftKey = user && id ? `travelista-booking-draft:${user.id}:${id}` : null;
@@ -233,7 +236,7 @@ const Booking = () => {
       setSubmitted(true);
       return;
     }
-    const { error } = await supabase.from("bookings").insert({
+    const { data: created, error } = await supabase.from("bookings").insert({
       traveler_id: user.id,
       host_id: host.id,
       start_date: startDate.toISOString().split("T")[0],
@@ -249,14 +252,16 @@ const Booking = () => {
 
       message: message || null,
       status: "pending",
-    });
+    }).select().maybeSingle();
     if (error) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
       return;
     }
     setSubmitted(true);
+    if (created) { setCreatedBooking(created as ItineraryBooking); setItineraryOpen(true); }
     if (draftKey) window.localStorage.removeItem(draftKey);
     toast({ title: "Booking Sent! 🎉", description: `Your booking has been sent to ${host.name}.` });
+
   };
 
   const handleShare = () => {
@@ -290,6 +295,11 @@ const Booking = () => {
               <p className="text-sm font-semibold"><strong>Total:</strong> {formatCurrency(total)}</p>
             </div>
             <div className="mt-8 flex gap-3 justify-center flex-wrap">
+              {createdBooking && (
+                <Button variant="outline" className="rounded-full px-6" onClick={() => setItineraryOpen(true)}>
+                  <CalendarDays className="w-4 h-4 mr-2" /> View full itinerary
+                </Button>
+              )}
               <Button variant="outline" className="rounded-full px-6" onClick={() => setChatOpen(true)}>
                 <MessageCircle className="w-4 h-4 mr-2" /> Chat with {host.name}
               </Button>
@@ -298,8 +308,10 @@ const Booking = () => {
           </motion.div>
         </div>
         <Footer />
+        <BookingItineraryDialog booking={createdBooking} hostName={host.name} open={itineraryOpen} onOpenChange={setItineraryOpen} />
         {isRealHost && <ChatPanel receiverId={host.id} receiverName={host.name} receiverImage={host.image} isOpen={chatOpen} onClose={() => setChatOpen(false)} />}
       </div>
+
     );
   }
 

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Award, Flame, Gift, Search, Save, Trash2, Users, Plus, RefreshCw, Coins, Ticket } from "lucide-react";
+import { Award, Flame, Gift, Search, Save, Trash2, Users, Plus, RefreshCw, Coins, Ticket, ShieldAlert } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
@@ -7,10 +7,11 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { STAMP_CATALOG, TIER_STYLES, type StampTier } from "@/lib/stampsCatalog";
 import { EVENT_LABELS, LEDGER_STATUS_STYLES } from "@/lib/rewardsEngine";
-import { useReferralCodes, useRegenerateReferralCode, useReviewLedger, useRewardLedger } from "@/hooks/useRewards";
+import { useReferralCodes, useRegenerateReferralCode, useReviewLedger, useRewardLedger, useAllClaimAttempts, useRewardAppeals } from "@/hooks/useRewards";
 import AdminPagination from "@/components/admin/AdminPagination";
+import RewardFraudQueue from "@/components/admin/RewardFraudQueue";
 
-type Section = "referrals" | "ledger" | "codes" | "streaks" | "stamps";
+type Section = "referrals" | "ledger" | "codes" | "streaks" | "stamps" | "fraud";
 
 interface Row { [k: string]: any }
 
@@ -33,8 +34,11 @@ const RewardsReferralsTab = () => {
   const [pageSize, setPageSize] = useState(25);
   const { data: ledger = [], refetch: refetchLedger } = useRewardLedger({ all: true });
   const { data: codes = [] } = useReferralCodes("all");
+  const { data: allAttempts = [] } = useAllClaimAttempts();
+  const { data: allAppeals = [] } = useRewardAppeals({ all: true });
   const reviewLedger = useReviewLedger();
   const regenerateCode = useRegenerateReferralCode();
+  const openFraudCount = allAttempts.filter(a => !a.allowed).length + allAppeals.filter(a => a.status === "pending").length;
 
   useEffect(() => { setPage(0); }, [section, query]);
   /** Paginates any filtered list with the shared admin pager. */
@@ -133,6 +137,7 @@ const RewardsReferralsTab = () => {
     { id: "codes", label: "Referral Codes", icon: Ticket, count: codes.length },
     { id: "streaks", label: "Travel Streaks", icon: Flame, count: streaks.length },
     { id: "stamps", label: "Stamps", icon: Award, count: stamps.length },
+    { id: "fraud", label: "Fraud review", icon: ShieldAlert, count: openFraudCount },
   ];
 
   const filteredLedger = ledger.filter(l => matches(l.user_id, `${l.title} ${l.event_type} ${l.status}`));
@@ -345,6 +350,8 @@ const RewardsReferralsTab = () => {
           </div>
         </div>
       )}
+
+      {section === "fraud" && <RewardFraudQueue nameFor={nameFor} />}
     </div>
   );
 };
