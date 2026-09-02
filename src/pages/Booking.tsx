@@ -233,7 +233,7 @@ const Booking = () => {
       setSubmitted(true);
       return;
     }
-    const { error } = await supabase.from("bookings").insert({
+    const { data: created, error } = await supabase.from("bookings").insert({
       traveler_id: user.id,
       host_id: host.id,
       start_date: startDate.toISOString().split("T")[0],
@@ -249,14 +249,16 @@ const Booking = () => {
 
       message: message || null,
       status: "pending",
-    });
+    }).select().maybeSingle();
     if (error) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
       return;
     }
     setSubmitted(true);
+    if (created) { setCreatedBooking(created as ItineraryBooking); setItineraryOpen(true); }
     if (draftKey) window.localStorage.removeItem(draftKey);
     toast({ title: "Booking Sent! 🎉", description: `Your booking has been sent to ${host.name}.` });
+
   };
 
   const handleShare = () => {
