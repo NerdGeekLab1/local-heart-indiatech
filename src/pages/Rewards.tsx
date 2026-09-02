@@ -63,6 +63,8 @@ const Rewards = () => {
   }, [user]);
 
   const currentStreak = streakData.filter(s => s.completed).length;
+  const thisMonth = new Date().getMonth();
+  const nextMonth = Math.min(thisMonth + 1, 11);
   const badges = badgeCatalogue.map(badge => ({ ...badge, unlocked: currentStreak >= badge.need }));
   const progress = (currentStreak / 11) * 100;
 
