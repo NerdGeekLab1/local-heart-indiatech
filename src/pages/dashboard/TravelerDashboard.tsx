@@ -25,6 +25,8 @@ import RewardWallet from "@/components/rewards/RewardWallet";
 import AchievementsStrip from "@/components/rewards/AchievementsStrip";
 import ReferralCodeCard from "@/components/rewards/ReferralCodeCard";
 import WandererPanel from "@/components/rewards/WandererPanel";
+import RewardsGuide from "@/components/rewards/RewardsGuide";
+
 import BookingItineraryDialog, { type ItineraryBooking } from "@/components/booking/BookingItineraryDialog";
 import SubscriptionStatusCard from "@/components/dashboard/SubscriptionStatusCard";
 
@@ -519,6 +521,9 @@ const TravelerDashboard = () => {
           <div className="mt-6 space-y-6">
             <RewardWallet />
 
+            <RewardsGuide />
+
+
             <div className="rounded-2xl bg-gradient-to-br from-primary/10 via-accent/5 to-secondary p-8 text-center">
               <Flame className="w-10 h-10 text-primary mx-auto mb-2" />
               <h2 className="text-2xl font-bold text-foreground">Travel Streak Challenge</h2>
@@ -594,10 +599,12 @@ const TravelerDashboard = () => {
 
         {/* Stamps */}
         {activeTab === "stamps" && (
-          <div className="mt-6">
+          <div className="mt-6 space-y-6">
             <StampCollection />
+            <RewardsGuide />
           </div>
         )}
+
 
         {/* Referrals */}
         {activeTab === "referrals" && (
