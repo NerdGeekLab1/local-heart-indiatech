@@ -597,10 +597,12 @@ const TravelerDashboard = () => {
 
         {/* Stamps */}
         {activeTab === "stamps" && (
-          <div className="mt-6">
+          <div className="mt-6 space-y-6">
             <StampCollection />
+            <RewardsGuide />
           </div>
         )}
+
 
         {/* Referrals */}
         {activeTab === "referrals" && (
