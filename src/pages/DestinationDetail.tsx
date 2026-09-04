@@ -112,7 +112,9 @@ const DestinationDetail = () => {
     price: Number(e.price),
   }));
 
-  const cityHosts = liveHosts.length > 0 ? liveHosts : hosts.filter(h => h.city === destination.name);
+  // Only real hosts tagged to this destination's city are listed — never demo hosts.
+  const cityHosts = liveHosts;
+
   const cityExperiences: any[] = liveExperiences.length > 0
     ? liveExperiences
     : experiences.filter(e => e.hostCity === destination.name);
