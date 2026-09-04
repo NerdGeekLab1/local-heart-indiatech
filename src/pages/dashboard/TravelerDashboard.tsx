@@ -519,6 +519,9 @@ const TravelerDashboard = () => {
           <div className="mt-6 space-y-6">
             <RewardWallet />
 
+            <RewardsGuide />
+
+
             <div className="rounded-2xl bg-gradient-to-br from-primary/10 via-accent/5 to-secondary p-8 text-center">
               <Flame className="w-10 h-10 text-primary mx-auto mb-2" />
               <h2 className="text-2xl font-bold text-foreground">Travel Streak Challenge</h2>
