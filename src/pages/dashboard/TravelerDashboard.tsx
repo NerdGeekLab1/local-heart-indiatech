@@ -26,6 +26,7 @@ import AchievementsStrip from "@/components/rewards/AchievementsStrip";
 import ReferralCodeCard from "@/components/rewards/ReferralCodeCard";
 import WandererPanel from "@/components/rewards/WandererPanel";
 import BookingItineraryDialog, { type ItineraryBooking } from "@/components/booking/BookingItineraryDialog";
+import SubscriptionStatusCard from "@/components/dashboard/SubscriptionStatusCard";
 
 
 import { Award } from "lucide-react";
@@ -212,6 +213,7 @@ const TravelerDashboard = () => {
         {/* Overview */}
         {activeTab === "overview" && (
           <>
+            <SubscriptionStatusCard />
             {(() => {
               const totalLikes = myPosts.reduce((s, p) => s + (p.likes_count || 0), 0);
               const totalEngagement = totalLikes + myBookmarks.length;

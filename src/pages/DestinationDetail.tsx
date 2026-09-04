@@ -112,7 +112,9 @@ const DestinationDetail = () => {
     price: Number(e.price),
   }));
 
-  const cityHosts = liveHosts.length > 0 ? liveHosts : hosts.filter(h => h.city === destination.name);
+  // Only real hosts tagged to this destination's city are listed — never demo hosts.
+  const cityHosts = liveHosts;
+
   const cityExperiences: any[] = liveExperiences.length > 0
     ? liveExperiences
     : experiences.filter(e => e.hostCity === destination.name);
@@ -539,7 +541,7 @@ const DestinationDetail = () => {
           ) : (
             <div className="rounded-2xl bg-card shadow-card p-8 text-center border-2 border-dashed border-border">
               <Users className="w-10 h-10 text-muted-foreground/40 mx-auto mb-3" />
-              <p className="text-foreground font-semibold">{destination.hostCount}+ verified local hosts available in {destination.name}</p>
+              <p className="text-foreground font-semibold">No verified local hosts listed in {destination.name} yet</p>
               <p className="text-sm text-muted-foreground mt-1">Browse all hosts in our directory or apply to become one yourself.</p>
               <div className="flex justify-center gap-2 mt-4">
                 <Link to="/explore"><Button size="sm" className="rounded-full">Browse Hosts</Button></Link>

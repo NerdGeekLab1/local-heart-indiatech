@@ -4,7 +4,8 @@ import { Star, Clock, MapPin, Users, Play, ArrowLeft, CheckCircle, Calendar, Shi
 import { Button } from "@/components/ui/button";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { experiences, hosts, reviews } from "@/lib/data";
+import { experiences, reviews } from "@/lib/data";
+import { useDbHosts } from "@/hooks/use-db-hosts";
 import { useEffect, useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
@@ -98,6 +99,7 @@ const ExperienceDetail = () => {
   const [liked, setLiked] = useState(false);
   const [dbStatus, setDbStatus] = useState<string | null>(null);
   const [videoOpen, setVideoOpen] = useState(false);
+  const { hosts: dbHosts } = useDbHosts();
   const exp = allExperiences.find(e => e.id === id);
 
   // If this id isn't in the static catalog (or even if it is), check DB for moderation status.
@@ -125,8 +127,20 @@ const ExperienceDetail = () => {
     );
   }
 
-  const host = hosts.find(h => h.id === exp.hostId);
+  // Only a real, published host whose city matches this experience is linked here.
+  const matchedHost = dbHosts.find(h => (h.city || "").toLowerCase() === (exp.hostCity || "").toLowerCase());
+  const host = matchedHost
+    ? {
+        id: matchedHost.username || matchedHost.id,
+        name: matchedHost.name,
+        city: matchedHost.city || exp.hostCity,
+        image: matchedHost.avatar_url || "/placeholder.svg",
+        rating: matchedHost.rating || 0,
+        services: matchedHost.services || [],
+      }
+    : null;
   const hostReviews = reviews.filter(r => r.hostId === exp.hostId).slice(0, 3);
+
   const isBike = "vehicleType" in exp;
   const schedule = "schedule" in exp ? (exp as any).schedule : null;
   const includes = exp.includes || [];
