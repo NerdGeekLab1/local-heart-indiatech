@@ -25,6 +25,8 @@ import RewardWallet from "@/components/rewards/RewardWallet";
 import AchievementsStrip from "@/components/rewards/AchievementsStrip";
 import ReferralCodeCard from "@/components/rewards/ReferralCodeCard";
 import WandererPanel from "@/components/rewards/WandererPanel";
+import RewardsGuide from "@/components/rewards/RewardsGuide";
+
 import BookingItineraryDialog, { type ItineraryBooking } from "@/components/booking/BookingItineraryDialog";
 import SubscriptionStatusCard from "@/components/dashboard/SubscriptionStatusCard";
 
