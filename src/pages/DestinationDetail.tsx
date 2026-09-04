@@ -541,7 +541,7 @@ const DestinationDetail = () => {
           ) : (
             <div className="rounded-2xl bg-card shadow-card p-8 text-center border-2 border-dashed border-border">
               <Users className="w-10 h-10 text-muted-foreground/40 mx-auto mb-3" />
-              <p className="text-foreground font-semibold">{destination.hostCount}+ verified local hosts available in {destination.name}</p>
+              <p className="text-foreground font-semibold">No verified local hosts listed in {destination.name} yet</p>
               <p className="text-sm text-muted-foreground mt-1">Browse all hosts in our directory or apply to become one yourself.</p>
               <div className="flex justify-center gap-2 mt-4">
                 <Link to="/explore"><Button size="sm" className="rounded-full">Browse Hosts</Button></Link>
