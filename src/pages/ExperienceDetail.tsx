@@ -125,8 +125,20 @@ const ExperienceDetail = () => {
     );
   }
 
-  const host = hosts.find(h => h.id === exp.hostId);
+  // Only a real, published host whose city matches this experience is linked here.
+  const matchedHost = dbHosts.find(h => (h.city || "").toLowerCase() === (exp.hostCity || "").toLowerCase());
+  const host = matchedHost
+    ? {
+        id: matchedHost.username || matchedHost.id,
+        name: matchedHost.name,
+        city: matchedHost.city || exp.hostCity,
+        image: matchedHost.avatar_url || "/placeholder.svg",
+        rating: matchedHost.rating || 0,
+        services: matchedHost.services || [],
+      }
+    : null;
   const hostReviews = reviews.filter(r => r.hostId === exp.hostId).slice(0, 3);
+
   const isBike = "vehicleType" in exp;
   const schedule = "schedule" in exp ? (exp as any).schedule : null;
   const includes = exp.includes || [];
