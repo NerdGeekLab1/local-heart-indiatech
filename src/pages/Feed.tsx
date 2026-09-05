@@ -35,7 +35,7 @@ const FILTERS = [
 const TAG_ICON: Record<string, any> = { location: MapPin, adventure: Mountain, experience: Sparkles };
 const PAGE_SIZE = 8;
 
-const Feed = () => {
+const Feed = ({ embedded = false }: { embedded?: boolean }) => {
   const { user } = useAuth();
   const { isBookmarked, toggle: toggleBM } = useBookmarks("post");
   const [posts, setPosts] = useState<FeedPost[]>([]);
@@ -136,24 +136,29 @@ const Feed = () => {
   const visiblePosts = activePin ? posts.filter(p => (p.location || p.tag_value) === activePin) : posts;
 
   return (
-    <div className="min-h-screen bg-background relative overflow-hidden">
-      <Helmet>
-        <title>Live Atlas Feed — RoamYoo postcards from Bharat</title>
-        <meta name="description" content="Live feed of traveler postcards across India — places, adventures and vibes pinned on a real-time map." />
-        <link rel="canonical" href="/feed" />
-        <meta property="og:title" content="RoamYoo — Live Atlas Feed" />
-        <meta property="og:description" content="Real postcards from real roads across India." />
-        <meta property="og:type" content="website" />
-        <meta property="og:url" content="/feed" />
-      </Helmet>
+    <div className={embedded ? "relative" : "min-h-screen bg-background relative overflow-hidden"}>
+      {!embedded && (
+        <Helmet>
+          <title>Live Atlas Feed — RoamYoo postcards from Bharat</title>
+          <meta name="description" content="Live feed of traveler postcards across India — places, adventures and vibes pinned on a real-time map." />
+          <link rel="canonical" href="/feed" />
+          <meta property="og:title" content="RoamYoo — Live Atlas Feed" />
+          <meta property="og:description" content="Real postcards from real roads across India." />
+          <meta property="og:type" content="website" />
+          <meta property="og:url" content="/feed" />
+        </Helmet>
+      )}
 
-      <div className="pointer-events-none fixed inset-0 -z-10 opacity-[0.04]" style={{
-        backgroundImage: "linear-gradient(to right, hsl(var(--foreground)) 1px, transparent 1px), linear-gradient(to bottom, hsl(var(--foreground)) 1px, transparent 1px)",
-        backgroundSize: "40px 40px"
-      }} />
-      <Navbar />
+      {!embedded && (
+        <div className="pointer-events-none fixed inset-0 -z-10 opacity-[0.04]" style={{
+          backgroundImage: "linear-gradient(to right, hsl(var(--foreground)) 1px, transparent 1px), linear-gradient(to bottom, hsl(var(--foreground)) 1px, transparent 1px)",
+          backgroundSize: "40px 40px"
+        }} />
+      )}
+      {!embedded && <Navbar />}
 
-      <main className="pt-20 pb-32 mx-auto max-w-7xl px-3 sm:px-4">
+      <main className={embedded ? "pb-8" : "pt-20 pb-32 mx-auto max-w-7xl px-3 sm:px-4"}>
+
         {/* Header */}
         <section className="relative mb-5 rounded-3xl overflow-hidden border-2 border-foreground/10 bg-card shadow-card">
           <div className="absolute top-0 right-0 h-full w-1/3 bg-gradient-to-br from-primary via-orange-500 to-pink-500 opacity-90 [clip-path:polygon(30%_0,100%_0,100%_100%,0_100%)]" />
@@ -332,13 +337,16 @@ const Feed = () => {
         </div>
       </main>
 
-      <button onClick={() => setCreateOpen(true)}
-        className="fixed bottom-24 right-4 lg:hidden z-40 w-14 h-14 rounded-2xl bg-foreground text-background shadow-2xl flex items-center justify-center hover:scale-105 active:scale-95 transition-transform"
-        aria-label="Create post">
-        <Plus className="w-6 h-6" />
-      </button>
+      {!embedded && (
+        <button onClick={() => setCreateOpen(true)}
+          className="fixed bottom-24 right-4 lg:hidden z-40 w-14 h-14 rounded-2xl bg-foreground text-background shadow-2xl flex items-center justify-center hover:scale-105 active:scale-95 transition-transform"
+          aria-label="Create post">
+          <Plus className="w-6 h-6" />
+        </button>
+      )}
 
-      <Footer />
+      {!embedded && <Footer />}
+
     </div>
   );
 };

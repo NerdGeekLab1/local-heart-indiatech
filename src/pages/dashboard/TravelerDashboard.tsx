@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import {
   MapPin, Calendar, Star, Heart, Clock, Settings, Bell, CreditCard, Shield, Globe,
   MessageCircle, Video, Save, Instagram, Facebook, Twitter, Compass, FileText, AlertTriangle, Target,
-  Receipt, Trophy, Flame, Gift, CheckCircle
+  Receipt, Trophy, Flame, Gift, CheckCircle, Rss, LayoutDashboard, Pin
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -27,6 +27,7 @@ import ReferralCodeCard from "@/components/rewards/ReferralCodeCard";
 import WandererPanel from "@/components/rewards/WandererPanel";
 import RewardsGuide from "@/components/rewards/RewardsGuide";
 
+import Feed from "@/pages/Feed";
 import BookingItineraryDialog, { type ItineraryBooking } from "@/components/booking/BookingItineraryDialog";
 import SubscriptionStatusCard from "@/components/dashboard/SubscriptionStatusCard";
 
@@ -44,11 +45,12 @@ const statusColors: Record<string, string> = {
   completed: "bg-secondary text-muted-foreground", cancelled: "bg-destructive/10 text-destructive",
 };
 
-type Tab = "overview" | "bookings" | "trips" | "saved" | "wanderer" | "grievances" | "messages" | "reviews" | "invoices" | "rewards" | "stamps" | "referrals" | "settings";
+type Tab = "overview" | "feed" | "bookings" | "trips" | "saved" | "wanderer" | "grievances" | "messages" | "reviews" | "invoices" | "rewards" | "stamps" | "referrals" | "settings";
 
 const TravelerDashboard = () => {
   const [searchParams] = useSearchParams();
-  const [activeTab, setActiveTab] = useState<Tab>((searchParams.get("tab") as Tab) || "overview");
+  const [defaultView, setDefaultView] = useLocalStorage<Tab>("traveler_default_view", "overview");
+  const [activeTab, setActiveTab] = useState<Tab>((searchParams.get("tab") as Tab) || defaultView || "overview");
 
   useEffect(() => {
     const thread = searchParams.get("thread");
@@ -179,6 +181,7 @@ const TravelerDashboard = () => {
 
   const tabs: { id: Tab; label: string; icon: React.ElementType }[] = [
     { id: "overview", label: "Overview", icon: Globe },
+    { id: "feed", label: "Feed", icon: Rss },
     { id: "bookings", label: "Bookings", icon: Calendar },
     { id: "trips", label: "My Trips", icon: Compass },
     { id: "invoices", label: "Invoices", icon: Receipt },
@@ -199,8 +202,34 @@ const TravelerDashboard = () => {
       <Navbar />
       <div className="pt-24 pb-16 px-4 sm:px-6 lg:px-8 mx-auto max-w-6xl">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-          <h1 className="text-3xl font-bold text-foreground">Welcome back, {profile.name}!</h1>
-          <p className="mt-1 text-muted-foreground">Manage your bookings, trips and experiences</p>
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <div>
+              <h1 className="text-3xl font-bold text-foreground">Welcome back, {profile.name}!</h1>
+              <p className="mt-1 text-muted-foreground">Manage your bookings, trips and experiences</p>
+            </div>
+            <div className="flex flex-col items-start sm:items-end gap-2">
+              <div className="inline-flex rounded-xl border border-border bg-card p-1">
+                {([
+                  { id: "overview" as Tab, label: "Dashboard", icon: LayoutDashboard },
+                  { id: "feed" as Tab, label: "Feed", icon: Rss },
+                ]).map(v => (
+                  <button key={v.id} onClick={() => setActiveTab(v.id)}
+                    className={`flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${activeTab === v.id ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}>
+                    <v.icon className="w-4 h-4" /> {v.label}
+                  </button>
+                ))}
+              </div>
+              <button
+                onClick={() => {
+                  setDefaultView(activeTab);
+                  toast({ title: "Default view saved", description: `${tabs.find(t => t.id === activeTab)?.label ?? "This view"} will open first next time.` });
+                }}
+                className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-primary transition-colors">
+                <Pin className="w-3 h-3" />
+                {defaultView === activeTab ? "This is your default view" : "Make this my default view"}
+              </button>
+            </div>
+          </div>
         </motion.div>
 
         <div className="mt-6 flex gap-1 overflow-x-auto border-b border-border pb-px">
@@ -446,6 +475,8 @@ const TravelerDashboard = () => {
         )}
 
         {/* Beta Wanderer */}
+        {activeTab === "feed" && <div className="mt-6"><Feed embedded /></div>}
+
         {activeTab === "wanderer" && <WandererPanel />}
 
 
