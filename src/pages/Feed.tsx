@@ -337,13 +337,16 @@ const Feed = ({ embedded = false }: { embedded?: boolean }) => {
         </div>
       </main>
 
-      <button onClick={() => setCreateOpen(true)}
-        className="fixed bottom-24 right-4 lg:hidden z-40 w-14 h-14 rounded-2xl bg-foreground text-background shadow-2xl flex items-center justify-center hover:scale-105 active:scale-95 transition-transform"
-        aria-label="Create post">
-        <Plus className="w-6 h-6" />
-      </button>
+      {!embedded && (
+        <button onClick={() => setCreateOpen(true)}
+          className="fixed bottom-24 right-4 lg:hidden z-40 w-14 h-14 rounded-2xl bg-foreground text-background shadow-2xl flex items-center justify-center hover:scale-105 active:scale-95 transition-transform"
+          aria-label="Create post">
+          <Plus className="w-6 h-6" />
+        </button>
+      )}
 
-      <Footer />
+      {!embedded && <Footer />}
+
     </div>
   );
 };
