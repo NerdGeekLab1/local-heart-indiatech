@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import {
   MapPin, Calendar, Star, Heart, Clock, Settings, Bell, CreditCard, Shield, Globe,
   MessageCircle, Video, Save, Instagram, Facebook, Twitter, Compass, FileText, AlertTriangle, Target,
-  Receipt, Trophy, Flame, Gift, CheckCircle, Rss, LayoutDashboard, Pin
+  Receipt, Trophy, Flame, Gift, CheckCircle, Rss, LayoutDashboard, PanelTop, Rows3, PartyPopper, Palette
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -39,6 +39,7 @@ import ChangePasswordDialog from "@/components/ChangePasswordDialog";
 import PhoneInput from "@/components/PhoneInput";
 import ChatPanel from "@/components/ChatPanel";
 import { isValidLocalPhone, splitPhone } from "@/lib/phone";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
 const statusColors: Record<string, string> = {
   pending: "bg-primary/10 text-primary", confirmed: "bg-accent/10 text-accent",
@@ -46,10 +47,13 @@ const statusColors: Record<string, string> = {
 };
 
 type Tab = "overview" | "feed" | "bookings" | "trips" | "saved" | "wanderer" | "grievances" | "messages" | "reviews" | "invoices" | "rewards" | "stamps" | "referrals" | "settings";
+type DashboardStyle = "journey" | "compact" | "playful";
+type DefaultView = "overview" | "feed";
 
 const TravelerDashboard = () => {
   const [searchParams] = useSearchParams();
-  const [defaultView, setDefaultView] = useLocalStorage<Tab>("traveler_default_view", "overview");
+  const [defaultView, setDefaultView] = useLocalStorage<DefaultView>("traveler_default_view", "overview");
+  const [dashboardStyle, setDashboardStyle] = useLocalStorage<DashboardStyle>("traveler_dashboard_style", "journey");
   const [activeTab, setActiveTab] = useState<Tab>((searchParams.get("tab") as Tab) || defaultView || "overview");
 
   useEffect(() => {
@@ -197,49 +201,62 @@ const TravelerDashboard = () => {
     { id: "settings", label: "Settings", icon: Settings },
   ];
 
+  const dashboardStyles: { id: DashboardStyle; label: string; description: string; icon: React.ElementType }[] = [
+    { id: "journey", label: "Journey", description: "Balanced, familiar and easy to scan", icon: PanelTop },
+    { id: "compact", label: "Compact", description: "More information with less scrolling", icon: Rows3 },
+    { id: "playful", label: "Playful", description: "Bold colors and lively travel energy", icon: PartyPopper },
+  ];
+
+  const chooseDashboardStyle = (style: DashboardStyle) => {
+    setDashboardStyle(style);
+    const label = dashboardStyles.find(option => option.id === style)?.label ?? "Dashboard";
+    toast({ title: `${label} view selected`, description: "Your dashboard style has been saved." });
+  };
+
   return (
-    <div className="min-h-screen bg-background">
+    <div className={`min-h-screen bg-background ${dashboardStyle === "playful" ? "selection:bg-primary/20" : ""}`} data-dashboard-style={dashboardStyle}>
       <Navbar />
-      <div className="pt-24 pb-16 px-4 sm:px-6 lg:px-8 mx-auto max-w-6xl">
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+      <div className={`pt-24 pb-16 px-4 sm:px-6 lg:px-8 mx-auto transition-[max-width] duration-300 ${dashboardStyle === "compact" ? "max-w-[1400px]" : "max-w-6xl"}`}>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className={dashboardStyle === "playful" ? "relative overflow-hidden rounded-2xl border border-primary/20 bg-primary/10 p-5 sm:p-7" : ""}
+        >
+          {dashboardStyle === "playful" && (
+            <div className="absolute right-5 top-3 text-5xl opacity-20" aria-hidden="true">✈</div>
+          )}
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div>
-              <h1 className="text-3xl font-bold text-foreground">Welcome back, {profile.name}!</h1>
-              <p className="mt-1 text-muted-foreground">Manage your bookings, trips and experiences</p>
+              <p className={`text-xs font-bold uppercase text-primary ${dashboardStyle === "playful" ? "mb-2" : "hidden"}`}>Your travel cockpit</p>
+              <h1 className={`${dashboardStyle === "compact" ? "text-2xl" : "text-3xl"} font-bold text-foreground`}>Welcome back, {profile.name}!</h1>
+              <p className="mt-1 text-muted-foreground">{dashboardStyle === "playful" ? "Where are we wandering next?" : "Manage your bookings, trips and experiences"}</p>
             </div>
-            <div className="flex flex-col items-start sm:items-end gap-2">
+            <div className="flex flex-col items-start sm:items-end gap-2 relative">
               <div className="inline-flex rounded-xl border border-border bg-card p-1">
                 {([
                   { id: "overview" as Tab, label: "Dashboard", icon: LayoutDashboard },
                   { id: "feed" as Tab, label: "Feed", icon: Rss },
                 ]).map(v => (
-                  <button key={v.id} onClick={() => setActiveTab(v.id)}
-                    className={`flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${activeTab === v.id ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}>
+                  <Button key={v.id} onClick={() => setActiveTab(v.id)} size="sm" variant={activeTab === v.id ? "default" : "ghost"}
+                    className="h-8 rounded-lg px-3">
                     <v.icon className="w-4 h-4" /> {v.label}
-                  </button>
+                  </Button>
                 ))}
               </div>
-              <button
-                onClick={() => {
-                  setDefaultView(activeTab);
-                  toast({ title: "Default view saved", description: `${tabs.find(t => t.id === activeTab)?.label ?? "This view"} will open first next time.` });
-                }}
-                className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-primary transition-colors">
-                <Pin className="w-3 h-3" />
-                {defaultView === activeTab ? "This is your default view" : "Make this my default view"}
-              </button>
             </div>
           </div>
         </motion.div>
 
-        <div className="mt-6 flex gap-1 overflow-x-auto border-b border-border pb-px">
+        <div className={dashboardStyle === "compact" ? "mt-6 lg:grid lg:grid-cols-[210px_minmax(0,1fr)] lg:gap-6" : ""}>
+        <nav aria-label="Traveler dashboard sections" className={`${dashboardStyle === "compact" ? "flex gap-1 overflow-x-auto border-b border-border pb-px lg:sticky lg:top-20 lg:flex-col lg:self-start lg:overflow-visible lg:border-b-0 lg:rounded-lg lg:bg-card lg:p-2 lg:shadow-card" : `mt-6 flex gap-1 overflow-x-auto border-b border-border pb-px ${dashboardStyle === "playful" ? "rounded-t-xl bg-secondary/50 px-2 pt-2" : ""}`}`}>
           {tabs.map(t => (
-            <button key={t.id} onClick={() => setActiveTab(t.id)}
-              className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium whitespace-nowrap transition-colors rounded-t-lg ${activeTab === t.id ? "bg-card text-primary border-b-2 border-primary" : "text-muted-foreground hover:text-foreground"}`}>
+            <Button key={t.id} onClick={() => setActiveTab(t.id)} variant="ghost"
+              className={`h-10 justify-start gap-2 px-4 text-sm whitespace-nowrap ${dashboardStyle === "compact" ? "lg:w-full" : "rounded-b-none"} ${activeTab === t.id ? (dashboardStyle === "playful" ? "bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground" : "bg-card text-primary border-b-2 border-primary hover:bg-card hover:text-primary") : "text-muted-foreground"}`}>
               <t.icon className="w-4 h-4" /> {t.label}
-            </button>
+            </Button>
           ))}
-        </div>
+        </nav>
+        <div className={`${dashboardStyle === "compact" ? "min-w-0 lg:-mt-6" : ""} ${dashboardStyle === "playful" ? "[&_.shadow-card]:shadow-elevated" : ""}`}>
 
         {/* Overview */}
         {activeTab === "overview" && (
@@ -711,8 +728,60 @@ const TravelerDashboard = () => {
 
         {/* Settings */}
         {activeTab === "settings" && (
-          <div className="mt-6 space-y-6 max-w-xl">
+          <div className="mt-6 space-y-6 max-w-3xl">
             <h2 className="text-xl font-bold text-foreground mb-4">Account Settings</h2>
+            <section className="rounded-lg bg-card p-5 shadow-card space-y-5" aria-labelledby="dashboard-appearance-heading">
+              <div>
+                <h3 id="dashboard-appearance-heading" className="font-bold text-foreground flex items-center gap-2"><Palette className="w-4 h-4 text-primary" /> Dashboard appearance</h3>
+                <p className="mt-1 text-sm text-muted-foreground">Choose how your travel space looks. Changes apply instantly.</p>
+              </div>
+              <RadioGroup value={dashboardStyle} onValueChange={value => chooseDashboardStyle(value as DashboardStyle)} className="grid gap-3 sm:grid-cols-3">
+                {dashboardStyles.map(option => {
+                  const Icon = option.icon;
+                  const selected = dashboardStyle === option.id;
+                  return (
+                    <label key={option.id} className={`cursor-pointer rounded-lg border p-3 transition-all ${selected ? "border-primary bg-primary/5 shadow-card" : "border-border hover:border-primary/40"}`}>
+                      <div className={`mb-3 h-20 overflow-hidden rounded-md border border-border ${option.id === "playful" ? "bg-primary/10" : "bg-secondary/60"}`}>
+                        <div className="flex h-5 items-center gap-1 border-b border-border px-2">
+                          <span className="h-1.5 w-1.5 rounded-full bg-primary" />
+                          <span className="h-1.5 w-8 rounded-full bg-muted-foreground/30" />
+                        </div>
+                        <div className={`grid h-[58px] gap-1 p-2 ${option.id === "compact" ? "grid-cols-[22px_1fr]" : "grid-cols-3"}`}>
+                          {option.id === "compact" && <span className="rounded-sm bg-foreground/10" />}
+                          <span className={`${option.id === "compact" ? "" : "col-span-2"} rounded-sm bg-card`} />
+                          <span className={`rounded-sm ${option.id === "playful" ? "bg-primary" : "bg-accent/30"}`} />
+                        </div>
+                      </div>
+                      <div className="flex items-start gap-2">
+                        <RadioGroupItem value={option.id} id={`dashboard-style-${option.id}`} className="mt-0.5" />
+                        <div>
+                          <span className="flex items-center gap-1.5 text-sm font-bold text-foreground"><Icon className="h-3.5 w-3.5 text-primary" />{option.label}</span>
+                          <span className="mt-0.5 block text-xs leading-snug text-muted-foreground">{option.description}</span>
+                        </div>
+                      </div>
+                    </label>
+                  );
+                })}
+              </RadioGroup>
+              <div className="border-t border-border pt-4">
+                <p className="text-sm font-semibold text-foreground">Open this view first</p>
+                <p className="mb-3 text-xs text-muted-foreground">Choose what appears whenever you return to your travel dashboard.</p>
+                <div className="inline-flex rounded-lg border border-border bg-secondary/50 p-1">
+                  {([
+                    { id: "overview" as DefaultView, label: "Dashboard", icon: LayoutDashboard },
+                    { id: "feed" as DefaultView, label: "Feed", icon: Rss },
+                  ]).map(view => (
+                    <Button key={view.id} type="button" size="sm" variant={defaultView === view.id ? "default" : "ghost"} className="h-8 rounded-md"
+                      onClick={() => {
+                        setDefaultView(view.id);
+                        toast({ title: "Default view saved", description: `${view.label} will open first next time.` });
+                      }}>
+                      <view.icon className="h-4 w-4" /> {view.label}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+            </section>
             <ReferralCodeCard />
 
             <div className="rounded-lg bg-card p-5 shadow-card space-y-4">
@@ -820,6 +889,8 @@ const TravelerDashboard = () => {
             </div>
           </div>
         )}
+        </div>
+        </div>
       </div>
       <BookingItineraryDialog booking={itineraryBooking} open={!!itineraryBooking} onOpenChange={open => !open && setItineraryBooking(null)} />
       <Footer />
