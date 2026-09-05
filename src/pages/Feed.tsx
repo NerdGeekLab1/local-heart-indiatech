@@ -35,7 +35,7 @@ const FILTERS = [
 const TAG_ICON: Record<string, any> = { location: MapPin, adventure: Mountain, experience: Sparkles };
 const PAGE_SIZE = 8;
 
-const Feed = () => {
+const Feed = ({ embedded = false }: { embedded?: boolean }) => {
   const { user } = useAuth();
   const { isBookmarked, toggle: toggleBM } = useBookmarks("post");
   const [posts, setPosts] = useState<FeedPost[]>([]);
