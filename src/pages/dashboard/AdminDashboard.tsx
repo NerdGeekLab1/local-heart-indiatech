@@ -46,6 +46,8 @@ import RewardsReferralsTab from "@/components/admin/RewardsReferralsTab";
 import ChatPanel from "@/components/ChatPanel";
 import { Film, Heart, Menu, BookOpen, PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import ApplicationDetailDialog from "@/components/admin/ApplicationDetailDialog";
+import HostVerificationQueue from "@/components/admin/HostVerificationQueue";
+
 
 
 type Tab = "overview" | "hosts" | "hostWaitlist" | "bookings" | "experiences" | "catalog" | "destinations" | "destinationQa" | "rewards" | "trips" | "grievances" | "users" | "wanderers" | "missions" | "leaderboard" | "invoices" | "feedModeration" | "reelsModeration" | "reviewModeration" | "analytics" | "settings" | "configuration" | "emails" | "plans" | "weddings" | "audit" | "testmode" | "docs" | "websiteCms" | "content";
