@@ -104,9 +104,11 @@ const TravelerDashboard = () => {
     setMyBookmarks(bms || []);
   };
 
-  useEffect(() => {
+  /** Pulls every traveler-owned record. Re-run on realtime events so host/admin
+   *  actions (booking approvals, replies, invoices) appear without a reload. */
+  const loadDbData = async () => {
     if (!user) return;
-    Promise.all([
+    const [{ data: bk }, { data: trips }, { data: grievances }, { data: invoices }, { data: streaks }, { data: revs }, { data: msgs }, { data: prof }] = await Promise.all([
       supabase.from("bookings").select("*").eq("traveler_id", user.id).order("created_at", { ascending: false }),
       supabase.from("trip_listings").select("*").eq("creator_id", user.id).order("created_at", { ascending: false }),
       supabase.from("grievances").select("*").eq("filed_by", user.id).order("created_at", { ascending: false }),
@@ -115,25 +117,45 @@ const TravelerDashboard = () => {
       supabase.from("reviews").select("*").eq("traveler_id", user.id),
       supabase.from("messages").select("*").or(`receiver_id.eq.${user.id},sender_id.eq.${user.id}`).order("created_at", { ascending: false }).limit(50),
       supabase.from("profiles").select("*").eq("id", user.id).maybeSingle(),
-    ]).then(([{ data: bk }, { data: trips }, { data: grievances }, { data: invoices }, { data: streaks }, { data: revs }, { data: msgs }, { data: prof }]) => {
-      setBookings(bk || []);
-      setMyTrips(trips || []);
-      setMyGrievances(grievances || []);
-      setMyInvoices(invoices || []);
-      setMyStreaks(streaks || []);
-      setDbReviews(revs || []);
-      setDbMessages(msgs || []);
-      if (prof) {
-        setDbProfile(prof);
-        setProfile(p => ({ ...p, name: `${prof.first_name} ${prof.last_name || ""}`.trim(), email: prof.email || p.email, phone: prof.phone || p.phone, bio: prof.bio || p.bio }));
-        const sl = (prof.social_links || {}) as Record<string, string>;
-        setSocialMedia(s => ({ ...s, ...sl }));
-      }
-    });
+    ]);
+    setBookings(bk || []);
+    setMyTrips(trips || []);
+    setMyGrievances(grievances || []);
+    setMyInvoices(invoices || []);
+    setMyStreaks(streaks || []);
+    setDbReviews(revs || []);
+    setDbMessages(msgs || []);
+    if (prof) {
+      setDbProfile(prof);
+      setProfile(p => ({ ...p, name: `${prof.first_name} ${prof.last_name || ""}`.trim(), email: prof.email || p.email, phone: prof.phone || p.phone, bio: prof.bio || p.bio }));
+      const sl = (prof.social_links || {}) as Record<string, string>;
+      setSocialMedia(s => ({ ...s, ...sl }));
+    }
+  };
+
+  useEffect(() => {
+    if (!user) return;
+    void loadDbData();
     loadPosts();
     loadSavedHosts();
+
+    const refresh = () => { void loadDbData(); };
+    const channel = supabase
+      .channel(`traveler-live-${user.id}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "bookings", filter: `traveler_id=eq.${user.id}` }, refresh)
+      .on("postgres_changes", { event: "*", schema: "public", table: "invoices", filter: `traveler_id=eq.${user.id}` }, refresh)
+      .on("postgres_changes", { event: "*", schema: "public", table: "grievances", filter: `filed_by=eq.${user.id}` }, refresh)
+      .on("postgres_changes", { event: "*", schema: "public", table: "messages", filter: `receiver_id=eq.${user.id}` }, refresh)
+      .subscribe();
+
+    window.addEventListener("focus", refresh);
+    return () => {
+      window.removeEventListener("focus", refresh);
+      void supabase.removeChannel(channel);
+    };
     // eslint-disable-next-line
   }, [user]);
+
 
   /** Hosts a traveler marked as favourite on a public host profile. */
   const loadSavedHosts = async () => {
