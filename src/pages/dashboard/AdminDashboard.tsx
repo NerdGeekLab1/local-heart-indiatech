@@ -1683,8 +1683,11 @@ const AdminDashboard = () => {
 
               )}
             </div>
+
+            <HostVerificationQueue />
           </div>
         )}
+
 
         {/* Hosts Tab */}
         {activeTab === "hosts" && (
