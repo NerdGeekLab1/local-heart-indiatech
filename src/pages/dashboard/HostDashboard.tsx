@@ -608,6 +608,7 @@ const HostDashboard = () => {
     { id: "invoices", label: "Invoices", icon: Receipt },
     
     { id: "messages", label: "Messages", icon: MessageCircle },
+    { id: "issues", label: "Issues Raised", icon: ShieldAlert },
     { id: "settings", label: "Settings", icon: Settings },
   ];
 
