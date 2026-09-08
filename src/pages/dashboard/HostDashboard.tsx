@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import {
   DollarSign, Users, Star, Calendar, Clock, TrendingUp, TrendingDown, MessageCircle, Settings, Home, Car, BarChart3,
   Bell, UtensilsCrossed, Plus, Save, Instagram, Facebook, Twitter, Youtube, Linkedin, Ghost, Globe, Tag, Bike, MapPin, Film,
-  FileText, Receipt, Heart, Eye, Copy, Phone, Sparkles, ExternalLink, BadgeCheck, ShieldCheck
+  FileText, Receipt, Heart, Eye, Copy, Phone, Sparkles, ExternalLink, BadgeCheck, ShieldCheck, ShieldAlert
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -34,6 +34,7 @@ import { hostCompleteness } from "@/lib/hostCompleteness";
 import InvoiceDetail from "@/components/dashboard/InvoiceDetail";
 import HostCatalogOfferings from "@/components/host/HostCatalogOfferings";
 import HostScheduleManager from "@/components/host/HostScheduleManager";
+import HostIssuesRaised from "@/components/host/HostIssuesRaised";
 
 const statusColors: Record<string, string> = {
   pending: "bg-primary/10 text-primary", confirmed: "bg-accent/10 text-accent",
@@ -43,7 +44,7 @@ const statusColors: Record<string, string> = {
 const HOST_CACHE_TTL = 5 * 60_000;
 const hostDashboardCache = new Map<string, { loadedAt: number; rows: any[] }>();
 
-type Tab = "overview" | "activity" | "analytics" | "bookings" | "listings" | "experiences" | "catalog" | "schedule" | "food" | "addons" | "reels" | "reviews" | "earnings" | "invoices" | "messages" | "settings";
+type Tab = "overview" | "activity" | "analytics" | "bookings" | "listings" | "experiences" | "catalog" | "schedule" | "food" | "addons" | "reels" | "reviews" | "earnings" | "invoices" | "messages" | "issues" | "settings";
 
 const profileFields: FieldConfig[] = [
   { key: "name", label: "Name", required: true },
@@ -608,6 +609,7 @@ const HostDashboard = () => {
     { id: "invoices", label: "Invoices", icon: Receipt },
     
     { id: "messages", label: "Messages", icon: MessageCircle },
+    { id: "issues", label: "Issues Raised", icon: ShieldAlert },
     { id: "settings", label: "Settings", icon: Settings },
   ];
 
@@ -1455,6 +1457,10 @@ const HostDashboard = () => {
 
         {activeTab === "messages" && user && (
           <HostMessageThreads userId={user.id} initialThread={searchParams.get("thread")} />
+        )}
+
+        {activeTab === "issues" && user && (
+          <HostIssuesRaised hostId={user.id} />
         )}
 
         {activeTab === "reels" && user && (
