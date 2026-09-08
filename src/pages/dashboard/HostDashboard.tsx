@@ -1457,6 +1457,10 @@ const HostDashboard = () => {
           <HostMessageThreads userId={user.id} initialThread={searchParams.get("thread")} />
         )}
 
+        {activeTab === "issues" && user && (
+          <HostIssuesRaised hostId={user.id} />
+        )}
+
         {activeTab === "reels" && user && (
           <div className="mt-6">
             <HostReelsManager userId={user.id} />
