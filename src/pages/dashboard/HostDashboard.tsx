@@ -34,6 +34,7 @@ import { hostCompleteness } from "@/lib/hostCompleteness";
 import InvoiceDetail from "@/components/dashboard/InvoiceDetail";
 import HostCatalogOfferings from "@/components/host/HostCatalogOfferings";
 import HostScheduleManager from "@/components/host/HostScheduleManager";
+import HostIssuesRaised from "@/components/host/HostIssuesRaised";
 
 const statusColors: Record<string, string> = {
   pending: "bg-primary/10 text-primary", confirmed: "bg-accent/10 text-accent",
