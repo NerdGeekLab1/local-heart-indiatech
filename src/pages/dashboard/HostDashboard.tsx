@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import {
   DollarSign, Users, Star, Calendar, Clock, TrendingUp, TrendingDown, MessageCircle, Settings, Home, Car, BarChart3,
   Bell, UtensilsCrossed, Plus, Save, Instagram, Facebook, Twitter, Youtube, Linkedin, Ghost, Globe, Tag, Bike, MapPin, Film,
-  FileText, Receipt, Heart, Eye, Copy, Phone, Sparkles, ExternalLink, BadgeCheck, ShieldCheck
+  FileText, Receipt, Heart, Eye, Copy, Phone, Sparkles, ExternalLink, BadgeCheck, ShieldCheck, ShieldAlert
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
