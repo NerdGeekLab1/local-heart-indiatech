@@ -74,6 +74,8 @@ const TravelerProfile = lazy(() => import("./pages/TravelerProfile.tsx"));
 const NotFound = lazy(() => import("./pages/NotFound.tsx"));
 const PasswordRecovery = lazy(() => import("./pages/PasswordRecovery.tsx"));
 const HostOnboarding = lazy(() => import("./pages/HostOnboarding.tsx"));
+const InvestorDeck = lazy(() => import("./pages/InvestorDeck.tsx"));
+const MarketingPlan = lazy(() => import("./pages/MarketingPlan.tsx"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -94,7 +96,7 @@ const RouteFallback = () => (
   </div>
 );
 
-const HIDE_CRUMBS = new Set(["/", "/signup", "/login/traveler", "/login/host", "/admin-login", "/auth/callback"]);
+const HIDE_CRUMBS = new Set(["/", "/investor-deck", "/marketing-plan", "/signup", "/login/traveler", "/login/host", "/admin-login", "/auth/callback"]);
 const BreadcrumbsBar = () => {
   const { pathname } = useLocation();
   if (HIDE_CRUMBS.has(pathname)) return null;
@@ -175,6 +177,8 @@ const App = () => (
             <Route path="/features" element={<FeaturesHub />} />
             <Route path="/feed" element={<Feed />} />
             <Route path="/traveler/:id" element={<TravelerProfile />} />
+            <Route path="/investor-deck" element={<InvestorDeck />} />
+            <Route path="/marketing-plan" element={<MarketingPlan />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
           </Suspense>
