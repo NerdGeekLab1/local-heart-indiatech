@@ -4,7 +4,7 @@ import { useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   ChevronLeft, ChevronRight, Play, Printer, MapPin, Users, Video, Sparkles,
-  ShieldCheck, Wallet, Gift, BarChart3, Building2, Megaphone, Globe2, Rocket,
+  ShieldCheck, Wallet, Gift, BarChart3, Building2, Megaphone, Globe2,
   Handshake, Target, CalendarClock, TrendingUp,
 } from "lucide-react";
 import SlideFrame, { Reveal } from "@/components/deck/SlideFrame";
@@ -398,7 +398,7 @@ const slides: { id: string; title: string; content: ReactNode }[] = [
     content: (
       <div className="flex h-full flex-col justify-center">
         <motion.div
-          className="absolute -left-52 bottom--20 h-[640px] w-[640px] rounded-full bg-accent/15 blur-3xl"
+          className="absolute -left-52 bottom-0 h-[640px] w-[640px] rounded-full bg-accent/15 blur-3xl"
           animate={{ scale: [1, 1.15, 1] }}
           transition={{ duration: 10, repeat: Infinity }}
         />
@@ -523,4 +523,3 @@ const InvestorDeck = () => {
 };
 
 export default InvestorDeck;
-export { Rocket };
