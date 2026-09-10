@@ -616,6 +616,217 @@ export type Database = {
         }
         Relationships: []
       }
+      creator_applications: {
+        Row: {
+          audience_countries: string[]
+          avatar_url: string | null
+          avg_views: number
+          bio: string | null
+          city: string | null
+          country: string
+          created_at: string
+          email: string
+          full_name: string
+          id: string
+          languages: string[]
+          niche: string | null
+          payout_details: string | null
+          payout_method: string | null
+          phone: string | null
+          platforms: Json
+          portfolio_links: string[]
+          review_notes: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          tier: string
+          total_followers: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          audience_countries?: string[]
+          avatar_url?: string | null
+          avg_views?: number
+          bio?: string | null
+          city?: string | null
+          country?: string
+          created_at?: string
+          email: string
+          full_name: string
+          id?: string
+          languages?: string[]
+          niche?: string | null
+          payout_details?: string | null
+          payout_method?: string | null
+          phone?: string | null
+          platforms?: Json
+          portfolio_links?: string[]
+          review_notes?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          tier?: string
+          total_followers?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          audience_countries?: string[]
+          avatar_url?: string | null
+          avg_views?: number
+          bio?: string | null
+          city?: string | null
+          country?: string
+          created_at?: string
+          email?: string
+          full_name?: string
+          id?: string
+          languages?: string[]
+          niche?: string | null
+          payout_details?: string | null
+          payout_method?: string | null
+          phone?: string | null
+          platforms?: Json
+          portfolio_links?: string[]
+          review_notes?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          tier?: string
+          total_followers?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      creator_content: {
+        Row: {
+          bookings_attributed: number
+          campaign: string | null
+          clicks: number
+          created_at: string
+          creator_id: string
+          id: string
+          likes: number
+          payout_amount: number
+          platform: string
+          posted_at: string | null
+          review_notes: string | null
+          reviewed_at: string | null
+          reward_points: number
+          status: string
+          title: string
+          updated_at: string
+          url: string
+          user_id: string
+          views: number
+        }
+        Insert: {
+          bookings_attributed?: number
+          campaign?: string | null
+          clicks?: number
+          created_at?: string
+          creator_id: string
+          id?: string
+          likes?: number
+          payout_amount?: number
+          platform?: string
+          posted_at?: string | null
+          review_notes?: string | null
+          reviewed_at?: string | null
+          reward_points?: number
+          status?: string
+          title: string
+          updated_at?: string
+          url: string
+          user_id: string
+          views?: number
+        }
+        Update: {
+          bookings_attributed?: number
+          campaign?: string | null
+          clicks?: number
+          created_at?: string
+          creator_id?: string
+          id?: string
+          likes?: number
+          payout_amount?: number
+          platform?: string
+          posted_at?: string | null
+          review_notes?: string | null
+          reviewed_at?: string | null
+          reward_points?: number
+          status?: string
+          title?: string
+          updated_at?: string
+          url?: string
+          user_id?: string
+          views?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "creator_content_creator_id_fkey"
+            columns: ["creator_id"]
+            isOneToOne: false
+            referencedRelation: "creator_applications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      creator_payouts: {
+        Row: {
+          amount_inr: number
+          created_at: string
+          creator_id: string
+          id: string
+          method: string | null
+          notes: string | null
+          paid_at: string | null
+          period: string | null
+          reference: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount_inr?: number
+          created_at?: string
+          creator_id: string
+          id?: string
+          method?: string | null
+          notes?: string | null
+          paid_at?: string | null
+          period?: string | null
+          reference?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount_inr?: number
+          created_at?: string
+          creator_id?: string
+          id?: string
+          method?: string | null
+          notes?: string | null
+          paid_at?: string | null
+          period?: string | null
+          reference?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "creator_payouts_creator_id_fkey"
+            columns: ["creator_id"]
+            isOneToOne: false
+            referencedRelation: "creator_applications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       destination_drafts: {
         Row: {
           created_at: string
@@ -2084,6 +2295,211 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      hotel_leads: {
+        Row: {
+          check_in: string | null
+          commission_inr: number
+          created_at: string
+          guest_country: string | null
+          guest_name: string
+          guests: number
+          hotel_id: string
+          id: string
+          nights: number
+          notes: string | null
+          room_type: string | null
+          source: string
+          status: string
+          updated_at: string
+          value_inr: number
+        }
+        Insert: {
+          check_in?: string | null
+          commission_inr?: number
+          created_at?: string
+          guest_country?: string | null
+          guest_name: string
+          guests?: number
+          hotel_id: string
+          id?: string
+          nights?: number
+          notes?: string | null
+          room_type?: string | null
+          source?: string
+          status?: string
+          updated_at?: string
+          value_inr?: number
+        }
+        Update: {
+          check_in?: string | null
+          commission_inr?: number
+          created_at?: string
+          guest_country?: string | null
+          guest_name?: string
+          guests?: number
+          hotel_id?: string
+          id?: string
+          nights?: number
+          notes?: string | null
+          room_type?: string | null
+          source?: string
+          status?: string
+          updated_at?: string
+          value_inr?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hotel_leads_hotel_id_fkey"
+            columns: ["hotel_id"]
+            isOneToOne: false
+            referencedRelation: "hotel_partners"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      hotel_partners: {
+        Row: {
+          amenities: string[]
+          city: string
+          commission_pct: number
+          contact_email: string
+          contact_name: string
+          contact_phone: string | null
+          country: string
+          cover_url: string | null
+          created_at: string
+          description: string | null
+          hotel_name: string
+          id: string
+          languages: string[]
+          logo_url: string | null
+          property_type: string
+          review_notes: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          room_count: number
+          state: string | null
+          status: string
+          updated_at: string
+          user_id: string
+          website: string | null
+        }
+        Insert: {
+          amenities?: string[]
+          city: string
+          commission_pct?: number
+          contact_email: string
+          contact_name: string
+          contact_phone?: string | null
+          country?: string
+          cover_url?: string | null
+          created_at?: string
+          description?: string | null
+          hotel_name: string
+          id?: string
+          languages?: string[]
+          logo_url?: string | null
+          property_type?: string
+          review_notes?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          room_count?: number
+          state?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+          website?: string | null
+        }
+        Update: {
+          amenities?: string[]
+          city?: string
+          commission_pct?: number
+          contact_email?: string
+          contact_name?: string
+          contact_phone?: string | null
+          country?: string
+          cover_url?: string | null
+          created_at?: string
+          description?: string | null
+          hotel_name?: string
+          id?: string
+          languages?: string[]
+          logo_url?: string | null
+          property_type?: string
+          review_notes?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          room_count?: number
+          state?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+          website?: string | null
+        }
+        Relationships: []
+      }
+      hotel_rate_plans: {
+        Row: {
+          cancellation_policy: string | null
+          created_at: string
+          hotel_id: string
+          id: string
+          is_active: boolean
+          meal_plan: string
+          min_nights: number
+          net_rate_inr: number | null
+          occupancy: number
+          rate_inr: number
+          room_type: string
+          terms: string | null
+          updated_at: string
+          valid_from: string | null
+          valid_to: string | null
+        }
+        Insert: {
+          cancellation_policy?: string | null
+          created_at?: string
+          hotel_id: string
+          id?: string
+          is_active?: boolean
+          meal_plan?: string
+          min_nights?: number
+          net_rate_inr?: number | null
+          occupancy?: number
+          rate_inr?: number
+          room_type: string
+          terms?: string | null
+          updated_at?: string
+          valid_from?: string | null
+          valid_to?: string | null
+        }
+        Update: {
+          cancellation_policy?: string | null
+          created_at?: string
+          hotel_id?: string
+          id?: string
+          is_active?: boolean
+          meal_plan?: string
+          min_nights?: number
+          net_rate_inr?: number | null
+          occupancy?: number
+          rate_inr?: number
+          room_type?: string
+          terms?: string | null
+          updated_at?: string
+          valid_from?: string | null
+          valid_to?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hotel_rate_plans_hotel_id_fkey"
+            columns: ["hotel_id"]
+            isOneToOne: false
+            referencedRelation: "hotel_partners"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       invoices: {
         Row: {
@@ -3568,6 +3984,37 @@ export type Database = {
           read_ct: number
         }[]
       }
+      record_creator_payout: {
+        Args: {
+          _amount: number
+          _creator_id: string
+          _method?: string
+          _notes?: string
+          _period?: string
+          _reference?: string
+          _status?: string
+        }
+        Returns: {
+          amount_inr: number
+          created_at: string
+          creator_id: string
+          id: string
+          method: string | null
+          notes: string | null
+          paid_at: string | null
+          period: string | null
+          reference: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "creator_payouts"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       redeem_reward: {
         Args: { _points: number; _reward_key: string; _title: string }
         Returns: {
@@ -3623,6 +4070,83 @@ export type Database = {
         }[]
       }
       resolve_cms_preview: { Args: { _token: string }; Returns: Json }
+      review_creator_application: {
+        Args: {
+          _application_id: string
+          _notes?: string
+          _status: string
+          _tier?: string
+        }
+        Returns: {
+          audience_countries: string[]
+          avatar_url: string | null
+          avg_views: number
+          bio: string | null
+          city: string | null
+          country: string
+          created_at: string
+          email: string
+          full_name: string
+          id: string
+          languages: string[]
+          niche: string | null
+          payout_details: string | null
+          payout_method: string | null
+          phone: string | null
+          platforms: Json
+          portfolio_links: string[]
+          review_notes: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          tier: string
+          total_followers: number
+          updated_at: string
+          user_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "creator_applications"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      review_creator_content: {
+        Args: {
+          _content_id: string
+          _notes?: string
+          _payout?: number
+          _reward_points?: number
+          _status: string
+        }
+        Returns: {
+          bookings_attributed: number
+          campaign: string | null
+          clicks: number
+          created_at: string
+          creator_id: string
+          id: string
+          likes: number
+          payout_amount: number
+          platform: string
+          posted_at: string | null
+          review_notes: string | null
+          reviewed_at: string | null
+          reward_points: number
+          status: string
+          title: string
+          updated_at: string
+          url: string
+          user_id: string
+          views: number
+        }
+        SetofOptions: {
+          from: "*"
+          to: "creator_content"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       review_host_verification: {
         Args: { _application_id: string; _notes?: string; _status: string }
         Returns: {
@@ -3639,6 +4163,46 @@ export type Database = {
         SetofOptions: {
           from: "*"
           to: "host_verification_applications"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      review_hotel_partner: {
+        Args: {
+          _commission?: number
+          _hotel_id: string
+          _notes?: string
+          _status: string
+        }
+        Returns: {
+          amenities: string[]
+          city: string
+          commission_pct: number
+          contact_email: string
+          contact_name: string
+          contact_phone: string | null
+          country: string
+          cover_url: string | null
+          created_at: string
+          description: string | null
+          hotel_name: string
+          id: string
+          languages: string[]
+          logo_url: string | null
+          property_type: string
+          review_notes: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          room_count: number
+          state: string | null
+          status: string
+          updated_at: string
+          user_id: string
+          website: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "hotel_partners"
           isOneToOne: true
           isSetofReturn: false
         }
