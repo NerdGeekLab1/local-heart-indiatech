@@ -76,6 +76,8 @@ const PasswordRecovery = lazy(() => import("./pages/PasswordRecovery.tsx"));
 const HostOnboarding = lazy(() => import("./pages/HostOnboarding.tsx"));
 const InvestorDeck = lazy(() => import("./pages/InvestorDeck.tsx"));
 const MarketingPlan = lazy(() => import("./pages/MarketingPlan.tsx"));
+const HotelPartners = lazy(() => import("./pages/HotelPartners.tsx"));
+const CreatorProgram = lazy(() => import("./pages/CreatorProgram.tsx"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -179,6 +181,8 @@ const App = () => (
             <Route path="/traveler/:id" element={<TravelerProfile />} />
             <Route path="/investor-deck" element={<InvestorDeck />} />
             <Route path="/marketing-plan" element={<MarketingPlan />} />
+            <Route path="/hotel-partners" element={<HotelPartners />} />
+            <Route path="/creators" element={<CreatorProgram />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
           </Suspense>
