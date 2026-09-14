@@ -47,10 +47,12 @@ import ChatPanel from "@/components/ChatPanel";
 import { Film, Heart, Menu, BookOpen, PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import ApplicationDetailDialog from "@/components/admin/ApplicationDetailDialog";
 import HostVerificationQueue from "@/components/admin/HostVerificationQueue";
+import HotelPartnersTab from "@/components/admin/HotelPartnersTab";
+import CreatorProgramTab from "@/components/admin/CreatorProgramTab";
 
 
 
-type Tab = "overview" | "hosts" | "hostWaitlist" | "bookings" | "experiences" | "catalog" | "destinations" | "destinationQa" | "rewards" | "trips" | "grievances" | "users" | "wanderers" | "missions" | "leaderboard" | "invoices" | "feedModeration" | "reelsModeration" | "reviewModeration" | "analytics" | "settings" | "configuration" | "emails" | "plans" | "weddings" | "audit" | "testmode" | "docs" | "websiteCms" | "content";
+type Tab = "overview" | "hosts" | "hostWaitlist" | "hotelPartners" | "creatorProgram" | "bookings" | "experiences" | "catalog" | "destinations" | "destinationQa" | "rewards" | "trips" | "grievances" | "users" | "wanderers" | "missions" | "leaderboard" | "invoices" | "feedModeration" | "reelsModeration" | "reviewModeration" | "analytics" | "settings" | "configuration" | "emails" | "plans" | "weddings" | "audit" | "testmode" | "docs" | "websiteCms" | "content";
 
 const ADMIN_TAB_KEY = "travelista.admin.activeTab";
 const ADMIN_NAV_KEY = "travelista.admin.navCollapsed";
@@ -805,6 +807,8 @@ const AdminDashboard = () => {
     { id: "users", label: "User Management", icon: Users, group: "People" },
     { id: "hostWaitlist", label: "Host Waitlist", icon: UserCheck, badge: hostQueue.length, group: "People" },
     { id: "hosts", label: "Hosts", icon: Users, group: "People" },
+    { id: "hotelPartners", label: "Hotel Partners", icon: Globe, group: "People" },
+    { id: "creatorProgram", label: "Creator Program", icon: Film, group: "People" },
     { id: "wanderers", label: "Wanderers", icon: Target, group: "People" },
     { id: "leaderboard", label: "Leaderboard", icon: Trophy, group: "People" },
 
@@ -1871,6 +1875,8 @@ const AdminDashboard = () => {
         {activeTab === "destinations" && <DestinationsTab />}
         {activeTab === "destinationQa" && <DestinationQaTab />}
         {activeTab === "rewards" && <RewardsReferralsTab />}
+        {activeTab === "hotelPartners" && <HotelPartnersTab />}
+        {activeTab === "creatorProgram" && <CreatorProgramTab />}
 
 
         {/* Beta Wanderers Tab */}
