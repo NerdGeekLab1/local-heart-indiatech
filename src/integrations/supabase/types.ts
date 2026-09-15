@@ -3912,6 +3912,29 @@ export type Database = {
           video_url: string
         }[]
       }
+      get_public_wanderer_showcase: {
+        Args: { _id: string }
+        Returns: {
+          avatar_url: string
+          badge: string
+          bio: string
+          city: string
+          created_at: string
+          full_name: string
+          id: string
+          missions_completed: number
+          preferred_destinations: string[]
+          score: number
+          social_links: Json
+          stamp_count: number
+          stamps: Json
+          status: string
+          total_videos: number
+          travel_styles: string[]
+          user_id: string
+          video_url: string
+        }[]
+      }
       get_public_wanderers: {
         Args: never
         Returns: {
@@ -3925,6 +3948,29 @@ export type Database = {
           preferred_destinations: string[]
           score: number
           social_links: Json
+          status: string
+          total_videos: number
+          travel_styles: string[]
+          user_id: string
+          video_url: string
+        }[]
+      }
+      get_public_wanderers_showcase: {
+        Args: never
+        Returns: {
+          avatar_url: string
+          badge: string
+          bio: string
+          city: string
+          created_at: string
+          full_name: string
+          id: string
+          missions_completed: number
+          preferred_destinations: string[]
+          score: number
+          social_links: Json
+          stamp_count: number
+          stamps: Json
           status: string
           total_videos: number
           travel_styles: string[]
