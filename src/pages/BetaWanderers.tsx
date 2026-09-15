@@ -58,7 +58,7 @@ const BetaWanderers = () => {
 
   useEffect(() => {
     supabase.rpc("get_public_wanderers_showcase").then(({ data }) => {
-      if (data?.length) setWanderers([...demoWanderers, ...(data as PublicWanderer[])]);
+      if (data?.length) setWanderers([...demoWanderers, ...(data as unknown as PublicWanderer[])]);
     });
   }, []);
 
