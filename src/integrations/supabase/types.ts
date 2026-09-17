@@ -714,7 +714,9 @@ export type Database = {
           posted_at: string | null
           review_notes: string | null
           reviewed_at: string | null
+          reviewed_by: string | null
           reward_points: number
+          stamp_key: string | null
           status: string
           title: string
           updated_at: string
@@ -735,7 +737,9 @@ export type Database = {
           posted_at?: string | null
           review_notes?: string | null
           reviewed_at?: string | null
+          reviewed_by?: string | null
           reward_points?: number
+          stamp_key?: string | null
           status?: string
           title: string
           updated_at?: string
@@ -756,7 +760,9 @@ export type Database = {
           posted_at?: string | null
           review_notes?: string | null
           reviewed_at?: string | null
+          reviewed_by?: string | null
           reward_points?: number
+          stamp_key?: string | null
           status?: string
           title?: string
           updated_at?: string
@@ -777,6 +783,9 @@ export type Database = {
       creator_payouts: {
         Row: {
           amount_inr: number
+          approved_at: string | null
+          approved_by: string | null
+          content_ids: string[]
           created_at: string
           creator_id: string
           id: string
@@ -791,6 +800,9 @@ export type Database = {
         }
         Insert: {
           amount_inr?: number
+          approved_at?: string | null
+          approved_by?: string | null
+          content_ids?: string[]
           created_at?: string
           creator_id: string
           id?: string
@@ -805,6 +817,9 @@ export type Database = {
         }
         Update: {
           amount_inr?: number
+          approved_at?: string | null
+          approved_by?: string | null
+          content_ids?: string[]
           created_at?: string
           creator_id?: string
           id?: string
@@ -3823,6 +3838,18 @@ export type Database = {
           typical_duration: string
         }[]
       }
+      get_creator_account_summary: {
+        Args: { _creator_id?: string }
+        Returns: {
+          approved_earnings: number
+          approved_payments: number
+          available_balance: number
+          creator_id: string
+          paid_payments: number
+          reward_points: number
+          stamp_count: number
+        }[]
+      }
       get_destination_public: { Args: { _identifier: string }; Returns: Json }
       get_host_onboarding_status: {
         Args: never
@@ -3922,6 +3949,7 @@ export type Database = {
           created_at: string
           full_name: string
           id: string
+          missions: Json
           missions_completed: number
           preferred_destinations: string[]
           score: number
@@ -3965,6 +3993,7 @@ export type Database = {
           created_at: string
           full_name: string
           id: string
+          missions: Json
           missions_completed: number
           preferred_destinations: string[]
           score: number
@@ -4042,6 +4071,9 @@ export type Database = {
         }
         Returns: {
           amount_inr: number
+          approved_at: string | null
+          approved_by: string | null
+          content_ids: string[]
           created_at: string
           creator_id: string
           id: string
@@ -4178,7 +4210,9 @@ export type Database = {
           posted_at: string | null
           review_notes: string | null
           reviewed_at: string | null
+          reviewed_by: string | null
           reward_points: number
+          stamp_key: string | null
           status: string
           title: string
           updated_at: string
