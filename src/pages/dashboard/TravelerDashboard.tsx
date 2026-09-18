@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
-  MapPin, Calendar, Star, Heart, Clock, Settings, Bell, CreditCard, Shield, Globe,
+  MapPin, Calendar, Star, Heart, Clock, Settings, CreditCard, Shield, Globe,
   MessageCircle, Video, Save, Instagram, Facebook, Twitter, Compass, FileText, AlertTriangle, Target,
   Receipt, Trophy, Flame, Gift, CheckCircle, Rss, LayoutDashboard, PanelTop, Rows3, PartyPopper, Palette
 } from "lucide-react";
@@ -26,6 +26,7 @@ import AchievementsStrip from "@/components/rewards/AchievementsStrip";
 import ReferralCodeCard from "@/components/rewards/ReferralCodeCard";
 import WandererPanel from "@/components/rewards/WandererPanel";
 import RewardsGuide from "@/components/rewards/RewardsGuide";
+import NotificationPanel from "@/components/NotificationPanel";
 
 import Feed from "@/pages/Feed";
 import BookingItineraryDialog, { type ItineraryBooking } from "@/components/booking/BookingItineraryDialog";
@@ -254,7 +255,7 @@ const TravelerDashboard = () => {
               <p className="mt-1 text-muted-foreground">{dashboardStyle === "playful" ? "Where are we wandering next?" : "Manage your bookings, trips and experiences"}</p>
             </div>
             <div className="flex flex-col items-start sm:items-end gap-2 relative">
-              <div className="inline-flex rounded-xl border border-border bg-card p-1">
+              <div className="flex items-center gap-2"><NotificationPanel /><div className="inline-flex rounded-xl border border-border bg-card p-1">
                 {([
                   { id: "overview" as Tab, label: "Dashboard", icon: LayoutDashboard },
                   { id: "feed" as Tab, label: "Feed", icon: Rss },
@@ -264,7 +265,7 @@ const TravelerDashboard = () => {
                     <v.icon className="w-4 h-4" /> {v.label}
                   </Button>
                 ))}
-              </div>
+              </div></div>
             </div>
           </div>
         </motion.div>
