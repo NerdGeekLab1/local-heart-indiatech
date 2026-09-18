@@ -9,7 +9,6 @@ import Footer from "@/components/Footer";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
-import { hosts, reviews } from "@/lib/data";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import VideoModal from "@/components/VideoModal";
 import { useBookmarks } from "@/hooks/use-bookmarks";
@@ -107,13 +106,6 @@ const TripDetail = () => {
   const spotsLeft = (trip.max_travelers || 10) - joinedCount;
   const isTrending = joinedCount >= 5;
   const isPopular = joinedCount >= 3;
-
-  // Find matching host leader from demo data
-  const matchingHost = hosts.find(h =>
-    trip.destination?.toLowerCase().includes(h.city.toLowerCase()) ||
-    trip.route?.toLowerCase().includes(h.city.toLowerCase())
-  );
-  const hostReviews = matchingHost ? reviews.filter(r => r.hostId === matchingHost.id) : [];
 
   // Get destination highlights
   const destKey = Object.keys(highlightReels).find(k => trip.destination?.includes(k) || trip.title?.includes(k));
@@ -342,33 +334,6 @@ const TripDetail = () => {
                 </div>
               </div>
 
-              {/* Host Reviews from past trips */}
-              {hostReviews.length > 0 && (
-                <div className="rounded-2xl bg-card p-6 shadow-card">
-                  <h2 className="text-lg font-bold text-foreground mb-4 flex items-center gap-2">
-                    <Star className="w-5 h-5 text-primary" /> Reviews from Past Travelers
-                  </h2>
-                  <div className="space-y-3">
-                    {hostReviews.slice(0, 3).map(r => (
-                      <div key={r.id} className="rounded-xl bg-secondary/50 p-4">
-                        <div className="flex items-center gap-2 mb-2">
-                          <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-xs font-bold text-primary">{r.travelerName[0]}</div>
-                          <div>
-                            <p className="text-sm font-semibold text-foreground">{r.travelerName} · {r.country}</p>
-                            <div className="flex gap-0.5">
-                              {Array.from({ length: r.rating }).map((_, j) => (
-                                <Star key={j} className="w-2.5 h-2.5 fill-primary text-primary" />
-                              ))}
-                            </div>
-                          </div>
-                        </div>
-                        <p className="text-xs text-muted-foreground">{r.text}</p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
               {/* FAQ */}
               <div className="rounded-2xl bg-card p-6 shadow-card">
                 <h2 className="text-lg font-bold text-foreground mb-4 flex items-center gap-2"><HelpCircle className="w-5 h-5 text-primary" /> FAQ</h2>
@@ -419,37 +384,22 @@ const TripDetail = () => {
                   </div>
                 </div>
 
-                {/* Trip Leader - Host */}
-                {matchingHost && (
+                {/* Traveler-led trip organizer */}
+                {creator && (
                   <div className="rounded-2xl bg-card p-5 shadow-card">
                     <h3 className="text-sm font-bold text-foreground mb-3 flex items-center gap-2">
                       <User className="w-4 h-4 text-primary" /> Trip Leader
                     </h3>
-                    <Link to={`/host/${matchingHost.id}`} className="group">
+                    <Link to={`/traveler/${trip.creator_id}`} className="group">
                       <div className="flex items-center gap-3">
-                        <img src={matchingHost.image} alt={matchingHost.name} className="w-14 h-14 rounded-2xl object-cover" />
+                        <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center text-lg font-bold text-primary">{`${creator.first_name?.[0] || "T"}${creator.last_name?.[0] || ""}`}</div>
                         <div>
-                          <p className="font-bold text-foreground group-hover:text-primary transition-colors">{matchingHost.name}</p>
-                          <p className="text-xs text-muted-foreground">{matchingHost.city} · ⭐ {matchingHost.rating}</p>
-                          <p className="text-xs text-muted-foreground italic">"{matchingHost.tagline}"</p>
+                          <p className="font-bold text-foreground group-hover:text-primary transition-colors">{`${creator.first_name || "Traveler"} ${creator.last_name || ""}`.trim()}</p>
+                          <p className="text-xs text-muted-foreground">Verified traveler · Trip organizer</p>
+                          {creator.bio && <p className="line-clamp-2 text-xs text-muted-foreground italic">“{creator.bio}”</p>}
                         </div>
                       </div>
                     </Link>
-                    <div className="mt-3 flex flex-wrap gap-1">
-                      {matchingHost.expertiseTags?.slice(0, 3).map(t => (
-                        <span key={t} className="text-[10px] bg-primary/10 text-primary px-2 py-0.5 rounded-full">{t}</span>
-                      ))}
-                    </div>
-                    <div className="mt-2 text-xs text-muted-foreground">
-                      <p>🛡️ Safety: {matchingHost.safetyScore}/100</p>
-                      <p>⏱️ Responds {matchingHost.responseTime}</p>
-                      <p>🗣️ {matchingHost.languages.join(", ")}</p>
-                    </div>
-                    {matchingHost.introVideoUrl && (
-                      <Button variant="outline" size="sm" className="w-full mt-3 rounded-full gap-1 text-xs" onClick={() => setVideoOpen(true)}>
-                        <Play className="w-3 h-3" /> Watch Intro Video
-                      </Button>
-                    )}
                   </div>
                 )}
 

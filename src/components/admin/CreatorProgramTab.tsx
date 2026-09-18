@@ -128,7 +128,7 @@ export default function CreatorProgramTab() {
     });
     setBusy(null);
     if (error) { toast({ title: "Could not update", description: error.message, variant: "destructive" }); return; }
-    toast({ title: `Content ${status}` });
+    toast({ title: `Content ${status}`, description: status === "approved" ? "Points and a creator stamp were credited." : undefined });
     void load();
   };
 
@@ -142,13 +142,13 @@ export default function CreatorProgramTab() {
       _period: payoutForm.period || null,
       _method: payoutForm.method || null,
       _reference: payoutForm.reference || null,
-      _status: "paid",
+      _status: "approved",
       _notes: null,
     });
     setBusy(null);
     if (error) { toast({ title: "Could not record payout", description: error.message, variant: "destructive" }); return; }
     setPayoutForm({ amount: "", period: "", method: "UPI", reference: "" });
-    toast({ title: "Payout recorded" });
+    toast({ title: "Payment approved", description: "The amount is now credited to the creator account." });
     void load();
   };
 
@@ -282,14 +282,14 @@ export default function CreatorProgramTab() {
 
                     {c.status === "approved" && (
                       <div className="rounded-md bg-secondary/40 p-3">
-                        <p className="text-sm font-semibold text-foreground flex items-center gap-2"><Wallet className="w-4 h-4 text-primary" /> Record a payout</p>
+                        <p className="text-sm font-semibold text-foreground flex items-center gap-2"><Wallet className="w-4 h-4 text-primary" /> Approve account payment</p>
                         <div className="mt-2 grid gap-2 sm:grid-cols-4">
                           <Input className="h-9" type="number" min={0} placeholder="Amount ₹" value={payoutForm.amount} onChange={e => setPayoutForm({ ...payoutForm, amount: e.target.value })} />
                           <Input className="h-9" placeholder="Period (e.g. Sep 2026)" value={payoutForm.period} onChange={e => setPayoutForm({ ...payoutForm, period: e.target.value })} />
                           <Input className="h-9" placeholder="Method" value={payoutForm.method} onChange={e => setPayoutForm({ ...payoutForm, method: e.target.value })} />
                           <Input className="h-9" placeholder="Reference / UTR" value={payoutForm.reference} onChange={e => setPayoutForm({ ...payoutForm, reference: e.target.value })} />
                         </div>
-                        <Button size="sm" className="mt-2" disabled={busy === c.id} onClick={() => pay(c.id)}>Mark paid</Button>
+                        <Button size="sm" className="mt-2" disabled={busy === c.id || earned - paid <= 0} onClick={() => pay(c.id)}>Approve payment</Button>
                       </div>
                     )}
 

@@ -22,6 +22,8 @@ interface Notification {
   time: string;
   read: boolean;
   senderId?: string | null;
+  destination?: string;
+  createdAt: string;
 }
 
 const typeConfig: Record<NotificationType, { icon: React.ElementType; color: string }> = {
@@ -54,33 +56,43 @@ const NotificationPanel = () => {
 
   useEffect(() => {
     if (!user) return;
-    const fetchMessages = async () => {
+    const readKey = `traveler-notification-reads:${user.id}`;
+    const fetchNotifications = async () => {
       setLoading(true);
-      const { data } = await supabase
-        .from("messages")
-        .select("*")
-        .or(`receiver_id.eq.${user.id},sender_id.eq.${user.id}`)
-        .order("created_at", { ascending: false })
-        .limit(30);
-
-      if (data) {
-        const mapped: Notification[] = data
-          .filter(m => m.receiver_id === user.id)
-          .map(m => ({
-            id: m.id,
+      const [{ data: messages }, { data: bookings }, { data: rewards }] = await Promise.all([
+        supabase.from("messages").select("*").eq("receiver_id", user.id).order("created_at", { ascending: false }).limit(20),
+        supabase.from("bookings").select("id,status,created_at,start_date").eq("traveler_id", user.id).in("status", ["approved", "confirmed", "rejected", "cancelled"]).order("created_at", { ascending: false }).limit(20),
+        supabase.from("reward_ledger").select("id,status,title,points,event_type,created_at,metadata").eq("user_id", user.id).in("status", ["approved", "paid", "rejected"]).order("created_at", { ascending: false }).limit(20),
+      ]);
+      const locallyRead = new Set<string>(JSON.parse(localStorage.getItem(readKey) || "[]"));
+      const mappedMessages: Notification[] = (messages || []).map(m => ({
+            id: `message:${m.id}`,
             type: "message" as NotificationType,
             title: "New Message",
             description: m.content.length > 80 ? m.content.slice(0, 80) + "…" : m.content,
             time: timeAgo(m.created_at),
             read: m.read ?? false,
             senderId: m.sender_id,
+            destination: `/dashboard/traveler?tab=messages&thread=${m.sender_id}`,
+            createdAt: m.created_at,
           }));
-        setNotifications(mapped);
-      }
+      const mappedBookings: Notification[] = (bookings || []).map(booking => ({
+        id: `booking:${booking.id}:${booking.status}`, type: "booking",
+        title: booking.status === "approved" || booking.status === "confirmed" ? "Booking approved" : "Booking update",
+        description: booking.status === "rejected" ? "Your booking request was rejected." : booking.status === "cancelled" ? "Your booking was cancelled." : `Your trip starting ${new Date(booking.start_date).toLocaleDateString("en-IN")} is confirmed.`,
+        time: timeAgo(booking.created_at), read: locallyRead.has(`booking:${booking.id}:${booking.status}`), destination: "/dashboard/traveler?tab=bookings", createdAt: booking.created_at,
+      }));
+      const mappedRewards: Notification[] = (rewards || []).map(reward => ({
+        id: `reward:${reward.id}:${reward.status}`, type: "reward",
+        title: reward.status === "rejected" ? "Reward decision" : reward.title || "Reward approved",
+        description: reward.status === "rejected" ? "Your reward request was not approved." : reward.points > 0 ? `${reward.points} points were approved for your account.` : "A reward or creator payment decision was added to your account.",
+        time: timeAgo(reward.created_at), read: locallyRead.has(`reward:${reward.id}:${reward.status}`), destination: "/dashboard/traveler?tab=rewards", createdAt: reward.created_at,
+      }));
+      setNotifications([...mappedMessages, ...mappedBookings, ...mappedRewards].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
       setLoading(false);
     };
 
-    fetchMessages();
+    void fetchNotifications();
 
     // Subscribe to real-time messages
     const channel = supabase
@@ -88,15 +100,19 @@ const NotificationPanel = () => {
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "messages", filter: `receiver_id=eq.${user.id}` }, (payload) => {
         const m = payload.new as any;
         setNotifications(prev => [{
-          id: m.id,
+          id: `message:${m.id}`,
           type: "message",
           title: "New Message",
           description: m.content.length > 80 ? m.content.slice(0, 80) + "…" : m.content,
           time: "just now",
           read: false,
           senderId: m.sender_id,
+          destination: `/dashboard/traveler?tab=messages&thread=${m.sender_id}`,
+          createdAt: m.created_at,
         }, ...prev]);
       })
+      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "bookings", filter: `traveler_id=eq.${user.id}` }, () => { void fetchNotifications(); })
+      .on("postgres_changes", { event: "*", schema: "public", table: "reward_ledger", filter: `user_id=eq.${user.id}` }, () => { void fetchNotifications(); })
       .subscribe();
 
     return () => { supabase.removeChannel(channel); };
@@ -107,6 +123,7 @@ const NotificationPanel = () => {
   const markAllRead = async () => {
     if (!user) return;
     setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+    localStorage.setItem(`traveler-notification-reads:${user.id}`, JSON.stringify(notifications.filter(n => n.type !== "message").map(n => n.id)));
     await supabase
       .from("messages")
       .update({ read: true })
@@ -116,12 +133,21 @@ const NotificationPanel = () => {
 
   const markRead = async (id: string) => {
     setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
-    await supabase.from("messages").update({ read: true }).eq("id", id);
+    if (!user) return;
+    if (id.startsWith("message:")) {
+      await supabase.from("messages").update({ read: true }).eq("id", id.replace("message:", ""));
+      return;
+    }
+    const key = `traveler-notification-reads:${user.id}`;
+    const ids = new Set<string>(JSON.parse(localStorage.getItem(key) || "[]"));
+    ids.add(id);
+    localStorage.setItem(key, JSON.stringify([...ids]));
   };
 
   /** Send the user to the right dashboard messages thread for this notification. */
   const openNotification = (n: Notification) => {
     markRead(n.id);
+    if (n.destination) { navigate(n.destination); return; }
     if (n.type !== "message") return;
     const base = userRole === "host" ? "/dashboard/host" : userRole === "admin" ? "/dashboard/admin" : "/dashboard/traveler";
     const thread = n.senderId ? `&thread=${n.senderId}` : "";
@@ -136,7 +162,7 @@ const NotificationPanel = () => {
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <Button variant="ghost" size="icon" className="rounded-full relative">
+        <Button variant="ghost" size="icon" className="rounded-full relative" aria-label={unreadCount ? `${unreadCount} unread notifications` : "Notifications"}>
           <Bell className="h-4 w-4" />
           {unreadCount > 0 && (
             <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-destructive rounded-full text-[9px] text-destructive-foreground flex items-center justify-center font-bold">

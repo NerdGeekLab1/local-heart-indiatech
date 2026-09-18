@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowLeft, Award, Globe, MapPin, Sparkles, Target, Trophy, Video } from "lucide-react";
+import { ArrowLeft, Award, CalendarDays, CheckCircle2, Globe, MapPin, Sparkles, Target, Trophy, Video } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import Navbar from "@/components/Navbar";
@@ -10,6 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { STAMP_CATALOG, TIER_STYLES, type StampTier } from "@/lib/stampsCatalog";
 
 type PublicStamp = { stamp_key: string; tier: StampTier; category: string; earned_at?: string };
+type PublicMission = { id?: string; title: string; description?: string; destination: string; status: string; reward_points?: number; completed_at?: string };
 
 const makeDemoStamps = (start: number, count: number): PublicStamp[] => Array.from({ length: count }, (_, index) => {
   const stamp = STAMP_CATALOG[(start + index) % STAMP_CATALOG.length];
@@ -17,7 +18,7 @@ const makeDemoStamps = (start: number, count: number): PublicStamp[] => Array.fr
 });
 
 const demoWanderers: Record<string, any> = {
-  "demo-1": { full_name: "Vikram Sharma", city: "Delhi", bio: "Solo traveler and vlogger exploring offbeat trails across the Himalayas. I've been on the road for three years, covering over 50,000 km across India.", travel_styles: ["Adventure Seeker", "Vlogger", "Solo Wanderer"], preferred_destinations: ["Ladakh", "Spiti Valley", "Himachal Pradesh"], score: 450, missions_completed: 12, total_videos: 28, badge: "trailblazer", social_links: { instagram: "@vikram_trails", youtube: "VikramTrails" }, stamps: makeDemoStamps(0, 8), stamp_count: 8 },
+  "demo-1": { full_name: "Vikram Sharma", city: "Delhi", bio: "Solo traveler and vlogger exploring offbeat trails across the Himalayas. I've been on the road for three years, covering over 50,000 km across India.", travel_styles: ["Adventure Seeker", "Vlogger", "Solo Wanderer"], preferred_destinations: ["Ladakh", "Spiti Valley", "Himachal Pradesh"], score: 450, missions_completed: 12, total_videos: 28, badge: "trailblazer", social_links: { instagram: "@vikram_trails", youtube: "VikramTrails" }, stamps: makeDemoStamps(0, 8), stamp_count: 8, missions: [{ title: "Himalayan Homestay Stories", description: "Documented family-run stays and the people preserving mountain hospitality.", destination: "Spiti Valley", status: "completed", reward_points: 250, completed_at: "2026-08-18" }, { title: "Leave No Trace Trail", description: "Led a trail clean-up and published a responsible trekking guide.", destination: "Ladakh", status: "completed", reward_points: 150, completed_at: "2026-07-06" }] },
   "demo-2": { full_name: "Ananya Iyer", city: "Bengaluru", bio: "Cultural photographer documenting India's living heritage. My lens captures stories that words cannot.", travel_styles: ["Culture Explorer", "Photographer"], preferred_destinations: ["Rajasthan", "Varanasi", "Kerala"], score: 380, missions_completed: 8, total_videos: 15, badge: "explorer", social_links: { instagram: "@ananya_captures" }, stamps: makeDemoStamps(5, 5), stamp_count: 5 },
   "demo-3": { full_name: "Rahul Desai", city: "Mumbai", bio: "Food traveler on a mission to taste every state in India, from street kitchens to royal thalis.", travel_styles: ["Foodie Traveler", "Backpacker"], preferred_destinations: ["Goa", "Kerala", "Northeast India"], score: 520, missions_completed: 15, total_videos: 34, badge: "pioneer", social_links: { instagram: "@rahul_eats", youtube: "RahulDesaiFood" }, stamps: makeDemoStamps(10, 11), stamp_count: 11 },
   "demo-4": { full_name: "Priyanka Nair", city: "Kochi", bio: "Backwater explorer and Ayurveda enthusiast sharing Kerala's hidden stories with the world.", travel_styles: ["Solo Wanderer", "Culture Explorer", "Photographer"], preferred_destinations: ["Kerala", "Andaman Islands"], score: 290, missions_completed: 6, total_videos: 12, badge: "explorer", social_links: { instagram: "@priyanka_wanders" }, stamps: makeDemoStamps(15, 4), stamp_count: 4 },
@@ -43,6 +44,7 @@ const BetaWandererProfile = () => {
 
   const badge = BADGES[wanderer.badge] || BADGES.explorer;
   const stamps: PublicStamp[] = wanderer.stamps || [];
+  const missions: PublicMission[] = wanderer.missions || [];
   const collectionPercent = Math.round((Number(wanderer.stamp_count || stamps.length) / STAMP_CATALOG.length) * 100);
 
   return (
@@ -68,11 +70,15 @@ const BetaWandererProfile = () => {
         </section>
 
         <div className="mt-5 grid gap-5 lg:grid-cols-[1.6fr_1fr]">
-          <section className="rounded-lg border border-border bg-card p-5 sm:p-6">
+          <div className="space-y-5"><section className="rounded-lg border border-border bg-card p-5 sm:p-6">
             <div className="flex items-start justify-between gap-4"><div><h2 className="flex items-center gap-2 text-lg font-bold text-foreground"><Sparkles className="h-5 w-5 text-primary" /> Stamp collection</h2><p className="mt-1 text-sm text-muted-foreground">Proof of places explored and experiences completed</p></div><span className="text-sm font-bold text-primary">{wanderer.stamp_count || stamps.length}/{STAMP_CATALOG.length}</span></div>
             <div className="mt-4 h-2 overflow-hidden rounded-full bg-secondary"><motion.div initial={{ width: 0 }} animate={{ width: `${collectionPercent}%` }} transition={{ duration: 0.7 }} className="h-full bg-primary" /></div>
             {stamps.length ? <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3">{stamps.map((stamp) => { const detail = STAMP_CATALOG.find((item) => item.key === stamp.stamp_key); const tier = TIER_STYLES[stamp.tier] || TIER_STYLES.bronze; return <div key={stamp.stamp_key} className="rounded-md border border-border bg-secondary/40 p-3 text-center"><div className="text-3xl">{detail?.emoji || "🏅"}</div><p className="mt-2 line-clamp-1 text-xs font-bold text-foreground">{detail?.title || stamp.stamp_key}</p><span className={`mt-2 inline-block rounded-full px-2 py-0.5 text-[9px] font-bold ${tier.bg}`}>{tier.label}</span></div>; })}</div> : <div className="mt-5 rounded-md border border-dashed border-border p-8 text-center"><Award className="mx-auto h-7 w-7 text-muted-foreground" /><p className="mt-2 text-sm text-muted-foreground">The first stamp is waiting to be earned.</p></div>}
           </section>
+          <section className="rounded-lg border border-border bg-card p-5 sm:p-6">
+            <div className="flex items-start justify-between gap-4"><div><h2 className="flex items-center gap-2 text-lg font-bold text-foreground"><Target className="h-5 w-5 text-primary" /> Completed missions</h2><p className="mt-1 text-sm text-muted-foreground">Field assignments completed for the Wanderer program</p></div><span className="text-sm font-bold text-primary">{missions.length} shown</span></div>
+            {missions.length ? <div className="mt-5 space-y-3">{missions.map((mission, index) => <article key={mission.id || `${mission.title}-${index}`} className="rounded-md border border-border bg-secondary/30 p-4"><div className="flex items-start justify-between gap-3"><div><h3 className="font-bold text-foreground">{mission.title}</h3><p className="mt-1 flex items-center gap-1 text-xs text-muted-foreground"><MapPin className="h-3.5 w-3.5" /> {mission.destination}</p></div><span className="inline-flex items-center gap-1 rounded-full bg-accent/10 px-2 py-1 text-[10px] font-bold text-accent"><CheckCircle2 className="h-3 w-3" /> Completed</span></div>{mission.description && <p className="mt-3 text-sm leading-6 text-muted-foreground">{mission.description}</p>}<div className="mt-3 flex flex-wrap gap-3 text-xs text-muted-foreground">{mission.completed_at && <span className="inline-flex items-center gap-1"><CalendarDays className="h-3.5 w-3.5" /> {new Date(mission.completed_at).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}</span>}{Number(mission.reward_points || 0) > 0 && <span className="font-semibold text-primary">+{mission.reward_points} points</span>}</div></article>)}</div> : <div className="mt-5 rounded-md border border-dashed border-border p-7 text-center"><Target className="mx-auto h-7 w-7 text-muted-foreground" /><p className="mt-2 text-sm text-muted-foreground">Completed mission details will appear here.</p></div>}
+          </section></div>
 
           <div className="space-y-5">
             <section className="rounded-lg border border-border bg-card p-5"><h2 className="text-base font-bold text-foreground">Travel style</h2><div className="mt-3 flex flex-wrap gap-2">{wanderer.travel_styles?.map((style: string) => <span key={style} className="rounded-full bg-primary/10 px-3 py-1.5 text-xs font-medium text-primary">{style}</span>)}</div></section>

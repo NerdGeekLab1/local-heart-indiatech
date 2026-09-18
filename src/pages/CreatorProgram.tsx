@@ -49,6 +49,7 @@ interface ContentRow {
   status: string;
   review_notes: string | null;
   created_at: string;
+  stamp_key?: string | null;
 }
 
 interface PayoutRow {
@@ -61,6 +62,8 @@ interface PayoutRow {
   paid_at: string | null;
   created_at: string;
 }
+
+interface CreatorAccountSummary { approved_earnings: number; approved_payments: number; paid_payments: number; available_balance: number; reward_points: number; stamp_count: number }
 
 const PLATFORMS = ["instagram", "youtube", "tiktok", "blog", "x", "other"];
 const TIERS = [
@@ -88,6 +91,7 @@ export default function CreatorProgram() {
   const [app, setApp] = useState<CreatorApp | null>(null);
   const [content, setContent] = useState<ContentRow[]>([]);
   const [payouts, setPayouts] = useState<PayoutRow[]>([]);
+  const [account, setAccount] = useState<CreatorAccountSummary | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
@@ -107,12 +111,14 @@ export default function CreatorProgram() {
     const row = (data as CreatorApp | null) ?? null;
     setApp(row);
     if (row) {
-      const [{ data: c }, { data: p }] = await Promise.all([
+      const [{ data: c }, { data: p }, { data: summary }] = await Promise.all([
         supabase.from("creator_content").select("*").eq("creator_id", row.id).order("created_at", { ascending: false }),
         supabase.from("creator_payouts").select("*").eq("creator_id", row.id).order("created_at", { ascending: false }),
+        supabase.rpc("get_creator_account_summary", { _creator_id: row.id }),
       ]);
       setContent((c as ContentRow[]) || []);
       setPayouts((p as PayoutRow[]) || []);
+      setAccount(((summary as CreatorAccountSummary[] | null)?.[0]) || null);
     }
     setLoading(false);
   };
@@ -334,7 +340,7 @@ export default function CreatorProgram() {
                   { label: "Approved", value: String(stats.approved), icon: CheckCircle2 },
                   { label: "Views", value: stats.views.toLocaleString("en-IN"), icon: Eye },
                   { label: "Clicks", value: stats.clicks.toLocaleString("en-IN"), icon: MousePointerClick },
-                  { label: "Reward points", value: String(stats.points), icon: Coins },
+                  { label: "Reward points", value: String(account?.reward_points ?? stats.points), icon: Coins },
                   { label: "Paid out", value: inr(stats.paid), icon: IndianRupee },
                 ].map(s => (
                   <div key={s.label} className="rounded-xl bg-card p-4 shadow-card border border-border/60">
@@ -347,8 +353,8 @@ export default function CreatorProgram() {
 
               <div className="rounded-xl bg-card p-6 shadow-card border border-border/60">
                 <p className="text-sm text-muted-foreground">Approved earnings</p>
-                <p className="text-3xl font-bold text-foreground">{inr(stats.earned)}</p>
-                <p className="text-xs text-muted-foreground mt-1">{inr(stats.paid)} already paid · {inr(Math.max(0, stats.earned - stats.paid))} awaiting payout · {stats.bookings} bookings attributed</p>
+                <p className="text-3xl font-bold text-foreground">{inr(Number(account?.approved_earnings ?? stats.earned))}</p>
+                <p className="text-xs text-muted-foreground mt-1">{inr(Number(account?.paid_payments ?? stats.paid))} paid · {inr(Number(account?.available_balance ?? Math.max(0, stats.earned - stats.paid)))} available · {account?.stamp_count ?? 0} creator stamps · {stats.bookings} bookings attributed</p>
               </div>
 
               {app.status === "approved" && (
@@ -386,7 +392,7 @@ export default function CreatorProgram() {
                           <p className="text-sm text-muted-foreground">
                             {c.platform}{c.campaign ? ` · ${c.campaign}` : ""} · {c.views.toLocaleString("en-IN")} views · {c.clicks} clicks · {c.bookings_attributed} bookings
                           </p>
-                          <p className="text-sm text-muted-foreground">{c.reward_points} points · {inr(Number(c.payout_amount))}</p>
+                          <p className="text-sm text-muted-foreground">{c.reward_points} points · {inr(Number(c.payout_amount))}{c.stamp_key ? " · 🏅 Storyteller stamp earned" : ""}</p>
                           {c.review_notes && <p className="text-xs text-muted-foreground mt-1">Note: {c.review_notes}</p>}
                         </div>
                         <span className={`text-xs px-2 py-1 rounded-full ${STATUS_STYLES[c.status] || "bg-secondary text-muted-foreground"}`}>{c.status}</span>
