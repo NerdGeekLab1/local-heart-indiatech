@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import {
   MapPin, Calendar, Star, Heart, Clock, Settings, CreditCard, Shield, Globe,
   MessageCircle, Video, Save, Instagram, Facebook, Twitter, Compass, FileText, AlertTriangle, Target,
-  Receipt, Trophy, Flame, Gift, CheckCircle, Rss, LayoutDashboard, PanelTop, Rows3, PartyPopper, Palette
+  Receipt, Trophy, Flame, Gift, CheckCircle, Rss, LayoutDashboard, PanelTop, Rows3, PartyPopper, Palette, Bell
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
