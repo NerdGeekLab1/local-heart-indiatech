@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { motion } from "framer-motion";
-import { MapPin, Calendar, Users, Clock, Bike, Car, Bus, Compass, Train, ArrowLeft, Share2, Heart, CheckCircle, Shield, HelpCircle, Flame, TrendingUp, Star, ChevronDown, ChevronUp, Play, Camera, User, Bookmark } from "lucide-react";
+import { MapPin, Calendar, Users, Clock, Bike, Car, Bus, Compass, Train, ArrowLeft, Share2, Heart, CheckCircle, Shield, HelpCircle, Flame, TrendingUp, Star, ChevronDown, ChevronUp, Camera, User, Bookmark } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -10,7 +10,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { useCurrency } from "@/contexts/CurrencyContext";
-import VideoModal from "@/components/VideoModal";
 import { useBookmarks } from "@/hooks/use-bookmarks";
 
 const tripTypeLabels: Record<string, string> = {
@@ -74,7 +73,6 @@ const TripDetail = () => {
   const [loading, setLoading] = useState(true);
   const [openFAQ, setOpenFAQ] = useState<number | null>(null);
   const [joinedCount] = useState(() => Math.floor(Math.random() * 6) + 2);
-  const [videoOpen, setVideoOpen] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -427,27 +425,6 @@ const TripDetail = () => {
                   </div>
                 )}
 
-                {/* Organizer from DB (fallback) */}
-                {creator && !matchingHost && (
-                  <div className="rounded-2xl bg-card p-5 shadow-card">
-                    <h3 className="text-sm font-bold text-foreground mb-3">Trip Organizer</h3>
-                    <Link to={`/trip-leader/${creator.id}`} className="group">
-                      <div className="flex items-center gap-3">
-                        <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-lg font-bold text-primary">
-                          {creator.avatar_url ? (
-                            <img src={creator.avatar_url} alt={creator.first_name} className="w-full h-full rounded-full object-cover" />
-                          ) : (creator.first_name?.[0] || "?")}
-                        </div>
-                        <div>
-                          <p className="font-semibold text-foreground group-hover:text-primary">{creator.first_name} {creator.last_name || ""}</p>
-                          {creator.nationality && <p className="text-xs text-muted-foreground">📍 {creator.nationality}</p>}
-                          <p className="text-[10px] text-primary">View Leader Profile →</p>
-                        </div>
-                      </div>
-                    </Link>
-                  </div>
-                )}
-
                 <div className="rounded-2xl bg-primary/5 border border-primary/20 p-5">
                   <h3 className="text-sm font-bold text-foreground mb-2">🛡️ Safety</h3>
                   <ul className="space-y-1.5 text-xs text-muted-foreground">
@@ -464,8 +441,6 @@ const TripDetail = () => {
       </div>
       <Footer />
 
-      {/* Video Modal */}
-      <VideoModal open={videoOpen} onClose={() => setVideoOpen(false)} videoUrl={matchingHost?.introVideoUrl} title={`${matchingHost?.name}'s Intro`} />
     </div>
   );
 };
