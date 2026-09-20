@@ -96,7 +96,7 @@ const NotificationPanel = () => {
 
     // Subscribe to real-time messages
     const channel = supabase
-      .channel("notifications-messages")
+      .channel(`traveler-notifications:${user.id}:${crypto.randomUUID()}`)
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "messages", filter: `receiver_id=eq.${user.id}` }, (payload) => {
         const m = payload.new as any;
         setNotifications(prev => [{
