@@ -5,3 +5,5 @@
 - [x] Add a traveler booking/reward decision bell with live, private alerts.
 - [x] Complete creator stamps and admin-approved account payouts.
 - [x] Verify database access, tests, build, and desktop/mobile flows.
+
+- [ ] Create and validate standalone RoamYoo product-review PowerPoint.
